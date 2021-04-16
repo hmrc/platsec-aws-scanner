@@ -30,3 +30,6 @@ class AwsScanner:
 
     def clean_athena(self) -> Sequence[AwsTaskReport]:
         return self._task_runner.run(self._task_builder.clean_athena_tasks())
+
+    def audit_s3(self) -> Sequence[AwsTaskReport]:
+        return self._task_runner.run(self._task_builder.audit_s3_tasks())

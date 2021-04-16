@@ -7,12 +7,14 @@ from botocore.exceptions import ClientError
 
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_organizations_types import Account, OrganizationalUnit
+from src.data.aws_s3_types import Bucket
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
+from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 
 
@@ -31,12 +33,20 @@ def organizational_unit(
     return OrganizationalUnit(identifier=identifier, name=name, root=root, accounts=accounts, org_units=org_units)
 
 
+def bucket(name: str = "a_bucket") -> Bucket:
+    return Bucket(name)
+
+
 def aws_task(account: Account = account(), description: str = "task") -> AwsTask:
     return AwsTask(description=description, account=account)
 
 
 def athena_task(account: Account = account(), description: str = "athena_task") -> AwsAthenaTask:
     return AwsAthenaTask(description=description, account=account)
+
+
+def s3_task(account: Account = account(), description: str = "s3_task") -> AwsS3Task:
+    return AwsS3Task(description=description, account=account)
 
 
 def ssm_task(account: Account = account(), description: str = "ssm_task") -> AwsSSMTask:
