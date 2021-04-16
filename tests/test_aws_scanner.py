@@ -1,0 +1,83 @@
+from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest.mock import Mock
+
+from typing import Sequence
+
+from src.data.aws_task_report import AwsTaskReport
+from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
+from src.aws_scanner import AwsScanner
+from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
+from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
+from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
+from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
+from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
+
+
+class TestAwsScanner(AwsScannerTestCase):
+    mock_tasks = [Mock(), Mock()]
+    mock_reports = [Mock(), Mock()]
+
+    year, month, service, source_ip, role = 2020, 7, "ssm", "127.0.0.1", "RoleSomething"
+
+    def principal_by_ip_finder_tasks(self, year: int, month: int, ip: str) -> Sequence[AwsPrincipalByIPFinderTask]:
+        return self.mock_tasks if year == self.year and month == self.month and ip == self.source_ip else []
+
+    def service_usage_scanner_tasks(self, year: int, month: int, service: str) -> Sequence[AwsServiceUsageScannerTask]:
+        return self.mock_tasks if year == self.year and month == self.month and service == self.service else []
+
+    def role_usage_scanner_tasks(self, year: int, month: int, role: str) -> Sequence[AwsRoleUsageScannerTask]:
+        return self.mock_tasks if year == self.year and month == self.month and role == self.role else []
+
+    def create_athena_table_tasks(self, year: int, month: int) -> Sequence[AwsCreateAthenaTableTask]:
+        return self.mock_tasks if year == self.year and month == self.month else []
+
+    def clean_athena_tasks(self) -> Sequence[AwsAthenaCleanerTask]:
+        return self.mock_tasks
+
+    def mock_run(self, tasks: Sequence[AwsCloudTrailTask]) -> Sequence[AwsTaskReport]:
+        return self.mock_reports if tasks == self.mock_tasks else []
+
+    def list_accounts_tasks(self) -> Sequence[AwsTaskReport]:
+        return self.mock_tasks
+
+    def list_ssm_parameters_tasks(self) -> Sequence[AwsTaskReport]:
+        return self.mock_tasks
+
+    def get_aws_scanner(self) -> AwsScanner:
+        return AwsScanner(
+            task_builder=Mock(
+                principal_by_ip_finder_tasks=Mock(side_effect=self.principal_by_ip_finder_tasks),
+                service_usage_scanner_tasks=Mock(side_effect=self.service_usage_scanner_tasks),
+                role_usage_scanner_tasks=Mock(side_effect=self.role_usage_scanner_tasks),
+                create_athena_table_tasks=Mock(side_effect=self.create_athena_table_tasks),
+                list_accounts_tasks=Mock(side_effect=self.list_accounts_tasks),
+                list_ssm_parameters_tasks=Mock(side_effect=self.list_ssm_parameters_tasks),
+                clean_athena_tasks=Mock(side_effect=self.clean_athena_tasks),
+            ),
+            task_runner=Mock(run=Mock(side_effect=self.mock_run)),
+        )
+
+    def test_scan_service_usage(self) -> None:
+        reports = self.get_aws_scanner().scan_service_usage(year=2020, month=7, service="ssm")
+        self.assertEqual(self.mock_reports, reports)
+
+    def test_scan_role_usage(self) -> None:
+        reports = self.get_aws_scanner().scan_role_usage(year=2020, month=7, role="RoleSomething")
+        self.assertEqual(self.mock_reports, reports)
+
+    def test_find_principal_by_ip(self) -> None:
+        reports = self.get_aws_scanner().find_principal_by_ip(year=2020, month=7, source_ip="127.0.0.1")
+        self.assertEqual(self.mock_reports, reports)
+
+    def test_create_table(self) -> None:
+        reports = self.get_aws_scanner().create_table(year=2020, month=7)
+        self.assertEqual(self.mock_reports, reports)
+
+    def test_list_accounts(self) -> None:
+        self.assertEqual(self.mock_reports, self.get_aws_scanner().list_accounts())
+
+    def test_list_ssm_parameters(self) -> None:
+        self.assertEqual(self.mock_reports, self.get_aws_scanner().list_ssm_parameters())
+
+    def test_clean_task_databases(self) -> None:
+        self.assertEqual(self.mock_reports, self.get_aws_scanner().clean_athena())
