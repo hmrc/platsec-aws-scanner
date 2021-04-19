@@ -43,6 +43,9 @@ class TestAwsScanner(AwsScannerTestCase):
     def list_ssm_parameters_tasks(self) -> Sequence[AwsTaskReport]:
         return self.mock_tasks
 
+    def audit_s3_tasks(self) -> Sequence[AwsTaskReport]:
+        return self.mock_tasks
+
     def get_aws_scanner(self) -> AwsScanner:
         return AwsScanner(
             task_builder=Mock(
@@ -53,6 +56,7 @@ class TestAwsScanner(AwsScannerTestCase):
                 list_accounts_tasks=Mock(side_effect=self.list_accounts_tasks),
                 list_ssm_parameters_tasks=Mock(side_effect=self.list_ssm_parameters_tasks),
                 clean_athena_tasks=Mock(side_effect=self.clean_athena_tasks),
+                audit_s3_tasks=Mock(side_effect=self.audit_s3_tasks),
             ),
             task_runner=Mock(run=Mock(side_effect=self.mock_run)),
         )
@@ -81,3 +85,6 @@ class TestAwsScanner(AwsScannerTestCase):
 
     def test_clean_task_databases(self) -> None:
         self.assertEqual(self.mock_reports, self.get_aws_scanner().clean_athena())
+
+    def test_audit_s3(self) -> None:
+        self.assertEqual(self.mock_reports, self.get_aws_scanner().audit_s3())

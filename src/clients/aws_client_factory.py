@@ -11,6 +11,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_athena_client import AwsAthenaClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
+from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
 
@@ -31,8 +32,11 @@ class AwsClientFactory:
     def get_athena_boto_client(self) -> BaseClient:
         return self._get_client("athena", self._config.account_cloudtrail(), self._config.role_cloudtrail())
 
-    def get_s3_boto_client(self) -> BaseClient:
-        return self._get_client("s3", self._config.account_cloudtrail(), self._config.role_s3())
+    def get_s3_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("s3", account, self._config.role_s3())
+
+    def get_s3_client(self, account: Account) -> AwsS3Client:
+        return AwsS3Client(self.get_s3_boto_client(account))
 
     def get_organizations_boto_client(self) -> BaseClient:
         return self._get_client("organizations", self._config.account_root(), self._config.role_organizations())

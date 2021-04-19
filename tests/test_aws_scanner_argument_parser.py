@@ -119,6 +119,19 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.username, "joe.bloggs")
             self.assertEqual(args.mfa_token, "433516")
 
+    def test_parse_args_for_audit_s3_task(self) -> None:
+        with patch("sys.argv", "prog audit_s3 -t 446468 -a 1,2".split()):
+            short_args = AwsScannerArgumentParser().parse_args()
+
+        with patch("sys.argv", "prog audit_s3 --token 446468 --accounts 1,2".split()):
+            long_args = AwsScannerArgumentParser().parse_args()
+
+        for args in [short_args, long_args]:
+            self.assertEqual(args.task, "audit_s3")
+            self.assertEqual(args.username, "joe.bloggs")
+            self.assertEqual(args.mfa_token, "446468")
+            self.assertEqual(args.accounts, ["1", "2"])
+
     def test_task_is_mandatory(self) -> None:
         with redirect_stderr(StringIO()) as err:
             with self.assertRaises(SystemExit):

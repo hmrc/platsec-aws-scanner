@@ -7,6 +7,7 @@ from src.clients.aws_client_factory import AwsClientFactory
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
+from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 
 
@@ -28,4 +29,6 @@ class AwsTaskRunner:
             return task.run(self._client_factory.get_organizations_client())
         elif isinstance(task, AwsSSMTask):
             return task.run(self._client_factory.get_ssm_client(task.account))
+        elif isinstance(task, AwsS3Task):
+            return task.run(self._client_factory.get_s3_client(task.account))
         raise UnsupportedTaskException(task)

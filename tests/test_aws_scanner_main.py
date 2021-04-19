@@ -107,6 +107,15 @@ class TestAwsScannerMain(AwsScannerTestCase):
         mock_clean.assert_called_once_with()
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
+    def test_main_with_audit_s3_cmd(self, _, __, ___, ____):
+        report = build_test_report("audit_s3")
+        with patch("sys.argv", "prog audit_s3 -u bob -t 123456".split()):
+            with patch(f"{SCANNER_REF}.audit_s3", return_value=report) as mock_audit_s3:
+                with redirect_stdout(StringIO()) as out:
+                    AwsScannerMain()
+        mock_audit_s3.assert_called_once_with()
+        self.assertEqual(f"{to_json(report)}\n", out.getvalue())
+
     def test_main_failure(self, _, __, ___, ____):
         with patch("sys.argv", "prog drop -u bob -t 123456".split()):
             with patch(f"{SCANNER_REF}.clean_athena", side_effect=AwsScannerException("got a problem")):

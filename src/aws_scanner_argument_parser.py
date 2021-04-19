@@ -26,6 +26,7 @@ class AwsScannerCommands:
     list_accounts: str = "list_accounts"
     list_ssm_parameters: str = "list_ssm_parameters"
     drop: str = "drop"
+    audit_s3: str = "audit_s3"
 
 
 class AwsScannerArgumentParser:
@@ -54,12 +55,19 @@ class AwsScannerArgumentParser:
         self._add_list_ssm_parameters_command(subparsers)
         self._add_create_table_command(subparsers)
         self._add_drop_command(subparsers)
+        self._add_audit_s3_command(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
         desc = "drop databases and tables created by tasks"
         drop_parser = subparsers.add_parser(AwsScannerCommands.drop, help=desc, description=desc)
         self._add_auth_args(drop_parser)
+
+    def _add_audit_s3_command(self, subparsers: Any) -> None:
+        desc = "audit S3 bucket compliance"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_s3, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
 
     def _add_create_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table"

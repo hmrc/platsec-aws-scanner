@@ -45,10 +45,12 @@ class TestGetBotoClients(AwsScannerTestCase):
         )
 
     def test_get_s3_boto_client(self) -> None:
+        s3_account = account(identifier="122344566788", name="some_s3_account")
         self.assert_get_client(
             method_under_test="get_s3_boto_client",
+            method_args={"account": s3_account},
             service="s3",
-            target_account=account(identifier="555666777888", name="cloudtrail"),
+            target_account=s3_account,
             role="s3_role",
         )
 
@@ -94,6 +96,15 @@ class TestGetClients(AwsScannerTestCase):
         ):
             ssm_client = AwsClientFactory(self.mfa, self.username).get_ssm_client(account())
             self.assertEqual(ssm_client._ssm, ssm_boto_client)
+
+    def test_get_s3_client(self, _: Mock) -> None:
+        s3_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_s3_boto_client",
+            side_effect=lambda acc: s3_boto_client if acc == account() else None,
+        ):
+            s3_client = AwsClientFactory(self.mfa, self.username).get_s3_client(account())
+            self.assertEqual(s3_client._s3, s3_boto_client)
 
 
 class TestAwsClientFactory(AwsScannerTestCase):

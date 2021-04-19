@@ -5,6 +5,7 @@ from datetime import date
 
 from src.aws_task_builder import AwsTaskBuilder
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
+from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -62,6 +63,13 @@ class TestAwsTaskBuilder(AwsScannerTestCase):
 
         self.assert_tasks_equal(AwsListSSMParametersTask(account("2", "two")), tasks[0])
         self.assert_tasks_equal(AwsListSSMParametersTask(account("4", "four")), tasks[1])
+
+    def test_audit_s3_tasks(self) -> None:
+        mock_orgs = Mock(find_account_by_ids=Mock(return_value=[(account("3", "three")), (account("5", "five"))]))
+        tasks = AwsTaskBuilder(mock_orgs, ["5", "3"]).audit_s3_tasks()
+
+        self.assert_tasks_equal(AwsAuditS3Task(account("3", "three")), tasks[0])
+        self.assert_tasks_equal(AwsAuditS3Task(account("5", "five")), tasks[1])
 
     def assert_tasks_equal(self, expected: AwsTask, actual: AwsTask) -> None:
         self.assertEqual(expected._account, actual._account)
