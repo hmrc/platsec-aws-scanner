@@ -18,4 +18,5 @@ class AwsAuditS3Task(AwsS3Task):
     @staticmethod
     def _enrich_bucket(client: AwsS3Client, bucket: Bucket) -> Bucket:
         bucket.encryption = client.get_bucket_encryption(bucket.name)
+        bucket.logging = client.get_bucket_logging(bucket.name)
         return bucket
