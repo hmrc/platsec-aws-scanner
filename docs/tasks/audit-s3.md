@@ -25,13 +25,24 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "results": {
       "buckets": [
         {
-          "name": "a-bucket"
+          "name": "a-bucket",
+          "encryption": {
+            "enabled": true,
+            "type": "aes"
+          }
         },
         {
-          "name": "another-bucket"
+          "name": "another-bucket",
+          "encryption": {
+            "enabled": false
+          }
         },
         {
-          "name": "some-bucket"
+          "name": "some-bucket",
+          "encryption": {
+            "enabled": true,
+            "type": "cmk"
+          }
         }
       ]
     }
