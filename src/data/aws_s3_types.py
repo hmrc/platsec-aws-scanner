@@ -6,11 +6,12 @@ from typing import Any, Callable, Dict, Optional
 @dataclass
 class Bucket:
     name: str
-    encryption: BucketEncryption
+    encryption: Optional[BucketEncryption] = None
+    logging: Optional[BucketLogging] = None
 
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
-    return Bucket(name=bucket_dict["Name"], encryption=BucketEncryption())
+    return Bucket(name=bucket_dict["Name"])
 
 
 @dataclass
@@ -30,3 +31,12 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     }
 
     return algo_mapping[algorithm]()
+
+
+@dataclass
+class BucketLogging:
+    enabled: bool = False
+
+
+def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
+    return BucketLogging(enabled="LoggingEnabled" in logging_dict)

@@ -46,3 +46,8 @@ GET_BUCKET_ENCRYPTION_KEYLESS = {
         "Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms"}}]
     }
 }
+
+GET_BUCKET_LOGGING_ENABLED = {
+    "LoggingEnabled": {"TargetBucket": "some-target-bucket", "TargetPrefix": "some-target-prefix"}
+}
+GET_BUCKET_LOGGING_DISABLED = {}

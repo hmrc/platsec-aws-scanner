@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_organizations_types import Account, OrganizationalUnit
-from src.data.aws_s3_types import Bucket, BucketEncryption
+from src.data.aws_s3_types import Bucket, BucketEncryption, BucketLogging
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
@@ -88,5 +88,11 @@ def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> Buck
     return BucketEncryption(enabled=enabled, type=type)
 
 
-def bucket(name: str = "a_bucket", encryption: BucketEncryption = bucket_encryption()) -> Bucket:
-    return Bucket(name=name, encryption=encryption)
+def bucket_logging(enabled: bool = False) -> BucketLogging:
+    return BucketLogging(enabled=enabled)
+
+
+def bucket(
+    name: str = "a_bucket", encryption: Optional[BucketEncryption] = None, logging: Optional[BucketLogging] = None
+) -> Bucket:
+    return Bucket(name=name, encryption=encryption, logging=logging)

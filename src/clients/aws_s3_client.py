@@ -4,7 +4,14 @@ from typing import List
 from botocore.client import BaseClient
 
 from src.clients import boto_try
-from src.data.aws_s3_types import Bucket, BucketEncryption, to_bucket, to_bucket_encryption
+from src.data.aws_s3_types import (
+    Bucket,
+    BucketEncryption,
+    BucketLogging,
+    to_bucket,
+    to_bucket_encryption,
+    to_bucket_logging,
+)
 
 
 class AwsS3Client:
@@ -21,4 +28,12 @@ class AwsS3Client:
             lambda: to_bucket_encryption(self._s3.get_bucket_encryption(Bucket=bucket)),
             BucketEncryption,
             f"unable to fetch encryption config for bucket '{bucket}'",
+        )
+
+    def get_bucket_logging(self, bucket: str) -> BucketLogging:
+        self._logger.debug(f"fetching server access logging config for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_logging(self._s3.get_bucket_logging(Bucket=bucket)),
+            BucketLogging,
+            f"unable to fetch server access logging config for bucket '{bucket}'",
         )

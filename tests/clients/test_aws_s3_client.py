@@ -9,7 +9,7 @@ from src.clients.aws_s3_client import AwsS3Client
 
 from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
-from tests.test_types_generator import bucket, bucket_encryption, client_error
+from tests.test_types_generator import bucket, bucket_encryption, bucket_logging, client_error
 
 
 class TestAwsS3ClientListBuckets(AwsScannerTestCase):
@@ -59,3 +59,29 @@ class TestAwsS3ClientGetBucketEncryption(AwsScannerTestCase):
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(bucket_encryption(enabled=False), self.s3_client().get_bucket_encryption("bad-bucket"))
         self.assertIn("ServerSideEncryptionConfigurationNotFoundError", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketLogging(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_logging(**kwargs) -> Dict[Any, Any]:
+        return {
+            "logging-enabled-bucket": lambda: responses.GET_BUCKET_LOGGING_ENABLED,
+            "logging-disabled-bucket": lambda: responses.GET_BUCKET_LOGGING_DISABLED,
+            "denied-bucket": lambda: _raise(client_error("GetBucketLogging", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_logging=Mock(side_effect=self.get_bucket_logging)))
+
+    def test_get_bucket_logging_enabled(self) -> None:
+        logging = bucket_logging(enabled=True)
+        self.assertEqual(logging, self.s3_client().get_bucket_logging("logging-enabled-bucket"))
+
+    def test_get_bucket_logging_disabled(self) -> None:
+        logging = bucket_logging(enabled=False)
+        self.assertEqual(logging, self.s3_client().get_bucket_logging("logging-disabled-bucket"))
+
+    def test_get_bucket_logging_failure(self) -> None:
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(bucket_logging(enabled=False), self.s3_client().get_bucket_logging("denied-bucket"))
+        self.assertIn("AccessDenied", err.getvalue())

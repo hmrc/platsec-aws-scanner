@@ -29,12 +29,18 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "encryption": {
             "enabled": true,
             "type": "aes"
+          },
+          "logging": {
+            "enabled": false
           }
         },
         {
           "name": "another-bucket",
           "encryption": {
             "enabled": false
+          },
+          "logging": {
+            "enabled": true
           }
         },
         {
@@ -42,6 +48,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "encryption": {
             "enabled": true,
             "type": "cmk"
+          },
+          "logging": {
+            "enabled": false
           }
         }
       ]
