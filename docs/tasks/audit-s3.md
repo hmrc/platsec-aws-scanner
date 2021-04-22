@@ -28,9 +28,12 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "name": "a-bucket",
           "encryption": {
             "enabled": true,
-            "type": "aes"
+            "type": "cmk"
           },
           "logging": {
+            "enabled": false
+          },
+          "secure_transport": {
             "enabled": false
           }
         },
@@ -41,16 +44,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           },
           "logging": {
             "enabled": true
-          }
-        },
-        {
-          "name": "some-bucket",
-          "encryption": {
-            "enabled": true,
-            "type": "cmk"
           },
-          "logging": {
-            "enabled": false
+          "secure_transport":  {
+            "enabled": true
           }
         }
       ]

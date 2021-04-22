@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from json import loads
 from typing import Any, Callable, Dict, Optional
 
 
@@ -8,6 +9,7 @@ class Bucket:
     name: str
     encryption: Optional[BucketEncryption] = None
     logging: Optional[BucketLogging] = None
+    secure_transport: Optional[BucketSecureTransport] = None
 
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
@@ -40,3 +42,17 @@ class BucketLogging:
 
 def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
     return BucketLogging(enabled="LoggingEnabled" in logging_dict)
+
+
+@dataclass
+class BucketSecureTransport:
+    enabled: bool = False
+
+
+def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecureTransport:
+    statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
+    return BucketSecureTransport(enabled=bool(list(filter(_has_secure_transport, statements))))
+
+
+def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
+    return policy.get("Effect") == "Deny" and policy.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}

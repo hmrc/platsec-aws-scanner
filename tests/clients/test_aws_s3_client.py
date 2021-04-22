@@ -9,7 +9,7 @@ from src.clients.aws_s3_client import AwsS3Client
 
 from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
-from tests.test_types_generator import bucket, bucket_encryption, bucket_logging, client_error
+from tests.test_types_generator import bucket, bucket_encryption, bucket_logging, bucket_secure_transport, client_error
 
 
 class TestAwsS3ClientListBuckets(AwsScannerTestCase):
@@ -84,4 +84,31 @@ class TestAwsS3ClientGetBucketLogging(AwsScannerTestCase):
     def test_get_bucket_logging_failure(self) -> None:
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(bucket_logging(enabled=False), self.s3_client().get_bucket_logging("denied-bucket"))
+        self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketSecureTransport(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
+        return {
+            "bucket": lambda: responses.GET_BUCKET_POLICY,
+            "secure-bucket": lambda: responses.GET_BUCKET_POLICY_SECURE_TRANSPORT,
+            "denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
+
+    def test_get_bucket_secure_transport_disabled(self) -> None:
+        secure_transport = bucket_secure_transport(enabled=False)
+        self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("bucket"))
+
+    def test_get_bucket_secure_transport_enabled(self) -> None:
+        secure_transport = bucket_secure_transport(enabled=True)
+        self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("secure-bucket"))
+
+    def test_get_bucket_secure_transport_failure(self) -> None:
+        secure_transport = bucket_secure_transport(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("denied"))
         self.assertIn("AccessDenied", err.getvalue())
