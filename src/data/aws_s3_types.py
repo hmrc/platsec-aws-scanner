@@ -9,6 +9,7 @@ class Bucket:
     name: str
     encryption: Optional[BucketEncryption] = None
     logging: Optional[BucketLogging] = None
+    public_access_block: Optional[BucketPublicAccessBlock] = None
     secure_transport: Optional[BucketSecureTransport] = None
 
 
@@ -56,3 +57,13 @@ def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecu
 
 def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
     return policy.get("Effect") == "Deny" and policy.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}
+
+
+@dataclass
+class BucketPublicAccessBlock:
+    enabled: bool = False
+
+
+def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
+    config = public_access_block_dict["PublicAccessBlockConfiguration"]
+    return BucketPublicAccessBlock(enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"])

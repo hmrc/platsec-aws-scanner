@@ -3,7 +3,14 @@ from unittest.mock import Mock
 
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 
-from tests.test_types_generator import account, bucket, bucket_encryption, bucket_logging, bucket_secure_transport
+from tests.test_types_generator import (
+    account,
+    bucket,
+    bucket_encryption,
+    bucket_logging,
+    bucket_public_access_block,
+    bucket_secure_transport,
+)
 
 
 class TestAwsAuditS3Task(AwsScannerTestCase):
@@ -25,11 +32,17 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_2: bucket_secure_transport(enabled=True),
             bucket_3: bucket_secure_transport(enabled=False),
         }
+        public_access_block_mapping = {
+            bucket_1: bucket_public_access_block(enabled=False),
+            bucket_2: bucket_public_access_block(enabled=True),
+            bucket_3: bucket_public_access_block(enabled=True),
+        }
 
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
             get_bucket_encryption=Mock(side_effect=lambda b: encryption_mapping[b]),
             get_bucket_logging=Mock(side_effect=lambda b: logging_mapping[b]),
+            get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
             get_bucket_secure_transport=Mock(side_effect=lambda b: secure_transport_mapping[b]),
         )
 
@@ -38,22 +51,25 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             {
                 "buckets": [
                     bucket(
-                        bucket_1,
-                        bucket_encryption(enabled=True, type="cmk"),
-                        bucket_logging(enabled=False),
-                        bucket_secure_transport(enabled=True),
+                        name=bucket_1,
+                        encryption=bucket_encryption(enabled=True, type="cmk"),
+                        logging=bucket_logging(enabled=False),
+                        public_access_block=bucket_public_access_block(enabled=False),
+                        secure_transport=bucket_secure_transport(enabled=True),
                     ),
                     bucket(
-                        bucket_2,
-                        bucket_encryption(enabled=False),
-                        bucket_logging(enabled=False),
-                        bucket_secure_transport(enabled=True),
+                        name=bucket_2,
+                        encryption=bucket_encryption(enabled=False),
+                        logging=bucket_logging(enabled=False),
+                        public_access_block=bucket_public_access_block(enabled=True),
+                        secure_transport=bucket_secure_transport(enabled=True),
                     ),
                     bucket(
-                        bucket_3,
-                        bucket_encryption(enabled=True, type="aws"),
-                        bucket_logging(enabled=True),
-                        bucket_secure_transport(enabled=False),
+                        name=bucket_3,
+                        encryption=bucket_encryption(enabled=True, type="aws"),
+                        logging=bucket_logging(enabled=True),
+                        public_access_block=bucket_public_access_block(enabled=True),
+                        secure_transport=bucket_secure_transport(enabled=False),
                     ),
                 ]
             },

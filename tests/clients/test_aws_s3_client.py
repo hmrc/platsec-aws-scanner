@@ -3,13 +3,20 @@ from unittest.mock import Mock
 
 from contextlib import redirect_stderr
 from io import StringIO
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.clients.aws_s3_client import AwsS3Client
 
 from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
-from tests.test_types_generator import bucket, bucket_encryption, bucket_logging, bucket_secure_transport, client_error
+from tests.test_types_generator import (
+    bucket,
+    bucket_encryption,
+    bucket_logging,
+    bucket_public_access_block,
+    bucket_secure_transport,
+    client_error,
+)
 
 
 class TestAwsS3ClientListBuckets(AwsScannerTestCase):
@@ -111,4 +118,52 @@ class TestAwsS3ClientGetBucketSecureTransport(AwsScannerTestCase):
         secure_transport = bucket_secure_transport(enabled=False)
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("denied"))
+        self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketPublicAccessBlock(AwsScannerTestCase):
+    @staticmethod
+    def s3_client(public_access_block_response: Optional[Dict[Any, Any]] = None) -> AwsS3Client:
+        return AwsS3Client(
+            Mock(
+                get_public_access_block=Mock(
+                    side_effect=lambda **kwargs: public_access_block_response
+                    if kwargs.get("Bucket") == "bucket"
+                    else _raise(client_error("GetPublicAccessBlock", "AccessDenied", "Access Denied")),
+                )
+            )
+        )
+
+    def test_get_bucket_public_access_block(self) -> None:
+        blocked = bucket_public_access_block(enabled=True)
+        not_blocked = bucket_public_access_block(enabled=False)
+
+        scenarios = [
+            {"response": responses.public_access_block(False, False, False, False), "state": not_blocked},
+            {"response": responses.public_access_block(False, False, False, True), "state": not_blocked},
+            {"response": responses.public_access_block(False, False, True, False), "state": not_blocked},
+            {"response": responses.public_access_block(False, True, False, False), "state": not_blocked},
+            {"response": responses.public_access_block(True, False, False, False), "state": not_blocked},
+            {"response": responses.public_access_block(False, False, True, True), "state": not_blocked},
+            {"response": responses.public_access_block(True, True, False, False), "state": not_blocked},
+            {"response": responses.public_access_block(False, True, False, True), "state": blocked},
+            {"response": responses.public_access_block(True, False, True, False), "state": not_blocked},
+            {"response": responses.public_access_block(True, False, False, True), "state": not_blocked},
+            {"response": responses.public_access_block(False, True, True, False), "state": not_blocked},
+            {"response": responses.public_access_block(False, True, True, True), "state": blocked},
+            {"response": responses.public_access_block(True, True, True, False), "state": not_blocked},
+            {"response": responses.public_access_block(True, True, False, True), "state": blocked},
+            {"response": responses.public_access_block(True, False, True, True), "state": not_blocked},
+            {"response": responses.public_access_block(True, True, True, True), "state": blocked},
+        ]
+
+        for scenario in scenarios:
+            self.assertEqual(
+                scenario["state"], self.s3_client(scenario["response"]).get_bucket_public_access_block("bucket")
+            )
+
+    def test_get_bucket_public_access_block_failure(self) -> None:
+        not_blocked = bucket_public_access_block(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(not_blocked, self.s3_client().get_bucket_public_access_block("denied"))
         self.assertIn("AccessDenied", err.getvalue())
