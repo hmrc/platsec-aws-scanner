@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_organizations_types import Account, OrganizationalUnit
-from src.data.aws_s3_types import Bucket, BucketEncryption, BucketLogging
+from src.data.aws_s3_types import Bucket, BucketEncryption, BucketLogging, BucketSecureTransport
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
@@ -92,7 +92,14 @@ def bucket_logging(enabled: bool = False) -> BucketLogging:
     return BucketLogging(enabled=enabled)
 
 
+def bucket_secure_transport(enabled: bool = False) -> BucketSecureTransport:
+    return BucketSecureTransport(enabled=enabled)
+
+
 def bucket(
-    name: str = "a_bucket", encryption: Optional[BucketEncryption] = None, logging: Optional[BucketLogging] = None
+    name: str = "a_bucket",
+    encryption: Optional[BucketEncryption] = None,
+    logging: Optional[BucketLogging] = None,
+    secure_transport: Optional[BucketSecureTransport] = None,
 ) -> Bucket:
-    return Bucket(name=name, encryption=encryption, logging=logging)
+    return Bucket(name=name, encryption=encryption, logging=logging, secure_transport=secure_transport)

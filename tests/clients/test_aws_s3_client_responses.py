@@ -51,3 +51,31 @@ GET_BUCKET_LOGGING_ENABLED = {
     "LoggingEnabled": {"TargetBucket": "some-target-bucket", "TargetPrefix": "some-target-prefix"}
 }
 GET_BUCKET_LOGGING_DISABLED = {}
+
+GET_BUCKET_POLICY = {
+    "Policy": '{"Statement": [{"Effect": "Allow", "Principal": "*", "Action": "s3:getObject", "Resource": "*"}]}'
+}
+GET_BUCKET_POLICY_SECURE_TRANSPORT = {
+    "Policy": """{
+        "Statement": [
+            {
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObject",
+                "Resource": "arn:aws:s3:::some-bucket/*",
+                "Condition": {"Null": {"s3:x-amz-server-side-encryption": "true"}}
+            },
+            {
+                "Sid": "2",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:*",
+                "Resource": [
+                    "arn:aws:s3:::secure-bucket/*",
+                    "arn:aws:s3:::secure-bucket"
+                ],
+                "Condition": {"Bool": {"aws:SecureTransport": "false"}}
+            }
+        ]
+    }"""
+}
