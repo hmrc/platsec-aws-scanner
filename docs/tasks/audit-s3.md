@@ -33,6 +33,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "logging": {
             "enabled": false
           },
+          "public_access_block": {
+            "enabled": false
+          },
           "secure_transport": {
             "enabled": false
           }
@@ -43,6 +46,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
             "enabled": false
           },
           "logging": {
+            "enabled": true
+          },
+          "public_access_block": {
             "enabled": true
           },
           "secure_transport":  {

@@ -1,3 +1,5 @@
+from typing import Dict
+
 LIST_BUCKETS = {
     "Buckets": [
         {"Name": "a-bucket", "CreationDate": "2015, 1, 1"},
@@ -79,3 +81,16 @@ GET_BUCKET_POLICY_SECURE_TRANSPORT = {
         ]
     }"""
 }
+
+
+def public_access_block(
+    block_public_acls: bool, ignore_public_acls: bool, block_public_policy: bool, restrict_public_buckets: bool
+) -> Dict[str, Dict[str, bool]]:
+    return {
+        "PublicAccessBlockConfiguration": {
+            "BlockPublicAcls": block_public_acls,
+            "IgnorePublicAcls": ignore_public_acls,
+            "BlockPublicPolicy": block_public_policy,
+            "RestrictPublicBuckets": restrict_public_buckets,
+        }
+    }

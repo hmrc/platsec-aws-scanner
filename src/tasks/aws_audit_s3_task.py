@@ -19,5 +19,6 @@ class AwsAuditS3Task(AwsS3Task):
     def _enrich_bucket(client: AwsS3Client, bucket: Bucket) -> Bucket:
         bucket.encryption = client.get_bucket_encryption(bucket.name)
         bucket.logging = client.get_bucket_logging(bucket.name)
+        bucket.public_access_block = client.get_bucket_public_access_block(bucket.name)
         bucket.secure_transport = client.get_bucket_secure_transport(bucket.name)
         return bucket

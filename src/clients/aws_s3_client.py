@@ -8,10 +8,12 @@ from src.data.aws_s3_types import (
     Bucket,
     BucketEncryption,
     BucketLogging,
+    BucketPublicAccessBlock,
     BucketSecureTransport,
     to_bucket,
     to_bucket_encryption,
     to_bucket_logging,
+    to_bucket_public_access_block,
     to_bucket_secure_transport,
 )
 
@@ -46,4 +48,12 @@ class AwsS3Client:
             lambda: to_bucket_secure_transport(self._s3.get_bucket_policy(Bucket=bucket)),
             BucketSecureTransport,
             f"unable to fetch policy for bucket '{bucket}'",
+        )
+
+    def get_bucket_public_access_block(self, bucket: str) -> BucketPublicAccessBlock:
+        self._logger.debug(f"fetching public access block for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_public_access_block(self._s3.get_public_access_block(Bucket=bucket)),
+            BucketPublicAccessBlock,
+            f"unable to fetch public access block for bucket '{bucket}'",
         )
