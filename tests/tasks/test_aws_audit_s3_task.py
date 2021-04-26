@@ -6,6 +6,7 @@ from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from tests.test_types_generator import (
     account,
     bucket,
+    bucket_data_sensitivity_tagging,
     bucket_encryption,
     bucket_logging,
     bucket_public_access_block,
@@ -37,6 +38,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_2: bucket_public_access_block(enabled=True),
             bucket_3: bucket_public_access_block(enabled=True),
         }
+        data_sensitivity_tagging = {
+            bucket_1: bucket_data_sensitivity_tagging(enabled=True),
+            bucket_2: bucket_data_sensitivity_tagging(enabled=False),
+            bucket_3: bucket_data_sensitivity_tagging(enabled=False),
+        }
 
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
@@ -44,6 +50,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             get_bucket_logging=Mock(side_effect=lambda b: logging_mapping[b]),
             get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
             get_bucket_secure_transport=Mock(side_effect=lambda b: secure_transport_mapping[b]),
+            get_bucket_data_sensitivity_tagging=Mock(side_effect=lambda b: data_sensitivity_tagging[b]),
         )
 
         task_report = AwsAuditS3Task(account())._run_task(s3_client)
@@ -52,6 +59,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                 "buckets": [
                     bucket(
                         name=bucket_1,
+                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=True),
                         encryption=bucket_encryption(enabled=True, type="cmk"),
                         logging=bucket_logging(enabled=False),
                         public_access_block=bucket_public_access_block(enabled=False),
@@ -59,6 +67,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     ),
                     bucket(
                         name=bucket_2,
+                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=False),
                         encryption=bucket_encryption(enabled=False),
                         logging=bucket_logging(enabled=False),
                         public_access_block=bucket_public_access_block(enabled=True),
@@ -66,6 +75,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     ),
                     bucket(
                         name=bucket_3,
+                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=False),
                         encryption=bucket_encryption(enabled=True, type="aws"),
                         logging=bucket_logging(enabled=True),
                         public_access_block=bucket_public_access_block(enabled=True),

@@ -9,6 +9,7 @@ from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
+    BucketDataSensitivityTagging,
     BucketEncryption,
     BucketLogging,
     BucketPublicAccessBlock,
@@ -90,6 +91,10 @@ def client_error(op_name: str, code: str, msg: str) -> ClientError:
     return ClientError(operation_name=op_name, error_response={"Error": {"Code": code, "Message": msg}})
 
 
+def bucket_data_sensitivity_tagging(enabled: bool = False) -> BucketDataSensitivityTagging:
+    return BucketDataSensitivityTagging(enabled=enabled)
+
+
 def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> BucketEncryption:
     return BucketEncryption(enabled=enabled, type=type)
 
@@ -108,6 +113,7 @@ def bucket_secure_transport(enabled: bool = False) -> BucketSecureTransport:
 
 def bucket(
     name: str = "a_bucket",
+    data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None,
     encryption: Optional[BucketEncryption] = None,
     logging: Optional[BucketLogging] = None,
     public_access_block: Optional[BucketPublicAccessBlock] = None,
@@ -115,6 +121,7 @@ def bucket(
 ) -> Bucket:
     return Bucket(
         name=name,
+        data_sensitivity_tagging=data_sensitivity_tagging,
         encryption=encryption,
         logging=logging,
         public_access_block=public_access_block,
