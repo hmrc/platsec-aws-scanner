@@ -1,12 +1,13 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from json import loads
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 
 @dataclass
 class Bucket:
     name: str
+    data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None
     encryption: Optional[BucketEncryption] = None
     logging: Optional[BucketLogging] = None
     public_access_block: Optional[BucketPublicAccessBlock] = None
@@ -67,3 +68,16 @@ class BucketPublicAccessBlock:
 def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
     config = public_access_block_dict["PublicAccessBlockConfiguration"]
     return BucketPublicAccessBlock(enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"])
+
+
+@dataclass
+class BucketDataSensitivityTagging:
+    enabled: bool = False
+
+
+def to_bucket_data_sensitivity_tagging(tagging_dict: Dict[str, List[Dict[str, str]]]) -> BucketDataSensitivityTagging:
+    return BucketDataSensitivityTagging(enabled=_has_data_sensitivity_tagging(tagging_dict["TagSet"]))
+
+
+def _has_data_sensitivity_tagging(tags: List[Dict[str, str]]) -> bool:
+    return bool(list(filter(lambda tag: tag["Key"] == "data_sensitivity" and tag["Value"] in ["high", "low"], tags)))

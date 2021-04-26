@@ -26,6 +26,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
       "buckets": [
         {
           "name": "a-bucket",
+          "data_sensitivity_tagging": {
+            "enabled": false
+          },
           "encryption": {
             "enabled": true,
             "type": "cmk"
@@ -42,6 +45,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
         },
         {
           "name": "another-bucket",
+          "data_sensitivity_tagging":  {
+            "enabled": true
+          },
           "encryption": {
             "enabled": false
           },

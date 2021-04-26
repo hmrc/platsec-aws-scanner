@@ -11,6 +11,7 @@ from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
 from tests.test_types_generator import (
     bucket,
+    bucket_data_sensitivity_tagging,
     bucket_encryption,
     bucket_logging,
     bucket_public_access_block,
@@ -167,3 +168,40 @@ class TestAwsS3ClientGetBucketPublicAccessBlock(AwsScannerTestCase):
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(not_blocked, self.s3_client().get_bucket_public_access_block("denied"))
         self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
+        return {
+            "low-sensitivity": lambda: responses.GET_BUCKET_TAGGING_LOW_SENSITIVITY,
+            "high-sensitivity": lambda: responses.GET_BUCKET_TAGGING_HIGH_SENSITIVITY,
+            "unknown-sensitivity": lambda: responses.GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY,
+            "no-sensitivity": lambda: responses.GET_BUCKET_TAGGING_NO_SENSITIVITY,
+            "no-tag": lambda: _raise(client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
+
+    def test_get_bucket_data_sensitivity_tagging_low(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=True)
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("low-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_tagging_high(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=True)
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("high-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_tagging_unknown(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("unknown-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_no_sensitivity(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_tagging_failure(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-tag"))
+        self.assertIn("NoSuchTagSet", err.getvalue())

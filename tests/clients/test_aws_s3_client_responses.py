@@ -94,3 +94,9 @@ def public_access_block(
             "RestrictPublicBuckets": restrict_public_buckets,
         }
     }
+
+
+GET_BUCKET_TAGGING_HIGH_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "high"}]}
+GET_BUCKET_TAGGING_LOW_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "low"}]}
+GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "unexpected"}]}
+GET_BUCKET_TAGGING_NO_SENSITIVITY = {"TagSet": [{"Key": "some_tag", "Value": "some_value"}]}
