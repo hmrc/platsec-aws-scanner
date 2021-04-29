@@ -52,7 +52,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
             "enabled":  false
           },
           "data_sensitivity_tagging":  {
-            "enabled": true
+            "enabled": true,
+            "type": "high"
           },
           "encryption": {
             "enabled": false

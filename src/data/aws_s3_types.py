@@ -105,11 +105,10 @@ def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, 
 @dataclass
 class BucketDataSensitivityTagging:
     enabled: bool = False
+    type: Optional[str] = None
 
 
-def to_bucket_data_sensitivity_tagging(tagging_dict: Dict[str, List[Dict[str, str]]]) -> BucketDataSensitivityTagging:
-    return BucketDataSensitivityTagging(enabled=_has_data_sensitivity_tagging(tagging_dict["TagSet"]))
-
-
-def _has_data_sensitivity_tagging(tags: List[Dict[str, str]]) -> bool:
-    return bool(list(filter(lambda tag: tag["Key"] == "data_sensitivity" and tag["Value"] in ["high", "low"], tags)))
+def to_bucket_data_sensitivity_tagging(tag_dict: Dict[str, List[Dict[str, str]]]) -> BucketDataSensitivityTagging:
+    tags = list(filter(lambda t: t["Key"] == "data_sensitivity" and t["Value"] in ["high", "low"], tag_dict["TagSet"]))
+    data_sensitivity = tags[0]["Value"] if tags else None
+    return BucketDataSensitivityTagging(enabled=bool(data_sensitivity), type=data_sensitivity)

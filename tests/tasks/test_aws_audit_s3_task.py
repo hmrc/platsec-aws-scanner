@@ -45,9 +45,9 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_3: bucket_public_access_block(enabled=True),
         }
         data_sensitivity_tagging = {
-            bucket_1: bucket_data_sensitivity_tagging(enabled=True),
+            bucket_1: bucket_data_sensitivity_tagging(enabled=True, type="low"),
             bucket_2: bucket_data_sensitivity_tagging(enabled=False),
-            bucket_3: bucket_data_sensitivity_tagging(enabled=False),
+            bucket_3: bucket_data_sensitivity_tagging(enabled=True, type="high"),
         }
 
         s3_client = Mock(
@@ -67,7 +67,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     bucket(
                         name=bucket_1,
                         content_deny=bucket_content_deny(enabled=False),
-                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=True),
+                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=True, type="low"),
                         encryption=bucket_encryption(enabled=True, type="cmk"),
                         logging=bucket_logging(enabled=False),
                         public_access_block=bucket_public_access_block(enabled=False),
@@ -85,7 +85,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     bucket(
                         name=bucket_3,
                         content_deny=bucket_content_deny(enabled=True),
-                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=False),
+                        data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=True, type="high"),
                         encryption=bucket_encryption(enabled=True, type="aws"),
                         logging=bucket_logging(enabled=True),
                         public_access_block=bucket_public_access_block(enabled=True),
