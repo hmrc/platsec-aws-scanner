@@ -1,3 +1,4 @@
+from json import dumps
 from typing import Dict
 
 LIST_BUCKETS = {
@@ -100,3 +101,57 @@ GET_BUCKET_TAGGING_HIGH_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "V
 GET_BUCKET_TAGGING_LOW_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "low"}]}
 GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_SENSITIVITY = {"TagSet": [{"Key": "some_tag", "Value": "some_value"}]}
+
+GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT = {
+    "Policy": dumps({"Statement": [{"Effect": "Deny", "Action": ["s3:GetObject*", "s3:PutObject", "s3:DeleteObject"]}]})
+}
+GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SEPARATE_STATEMENTS = {
+    "Policy": dumps(
+        {
+            "Statement": [
+                {"Effect": "Deny", "Action": "s3:GetObject"},
+                {"Effect": "Deny", "Action": "s3:PutObject*"},
+                {"Effect": "Deny", "Action": "s3:DeleteObject"},
+            ]
+        }
+    )
+}
+GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_MIXED_STATEMENTS = {
+    "Policy": dumps(
+        {
+            "Statement": [
+                {"Effect": "Deny", "Action": ["s3:GetObject", "s3:PutObject"]},
+                {"Effect": "Deny", "Action": "s3:DeleteObject*"},
+            ]
+        }
+    )
+}
+GET_BUCKET_POLICY_DENY_GET_PUT_SINGLE_STATEMENT = {
+    "Policy": dumps({"Statement": [{"Effect": "Deny", "Action": ["s3:GetObject", "s3:PutObject"]}]})
+}
+GET_BUCKET_POLICY_DENY_GET_DELETE_SEPARATE_STATEMENTS = {
+    "Policy": dumps(
+        {"Statement": [{"Effect": "Deny", "Action": "s3:GetObject"}, {"Effect": "Deny", "Action": "s3:DeleteObject"}]}
+    )
+}
+GET_BUCKET_POLICY_DENY_PUT_DELETE_MIXED_STATEMENTS = {
+    "Policy": dumps(
+        {
+            "Statement": [
+                {"Effect": "Deny", "Action": ["s3:SomethingElse", "s3:PutObject"]},
+                {"Effect": "Deny", "Action": "s3:DeleteObject"},
+            ]
+        }
+    )
+}
+GET_BUCKET_POLICY_ALLOW_GET_PUT_DELETE_MIXED_STATEMENTS = {
+    "Policy": dumps(
+        {
+            "Statement": [
+                {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"]},
+                {"Effect": "Allow", "Action": "s3:DeleteObject"},
+            ]
+        }
+    )
+}
+GET_BUCKET_POLICY_DENY_OTHER = {"Policy": dumps({"Statement": [{"Effect": "Deny", "Action": "s3:SomeAction"}]})}

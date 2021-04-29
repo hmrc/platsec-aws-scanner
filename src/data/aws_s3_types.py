@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from functools import reduce
 from json import loads
 from typing import Any, Callable, Dict, List, Optional
 
@@ -7,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional
 @dataclass
 class Bucket:
     name: str
+    content_deny: Optional[BucketContentDeny] = None
     data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None
     encryption: Optional[BucketEncryption] = None
     logging: Optional[BucketLogging] = None
@@ -16,6 +18,36 @@ class Bucket:
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
     return Bucket(name=bucket_dict["Name"])
+
+
+@dataclass
+class BucketContentDeny:
+    enabled: bool = False
+
+
+def to_bucket_content_deny(bucket_policy_dict: Dict[Any, Any]) -> BucketContentDeny:
+    statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
+    deny_actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    return BucketContentDeny(
+        enabled=reduce(lambda a, b: a and b, map(lambda action: _has_denied_action(statements, action), deny_actions))
+    )
+
+
+def _has_denied_action(statements: List[Dict[Any, Any]], action: str) -> bool:
+    return reduce(lambda a, b: a or b, map(lambda statement: _is_denied(statement, action), statements))
+
+
+def _is_denied(statement: Dict[Any, Any], deny_action: str) -> bool:
+    action = statement.get("Action")
+    return statement.get("Effect") == "Deny" and (_is_action(action, deny_action) or _has_action(action, deny_action))
+
+
+def _is_action(action: Any, expected: str) -> bool:
+    return type(action) is str and action.startswith(expected)
+
+
+def _has_action(actions: Any, expected: str) -> bool:
+    return type(actions) is list and bool(list(filter(lambda action: _is_action(action, expected), actions)))
 
 
 @dataclass

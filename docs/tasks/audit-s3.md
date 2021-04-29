@@ -26,6 +26,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
       "buckets": [
         {
           "name": "a-bucket",
+          "content_deny": {
+            "enabled": true
+          },
           "data_sensitivity_tagging": {
             "enabled": false
           },
@@ -45,6 +48,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
         },
         {
           "name": "another-bucket",
+          "content_deny":  {
+            "enabled":  false
+          },
           "data_sensitivity_tagging":  {
             "enabled": true
           },

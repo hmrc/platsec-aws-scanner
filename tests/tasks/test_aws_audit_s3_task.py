@@ -6,6 +6,7 @@ from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from tests.test_types_generator import (
     account,
     bucket,
+    bucket_content_deny,
     bucket_data_sensitivity_tagging,
     bucket_encryption,
     bucket_logging,
@@ -18,6 +19,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
     def test_run_task(self) -> None:
         bucket_1, bucket_2, bucket_3 = "bucket-1", "bucket-2", "another_bucket"
         buckets = [bucket(bucket_1), bucket(bucket_2), bucket(bucket_3)]
+        content_deny_mapping = {
+            bucket_1: bucket_content_deny(enabled=False),
+            bucket_2: bucket_content_deny(enabled=True),
+            bucket_3: bucket_content_deny(enabled=True),
+        }
         encryption_mapping = {
             bucket_1: bucket_encryption(enabled=True, type="cmk"),
             bucket_2: bucket_encryption(enabled=False),
@@ -46,6 +52,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
 
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
+            get_bucket_content_deny=Mock(side_effect=lambda b: content_deny_mapping[b]),
             get_bucket_encryption=Mock(side_effect=lambda b: encryption_mapping[b]),
             get_bucket_logging=Mock(side_effect=lambda b: logging_mapping[b]),
             get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
@@ -59,6 +66,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                 "buckets": [
                     bucket(
                         name=bucket_1,
+                        content_deny=bucket_content_deny(enabled=False),
                         data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=True),
                         encryption=bucket_encryption(enabled=True, type="cmk"),
                         logging=bucket_logging(enabled=False),
@@ -67,6 +75,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     ),
                     bucket(
                         name=bucket_2,
+                        content_deny=bucket_content_deny(enabled=True),
                         data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=False),
                         encryption=bucket_encryption(enabled=False),
                         logging=bucket_logging(enabled=False),
@@ -75,6 +84,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     ),
                     bucket(
                         name=bucket_3,
+                        content_deny=bucket_content_deny(enabled=True),
                         data_sensitivity_tagging=bucket_data_sensitivity_tagging(enabled=False),
                         encryption=bucket_encryption(enabled=True, type="aws"),
                         logging=bucket_logging(enabled=True),

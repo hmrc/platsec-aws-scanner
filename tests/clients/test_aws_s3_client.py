@@ -11,6 +11,7 @@ from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
 from tests.test_types_generator import (
     bucket,
+    bucket_content_deny,
     bucket_data_sensitivity_tagging,
     bucket_encryption,
     bucket_logging,
@@ -205,3 +206,60 @@ class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-tag"))
         self.assertIn("NoSuchTagSet", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
+        return {
+            "deny-single": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT,
+            "deny-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SEPARATE_STATEMENTS,
+            "deny-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_MIXED_STATEMENTS,
+            "deny-incomplete": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_SINGLE_STATEMENT,
+            "deny-incomplete-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_DELETE_SEPARATE_STATEMENTS,
+            "deny-incomplete-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_PUT_DELETE_MIXED_STATEMENTS,
+            "allow-mixed": lambda: responses.GET_BUCKET_POLICY_ALLOW_GET_PUT_DELETE_MIXED_STATEMENTS,
+            "deny-other": lambda: responses.GET_BUCKET_POLICY_DENY_OTHER,
+            "access-denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
+
+    def test_get_bucket_content_deny_single(self) -> None:
+        content_deny = bucket_content_deny(enabled=True)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-single"))
+
+    def test_get_bucket_content_deny_separate(self) -> None:
+        content_deny = bucket_content_deny(enabled=True)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-separate"))
+
+    def test_get_bucket_content_deny_mixed(self) -> None:
+        content_deny = bucket_content_deny(enabled=True)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-mixed"))
+
+    def test_get_bucket_content_deny_incomplete(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete"))
+
+    def test_get_bucket_content_deny_incomplete_separate(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete-separate"))
+
+    def test_get_bucket_content_deny_incomplete_mixed(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete-mixed"))
+
+    def test_get_bucket_content_deny_allow_mixed(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("allow-mixed"))
+
+    def test_get_bucket_content_deny_other(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-other"))
+
+    def test_get_bucket_content_deny_failure(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("access-denied"))
+        self.assertIn("AccessDenied", err.getvalue())
