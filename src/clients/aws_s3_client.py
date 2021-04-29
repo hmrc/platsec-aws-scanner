@@ -10,6 +10,7 @@ from src.data.aws_s3_types import (
     BucketDataSensitivityTagging,
     BucketEncryption,
     BucketLogging,
+    BucketMFADelete,
     BucketPublicAccessBlock,
     BucketSecureTransport,
     to_bucket,
@@ -17,6 +18,7 @@ from src.data.aws_s3_types import (
     to_bucket_data_sensitivity_tagging,
     to_bucket_encryption,
     to_bucket_logging,
+    to_bucket_mfa_delete,
     to_bucket_public_access_block,
     to_bucket_secure_transport,
 )
@@ -76,4 +78,12 @@ class AwsS3Client:
             lambda: to_bucket_content_deny(self._s3.get_bucket_policy(Bucket=bucket)),
             BucketContentDeny,
             f"unable to fetch policy for bucket '{bucket}'",
+        )
+
+    def get_bucket_mfa_delete(self, bucket: str) -> BucketMFADelete:
+        self._logger.debug(f"fetching versioning for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_mfa_delete(self._s3.get_bucket_versioning(Bucket=bucket)),
+            BucketMFADelete,
+            f"unable to fetch versioning for bucket '{bucket}'",
         )

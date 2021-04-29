@@ -39,6 +39,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "logging": {
             "enabled": false
           },
+          "mfa_delete": {
+            "enabled": true
+          },
           "public_access_block": {
             "enabled": false
           },
@@ -60,6 +63,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           },
           "logging": {
             "enabled": true
+          },
+          "mfa_delete":  {
+            "enabled": false
           },
           "public_access_block": {
             "enabled": true

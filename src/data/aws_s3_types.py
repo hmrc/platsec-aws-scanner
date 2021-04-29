@@ -12,6 +12,7 @@ class Bucket:
     data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None
     encryption: Optional[BucketEncryption] = None
     logging: Optional[BucketLogging] = None
+    mfa_delete: Optional[BucketMFADelete] = None
     public_access_block: Optional[BucketPublicAccessBlock] = None
     secure_transport: Optional[BucketSecureTransport] = None
 
@@ -76,6 +77,15 @@ class BucketLogging:
 
 def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
     return BucketLogging(enabled="LoggingEnabled" in logging_dict)
+
+
+@dataclass
+class BucketMFADelete:
+    enabled: bool = False
+
+
+def to_bucket_mfa_delete(versioning_dict: Dict[Any, Any]) -> BucketMFADelete:
+    return BucketMFADelete(enabled=versioning_dict.get("MFADelete") == "Enabled")
 
 
 @dataclass
