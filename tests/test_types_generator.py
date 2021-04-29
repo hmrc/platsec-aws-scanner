@@ -13,6 +13,7 @@ from src.data.aws_s3_types import (
     BucketDataSensitivityTagging,
     BucketEncryption,
     BucketLogging,
+    BucketMFADelete,
     BucketPublicAccessBlock,
     BucketSecureTransport,
 )
@@ -108,6 +109,10 @@ def bucket_logging(enabled: bool = False) -> BucketLogging:
     return BucketLogging(enabled=enabled)
 
 
+def bucket_mfa_delete(enabled: bool = False) -> BucketMFADelete:
+    return BucketMFADelete(enabled=enabled)
+
+
 def bucket_public_access_block(enabled: bool = False) -> BucketPublicAccessBlock:
     return BucketPublicAccessBlock(enabled=enabled)
 
@@ -122,6 +127,7 @@ def bucket(
     data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None,
     encryption: Optional[BucketEncryption] = None,
     logging: Optional[BucketLogging] = None,
+    mfa_delete: Optional[BucketMFADelete] = None,
     public_access_block: Optional[BucketPublicAccessBlock] = None,
     secure_transport: Optional[BucketSecureTransport] = None,
 ) -> Bucket:
@@ -131,6 +137,7 @@ def bucket(
         data_sensitivity_tagging=data_sensitivity_tagging,
         encryption=encryption,
         logging=logging,
+        mfa_delete=mfa_delete,
         public_access_block=public_access_block,
         secure_transport=secure_transport,
     )

@@ -15,6 +15,7 @@ from tests.test_types_generator import (
     bucket_data_sensitivity_tagging,
     bucket_encryption,
     bucket_logging,
+    bucket_mfa_delete,
     bucket_public_access_block,
     bucket_secure_transport,
     client_error,
@@ -262,4 +263,36 @@ class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
         content_deny = bucket_content_deny(enabled=False)
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("access-denied"))
+        self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_versioning(**kwargs) -> Dict[Any, Any]:
+        return {
+            "mfa-delete-enabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_ENABLED,
+            "mfa-delete-disabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_DISABLED,
+            "mfa-delete-unset": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_UNSET,
+            "access-denied": lambda: _raise(client_error("GetBucketVersioning", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_versioning=Mock(side_effect=self.get_bucket_versioning)))
+
+    def test_get_bucket_mfa_delete_enabled(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=True)
+        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-enabled"))
+
+    def test_get_bucket_mfa_delete_disabled(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=False)
+        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-disabled"))
+
+    def test_get_bucket_mfa_delete_unset(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=False)
+        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-unset"))
+
+    def test_get_bucket_mfa_delete_failure(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("access-denied"))
         self.assertIn("AccessDenied", err.getvalue())
