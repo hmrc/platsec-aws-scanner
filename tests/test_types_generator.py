@@ -96,8 +96,8 @@ def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
     return BucketContentDeny(enabled=enabled)
 
 
-def bucket_data_sensitivity_tagging(enabled: bool = False) -> BucketDataSensitivityTagging:
-    return BucketDataSensitivityTagging(enabled=enabled)
+def bucket_data_sensitivity_tagging(enabled: bool = False, type: Optional[str] = None) -> BucketDataSensitivityTagging:
+    return BucketDataSensitivityTagging(enabled=enabled, type=type)
 
 
 def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> BucketEncryption:

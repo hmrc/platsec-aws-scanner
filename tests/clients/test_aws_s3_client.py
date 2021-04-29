@@ -186,11 +186,11 @@ class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
         return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
 
     def test_get_bucket_data_sensitivity_tagging_low(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=True)
+        tagging = bucket_data_sensitivity_tagging(enabled=True, type="low")
         self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("low-sensitivity"))
 
     def test_get_bucket_data_sensitivity_tagging_high(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=True)
+        tagging = bucket_data_sensitivity_tagging(enabled=True, type="high")
         self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("high-sensitivity"))
 
     def test_get_bucket_data_sensitivity_tagging_unknown(self) -> None:
