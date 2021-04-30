@@ -10,7 +10,7 @@ from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
     BucketContentDeny,
-    BucketDataSensitivityTagging,
+    BucketDataTagging,
     BucketEncryption,
     BucketLogging,
     BucketMFADelete,
@@ -98,8 +98,8 @@ def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
     return BucketContentDeny(enabled=enabled)
 
 
-def bucket_data_sensitivity_tagging(enabled: bool = False, type: Optional[str] = None) -> BucketDataSensitivityTagging:
-    return BucketDataSensitivityTagging(enabled=enabled, type=type)
+def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> BucketDataTagging:
+    return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
 
 def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> BucketEncryption:
@@ -129,7 +129,7 @@ def bucket_versioning(enabled: bool = False) -> BucketVersioning:
 def bucket(
     name: str = "a_bucket",
     content_deny: Optional[BucketContentDeny] = None,
-    data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None,
+    data_tagging: Optional[BucketDataTagging] = None,
     encryption: Optional[BucketEncryption] = None,
     logging: Optional[BucketLogging] = None,
     mfa_delete: Optional[BucketMFADelete] = None,
@@ -140,7 +140,7 @@ def bucket(
     return Bucket(
         name=name,
         content_deny=content_deny,
-        data_sensitivity_tagging=data_sensitivity_tagging,
+        data_tagging=data_tagging,
         encryption=encryption,
         logging=logging,
         mfa_delete=mfa_delete,

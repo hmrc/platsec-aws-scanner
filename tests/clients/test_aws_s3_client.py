@@ -12,7 +12,7 @@ from tests.clients import test_aws_s3_client_responses as responses
 from tests.test_types_generator import (
     bucket,
     bucket_content_deny,
-    bucket_data_sensitivity_tagging,
+    bucket_data_tagging,
     bucket_encryption,
     bucket_logging,
     bucket_mfa_delete,
@@ -87,6 +87,68 @@ class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
         self.assertIn("AccessDenied", err.getvalue())
 
 
+class TestAwsS3ClientGetBucketDataExpiryTagging(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
+        return {
+            "expiry-1-week": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_1_WEEK,
+            "expiry-1-month": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_1_MONTH,
+            "expiry-90-days": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_90_DAYS,
+            "expiry-6-months": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_6_MONTHS,
+            "expiry-1-year": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_1_YEAR,
+            "expiry-7-years": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_7_YEARS,
+            "expiry-10-years": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_10_YEARS,
+            "expiry-unknown": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_UNKNOWN,
+            "no-expiry": lambda: responses.GET_BUCKET_TAGGING_NO_EXPIRY,
+            "no-tag": lambda: _raise(client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
+
+    def test_get_bucket_data_tagging_expiry_1_week(self) -> None:
+        tagging = bucket_data_tagging(expiry="1-week")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-1-week"))
+
+    def test_get_bucket_data_tagging_expiry_1_month(self) -> None:
+        tagging = bucket_data_tagging(expiry="1-month")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-1-month"))
+
+    def test_get_bucket_data_tagging_expiry_90_days(self) -> None:
+        tagging = bucket_data_tagging(expiry="90-days")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-90-days"))
+
+    def test_get_bucket_data_tagging_expiry_6_months(self) -> None:
+        tagging = bucket_data_tagging(expiry="6-months")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-6-months"))
+
+    def test_get_bucket_data_tagging_expiry_1_year(self) -> None:
+        tagging = bucket_data_tagging(expiry="1-year")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-1-year"))
+
+    def test_get_bucket_data_tagging_expiry_7_years(self) -> None:
+        tagging = bucket_data_tagging(expiry="7-years")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-7-years"))
+
+    def test_get_bucket_data_tagging_expiry_10_years(self) -> None:
+        tagging = bucket_data_tagging(expiry="10-years")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-10-years"))
+
+    def test_get_bucket_data_tagging_expiry_unknown(self) -> None:
+        tagging = bucket_data_tagging(expiry="unset")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("expiry-unknown"))
+
+    def test_get_bucket_data_tagging_no_expiry(self) -> None:
+        tagging = bucket_data_tagging(expiry="unset")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("no-expiry"))
+
+    def test_get_bucket_data_tagging_expiry_failure(self) -> None:
+        tagging = bucket_data_tagging(expiry="unset")
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("no-tag"))
+        self.assertIn("NoSuchTagSet", err.getvalue())
+
+
 class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
     @staticmethod
     def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
@@ -102,25 +164,25 @@ class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
         return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
 
     def test_get_bucket_data_sensitivity_tagging_low(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=True, type="low")
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("low-sensitivity"))
+        tagging = bucket_data_tagging(sensitivity="low")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("low-sensitivity"))
 
     def test_get_bucket_data_sensitivity_tagging_high(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=True, type="high")
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("high-sensitivity"))
+        tagging = bucket_data_tagging(sensitivity="high")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("high-sensitivity"))
 
     def test_get_bucket_data_sensitivity_tagging_unknown(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=False)
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("unknown-sensitivity"))
+        tagging = bucket_data_tagging(sensitivity="unset")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("unknown-sensitivity"))
 
     def test_get_bucket_data_sensitivity_no_sensitivity(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=False)
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-sensitivity"))
+        tagging = bucket_data_tagging(sensitivity="unset")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("no-sensitivity"))
 
     def test_get_bucket_data_sensitivity_tagging_failure(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        tagging = bucket_data_tagging(sensitivity="unset")
         with redirect_stderr(StringIO()) as err:
-            self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-tag"))
+            self.assertEqual(tagging, self.s3_client().get_bucket_data_tagging("no-tag"))
         self.assertIn("NoSuchTagSet", err.getvalue())
 
 
