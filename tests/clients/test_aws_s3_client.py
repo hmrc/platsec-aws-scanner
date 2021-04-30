@@ -30,6 +30,100 @@ class TestAwsS3ClientListBuckets(AwsScannerTestCase):
         self.assertEqual(expected_buckets, client.list_buckets())
 
 
+class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
+        return {
+            "deny-single": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT,
+            "deny-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SEPARATE_STATEMENTS,
+            "deny-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_MIXED_STATEMENTS,
+            "deny-incomplete": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_SINGLE_STATEMENT,
+            "deny-incomplete-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_DELETE_SEPARATE_STATEMENTS,
+            "deny-incomplete-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_PUT_DELETE_MIXED_STATEMENTS,
+            "allow-mixed": lambda: responses.GET_BUCKET_POLICY_ALLOW_GET_PUT_DELETE_MIXED_STATEMENTS,
+            "deny-other": lambda: responses.GET_BUCKET_POLICY_DENY_OTHER,
+            "access-denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
+
+    def test_get_bucket_content_deny_single(self) -> None:
+        content_deny = bucket_content_deny(enabled=True)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-single"))
+
+    def test_get_bucket_content_deny_separate(self) -> None:
+        content_deny = bucket_content_deny(enabled=True)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-separate"))
+
+    def test_get_bucket_content_deny_mixed(self) -> None:
+        content_deny = bucket_content_deny(enabled=True)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-mixed"))
+
+    def test_get_bucket_content_deny_incomplete(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete"))
+
+    def test_get_bucket_content_deny_incomplete_separate(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete-separate"))
+
+    def test_get_bucket_content_deny_incomplete_mixed(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete-mixed"))
+
+    def test_get_bucket_content_deny_allow_mixed(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("allow-mixed"))
+
+    def test_get_bucket_content_deny_other(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-other"))
+
+    def test_get_bucket_content_deny_failure(self) -> None:
+        content_deny = bucket_content_deny(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("access-denied"))
+        self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
+        return {
+            "low-sensitivity": lambda: responses.GET_BUCKET_TAGGING_LOW_SENSITIVITY,
+            "high-sensitivity": lambda: responses.GET_BUCKET_TAGGING_HIGH_SENSITIVITY,
+            "unknown-sensitivity": lambda: responses.GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY,
+            "no-sensitivity": lambda: responses.GET_BUCKET_TAGGING_NO_SENSITIVITY,
+            "no-tag": lambda: _raise(client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
+
+    def test_get_bucket_data_sensitivity_tagging_low(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=True, type="low")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("low-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_tagging_high(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=True, type="high")
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("high-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_tagging_unknown(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("unknown-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_no_sensitivity(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-sensitivity"))
+
+    def test_get_bucket_data_sensitivity_tagging_failure(self) -> None:
+        tagging = bucket_data_sensitivity_tagging(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-tag"))
+        self.assertIn("NoSuchTagSet", err.getvalue())
+
+
 class TestAwsS3ClientGetBucketEncryption(AwsScannerTestCase):
     @staticmethod
     def get_bucket_encryption(**kwargs) -> Dict[Any, Any]:
@@ -98,30 +192,35 @@ class TestAwsS3ClientGetBucketLogging(AwsScannerTestCase):
         self.assertIn("AccessDenied", err.getvalue())
 
 
-class TestAwsS3ClientGetBucketSecureTransport(AwsScannerTestCase):
+class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
+    def get_bucket_versioning(**kwargs) -> Dict[Any, Any]:
         return {
-            "bucket": lambda: responses.GET_BUCKET_POLICY,
-            "secure-bucket": lambda: responses.GET_BUCKET_POLICY_SECURE_TRANSPORT,
-            "denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
+            "mfa-delete-enabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_ENABLED,
+            "mfa-delete-disabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_DISABLED,
+            "mfa-delete-unset": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_UNSET,
+            "access-denied": lambda: _raise(client_error("GetBucketVersioning", "AccessDenied", "Access Denied")),
         }.get(kwargs.get("Bucket"))()
 
     def s3_client(self) -> AwsS3Client:
-        return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
+        return AwsS3Client(Mock(get_bucket_versioning=Mock(side_effect=self.get_bucket_versioning)))
 
-    def test_get_bucket_secure_transport_disabled(self) -> None:
-        secure_transport = bucket_secure_transport(enabled=False)
-        self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("bucket"))
+    def test_get_bucket_mfa_delete_enabled(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=True)
+        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-enabled"))
 
-    def test_get_bucket_secure_transport_enabled(self) -> None:
-        secure_transport = bucket_secure_transport(enabled=True)
-        self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("secure-bucket"))
+    def test_get_bucket_mfa_delete_disabled(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=False)
+        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-disabled"))
 
-    def test_get_bucket_secure_transport_failure(self) -> None:
-        secure_transport = bucket_secure_transport(enabled=False)
+    def test_get_bucket_mfa_delete_unset(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=False)
+        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-unset"))
+
+    def test_get_bucket_mfa_delete_failure(self) -> None:
+        mfa_delete = bucket_mfa_delete(enabled=False)
         with redirect_stderr(StringIO()) as err:
-            self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("denied"))
+            self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("access-denied"))
         self.assertIn("AccessDenied", err.getvalue())
 
 
@@ -173,129 +272,30 @@ class TestAwsS3ClientGetBucketPublicAccessBlock(AwsScannerTestCase):
         self.assertIn("AccessDenied", err.getvalue())
 
 
-class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
-    @staticmethod
-    def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
-        return {
-            "low-sensitivity": lambda: responses.GET_BUCKET_TAGGING_LOW_SENSITIVITY,
-            "high-sensitivity": lambda: responses.GET_BUCKET_TAGGING_HIGH_SENSITIVITY,
-            "unknown-sensitivity": lambda: responses.GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY,
-            "no-sensitivity": lambda: responses.GET_BUCKET_TAGGING_NO_SENSITIVITY,
-            "no-tag": lambda: _raise(client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")),
-        }.get(kwargs.get("Bucket"))()
-
-    def s3_client(self) -> AwsS3Client:
-        return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
-
-    def test_get_bucket_data_sensitivity_tagging_low(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=True, type="low")
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("low-sensitivity"))
-
-    def test_get_bucket_data_sensitivity_tagging_high(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=True, type="high")
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("high-sensitivity"))
-
-    def test_get_bucket_data_sensitivity_tagging_unknown(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=False)
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("unknown-sensitivity"))
-
-    def test_get_bucket_data_sensitivity_no_sensitivity(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=False)
-        self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-sensitivity"))
-
-    def test_get_bucket_data_sensitivity_tagging_failure(self) -> None:
-        tagging = bucket_data_sensitivity_tagging(enabled=False)
-        with redirect_stderr(StringIO()) as err:
-            self.assertEqual(tagging, self.s3_client().get_bucket_data_sensitivity_tagging("no-tag"))
-        self.assertIn("NoSuchTagSet", err.getvalue())
-
-
-class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
+class TestAwsS3ClientGetBucketSecureTransport(AwsScannerTestCase):
     @staticmethod
     def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
         return {
-            "deny-single": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT,
-            "deny-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SEPARATE_STATEMENTS,
-            "deny-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_MIXED_STATEMENTS,
-            "deny-incomplete": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_SINGLE_STATEMENT,
-            "deny-incomplete-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_DELETE_SEPARATE_STATEMENTS,
-            "deny-incomplete-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_PUT_DELETE_MIXED_STATEMENTS,
-            "allow-mixed": lambda: responses.GET_BUCKET_POLICY_ALLOW_GET_PUT_DELETE_MIXED_STATEMENTS,
-            "deny-other": lambda: responses.GET_BUCKET_POLICY_DENY_OTHER,
-            "access-denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
+            "bucket": lambda: responses.GET_BUCKET_POLICY,
+            "secure-bucket": lambda: responses.GET_BUCKET_POLICY_SECURE_TRANSPORT,
+            "denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
         }.get(kwargs.get("Bucket"))()
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
 
-    def test_get_bucket_content_deny_single(self) -> None:
-        content_deny = bucket_content_deny(enabled=True)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-single"))
+    def test_get_bucket_secure_transport_disabled(self) -> None:
+        secure_transport = bucket_secure_transport(enabled=False)
+        self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("bucket"))
 
-    def test_get_bucket_content_deny_separate(self) -> None:
-        content_deny = bucket_content_deny(enabled=True)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-separate"))
+    def test_get_bucket_secure_transport_enabled(self) -> None:
+        secure_transport = bucket_secure_transport(enabled=True)
+        self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("secure-bucket"))
 
-    def test_get_bucket_content_deny_mixed(self) -> None:
-        content_deny = bucket_content_deny(enabled=True)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-mixed"))
-
-    def test_get_bucket_content_deny_incomplete(self) -> None:
-        content_deny = bucket_content_deny(enabled=False)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete"))
-
-    def test_get_bucket_content_deny_incomplete_separate(self) -> None:
-        content_deny = bucket_content_deny(enabled=False)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete-separate"))
-
-    def test_get_bucket_content_deny_incomplete_mixed(self) -> None:
-        content_deny = bucket_content_deny(enabled=False)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-incomplete-mixed"))
-
-    def test_get_bucket_content_deny_allow_mixed(self) -> None:
-        content_deny = bucket_content_deny(enabled=False)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("allow-mixed"))
-
-    def test_get_bucket_content_deny_other(self) -> None:
-        content_deny = bucket_content_deny(enabled=False)
-        self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("deny-other"))
-
-    def test_get_bucket_content_deny_failure(self) -> None:
-        content_deny = bucket_content_deny(enabled=False)
+    def test_get_bucket_secure_transport_failure(self) -> None:
+        secure_transport = bucket_secure_transport(enabled=False)
         with redirect_stderr(StringIO()) as err:
-            self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("access-denied"))
-        self.assertIn("AccessDenied", err.getvalue())
-
-
-class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
-    @staticmethod
-    def get_bucket_versioning(**kwargs) -> Dict[Any, Any]:
-        return {
-            "mfa-delete-enabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_ENABLED,
-            "mfa-delete-disabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_DISABLED,
-            "mfa-delete-unset": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_UNSET,
-            "access-denied": lambda: _raise(client_error("GetBucketVersioning", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
-
-    def s3_client(self) -> AwsS3Client:
-        return AwsS3Client(Mock(get_bucket_versioning=Mock(side_effect=self.get_bucket_versioning)))
-
-    def test_get_bucket_mfa_delete_enabled(self) -> None:
-        mfa_delete = bucket_mfa_delete(enabled=True)
-        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-enabled"))
-
-    def test_get_bucket_mfa_delete_disabled(self) -> None:
-        mfa_delete = bucket_mfa_delete(enabled=False)
-        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-disabled"))
-
-    def test_get_bucket_mfa_delete_unset(self) -> None:
-        mfa_delete = bucket_mfa_delete(enabled=False)
-        self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("mfa-delete-unset"))
-
-    def test_get_bucket_mfa_delete_failure(self) -> None:
-        mfa_delete = bucket_mfa_delete(enabled=False)
-        with redirect_stderr(StringIO()) as err:
-            self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("access-denied"))
+            self.assertEqual(secure_transport, self.s3_client().get_bucket_secure_transport("denied"))
         self.assertIn("AccessDenied", err.getvalue())
 
 

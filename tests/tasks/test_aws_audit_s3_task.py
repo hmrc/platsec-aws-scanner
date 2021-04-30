@@ -26,6 +26,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_2: bucket_content_deny(enabled=True),
             bucket_3: bucket_content_deny(enabled=True),
         }
+        data_sensitivity_tagging = {
+            bucket_1: bucket_data_sensitivity_tagging(enabled=True, type="low"),
+            bucket_2: bucket_data_sensitivity_tagging(enabled=False),
+            bucket_3: bucket_data_sensitivity_tagging(enabled=True, type="high"),
+        }
         encryption_mapping = {
             bucket_1: bucket_encryption(enabled=True, type="cmk"),
             bucket_2: bucket_encryption(enabled=False),
@@ -41,20 +46,15 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_2: bucket_mfa_delete(enabled=False),
             bucket_3: bucket_mfa_delete(enabled=True),
         }
-        secure_transport_mapping = {
-            bucket_1: bucket_secure_transport(enabled=True),
-            bucket_2: bucket_secure_transport(enabled=True),
-            bucket_3: bucket_secure_transport(enabled=False),
-        }
         public_access_block_mapping = {
             bucket_1: bucket_public_access_block(enabled=False),
             bucket_2: bucket_public_access_block(enabled=True),
             bucket_3: bucket_public_access_block(enabled=True),
         }
-        data_sensitivity_tagging = {
-            bucket_1: bucket_data_sensitivity_tagging(enabled=True, type="low"),
-            bucket_2: bucket_data_sensitivity_tagging(enabled=False),
-            bucket_3: bucket_data_sensitivity_tagging(enabled=True, type="high"),
+        secure_transport_mapping = {
+            bucket_1: bucket_secure_transport(enabled=True),
+            bucket_2: bucket_secure_transport(enabled=True),
+            bucket_3: bucket_secure_transport(enabled=False),
         }
         versioning_mapping = {
             bucket_1: bucket_versioning(enabled=True),
@@ -65,12 +65,12 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
             get_bucket_content_deny=Mock(side_effect=lambda b: content_deny_mapping[b]),
+            get_bucket_data_sensitivity_tagging=Mock(side_effect=lambda b: data_sensitivity_tagging[b]),
             get_bucket_encryption=Mock(side_effect=lambda b: encryption_mapping[b]),
             get_bucket_logging=Mock(side_effect=lambda b: logging_mapping[b]),
             get_bucket_mfa_delete=Mock(side_effect=lambda b: mfa_delete_mapping[b]),
             get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
             get_bucket_secure_transport=Mock(side_effect=lambda b: secure_transport_mapping[b]),
-            get_bucket_data_sensitivity_tagging=Mock(side_effect=lambda b: data_sensitivity_tagging[b]),
             get_bucket_versioning=Mock(side_effect=lambda b: versioning_mapping[b]),
         )
 

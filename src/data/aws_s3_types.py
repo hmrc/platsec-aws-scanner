@@ -53,6 +53,18 @@ def _has_action(actions: Any, expected: str) -> bool:
 
 
 @dataclass
+class BucketDataSensitivityTagging:
+    enabled: bool = False
+    type: Optional[str] = None
+
+
+def to_bucket_data_sensitivity_tagging(tag_dict: Dict[str, List[Dict[str, str]]]) -> BucketDataSensitivityTagging:
+    tags = list(filter(lambda t: t["Key"] == "data_sensitivity" and t["Value"] in ["high", "low"], tag_dict["TagSet"]))
+    data_sensitivity = tags[0]["Value"] if tags else None
+    return BucketDataSensitivityTagging(enabled=bool(data_sensitivity), type=data_sensitivity)
+
+
+@dataclass
 class BucketEncryption:
     enabled: bool = False
     type: Optional[str] = None
@@ -90,6 +102,16 @@ def to_bucket_mfa_delete(versioning_dict: Dict[Any, Any]) -> BucketMFADelete:
 
 
 @dataclass
+class BucketPublicAccessBlock:
+    enabled: bool = False
+
+
+def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
+    config = public_access_block_dict["PublicAccessBlockConfiguration"]
+    return BucketPublicAccessBlock(enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"])
+
+
+@dataclass
 class BucketSecureTransport:
     enabled: bool = False
 
@@ -101,28 +123,6 @@ def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecu
 
 def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
     return policy.get("Effect") == "Deny" and policy.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}
-
-
-@dataclass
-class BucketPublicAccessBlock:
-    enabled: bool = False
-
-
-def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
-    config = public_access_block_dict["PublicAccessBlockConfiguration"]
-    return BucketPublicAccessBlock(enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"])
-
-
-@dataclass
-class BucketDataSensitivityTagging:
-    enabled: bool = False
-    type: Optional[str] = None
-
-
-def to_bucket_data_sensitivity_tagging(tag_dict: Dict[str, List[Dict[str, str]]]) -> BucketDataSensitivityTagging:
-    tags = list(filter(lambda t: t["Key"] == "data_sensitivity" and t["Value"] in ["high", "low"], tag_dict["TagSet"]))
-    data_sensitivity = tags[0]["Value"] if tags else None
-    return BucketDataSensitivityTagging(enabled=bool(data_sensitivity), type=data_sensitivity)
 
 
 @dataclass
