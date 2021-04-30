@@ -24,4 +24,5 @@ class AwsAuditS3Task(AwsS3Task):
         bucket.mfa_delete = client.get_bucket_mfa_delete(bucket.name)
         bucket.public_access_block = client.get_bucket_public_access_block(bucket.name)
         bucket.secure_transport = client.get_bucket_secure_transport(bucket.name)
+        bucket.versioning = client.get_bucket_versioning(bucket.name)
         return bucket

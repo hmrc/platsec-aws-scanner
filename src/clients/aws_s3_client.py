@@ -13,6 +13,7 @@ from src.data.aws_s3_types import (
     BucketMFADelete,
     BucketPublicAccessBlock,
     BucketSecureTransport,
+    BucketVersioning,
     to_bucket,
     to_bucket_content_deny,
     to_bucket_data_sensitivity_tagging,
@@ -21,6 +22,7 @@ from src.data.aws_s3_types import (
     to_bucket_mfa_delete,
     to_bucket_public_access_block,
     to_bucket_secure_transport,
+    to_bucket_versioning,
 )
 
 
@@ -31,6 +33,22 @@ class AwsS3Client:
 
     def list_buckets(self) -> List[Bucket]:
         return [to_bucket(bucket) for bucket in self._s3.list_buckets()["Buckets"]]
+
+    def get_bucket_content_deny(self, bucket: str) -> BucketContentDeny:
+        self._logger.debug(f"fetching policy for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_content_deny(self._s3.get_bucket_policy(Bucket=bucket)),
+            BucketContentDeny,
+            f"unable to fetch policy for bucket '{bucket}'",
+        )
+
+    def get_bucket_data_sensitivity_tagging(self, bucket: str) -> BucketDataSensitivityTagging:
+        self._logger.debug(f"fetching tagging for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_data_sensitivity_tagging(self._s3.get_bucket_tagging(Bucket=bucket)),
+            BucketDataSensitivityTagging,
+            f"unable to fetch tagging for bucket '{bucket}'",
+        )
 
     def get_bucket_encryption(self, bucket: str) -> BucketEncryption:
         self._logger.debug(f"fetching encryption config for bucket '{bucket}'")
@@ -48,12 +66,12 @@ class AwsS3Client:
             f"unable to fetch server access logging config for bucket '{bucket}'",
         )
 
-    def get_bucket_secure_transport(self, bucket: str) -> BucketSecureTransport:
-        self._logger.debug(f"fetching policy for bucket '{bucket}'")
+    def get_bucket_mfa_delete(self, bucket: str) -> BucketMFADelete:
+        self._logger.debug(f"fetching versioning for bucket '{bucket}'")
         return boto_try(
-            lambda: to_bucket_secure_transport(self._s3.get_bucket_policy(Bucket=bucket)),
-            BucketSecureTransport,
-            f"unable to fetch policy for bucket '{bucket}'",
+            lambda: to_bucket_mfa_delete(self._s3.get_bucket_versioning(Bucket=bucket)),
+            BucketMFADelete,
+            f"unable to fetch versioning for bucket '{bucket}'",
         )
 
     def get_bucket_public_access_block(self, bucket: str) -> BucketPublicAccessBlock:
@@ -64,26 +82,18 @@ class AwsS3Client:
             f"unable to fetch public access block for bucket '{bucket}'",
         )
 
-    def get_bucket_data_sensitivity_tagging(self, bucket: str) -> BucketDataSensitivityTagging:
-        self._logger.debug(f"fetching tagging for bucket '{bucket}'")
-        return boto_try(
-            lambda: to_bucket_data_sensitivity_tagging(self._s3.get_bucket_tagging(Bucket=bucket)),
-            BucketDataSensitivityTagging,
-            f"unable to fetch tagging for bucket '{bucket}'",
-        )
-
-    def get_bucket_content_deny(self, bucket: str) -> BucketContentDeny:
+    def get_bucket_secure_transport(self, bucket: str) -> BucketSecureTransport:
         self._logger.debug(f"fetching policy for bucket '{bucket}'")
         return boto_try(
-            lambda: to_bucket_content_deny(self._s3.get_bucket_policy(Bucket=bucket)),
-            BucketContentDeny,
+            lambda: to_bucket_secure_transport(self._s3.get_bucket_policy(Bucket=bucket)),
+            BucketSecureTransport,
             f"unable to fetch policy for bucket '{bucket}'",
         )
 
-    def get_bucket_mfa_delete(self, bucket: str) -> BucketMFADelete:
+    def get_bucket_versioning(self, bucket: str) -> BucketVersioning:
         self._logger.debug(f"fetching versioning for bucket '{bucket}'")
         return boto_try(
-            lambda: to_bucket_mfa_delete(self._s3.get_bucket_versioning(Bucket=bucket)),
-            BucketMFADelete,
+            lambda: to_bucket_versioning(self._s3.get_bucket_versioning(Bucket=bucket)),
+            BucketVersioning,
             f"unable to fetch versioning for bucket '{bucket}'",
         )

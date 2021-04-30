@@ -159,3 +159,7 @@ GET_BUCKET_POLICY_DENY_OTHER = {"Policy": dumps({"Statement": [{"Effect": "Deny"
 GET_BUCKET_VERSIONING_MFA_DELETE_ENABLED = {"Status": "whatever", "MFADelete": "Enabled"}
 GET_BUCKET_VERSIONING_MFA_DELETE_DISABLED = {"Status": "whatever", "MFADelete": "Disabled"}
 GET_BUCKET_VERSIONING_MFA_DELETE_UNSET = {"Status": "whatever"}
+
+GET_BUCKET_VERSIONING_ENABLED = {"Status": "Enabled", "MFADelete": "whatever"}
+GET_BUCKET_VERSIONING_SUSPENDED = {"Status": "Suspended", "MFADelete": "whatever"}
+GET_BUCKET_VERSIONING_UNSET = {"MFADelete": "whatever"}

@@ -16,6 +16,7 @@ from src.data.aws_s3_types import (
     BucketMFADelete,
     BucketPublicAccessBlock,
     BucketSecureTransport,
+    BucketVersioning,
 )
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
@@ -121,6 +122,10 @@ def bucket_secure_transport(enabled: bool = False) -> BucketSecureTransport:
     return BucketSecureTransport(enabled=enabled)
 
 
+def bucket_versioning(enabled: bool = False) -> BucketVersioning:
+    return BucketVersioning(enabled=enabled)
+
+
 def bucket(
     name: str = "a_bucket",
     content_deny: Optional[BucketContentDeny] = None,
@@ -130,6 +135,7 @@ def bucket(
     mfa_delete: Optional[BucketMFADelete] = None,
     public_access_block: Optional[BucketPublicAccessBlock] = None,
     secure_transport: Optional[BucketSecureTransport] = None,
+    versioning: Optional[BucketVersioning] = None,
 ) -> Bucket:
     return Bucket(
         name=name,
@@ -140,4 +146,5 @@ def bucket(
         mfa_delete=mfa_delete,
         public_access_block=public_access_block,
         secure_transport=secure_transport,
+        versioning=versioning,
     )

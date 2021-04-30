@@ -47,6 +47,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           },
           "secure_transport": {
             "enabled": false
+          },
+          "versioning": {
+            "enabled": true
           }
         },
         {
@@ -72,6 +75,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           },
           "secure_transport":  {
             "enabled": true
+          },
+          "versioning": {
+            "enabled":  false
           }
         }
       ]
