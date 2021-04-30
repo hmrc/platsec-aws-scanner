@@ -15,6 +15,7 @@ class Bucket:
     mfa_delete: Optional[BucketMFADelete] = None
     public_access_block: Optional[BucketPublicAccessBlock] = None
     secure_transport: Optional[BucketSecureTransport] = None
+    versioning: Optional[BucketVersioning] = None
 
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
@@ -122,3 +123,12 @@ def to_bucket_data_sensitivity_tagging(tag_dict: Dict[str, List[Dict[str, str]]]
     tags = list(filter(lambda t: t["Key"] == "data_sensitivity" and t["Value"] in ["high", "low"], tag_dict["TagSet"]))
     data_sensitivity = tags[0]["Value"] if tags else None
     return BucketDataSensitivityTagging(enabled=bool(data_sensitivity), type=data_sensitivity)
+
+
+@dataclass
+class BucketVersioning:
+    enabled: bool = False
+
+
+def to_bucket_versioning(versioning_dict: Dict[Any, Any]) -> BucketVersioning:
+    return BucketVersioning(enabled=versioning_dict.get("Status") == "Enabled")

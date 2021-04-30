@@ -13,6 +13,7 @@ from tests.test_types_generator import (
     bucket_mfa_delete,
     bucket_public_access_block,
     bucket_secure_transport,
+    bucket_versioning,
 )
 
 
@@ -55,6 +56,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_2: bucket_data_sensitivity_tagging(enabled=False),
             bucket_3: bucket_data_sensitivity_tagging(enabled=True, type="high"),
         }
+        versioning_mapping = {
+            bucket_1: bucket_versioning(enabled=True),
+            bucket_2: bucket_versioning(enabled=True),
+            bucket_3: bucket_versioning(enabled=False),
+        }
 
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
@@ -65,6 +71,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
             get_bucket_secure_transport=Mock(side_effect=lambda b: secure_transport_mapping[b]),
             get_bucket_data_sensitivity_tagging=Mock(side_effect=lambda b: data_sensitivity_tagging[b]),
+            get_bucket_versioning=Mock(side_effect=lambda b: versioning_mapping[b]),
         )
 
         task_report = AwsAuditS3Task(account())._run_task(s3_client)
@@ -80,6 +87,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                         mfa_delete=bucket_mfa_delete(enabled=True),
                         public_access_block=bucket_public_access_block(enabled=False),
                         secure_transport=bucket_secure_transport(enabled=True),
+                        versioning=bucket_versioning(enabled=True),
                     ),
                     bucket(
                         name=bucket_2,
@@ -90,6 +98,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                         mfa_delete=bucket_mfa_delete(enabled=False),
                         public_access_block=bucket_public_access_block(enabled=True),
                         secure_transport=bucket_secure_transport(enabled=True),
+                        versioning=bucket_versioning(enabled=True),
                     ),
                     bucket(
                         name=bucket_3,
@@ -100,6 +109,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                         mfa_delete=bucket_mfa_delete(enabled=True),
                         public_access_block=bucket_public_access_block(enabled=True),
                         secure_transport=bucket_secure_transport(enabled=False),
+                        versioning=bucket_versioning(enabled=False),
                     ),
                 ]
             },

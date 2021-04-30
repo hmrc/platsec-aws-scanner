@@ -18,6 +18,7 @@ from tests.test_types_generator import (
     bucket_mfa_delete,
     bucket_public_access_block,
     bucket_secure_transport,
+    bucket_versioning,
     client_error,
 )
 
@@ -295,4 +296,36 @@ class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
         mfa_delete = bucket_mfa_delete(enabled=False)
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(mfa_delete, self.s3_client().get_bucket_mfa_delete("access-denied"))
+        self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketVersioning(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_versioning(**kwargs) -> Dict[Any, Any]:
+        return {
+            "versioning-enabled": lambda: responses.GET_BUCKET_VERSIONING_ENABLED,
+            "versioning-suspended": lambda: responses.GET_BUCKET_VERSIONING_SUSPENDED,
+            "versioning-unset": lambda: responses.GET_BUCKET_VERSIONING_UNSET,
+            "access-denied": lambda: _raise(client_error("GetBucketVersioning", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_versioning=Mock(side_effect=self.get_bucket_versioning)))
+
+    def test_get_bucket_versioning_enabled(self) -> None:
+        versioning = bucket_versioning(enabled=True)
+        self.assertEqual(versioning, self.s3_client().get_bucket_versioning("versioning-enabled"))
+
+    def test_get_bucket_versioning_suspended(self) -> None:
+        versioning = bucket_versioning(enabled=False)
+        self.assertEqual(versioning, self.s3_client().get_bucket_versioning("versioning-suspended"))
+
+    def test_get_bucket_versioning_unset(self) -> None:
+        versioning = bucket_versioning(enabled=False)
+        self.assertEqual(versioning, self.s3_client().get_bucket_versioning("versioning-unset"))
+
+    def test_get_bucket_versioning_failure(self) -> None:
+        versioning = bucket_versioning(enabled=False)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(versioning, self.s3_client().get_bucket_versioning("access-denied"))
         self.assertIn("AccessDenied", err.getvalue())
