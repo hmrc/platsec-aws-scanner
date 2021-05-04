@@ -4,14 +4,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "==20.8b1"
+black = "==21.4b2"
 coverage = "==5.5"
 flake8 = "==3.9.1"
 httpretty = "==1.0.5"
 mypy = "==0.812"
 
 [packages]
-boto3 = "==1.17.54"
+boto3 = "==1.17.61"
 requests = "==2.25.1"
 
 [requires]
