@@ -29,8 +29,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "content_deny": {
             "enabled": true
           },
-          "data_sensitivity_tagging": {
-            "enabled": false
+          "data_tagging": {
+            "expiry": "1-week",
+            "sensitivity": "high"
           },
           "encryption": {
             "enabled": true,
@@ -57,9 +58,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "content_deny":  {
             "enabled":  false
           },
-          "data_sensitivity_tagging":  {
-            "enabled": true,
-            "type": "high"
+          "data_tagging": {
+            "expiry": "90-days",
+            "sensitivity": "unset"
           },
           "encryption": {
             "enabled": false

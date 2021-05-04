@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional
 class Bucket:
     name: str
     content_deny: Optional[BucketContentDeny] = None
-    data_sensitivity_tagging: Optional[BucketDataSensitivityTagging] = None
+    data_tagging: Optional[BucketDataTagging] = None
     encryption: Optional[BucketEncryption] = None
     logging: Optional[BucketLogging] = None
     mfa_delete: Optional[BucketMFADelete] = None
@@ -53,15 +53,21 @@ def _has_action(actions: Any, expected: str) -> bool:
 
 
 @dataclass
-class BucketDataSensitivityTagging:
-    enabled: bool = False
-    type: Optional[str] = None
+class BucketDataTagging:
+    expiry: str = "unset"
+    sensitivity: str = "unset"
 
 
-def to_bucket_data_sensitivity_tagging(tag_dict: Dict[str, List[Dict[str, str]]]) -> BucketDataSensitivityTagging:
-    tags = list(filter(lambda t: t["Key"] == "data_sensitivity" and t["Value"] in ["high", "low"], tag_dict["TagSet"]))
-    data_sensitivity = tags[0]["Value"] if tags else None
-    return BucketDataSensitivityTagging(enabled=bool(data_sensitivity), type=data_sensitivity)
+def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> BucketDataTagging:
+    tags = {tag["Key"]: tag["Value"] for tag in tag_response["TagSet"]}
+    expiry = tags.get("data_expiry")
+    sensitivity = tags.get("data_sensitivity")
+    return BucketDataTagging(
+        expiry=expiry
+        if expiry in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years"]
+        else "unset",
+        sensitivity=sensitivity if sensitivity in ["low", "high"] else "unset",
+    )
 
 
 @dataclass

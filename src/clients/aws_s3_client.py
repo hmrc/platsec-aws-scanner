@@ -7,7 +7,7 @@ from src.clients import boto_try
 from src.data.aws_s3_types import (
     Bucket,
     BucketContentDeny,
-    BucketDataSensitivityTagging,
+    BucketDataTagging,
     BucketEncryption,
     BucketLogging,
     BucketMFADelete,
@@ -16,7 +16,7 @@ from src.data.aws_s3_types import (
     BucketVersioning,
     to_bucket,
     to_bucket_content_deny,
-    to_bucket_data_sensitivity_tagging,
+    to_bucket_data_tagging,
     to_bucket_encryption,
     to_bucket_logging,
     to_bucket_mfa_delete,
@@ -42,11 +42,11 @@ class AwsS3Client:
             f"unable to fetch policy for bucket '{bucket}'",
         )
 
-    def get_bucket_data_sensitivity_tagging(self, bucket: str) -> BucketDataSensitivityTagging:
+    def get_bucket_data_tagging(self, bucket: str) -> BucketDataTagging:
         self._logger.debug(f"fetching tagging for bucket '{bucket}'")
         return boto_try(
-            lambda: to_bucket_data_sensitivity_tagging(self._s3.get_bucket_tagging(Bucket=bucket)),
-            BucketDataSensitivityTagging,
+            lambda: to_bucket_data_tagging(self._s3.get_bucket_tagging(Bucket=bucket)),
+            BucketDataTagging,
             f"unable to fetch tagging for bucket '{bucket}'",
         )
 
