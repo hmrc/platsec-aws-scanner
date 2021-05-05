@@ -20,6 +20,7 @@ class AwsAuditS3Task(AwsS3Task):
         bucket.content_deny = client.get_bucket_content_deny(bucket.name)
         bucket.data_tagging = client.get_bucket_data_tagging(bucket.name)
         bucket.encryption = client.get_bucket_encryption(bucket.name)
+        bucket.lifecycle = client.get_bucket_lifecycle(bucket.name)
         bucket.logging = client.get_bucket_logging(bucket.name)
         bucket.mfa_delete = client.get_bucket_mfa_delete(bucket.name)
         bucket.public_access_block = client.get_bucket_public_access_block(bucket.name)

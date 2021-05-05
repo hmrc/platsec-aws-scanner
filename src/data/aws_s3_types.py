@@ -1,8 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from functools import reduce
 from json import loads
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 
 @dataclass
@@ -11,6 +10,7 @@ class Bucket:
     content_deny: Optional[BucketContentDeny] = None
     data_tagging: Optional[BucketDataTagging] = None
     encryption: Optional[BucketEncryption] = None
+    lifecycle: Optional[BucketLifecycle] = None
     logging: Optional[BucketLogging] = None
     mfa_delete: Optional[BucketMFADelete] = None
     public_access_block: Optional[BucketPublicAccessBlock] = None
@@ -30,13 +30,11 @@ class BucketContentDeny:
 def to_bucket_content_deny(bucket_policy_dict: Dict[Any, Any]) -> BucketContentDeny:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
     deny_actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-    return BucketContentDeny(
-        enabled=reduce(lambda a, b: a and b, map(lambda action: _has_denied_action(statements, action), deny_actions))
-    )
+    return BucketContentDeny(enabled=all(map(lambda action: _has_denied_action(statements, action), deny_actions)))
 
 
 def _has_denied_action(statements: List[Dict[Any, Any]], action: str) -> bool:
-    return reduce(lambda a, b: a or b, map(lambda statement: _is_denied(statement, action), statements))
+    return any(map(lambda statement: _is_denied(statement, action), statements))
 
 
 def _is_denied(statement: Dict[Any, Any], deny_action: str) -> bool:
@@ -87,6 +85,27 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     }
 
     return algo_mapping[algorithm]()
+
+
+@dataclass
+class BucketLifecycle:
+    current_version_expiry: Union[int, str] = "unset"
+    previous_version_deletion: Union[int, str] = "unset"
+
+
+def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
+    enabled_rules = list(filter(lambda rule: rule.get("Status") == "Enabled", lifecycle_config["Rules"]))
+    current_version_rules = filter(lambda rule: "Expiration" in rule, enabled_rules)
+    previous_version_rules = filter(lambda rule: "NoncurrentVersionExpiration" in rule, enabled_rules)
+    return BucketLifecycle(
+        current_version_expiry=min(
+            map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
+        ),
+        previous_version_deletion=min(
+            map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
+            default="unset",
+        ),
+    )
 
 
 @dataclass

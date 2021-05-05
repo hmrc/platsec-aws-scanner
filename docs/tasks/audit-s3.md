@@ -37,6 +37,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
             "enabled": true,
             "type": "cmk"
           },
+          "lifecycle": {
+            "current_version_expiry": 7,
+            "previous_version_deletion": 14
+          },
           "logging": {
             "enabled": false
           },
@@ -64,6 +68,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           },
           "encryption": {
             "enabled": false
+          },
+          "lifecycle": {
+            "current_version_expiry": 366,
+            "previous_version_deletion": "unset"
           },
           "logging": {
             "enabled": true

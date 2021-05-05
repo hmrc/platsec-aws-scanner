@@ -9,6 +9,7 @@ from tests.test_types_generator import (
     bucket_content_deny,
     bucket_data_tagging,
     bucket_encryption,
+    bucket_lifecycle,
     bucket_logging,
     bucket_mfa_delete,
     bucket_public_access_block,
@@ -35,6 +36,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_1: bucket_encryption(enabled=True, type="cmk"),
             bucket_2: bucket_encryption(enabled=False),
             bucket_3: bucket_encryption(enabled=True, type="aws"),
+        }
+        lifecycle_mapping = {
+            bucket_1: bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
+            bucket_2: bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
+            bucket_3: bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
         }
         logging_mapping = {
             bucket_1: bucket_logging(enabled=False),
@@ -67,6 +73,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             get_bucket_content_deny=Mock(side_effect=lambda b: content_deny_mapping[b]),
             get_bucket_data_tagging=Mock(side_effect=lambda b: data_tagging[b]),
             get_bucket_encryption=Mock(side_effect=lambda b: encryption_mapping[b]),
+            get_bucket_lifecycle=Mock(side_effect=lambda b: lifecycle_mapping[b]),
             get_bucket_logging=Mock(side_effect=lambda b: logging_mapping[b]),
             get_bucket_mfa_delete=Mock(side_effect=lambda b: mfa_delete_mapping[b]),
             get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
@@ -83,6 +90,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                         content_deny=bucket_content_deny(enabled=False),
                         data_tagging=bucket_data_tagging(expiry="6-months", sensitivity="low"),
                         encryption=bucket_encryption(enabled=True, type="cmk"),
+                        lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
                         logging=bucket_logging(enabled=False),
                         mfa_delete=bucket_mfa_delete(enabled=True),
                         public_access_block=bucket_public_access_block(enabled=False),
@@ -94,6 +102,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                         content_deny=bucket_content_deny(enabled=True),
                         data_tagging=bucket_data_tagging(expiry="1-month", sensitivity="high"),
                         encryption=bucket_encryption(enabled=False),
+                        lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
                         logging=bucket_logging(enabled=False),
                         mfa_delete=bucket_mfa_delete(enabled=False),
                         public_access_block=bucket_public_access_block(enabled=True),
@@ -105,6 +114,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                         content_deny=bucket_content_deny(enabled=True),
                         data_tagging=bucket_data_tagging(expiry="1-week", sensitivity="high"),
                         encryption=bucket_encryption(enabled=True, type="aws"),
+                        lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
                         logging=bucket_logging(enabled=True),
                         mfa_delete=bucket_mfa_delete(enabled=True),
                         public_access_block=bucket_public_access_block(enabled=True),

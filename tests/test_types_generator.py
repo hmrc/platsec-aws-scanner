@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from datetime import date
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from botocore.exceptions import ClientError
 
@@ -12,6 +12,7 @@ from src.data.aws_s3_types import (
     BucketContentDeny,
     BucketDataTagging,
     BucketEncryption,
+    BucketLifecycle,
     BucketLogging,
     BucketMFADelete,
     BucketPublicAccessBlock,
@@ -106,6 +107,14 @@ def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> Buck
     return BucketEncryption(enabled=enabled, type=type)
 
 
+def bucket_lifecycle(
+    current_version_expiry: Union[int, str] = "unset", previous_version_deletion: Union[int, str] = "unset"
+) -> BucketLifecycle:
+    return BucketLifecycle(
+        current_version_expiry=current_version_expiry, previous_version_deletion=previous_version_deletion
+    )
+
+
 def bucket_logging(enabled: bool = False) -> BucketLogging:
     return BucketLogging(enabled=enabled)
 
@@ -131,6 +140,7 @@ def bucket(
     content_deny: Optional[BucketContentDeny] = None,
     data_tagging: Optional[BucketDataTagging] = None,
     encryption: Optional[BucketEncryption] = None,
+    lifecycle: Optional[BucketLifecycle] = None,
     logging: Optional[BucketLogging] = None,
     mfa_delete: Optional[BucketMFADelete] = None,
     public_access_block: Optional[BucketPublicAccessBlock] = None,
@@ -142,6 +152,7 @@ def bucket(
         content_deny=content_deny,
         data_tagging=data_tagging,
         encryption=encryption,
+        lifecycle=lifecycle,
         logging=logging,
         mfa_delete=mfa_delete,
         public_access_block=public_access_block,
