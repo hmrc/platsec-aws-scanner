@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from functools import reduce
 from json import loads
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -31,13 +30,11 @@ class BucketContentDeny:
 def to_bucket_content_deny(bucket_policy_dict: Dict[Any, Any]) -> BucketContentDeny:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
     deny_actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-    return BucketContentDeny(
-        enabled=reduce(lambda a, b: a and b, map(lambda action: _has_denied_action(statements, action), deny_actions))
-    )
+    return BucketContentDeny(enabled=all(map(lambda action: _has_denied_action(statements, action), deny_actions)))
 
 
 def _has_denied_action(statements: List[Dict[Any, Any]], action: str) -> bool:
-    return reduce(lambda a, b: a or b, map(lambda statement: _is_denied(statement, action), statements))
+    return any(map(lambda statement: _is_denied(statement, action), statements))
 
 
 def _is_denied(statement: Dict[Any, Any], deny_action: str) -> bool:
