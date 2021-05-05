@@ -173,3 +173,19 @@ GET_BUCKET_VERSIONING_MFA_DELETE_UNSET = {"Status": "whatever"}
 GET_BUCKET_VERSIONING_ENABLED = {"Status": "Enabled", "MFADelete": "whatever"}
 GET_BUCKET_VERSIONING_SUSPENDED = {"Status": "Suspended", "MFADelete": "whatever"}
 GET_BUCKET_VERSIONING_UNSET = {"MFADelete": "whatever"}
+
+GET_BUCKET_LIFECYCLE_CONFIGURATION_SINGLE_RULE = {
+    "Rules": [{"Expiration": {"Days": 15}, "Status": "Enabled", "NoncurrentVersionExpiration": {"NoncurrentDays": 30}}]
+}
+GET_BUCKET_LIFECYCLE_CONFIGURATION_MULTIPLE_RULES = {
+    "Rules": [
+        {"Expiration": {"Days": 15}, "Status": "Enabled", "NoncurrentVersionExpiration": {"NoncurrentDays": 10}},
+        {"Expiration": {"Days": 5}, "Status": "Enabled", "NoncurrentVersionExpiration": {"NoncurrentDays": 30}},
+    ]
+}
+GET_BUCKET_LIFECYCLE_CONFIGURATION_DISABLED = {
+    "Rules": [{"Expiration": {"Days": 15}, "Status": "Disabled", "NoncurrentVersionExpiration": {"NoncurrentDays": 30}}]
+}
+GET_BUCKET_LIFECYCLE_CONFIGURATION_NO_EXPIRY = {
+    "Rules": [{"Status": "Enabled", "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 45}}]
+}

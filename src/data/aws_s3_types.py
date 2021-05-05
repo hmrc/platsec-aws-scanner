@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import reduce
 from json import loads
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 
 @dataclass
@@ -11,6 +11,7 @@ class Bucket:
     content_deny: Optional[BucketContentDeny] = None
     data_tagging: Optional[BucketDataTagging] = None
     encryption: Optional[BucketEncryption] = None
+    lifecycle: Optional[BucketLifecycle] = None
     logging: Optional[BucketLogging] = None
     mfa_delete: Optional[BucketMFADelete] = None
     public_access_block: Optional[BucketPublicAccessBlock] = None
@@ -87,6 +88,27 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     }
 
     return algo_mapping[algorithm]()
+
+
+@dataclass
+class BucketLifecycle:
+    current_version_expiry: Union[int, str] = "unset"
+    previous_version_deletion: Union[int, str] = "unset"
+
+
+def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
+    enabled_rules = list(filter(lambda rule: rule.get("Status") == "Enabled", lifecycle_config["Rules"]))
+    current_version_rules = filter(lambda rule: "Expiration" in rule, enabled_rules)
+    previous_version_rules = filter(lambda rule: "NoncurrentVersionExpiration" in rule, enabled_rules)
+    return BucketLifecycle(
+        current_version_expiry=min(
+            map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
+        ),
+        previous_version_deletion=min(
+            map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
+            default="unset",
+        ),
+    )
 
 
 @dataclass

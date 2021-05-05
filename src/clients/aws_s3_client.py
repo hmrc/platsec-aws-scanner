@@ -9,6 +9,7 @@ from src.data.aws_s3_types import (
     BucketContentDeny,
     BucketDataTagging,
     BucketEncryption,
+    BucketLifecycle,
     BucketLogging,
     BucketMFADelete,
     BucketPublicAccessBlock,
@@ -18,6 +19,7 @@ from src.data.aws_s3_types import (
     to_bucket_content_deny,
     to_bucket_data_tagging,
     to_bucket_encryption,
+    to_bucket_lifecycle,
     to_bucket_logging,
     to_bucket_mfa_delete,
     to_bucket_public_access_block,
@@ -56,6 +58,14 @@ class AwsS3Client:
             lambda: to_bucket_encryption(self._s3.get_bucket_encryption(Bucket=bucket)),
             BucketEncryption,
             f"unable to fetch encryption config for bucket '{bucket}'",
+        )
+
+    def get_bucket_lifecycle(self, bucket: str) -> BucketLifecycle:
+        self._logger.debug(f"fetching lifecycle configuration for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_lifecycle(self._s3.get_bucket_lifecycle_configuration(Bucket=bucket)),
+            BucketLifecycle,
+            f"unable to fetch lifecycle configuration for bucket '{bucket}'",
         )
 
     def get_bucket_logging(self, bucket: str) -> BucketLogging:

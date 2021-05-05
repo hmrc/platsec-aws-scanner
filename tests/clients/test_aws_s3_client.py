@@ -14,6 +14,7 @@ from tests.test_types_generator import (
     bucket_content_deny,
     bucket_data_tagging,
     bucket_encryption,
+    bucket_lifecycle,
     bucket_logging,
     bucket_mfa_delete,
     bucket_public_access_block,
@@ -252,6 +253,49 @@ class TestAwsS3ClientGetBucketLogging(AwsScannerTestCase):
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(bucket_logging(enabled=False), self.s3_client().get_bucket_logging("denied-bucket"))
         self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketLifecycle(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_lifecycle(**kwargs) -> Dict[Any, Any]:
+        return {
+            "single-rule": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_SINGLE_RULE,
+            "multiple-rules": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_MULTIPLE_RULES,
+            "disabled": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_DISABLED,
+            "no-expiry": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_NO_EXPIRY,
+            "no-lifecycle": lambda: _raise(
+                client_error(
+                    "GetBucketLifecycleConfiguration",
+                    "NoSuchLifecycleConfiguration",
+                    "The lifecycle configuration does not exist",
+                )
+            ),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_lifecycle_configuration=Mock(side_effect=self.get_bucket_lifecycle)))
+
+    def test_get_bucket_lifecycle_single_rule(self) -> None:
+        lifecycle = bucket_lifecycle(current_version_expiry=15, previous_version_deletion=30)
+        self.assertEqual(lifecycle, self.s3_client().get_bucket_lifecycle("single-rule"))
+
+    def test_get_bucket_lifecycle_multiple_rules(self) -> None:
+        lifecycle = bucket_lifecycle(current_version_expiry=5, previous_version_deletion=10)
+        self.assertEqual(lifecycle, self.s3_client().get_bucket_lifecycle("multiple-rules"))
+
+    def test_get_bucket_lifecycle_disabled(self) -> None:
+        lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
+        self.assertEqual(lifecycle, self.s3_client().get_bucket_lifecycle("disabled"))
+
+    def test_get_bucket_lifecycle_no_expiry(self) -> None:
+        lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
+        self.assertEqual(lifecycle, self.s3_client().get_bucket_lifecycle("no-expiry"))
+
+    def test_get_bucket_lifecycle_not_set(self) -> None:
+        lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(lifecycle, self.s3_client().get_bucket_lifecycle("no-lifecycle"))
+        self.assertIn("NoSuchLifecycleConfiguration", err.getvalue())
 
 
 class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
