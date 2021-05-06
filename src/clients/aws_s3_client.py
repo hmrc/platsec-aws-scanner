@@ -2,11 +2,13 @@ from logging import getLogger
 from typing import List
 
 from botocore.client import BaseClient
+from botocore.exceptions import BotoCoreError, ClientError
 
 from src.clients import boto_try
 from src.data.aws_s3_types import (
     Bucket,
     BucketContentDeny,
+    BucketCORS,
     BucketDataTagging,
     BucketEncryption,
     BucketLifecycle,
@@ -17,6 +19,7 @@ from src.data.aws_s3_types import (
     BucketVersioning,
     to_bucket,
     to_bucket_content_deny,
+    to_bucket_cors,
     to_bucket_data_tagging,
     to_bucket_encryption,
     to_bucket_lifecycle,
@@ -43,6 +46,16 @@ class AwsS3Client:
             BucketContentDeny,
             f"unable to fetch policy for bucket '{bucket}'",
         )
+
+    def get_bucket_cors(self, bucket: str) -> BucketCORS:
+        self._logger.debug(f"fetching cors for bucket '{bucket}'")
+        try:
+            return to_bucket_cors(self._s3.get_bucket_cors(Bucket=bucket))
+        except (BotoCoreError, ClientError) as error:
+            if "NoSuchCORSConfiguration" in str(error):
+                return BucketCORS(enabled=False)
+            self._logger.warning(f"unable to fetch cors for bucket '{bucket}'")
+            return BucketCORS(enabled=True)
 
     def get_bucket_data_tagging(self, bucket: str) -> BucketDataTagging:
         self._logger.debug(f"fetching tagging for bucket '{bucket}'")

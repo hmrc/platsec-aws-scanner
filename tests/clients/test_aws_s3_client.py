@@ -12,6 +12,7 @@ from tests.clients import test_aws_s3_client_responses as responses
 from tests.test_types_generator import (
     bucket,
     bucket_content_deny,
+    bucket_cors,
     bucket_data_tagging,
     bucket_encryption,
     bucket_lifecycle,
@@ -86,6 +87,33 @@ class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(content_deny, self.s3_client().get_bucket_content_deny("access-denied"))
         self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientGetBucketCORS(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_cors(**kwargs) -> Dict[Any, Any]:
+        return {
+            "cors-enabled": lambda: responses.GET_BUCKET_CORS_ENABLED,
+            "cors-disabled": lambda: _raise(
+                client_error("GetBucketCors", "NoSuchCORSConfiguration", "The CORS configuration does not exist")
+            ),
+            "access-denied": lambda: _raise(client_error("GetBucketCors", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_cors=Mock(side_effect=self.get_bucket_cors)))
+
+    def test_get_bucket_cors_enabled(self) -> None:
+        cors = bucket_cors(enabled=True)
+        self.assertEqual(cors, self.s3_client().get_bucket_cors("cors-enabled"))
+
+    def test_get_bucket_cors_disabled(self) -> None:
+        cors = bucket_cors(enabled=False)
+        self.assertEqual(cors, self.s3_client().get_bucket_cors("cors-disabled"))
+
+    def test_get_bucket_cors_failure(self) -> None:
+        cors = bucket_cors(enabled=True)
+        self.assertEqual(cors, self.s3_client().get_bucket_cors("access-denied"))
 
 
 class TestAwsS3ClientGetBucketDataExpiryTagging(AwsScannerTestCase):

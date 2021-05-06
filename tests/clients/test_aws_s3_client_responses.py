@@ -189,3 +189,5 @@ GET_BUCKET_LIFECYCLE_CONFIGURATION_DISABLED = {
 GET_BUCKET_LIFECYCLE_CONFIGURATION_NO_EXPIRY = {
     "Rules": [{"Status": "Enabled", "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 45}}]
 }
+
+GET_BUCKET_CORS_ENABLED = {"CORSRules": [{"AllowedMethods": ["GET"], "AllowedOrigins": ["*"]}]}

@@ -10,6 +10,7 @@ from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
     BucketContentDeny,
+    BucketCORS,
     BucketDataTagging,
     BucketEncryption,
     BucketLifecycle,
@@ -99,6 +100,10 @@ def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
     return BucketContentDeny(enabled=enabled)
 
 
+def bucket_cors(enabled: bool = True) -> BucketCORS:
+    return BucketCORS(enabled=enabled)
+
+
 def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> BucketDataTagging:
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
@@ -138,6 +143,7 @@ def bucket_versioning(enabled: bool = False) -> BucketVersioning:
 def bucket(
     name: str = "a_bucket",
     content_deny: Optional[BucketContentDeny] = None,
+    cors: Optional[BucketCORS] = None,
     data_tagging: Optional[BucketDataTagging] = None,
     encryption: Optional[BucketEncryption] = None,
     lifecycle: Optional[BucketLifecycle] = None,
@@ -150,6 +156,7 @@ def bucket(
     return Bucket(
         name=name,
         content_deny=content_deny,
+        cors=cors,
         data_tagging=data_tagging,
         encryption=encryption,
         lifecycle=lifecycle,
