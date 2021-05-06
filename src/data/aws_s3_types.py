@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 class Bucket:
     name: str
     content_deny: Optional[BucketContentDeny] = None
+    cors: Optional[BucketCORS] = None
     data_tagging: Optional[BucketDataTagging] = None
     encryption: Optional[BucketEncryption] = None
     lifecycle: Optional[BucketLifecycle] = None
@@ -48,6 +49,15 @@ def _is_action(action: Any, expected: str) -> bool:
 
 def _has_action(actions: Any, expected: str) -> bool:
     return type(actions) is list and bool(list(filter(lambda action: _is_action(action, expected), actions)))
+
+
+@dataclass
+class BucketCORS:
+    enabled: bool = True  # assume CORS is enabled by default so that the audit report never brings false negatives back
+
+
+def to_bucket_cors(cors_config: Dict[Any, Any]) -> BucketCORS:
+    return BucketCORS(enabled="CORSRules" in cors_config)
 
 
 @dataclass

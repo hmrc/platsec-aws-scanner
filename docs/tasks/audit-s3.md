@@ -29,6 +29,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "content_deny": {
             "enabled": true
           },
+          "cors": {
+            "enabled": false
+          },
           "data_tagging": {
             "expiry": "1-week",
             "sensitivity": "high"
@@ -61,6 +64,9 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
           "name": "another-bucket",
           "content_deny":  {
             "enabled":  false
+          },
+          "cors": {
+            "enabled": true
           },
           "data_tagging": {
             "expiry": "90-days",

@@ -7,6 +7,7 @@ from tests.test_types_generator import (
     account,
     bucket,
     bucket_content_deny,
+    bucket_cors,
     bucket_data_tagging,
     bucket_encryption,
     bucket_lifecycle,
@@ -26,6 +27,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
             bucket_1: bucket_content_deny(enabled=False),
             bucket_2: bucket_content_deny(enabled=True),
             bucket_3: bucket_content_deny(enabled=True),
+        }
+        cors_mapping = {
+            bucket_1: bucket_cors(enabled=True),
+            bucket_2: bucket_cors(enabled=False),
+            bucket_3: bucket_cors(enabled=False),
         }
         data_tagging = {
             bucket_1: bucket_data_tagging(expiry="6-months", sensitivity="low"),
@@ -71,6 +77,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
             get_bucket_content_deny=Mock(side_effect=lambda b: content_deny_mapping[b]),
+            get_bucket_cors=Mock(side_effect=lambda b: cors_mapping[b]),
             get_bucket_data_tagging=Mock(side_effect=lambda b: data_tagging[b]),
             get_bucket_encryption=Mock(side_effect=lambda b: encryption_mapping[b]),
             get_bucket_lifecycle=Mock(side_effect=lambda b: lifecycle_mapping[b]),
@@ -88,6 +95,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     bucket(
                         name=bucket_1,
                         content_deny=bucket_content_deny(enabled=False),
+                        cors=bucket_cors(True),
                         data_tagging=bucket_data_tagging(expiry="6-months", sensitivity="low"),
                         encryption=bucket_encryption(enabled=True, type="cmk"),
                         lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
@@ -100,6 +108,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     bucket(
                         name=bucket_2,
                         content_deny=bucket_content_deny(enabled=True),
+                        cors=bucket_cors(False),
                         data_tagging=bucket_data_tagging(expiry="1-month", sensitivity="high"),
                         encryption=bucket_encryption(enabled=False),
                         lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
@@ -112,6 +121,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     bucket(
                         name=bucket_3,
                         content_deny=bucket_content_deny(enabled=True),
+                        cors=bucket_cors(False),
                         data_tagging=bucket_data_tagging(expiry="1-week", sensitivity="high"),
                         encryption=bucket_encryption(enabled=True, type="aws"),
                         lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
