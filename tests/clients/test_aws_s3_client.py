@@ -11,6 +11,7 @@ from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
 from tests.test_types_generator import (
     bucket,
+    bucket_acl,
     bucket_content_deny,
     bucket_cors,
     bucket_data_tagging,
@@ -30,6 +31,43 @@ class TestAwsS3ClientListBuckets(AwsScannerTestCase):
         client = AwsS3Client(Mock(list_buckets=Mock(return_value=responses.LIST_BUCKETS)))
         expected_buckets = [bucket("a-bucket"), bucket("another-bucket")]
         self.assertEqual(expected_buckets, client.list_buckets())
+
+
+class TestAwsS3ClientGetBucketAccessControlList(AwsScannerTestCase):
+    @staticmethod
+    def get_bucket_acl(**kwargs) -> Dict[Any, Any]:
+        return {
+            "no-grant": lambda: responses.GET_BUCKET_ACL_NO_GRANT,
+            "owner-grant": lambda: responses.GET_BUCKET_ACL_OWNER_GRANT,
+            "all-users-grant": lambda: responses.GET_BUCKET_ACL_ALL_USERS_GRANT,
+            "authenticated-users-grant": lambda: responses.GET_BUCKET_ACL_AUTHENTICATED_USERS_GRANT,
+            "access-denied": lambda: _raise(client_error("GetBucketAcl", "AccessDenied", "Access Denied")),
+        }.get(kwargs.get("Bucket"))()
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(get_bucket_acl=Mock(side_effect=self.get_bucket_acl)))
+
+    def test_get_bucket_acl_no_grant(self) -> None:
+        acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=False)
+        self.assertEqual(acl, self.s3_client().get_bucket_acl("no-grant"))
+
+    def test_get_bucket_acl_owner_grant(self) -> None:
+        acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=False)
+        self.assertEqual(acl, self.s3_client().get_bucket_acl("owner-grant"))
+
+    def test_get_bucket_acl_all_users_grant(self) -> None:
+        acl = bucket_acl(all_users_enabled=True, authenticated_users_enabled=False)
+        self.assertEqual(acl, self.s3_client().get_bucket_acl("all-users-grant"))
+
+    def test_get_bucket_acl_authenticated_users_grant(self) -> None:
+        acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=True)
+        self.assertEqual(acl, self.s3_client().get_bucket_acl("authenticated-users-grant"))
+
+    def test_get_bucket_acl_failure(self) -> None:
+        acl = bucket_acl(all_users_enabled=True, authenticated_users_enabled=True)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(acl, self.s3_client().get_bucket_acl("access-denied"))
+        self.assertIn("AccessDenied", err.getvalue())
 
 
 class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):

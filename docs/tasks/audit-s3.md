@@ -26,6 +26,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
       "buckets": [
         {
           "name": "a-bucket",
+          "acl": {
+            "all_users_enabled": false,
+            "authenticated_users_enabled": false
+          },
           "content_deny": {
             "enabled": true
           },
@@ -62,6 +66,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
         },
         {
           "name": "another-bucket",
+          "acl": {
+            "all_users_enabled": true,
+            "authenticated_users_enabled": false
+          },
           "content_deny":  {
             "enabled":  false
           },

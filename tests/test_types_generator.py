@@ -9,6 +9,7 @@ from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
+    BucketACL,
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
@@ -96,6 +97,10 @@ def client_error(op_name: str, code: str, msg: str) -> ClientError:
     return ClientError(operation_name=op_name, error_response={"Error": {"Code": code, "Message": msg}})
 
 
+def bucket_acl(all_users_enabled: bool = True, authenticated_users_enabled: bool = True) -> BucketACL:
+    return BucketACL(all_users_enabled=all_users_enabled, authenticated_users_enabled=authenticated_users_enabled)
+
+
 def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
     return BucketContentDeny(enabled=enabled)
 
@@ -142,6 +147,7 @@ def bucket_versioning(enabled: bool = False) -> BucketVersioning:
 
 def bucket(
     name: str = "a_bucket",
+    acl: Optional[BucketACL] = None,
     content_deny: Optional[BucketContentDeny] = None,
     cors: Optional[BucketCORS] = None,
     data_tagging: Optional[BucketDataTagging] = None,
@@ -155,6 +161,7 @@ def bucket(
 ) -> Bucket:
     return Bucket(
         name=name,
+        acl=acl,
         content_deny=content_deny,
         cors=cors,
         data_tagging=data_tagging,

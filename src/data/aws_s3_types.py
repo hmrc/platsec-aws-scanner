@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 @dataclass
 class Bucket:
     name: str
+    acl: Optional[BucketACL] = None
     content_deny: Optional[BucketContentDeny] = None
     cors: Optional[BucketCORS] = None
     data_tagging: Optional[BucketDataTagging] = None
@@ -21,6 +22,21 @@ class Bucket:
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
     return Bucket(name=bucket_dict["Name"])
+
+
+@dataclass
+class BucketACL:
+    # assume both enabled by default so that the audit report never brings false negatives back
+    all_users_enabled: bool = True
+    authenticated_users_enabled: bool = True
+
+
+def to_bucket_acl(acl: Dict[Any, Any]) -> BucketACL:
+    grantees = [grant["Grantee"] for grant in acl["Grants"]]
+    return BucketACL(
+        all_users_enabled=any(map(lambda grantee: "AllUsers" in grantee.get("URI", ""), grantees)),
+        authenticated_users_enabled=any(map(lambda grantee: "AuthenticatedUsers" in grantee.get("URI", ""), grantees)),
+    )
 
 
 @dataclass

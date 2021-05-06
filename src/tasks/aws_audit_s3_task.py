@@ -17,6 +17,7 @@ class AwsAuditS3Task(AwsS3Task):
 
     @staticmethod
     def _enrich_bucket(client: AwsS3Client, bucket: Bucket) -> Bucket:
+        bucket.acl = client.get_bucket_acl(bucket.name)
         bucket.content_deny = client.get_bucket_content_deny(bucket.name)
         bucket.cors = client.get_bucket_cors(bucket.name)
         bucket.data_tagging = client.get_bucket_data_tagging(bucket.name)
