@@ -64,7 +64,7 @@ class AwsS3Client:
         except (BotoCoreError, ClientError) as error:
             if "NoSuchCORSConfiguration" in str(error):
                 return BucketCORS(enabled=False)
-            self._logger.warning(f"unable to fetch cors for bucket '{bucket}'")
+            self._logger.warning(f"unable to fetch cors for bucket '{bucket}': {error}")
             return BucketCORS(enabled=True)
 
     def get_bucket_data_tagging(self, bucket: str) -> BucketDataTagging:
