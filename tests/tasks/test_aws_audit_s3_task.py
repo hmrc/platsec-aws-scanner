@@ -6,6 +6,7 @@ from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from tests.test_types_generator import (
     account,
     bucket,
+    bucket_acl,
     bucket_content_deny,
     bucket_cors,
     bucket_data_tagging,
@@ -23,6 +24,11 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
     def test_run_task(self) -> None:
         bucket_1, bucket_2, bucket_3 = "bucket-1", "bucket-2", "another_bucket"
         buckets = [bucket(bucket_1), bucket(bucket_2), bucket(bucket_3)]
+        acl_mapping = {
+            bucket_1: bucket_acl(all_users_enabled=True, authenticated_users_enabled=False),
+            bucket_2: bucket_acl(all_users_enabled=False, authenticated_users_enabled=True),
+            bucket_3: bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
+        }
         content_deny_mapping = {
             bucket_1: bucket_content_deny(enabled=False),
             bucket_2: bucket_content_deny(enabled=True),
@@ -76,6 +82,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
 
         s3_client = Mock(
             list_buckets=Mock(return_value=buckets),
+            get_bucket_acl=Mock(side_effect=lambda b: acl_mapping[b]),
             get_bucket_content_deny=Mock(side_effect=lambda b: content_deny_mapping[b]),
             get_bucket_cors=Mock(side_effect=lambda b: cors_mapping[b]),
             get_bucket_data_tagging=Mock(side_effect=lambda b: data_tagging[b]),
@@ -94,6 +101,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                 "buckets": [
                     bucket(
                         name=bucket_1,
+                        acl=bucket_acl(all_users_enabled=True, authenticated_users_enabled=False),
                         content_deny=bucket_content_deny(enabled=False),
                         cors=bucket_cors(True),
                         data_tagging=bucket_data_tagging(expiry="6-months", sensitivity="low"),
@@ -107,6 +115,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     ),
                     bucket(
                         name=bucket_2,
+                        acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=True),
                         content_deny=bucket_content_deny(enabled=True),
                         cors=bucket_cors(False),
                         data_tagging=bucket_data_tagging(expiry="1-month", sensitivity="high"),
@@ -120,6 +129,7 @@ class TestAwsAuditS3Task(AwsScannerTestCase):
                     ),
                     bucket(
                         name=bucket_3,
+                        acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
                         content_deny=bucket_content_deny(enabled=True),
                         cors=bucket_cors(False),
                         data_tagging=bucket_data_tagging(expiry="1-week", sensitivity="high"),

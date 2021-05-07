@@ -7,6 +7,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from src.clients import boto_try
 from src.data.aws_s3_types import (
     Bucket,
+    BucketACL,
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
@@ -18,6 +19,7 @@ from src.data.aws_s3_types import (
     BucketSecureTransport,
     BucketVersioning,
     to_bucket,
+    to_bucket_acl,
     to_bucket_content_deny,
     to_bucket_cors,
     to_bucket_data_tagging,
@@ -38,6 +40,14 @@ class AwsS3Client:
 
     def list_buckets(self) -> List[Bucket]:
         return [to_bucket(bucket) for bucket in self._s3.list_buckets()["Buckets"]]
+
+    def get_bucket_acl(self, bucket: str) -> BucketACL:
+        self._logger.debug(f"fetching access control list for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_acl(self._s3.get_bucket_acl(Bucket=bucket)),
+            BucketACL,
+            f"unable to fetch access control list for bucket '{bucket}'",
+        )
 
     def get_bucket_content_deny(self, bucket: str) -> BucketContentDeny:
         self._logger.debug(f"fetching policy for bucket '{bucket}'")

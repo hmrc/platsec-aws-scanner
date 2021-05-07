@@ -191,3 +191,10 @@ GET_BUCKET_LIFECYCLE_CONFIGURATION_NO_EXPIRY = {
 }
 
 GET_BUCKET_CORS_ENABLED = {"CORSRules": [{"AllowedMethods": ["GET"], "AllowedOrigins": ["*"]}]}
+
+GET_BUCKET_ACL_NO_GRANT = {"Owner": {"ID": "some_id"}, "Grants": []}
+GET_BUCKET_ACL_OWNER_GRANT = {"Owner": {"ID": "some_id"}, "Grants": [{"Grantee": {"ID": "some_id"}}]}
+GET_BUCKET_ACL_ALL_USERS_GRANT = {"Grants": [{"Grantee": {"URI": "http://acs.amazonaws.com/groups/global/AllUsers"}}]}
+GET_BUCKET_ACL_AUTHENTICATED_USERS_GRANT = {
+    "Grants": [{"Grantee": {"URI": "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"}}]
+}
