@@ -1,4 +1,5 @@
-from logging import getLogger
+import logging
+
 from typing import Any, Callable, Dict
 
 from src.aws_parallel_task_runner import AwsParallelTaskRunner
@@ -13,16 +14,27 @@ from src.json_serializer import to_json
 
 class AwsScannerMain:
     def __init__(self) -> None:
-        self._logger = getLogger(self.__class__.__name__)
         self._main()
 
     def _main(self) -> None:
         args = AwsScannerArgumentParser().parse_args()
+        logger = self._configure_logging(args)
         try:
             print(to_json(self._get_tasks_mapping(self._build_aws_scanner(args), args)[args.task]()))
         except AwsScannerException as ex:
-            self._logger.error(f"{type(ex).__name__}: {ex}")
+            logger.error(f"{type(ex).__name__}: {ex}")
             raise SystemExit(1)
+
+    def _configure_logging(self, args: AwsScannerArguments) -> logging.Logger:
+        logging.basicConfig(
+            level=args.log_level.upper(),
+            datefmt="%Y-%m-%dT%H:%M:%S",
+            format="%(asctime)s %(levelname)s %(module)s %(message)s",
+        )
+        logging.getLogger("botocore").setLevel(logging.ERROR)
+        logging.getLogger("urllib3").setLevel(logging.ERROR)
+        logging.getLogger("requests").setLevel(logging.ERROR)
+        return logging.getLogger(self.__class__.__name__)
 
     @staticmethod
     def _build_aws_scanner(args: AwsScannerArguments) -> AwsScanner:
