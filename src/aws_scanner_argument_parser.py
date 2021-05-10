@@ -16,6 +16,7 @@ class AwsScannerArguments:
     service: str
     role: str
     source_ip: str
+    log_level: str
 
 
 class AwsScannerCommands:
@@ -45,6 +46,16 @@ class AwsScannerArgumentParser:
         parser.add_argument("-m", "--month", type=int, required=True, help="month for AWS Athena data partition")
         AwsScannerArgumentParser._add_accounts_args(parser)
 
+    @staticmethod
+    def _add_verbosity_arg(parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            choices=["error", "warning", "info", "debug"],
+            default="error",
+            help="log level configuration",
+        )
+
     def _build_parser(self) -> ArgumentParser:
         parser = ArgumentParser()
         subparsers = parser.add_subparsers(dest="task", required=True)
@@ -62,29 +73,34 @@ class AwsScannerArgumentParser:
         desc = "drop databases and tables created by tasks"
         drop_parser = subparsers.add_parser(AwsScannerCommands.drop, help=desc, description=desc)
         self._add_auth_args(drop_parser)
+        self._add_verbosity_arg(drop_parser)
 
     def _add_audit_s3_command(self, subparsers: Any) -> None:
         desc = "audit S3 bucket compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_s3, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
 
     def _add_create_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table"
         table_parser = subparsers.add_parser(AwsScannerCommands.create_table, help=desc, description=desc)
         self._add_auth_args(table_parser)
         self._add_athena_task_args(table_parser)
+        self._add_verbosity_arg(table_parser)
 
     def _add_list_accounts_command(self, subparsers: Any) -> None:
         desc = "list organization accounts"
         list_accounts_parser = subparsers.add_parser(AwsScannerCommands.list_accounts, help=desc, description=desc)
         self._add_auth_args(list_accounts_parser)
+        self._add_verbosity_arg(list_accounts_parser)
 
     def _add_list_ssm_parameters_command(self, subparsers: Any) -> None:
         desc = "list SSM parameters"
         list_params_parser = subparsers.add_parser(AwsScannerCommands.list_ssm_parameters, help=desc, description=desc)
         self._add_auth_args(list_params_parser)
         self._add_accounts_args(list_params_parser)
+        self._add_verbosity_arg(list_params_parser)
 
     def _add_find_principal_command(self, subparsers: Any) -> None:
         desc = "find principal by source IP"
@@ -92,6 +108,7 @@ class AwsScannerArgumentParser:
         self._add_auth_args(principal_parser)
         self._add_athena_task_args(principal_parser)
         principal_parser.add_argument("-i", "--ip", type=str, required=True, help="source IP of principal to find")
+        self._add_verbosity_arg(principal_parser)
 
     def _add_role_usage_command(self, subparsers: Any) -> None:
         desc = "scan AWS role usage"
@@ -99,6 +116,7 @@ class AwsScannerArgumentParser:
         self._add_auth_args(role_parser)
         self._add_athena_task_args(role_parser)
         role_parser.add_argument("-r", "--role", type=str, required=True, help="which role to scan usage for")
+        self._add_verbosity_arg(role_parser)
 
     def _add_service_usage_command(self, subparsers: Any) -> None:
         desc = "scan AWS service usage"
@@ -106,6 +124,7 @@ class AwsScannerArgumentParser:
         self._add_auth_args(service_parser)
         self._add_athena_task_args(service_parser)
         service_parser.add_argument("-s", "--service", type=str, required=True, help="which service to scan usage for")
+        self._add_verbosity_arg(service_parser)
 
     def parse_args(self) -> AwsScannerArguments:
         args = vars(self._build_parser().parse_args())
@@ -119,6 +138,7 @@ class AwsScannerArgumentParser:
             service=str(args.get("service")),
             role=str(args.get("role")),
             source_ip=str(args.get("ip")),
+            log_level=str(args.get("verbosity")),
         )
 
     @staticmethod

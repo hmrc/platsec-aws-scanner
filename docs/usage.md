@@ -51,6 +51,8 @@ Arguments also have abbreviations:
     the task will be run against all accounts that live in and under the [parent organizational unit specified in the
     configuration file](configuration.md#organizational-unit))
 
+-   `-v / --verbosity` (optional): log level configuration; one of \["error" (default), "warning", "info", "debug"\]
+
 ### Task report
 
 Tasks are executed [in parallel](configuration.md#tasks). Each successful task produces a report. Once all tasks have
@@ -120,7 +122,9 @@ It's also possible to print a helper message on a specific task with the `-h / -
 
 ```sh
 ./platsec_aws_scanner.sh service_usage -h
-usage: platsec_aws_scanner.py service_usage [-h] -u USERNAME -t TOKEN -y YEAR -m MONTH [-a ACCOUNTS] -s SERVICE
+usage: platsec_aws_scanner.py service_usage [-h] [-u USERNAME] -t TOKEN -y YEAR -m MONTH [-a ACCOUNTS] -s SERVICE [-v {error,warning,info,debug}]
+
+scan AWS service usage
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -135,4 +139,6 @@ optional arguments:
                         comma-separated list of target accounts
   -s SERVICE, --service SERVICE
                         which service to scan usage for
+  -v {error,warning,info,debug}, --verbosity {error,warning,info,debug}
+                        log level configuration
 ```

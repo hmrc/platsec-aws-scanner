@@ -151,7 +151,9 @@ class TestAwsS3ClientGetBucketCORS(AwsScannerTestCase):
 
     def test_get_bucket_cors_failure(self) -> None:
         cors = bucket_cors(enabled=True)
-        self.assertEqual(cors, self.s3_client().get_bucket_cors("access-denied"))
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual(cors, self.s3_client().get_bucket_cors("access-denied"))
+        self.assertIn("AccessDenied", err.getvalue())
 
 
 class TestAwsS3ClientGetBucketDataExpiryTagging(AwsScannerTestCase):
