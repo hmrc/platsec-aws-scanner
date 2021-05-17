@@ -1,12 +1,15 @@
+import os
 import sys
 from configparser import ConfigParser
+from logging import getLogger
 
 from src.data.aws_organizations_types import Account
 
 
 class AwsScannerConfig:
     def __init__(self) -> None:
-        self._config = AwsScannerConfig._load_config()
+        self._logger = getLogger(self.__class__.__name__)
+        self._config = self._load_config()
 
     def account_auth(self) -> Account:
         return Account(self._get_config("accounts", "auth"), "auth")
@@ -58,19 +61,12 @@ class AwsScannerConfig:
 
     def _get_config(self, section: str, key: str) -> str:
         try:
-            return self._config[section][key]
+            return os.environ.get(f"AWS_SCANNER_{section.upper()}_{key.upper()}") or self._config[section][key]
         except KeyError:
             sys.exit(f"missing config: section '{section}', key '{key}'")
 
-    @staticmethod
-    def _load_config() -> ConfigParser:
+    def _load_config(self) -> ConfigParser:
         config = ConfigParser()
-        config_is_read = config.read("aws_scanner_config.ini")
-        return (
-            config
-            if config_is_read
-            else sys.exit(
-                "Config file 'aws_scanner_config.ini' is missing and should be placed at the root of the project. "
-                "See 'aws_scanner_config_template.ini' for a config example."
-            )
-        )
+        if not config.read("aws_scanner_config.ini"):
+            self._logger.info("Config file 'aws_scanner_config.ini' not found, using environment variables instead")
+        return config
