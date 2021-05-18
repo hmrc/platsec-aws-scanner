@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from botocore.exceptions import ClientError
 
+from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -172,4 +173,30 @@ def bucket(
         public_access_block=public_access_block,
         secure_transport=secure_transport,
         versioning=versioning,
+    )
+
+
+def aws_scanner_arguments(
+    username: str = "bob",
+    mfa_token: str = "123456",
+    task: str = "a_task",
+    year: int = 2020,
+    month: int = 2,
+    accounts: Optional[List[str]] = None,
+    service: str = "a_service",
+    role: str = "a_role",
+    source_ip: str = "127.0.0.1",
+    log_level: str = "error",
+) -> AwsScannerArguments:
+    return AwsScannerArguments(
+        username=username,
+        mfa_token=mfa_token,
+        task=task,
+        year=year,
+        month=month,
+        accounts=accounts or ["999888777666", "555444333222"],
+        service=service,
+        role=role,
+        source_ip=source_ip,
+        log_level=log_level,
     )

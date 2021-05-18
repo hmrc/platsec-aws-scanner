@@ -126,8 +126,10 @@ class AwsScannerArgumentParser:
         service_parser.add_argument("-s", "--service", type=str, required=True, help="which service to scan usage for")
         self._add_verbosity_arg(service_parser)
 
-    def parse_args(self) -> AwsScannerArguments:
-        args = vars(self._build_parser().parse_args())
+    def parse_cli_args(self) -> AwsScannerArguments:
+        return self.parse_args(vars(self._build_parser().parse_args()))
+
+    def parse_args(self, args: Dict[str, Any]) -> AwsScannerArguments:
         return AwsScannerArguments(
             username=self._fetch_username(args),
             mfa_token=str(args.get("token")),

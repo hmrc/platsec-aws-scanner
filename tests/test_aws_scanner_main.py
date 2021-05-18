@@ -10,7 +10,7 @@ from src.aws_scanner_main import AwsScannerMain
 from src.data.aws_scanner_exceptions import AwsScannerException
 from src.json_serializer import to_json
 
-from tests.test_types_generator import task_report
+from tests.test_types_generator import aws_scanner_arguments, task_report
 
 CLIENT_FACTORY_REF = "src.clients.aws_client_factory.AwsClientFactory"
 SCANNER_REF = "src.aws_scanner.AwsScanner"
@@ -54,73 +54,65 @@ def build_test_report(description):
 class TestAwsScannerMain(AwsScannerTestCase):
     def test_main_with_service_usage_cmd(self, _, __, ___, ____):
         report = build_test_report("service_usage")
-        with patch("sys.argv", "prog service_usage -u bob -t 123456 -y 2021 -m 2 -s ssm".split()):
-            with patch(f"{SCANNER_REF}.scan_service_usage", return_value=report) as mock_scan_service_usage:
-                with redirect_stdout(StringIO()) as out:
-                    AwsScannerMain()
+        with patch(f"{SCANNER_REF}.scan_service_usage", return_value=report) as mock_scan_service_usage:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="service_usage", service="ssm", year=2021, month=2))
         mock_scan_service_usage.assert_called_once_with(2021, 2, "ssm")
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_role_usage_cmd(self, _, __, ___, ____):
         report = build_test_report("role_usage")
-        with patch("sys.argv", "prog role_usage -u bob -t 123456 -y 2021 -m 2 -r SomeSensitiveRole".split()):
-            with patch(f"{SCANNER_REF}.scan_role_usage", return_value=report) as mock_scan_role_usage:
-                with redirect_stdout(StringIO()) as out:
-                    AwsScannerMain()
+        with patch(f"{SCANNER_REF}.scan_role_usage", return_value=report) as mock_scan_role_usage:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="role_usage", role="SomeSensitiveRole", year=2021, month=2))
         mock_scan_role_usage.assert_called_once_with(2021, 2, "SomeSensitiveRole")
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_find_principal_by_ip_cmd(self, _, __, ___, ____):
         report = build_test_report("principal")
-        with patch("sys.argv", "prog find_principal -u bob -t 123456 -y 2022 -m 04 -i 127.0.0.5".split()):
-            with patch(f"{SCANNER_REF}.find_principal_by_ip", return_value=report) as mock_find_principal_by_ip:
-                with redirect_stdout(StringIO()) as out:
-                    AwsScannerMain()
+        with patch(f"{SCANNER_REF}.find_principal_by_ip", return_value=report) as mock_find_principal_by_ip:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="find_principal", year=2022, month=4, source_ip="127.0.0.5"))
         mock_find_principal_by_ip.assert_called_once_with(2022, 4, "127.0.0.5")
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_create_table_cmd(self, _, __, ___, ____):
         report = build_test_report("create_table")
-        with patch("sys.argv", "prog create_table -u bob -t 123456 -y 2020 -m 02 -a 1,2,3".split()):
-            with patch(f"{SCANNER_REF}.__init__", side_effect=init_scanner_with_target_accounts):
-                with patch(f"{SCANNER_REF}.create_table", return_value=report) as mock_create_table:
-                    with redirect_stdout(StringIO()) as out:
-                        AwsScannerMain()
+        with patch(f"{SCANNER_REF}.__init__", side_effect=init_scanner_with_target_accounts):
+            with patch(f"{SCANNER_REF}.create_table", return_value=report) as mock_create_table:
+                with redirect_stdout(StringIO()) as out:
+                    AwsScannerMain(aws_scanner_arguments(task="create_table", accounts=["1", "2", "3"]))
         mock_create_table.assert_called_once_with(2020, 2)
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_list_accounts_cmd(self, _, __, ___, ____):
         report = build_test_report("list_accounts")
-        with patch("sys.argv", "prog list_accounts -u bob -t 123456".split()):
-            with patch(f"{SCANNER_REF}.list_accounts", return_value=report) as mock_clean:
-                with redirect_stdout(StringIO()) as out:
-                    AwsScannerMain()
+        with patch(f"{SCANNER_REF}.list_accounts", return_value=report) as mock_clean:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="list_accounts"))
         mock_clean.assert_called_once_with()
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_drop_cmd(self, _, __, ___, ____):
         report = build_test_report("drop")
-        with patch("sys.argv", "prog drop -u bob -t 123456".split()):
-            with patch(f"{SCANNER_REF}.clean_athena", return_value=report) as mock_clean:
-                with redirect_stdout(StringIO()) as out:
-                    AwsScannerMain()
+        with patch(f"{SCANNER_REF}.clean_athena", return_value=report) as mock_clean:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="drop"))
         mock_clean.assert_called_once_with()
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_audit_s3_cmd(self, _, __, ___, ____):
         report = build_test_report("audit_s3")
-        with patch("sys.argv", "prog audit_s3 -u bob -t 123456".split()):
-            with patch(f"{SCANNER_REF}.audit_s3", return_value=report) as mock_audit_s3:
-                with redirect_stdout(StringIO()) as out:
-                    AwsScannerMain()
+        with patch(f"{SCANNER_REF}.audit_s3", return_value=report) as mock_audit_s3:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="audit_s3"))
         mock_audit_s3.assert_called_once_with()
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_failure(self, _, __, ___, ____):
-        with patch("sys.argv", "prog drop -u bob -t 123456".split()):
-            with patch(f"{SCANNER_REF}.clean_athena", side_effect=AwsScannerException("got a problem")):
-                with self.assertRaises(SystemExit) as se:
-                    with self.assertLogs("AwsScannerMain", level="ERROR") as error_log:
-                        AwsScannerMain()
+        with patch(f"{SCANNER_REF}.clean_athena", side_effect=AwsScannerException("got a problem")):
+            with self.assertRaises(SystemExit) as se:
+                with self.assertLogs("AwsScannerMain", level="ERROR") as error_log:
+                    AwsScannerMain(aws_scanner_arguments(task="drop"))
         self.assertEqual(1, se.exception.code, f"exit code should be 1 but got {se.exception.code}")
         self.assertIn("AwsScannerException: got a problem", error_log.output[0])
