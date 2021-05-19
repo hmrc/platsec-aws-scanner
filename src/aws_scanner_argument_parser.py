@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
+from functools import reduce
 from typing import Any, Dict, List, Optional
 
 from src.aws_scanner_config import AwsScannerConfig as Config
@@ -128,6 +129,11 @@ class AwsScannerArgumentParser:
 
     def parse_cli_args(self) -> AwsScannerArguments:
         return self.parse_args(vars(self._build_parser().parse_args()))
+
+    def parse_lambda_args(self, lambda_event: Dict[str, Any]) -> AwsScannerArguments:
+        args = dict(lambda_event, **{"username": "__lambda", "token": "000000"})
+        command = reduce(lambda cmd, arg: cmd + [f"--{arg[0]}", str(arg[1])], args.items(), [args.pop("task", "")])
+        return self.parse_args(vars(self._build_parser().parse_args(command)))
 
     def parse_args(self, args: Dict[str, Any]) -> AwsScannerArguments:
         return AwsScannerArguments(

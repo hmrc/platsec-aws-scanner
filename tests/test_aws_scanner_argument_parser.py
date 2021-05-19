@@ -8,7 +8,7 @@ from src.aws_scanner_argument_parser import AwsScannerArgumentParser
 
 
 class TestAwsScannerArgumentParser(AwsScannerTestCase):
-    def test_parse_args_for_service_usage_task(self) -> None:
+    def test_parse_cli_args_for_service_usage_task(self) -> None:
         with patch("sys.argv", "prog service_usage -u bob -t 666666 -y 2021 -m 02 -s ssm -v info".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -27,7 +27,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.accounts, None)
             self.assertEqual(args.service, "ssm")
 
-    def test_parse_args_for_role_usage_task(self) -> None:
+    def test_parse_cli_args_for_role_usage_task(self) -> None:
         with patch("sys.argv", "prog role_usage -u tom -t 654321 -y 2018 -m 1 -r RoleVerySensitive -v info".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -46,7 +46,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.accounts, None)
             self.assertEqual(args.role, "RoleVerySensitive")
 
-    def test_parse_args_for_principal_task(self) -> None:
+    def test_parse_cli_args_for_principal_task(self) -> None:
         with patch("sys.argv", "prog find_principal -u tom -t 987654 -y 2020 -m 11 -i 127.0.0.1 -v info".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -65,7 +65,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.accounts, None)
             self.assertEqual(args.source_ip, "127.0.0.1")
 
-    def test_parse_args_for_create_table_task(self) -> None:
+    def test_parse_cli_args_for_create_table_task(self) -> None:
         with patch("sys.argv", "prog create_table -u john -t 444555 -y 2019 -m 5 -a 1,2,3 -v info".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -83,7 +83,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.month, 5)
             self.assertEqual(args.accounts, ["1", "2", "3"])
 
-    def test_parse_args_for_list_accounts_task(self) -> None:
+    def test_parse_cli_args_for_list_accounts_task(self) -> None:
         with patch("sys.argv", "prog list_accounts -u rob -t 446655 -v debug".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -96,7 +96,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.mfa_token, "446655")
             self.assertEqual(args.log_level, "debug")
 
-    def test_parse_args_for_list_ssm_parameters_task(self) -> None:
+    def test_parse_cli_args_for_list_ssm_parameters_task(self) -> None:
         with patch("sys.argv", "prog list_ssm_parameters -u kev -t 446465 -v warning".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -109,7 +109,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.mfa_token, "446465")
             self.assertEqual(args.log_level, "warning")
 
-    def test_parse_args_for_drop_task(self) -> None:
+    def test_parse_cli_args_for_drop_task(self) -> None:
         with patch("sys.argv", "prog drop -t 433516 -v info".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -122,7 +122,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.mfa_token, "433516")
             self.assertEqual(args.log_level, "info")
 
-    def test_parse_args_for_audit_s3_task(self) -> None:
+    def test_parse_cli_args_for_audit_s3_task(self) -> None:
         with patch("sys.argv", "prog audit_s3 -t 446468 -a 1,2 -v error".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -136,9 +136,28 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.accounts, ["1", "2"])
             self.assertEqual(args.log_level, "error")
 
-    def test_task_is_mandatory(self) -> None:
+    def test_cli_task_is_mandatory(self) -> None:
         with redirect_stderr(StringIO()) as err:
             with self.assertRaises(SystemExit):
                 with patch("sys.argv", "prog".split()):
                     AwsScannerArgumentParser().parse_cli_args()
         self.assertIn("required: task", err.getvalue())
+
+    def test_lambda_task_is_mandatory(self) -> None:
+        with redirect_stderr(StringIO()) as err:
+            with self.assertRaises(SystemExit):
+                AwsScannerArgumentParser().parse_lambda_args({})
+        self.assertIn("error: argument task", err.getvalue())
+
+    def test_parse_lambda_args_for_service_usage_task(self) -> None:
+        lambda_args = AwsScannerArgumentParser().parse_lambda_args(
+            {"year": 2021, "month": 2, "task": "service_usage", "service": "ssm", "username": "something", "token": "1"}
+        )
+
+        self.assertEqual(lambda_args.task, "service_usage")
+        self.assertEqual(lambda_args.username, "__lambda")
+        self.assertEqual(lambda_args.mfa_token, "000000")
+        self.assertEqual(lambda_args.year, 2021)
+        self.assertEqual(lambda_args.month, 2)
+        self.assertEqual(lambda_args.accounts, None)
+        self.assertEqual(lambda_args.service, "ssm")
