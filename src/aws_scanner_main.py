@@ -30,6 +30,7 @@ class AwsScannerMain:
             datefmt="%Y-%m-%dT%H:%M:%S",
             format="%(asctime)s %(levelname)s %(module)s %(message)s",
         )
+        logging.getLogger().setLevel(args.log_level.upper())
         logging.getLogger("botocore").setLevel(logging.ERROR)
         logging.getLogger("urllib3").setLevel(logging.ERROR)
         logging.getLogger("requests").setLevel(logging.ERROR)
