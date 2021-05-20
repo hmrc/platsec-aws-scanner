@@ -5,6 +5,7 @@ from contextlib import redirect_stderr
 from io import StringIO
 
 from src.aws_scanner_argument_parser import AwsScannerArgumentParser
+from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
 
 
 class TestAwsScannerArgumentParser(AwsScannerTestCase):
@@ -155,8 +156,8 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
         )
 
         self.assertEqual(lambda_args.task, "service_usage")
-        self.assertEqual(lambda_args.username, "__lambda")
-        self.assertEqual(lambda_args.mfa_token, "000000")
+        self.assertEqual(lambda_args.username, SERVICE_ACCOUNT_USER)
+        self.assertEqual(lambda_args.mfa_token, SERVICE_ACCOUNT_TOKEN)
         self.assertEqual(lambda_args.year, 2021)
         self.assertEqual(lambda_args.month, 2)
         self.assertEqual(lambda_args.accounts, None)
