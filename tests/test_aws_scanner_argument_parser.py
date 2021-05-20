@@ -94,7 +94,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.task, "list_accounts")
             self.assertEqual(args.username, "rob")
             self.assertEqual(args.mfa_token, "446655")
-            self.assertEqual(args.log_level, "debug")
+            self.assertEqual(args.log_level, "DEBUG")
 
     def test_parse_cli_args_for_list_ssm_parameters_task(self) -> None:
         with patch("sys.argv", "prog list_ssm_parameters -u kev -t 446465 -v warning".split()):
@@ -107,7 +107,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.task, "list_ssm_parameters")
             self.assertEqual(args.username, "kev")
             self.assertEqual(args.mfa_token, "446465")
-            self.assertEqual(args.log_level, "warning")
+            self.assertEqual(args.log_level, "WARNING")
 
     def test_parse_cli_args_for_drop_task(self) -> None:
         with patch("sys.argv", "prog drop -t 433516 -v info".split()):
@@ -120,7 +120,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.task, "drop")
             self.assertEqual(args.username, "joe.bloggs")
             self.assertEqual(args.mfa_token, "433516")
-            self.assertEqual(args.log_level, "info")
+            self.assertEqual(args.log_level, "INFO")
 
     def test_parse_cli_args_for_audit_s3_task(self) -> None:
         with patch("sys.argv", "prog audit_s3 -t 446468 -a 1,2 -v error".split()):
@@ -134,7 +134,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.username, "joe.bloggs")
             self.assertEqual(args.mfa_token, "446468")
             self.assertEqual(args.accounts, ["1", "2"])
-            self.assertEqual(args.log_level, "error")
+            self.assertEqual(args.log_level, "ERROR")
 
     def test_cli_task_is_mandatory(self) -> None:
         with redirect_stderr(StringIO()) as err:

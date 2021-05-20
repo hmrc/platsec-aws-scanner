@@ -186,7 +186,7 @@ def aws_scanner_arguments(
     service: str = "a_service",
     role: str = "a_role",
     source_ip: str = "127.0.0.1",
-    log_level: str = "error",
+    log_level: str = "ERROR",
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,

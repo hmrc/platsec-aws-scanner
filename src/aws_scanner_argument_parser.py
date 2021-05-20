@@ -146,7 +146,7 @@ class AwsScannerArgumentParser:
             service=str(args.get("service")),
             role=str(args.get("role")),
             source_ip=str(args.get("ip")),
-            log_level=str(args.get("verbosity")),
+            log_level=str(args.get("verbosity")).upper(),
         )
 
     @staticmethod

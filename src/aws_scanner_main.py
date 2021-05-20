@@ -26,11 +26,11 @@ class AwsScannerMain:
 
     def _configure_logging(self, args: AwsScannerArguments) -> logging.Logger:
         logging.basicConfig(
-            level=args.log_level.upper(),
+            level=args.log_level,
             datefmt="%Y-%m-%dT%H:%M:%S",
             format="%(asctime)s %(levelname)s %(module)s %(message)s",
         )
-        logging.getLogger().setLevel(args.log_level.upper())
+        logging.getLogger().setLevel(args.log_level)
         logging.getLogger("botocore").setLevel(logging.ERROR)
         logging.getLogger("urllib3").setLevel(logging.ERROR)
         logging.getLogger("requests").setLevel(logging.ERROR)
