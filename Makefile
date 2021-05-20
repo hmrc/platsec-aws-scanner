@@ -4,7 +4,7 @@ DOCKER = docker run \
 	--env "PYTHONWARNINGS=ignore:ResourceWarning" \
 	--volume "$(PWD):${PWD}" \
 	--workdir "${PWD}"
-PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*,platsec_aws_scanner.py"
+PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
 PYTHON_TEST_PATTERN ?= "test_*.py"
 PYTHON_VERSION = $(shell head -1 .python-version)
