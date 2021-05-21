@@ -59,3 +59,11 @@ python-coverage:
 md-check:
 	@docker pull zemanlx/remark-lint:0.2.0 >/dev/null
 	@docker run --rm -i -v $(PWD):/lint/input:ro zemanlx/remark-lint:0.2.0 --frail .
+
+.PHONY: build-lambda-image
+build-lambda-image:
+	@docker build \
+		--file lambda.Dockerfile \
+		--tag platsec_aws_scanner_lambda:local . \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		>/dev/null
