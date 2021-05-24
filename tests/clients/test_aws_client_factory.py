@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from botocore.exceptions import NoCredentialsError
 
 from src.clients.aws_client_factory import AwsClientFactory, AwsCredentials
+from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
 
@@ -111,7 +112,7 @@ class TestAwsClientFactory(AwsScannerTestCase):
     mfa, username = "123456", "joe.bloggs"
     service_name, role = "some_service", "some_role"
 
-    def test_get_session_token(self) -> None:
+    def test_get_session_token_user_account(self) -> None:
         boto_credentials = {
             "Credentials": {
                 "AccessKeyId": "some_access_key",
@@ -133,6 +134,11 @@ class TestAwsClientFactory(AwsScannerTestCase):
             DurationSeconds=3600, SerialNumber="arn:aws:iam::111222333444:mfa/joe.bloggs", TokenCode="123456"
         )
 
+    def test_get_session_token_service_account(self) -> None:
+        with patch("src.clients.aws_client_factory.boto3") as mock_boto3:
+            self.assertIsNone(AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER)._session_token)
+        mock_boto3.client.assert_not_called()
+
     def test_get_client(self) -> None:
         mock_client = Mock()
         mock_boto = Mock(client=Mock(return_value=mock_client))
@@ -153,7 +159,7 @@ class TestAwsClientFactory(AwsScannerTestCase):
             aws_session_token="session",
         )
 
-    def test_assume_role(self) -> None:
+    def test_assume_role_user_account(self) -> None:
         assumed_role_creds = {
             "Credentials": {
                 "AccessKeyId": "some_access_key",
@@ -175,6 +181,27 @@ class TestAwsClientFactory(AwsScannerTestCase):
             aws_secret_access_key="session_secret_key",
             aws_session_token="session_token",
         )
+        mock_sts_client.assume_role.assert_called_once_with(
+            DurationSeconds=3600,
+            RoleArn="arn:aws:iam::account_id:role/some_role",
+            RoleSessionName="boto3_assuming_some_role",
+        )
+
+    def test_assume_role_service_account(self) -> None:
+        assumed_role_creds = {
+            "Credentials": {
+                "AccessKeyId": "some_access_key",
+                "SecretAccessKey": "some_secret_access_key",
+                "SessionToken": "some_session_token",
+            }
+        }
+        mock_sts_client = Mock(assume_role=Mock(return_value=assumed_role_creds))
+        mock_boto = Mock(client=Mock(return_value=mock_sts_client))
+
+        with patch("src.clients.aws_client_factory.boto3", mock_boto):
+            creds = AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER)._assume_role(account(), self.role)
+        self.assertEqual(creds, AwsCredentials("some_access_key", "some_secret_access_key", "some_session_token"))
+        mock_boto.client.assert_called_once_with(service_name="sts")
         mock_sts_client.assume_role.assert_called_once_with(
             DurationSeconds=3600,
             RoleArn="arn:aws:iam::account_id:role/some_role",

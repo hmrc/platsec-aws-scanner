@@ -4,7 +4,7 @@ DOCKER = docker run \
 	--env "PYTHONWARNINGS=ignore:ResourceWarning" \
 	--volume "$(PWD):${PWD}" \
 	--workdir "${PWD}"
-PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*,platsec_aws_scanner.py"
+PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
 PYTHON_TEST_PATTERN ?= "test_*.py"
 PYTHON_VERSION = $(shell head -1 .python-version)
@@ -59,3 +59,11 @@ python-coverage:
 md-check:
 	@docker pull zemanlx/remark-lint:0.2.0 >/dev/null
 	@docker run --rm -i -v $(PWD):/lint/input:ro zemanlx/remark-lint:0.2.0 --frail .
+
+.PHONY: build-lambda-image
+build-lambda-image:
+	@docker build \
+		--file lambda.Dockerfile \
+		--tag platsec_aws_scanner_lambda:local . \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		>/dev/null
