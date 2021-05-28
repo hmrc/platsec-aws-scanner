@@ -29,7 +29,6 @@ RUN groupmod -g 64 dialout \
 FROM linter-base AS pipenv
 RUN apk add --no-cache \
     bash=~5.1 \
-    curl=~7.76 \
     gcc~=10.2 \
     libc-dev~=0.7 \
     make=~4.3 \

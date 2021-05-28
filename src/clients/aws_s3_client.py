@@ -130,3 +130,11 @@ class AwsS3Client:
             BucketVersioning,
             f"unable to fetch versioning for bucket '{bucket}'",
         )
+
+    def put_object(self, bucket: str, object_name: str, object_content: str) -> str:
+        self._logger.debug(f"putting object '{object_name}' in bucket '{bucket}'")
+        return boto_try(
+            lambda: str(self._s3.put_object(Bucket=bucket, Key=object_name, Body=object_content)["VersionId"]),
+            str,
+            f"unable to put object '{object_name}' in bucket '{bucket}'",
+        )

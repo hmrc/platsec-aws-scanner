@@ -70,6 +70,21 @@ parent = Parent OU
     all accounts, whether they are part of this parent OU or OUs owned by this OU, will be targeted by the scanning
     tasks)
 
+## Reports
+
+```ini
+[reports]
+account = 333222333222
+bucket = scanner-reports-bucket
+output = s3
+role = s3_reports_role
+```
+
+- `account`: an account with a bucket where scanner reports will be written into
+- `bucket`: name of the bucket were scanner reports will be written into
+- `output`: \[stdout|s3\] whether scanner reports should be printed in standard output or written in an S3 bucket
+- `role`: name of the role that is assumed to write scanner reports in `reports.bucket`
+
 ## Roles
 
 ```ini
@@ -81,10 +96,10 @@ ssm = ssm_role
 username = joe.bloggs
 ```
 
-- `cloudtrail`: name of the role that is assumed by this tool to perform cloudtrail-related operations
-- `organizations`: name of the role that is assumed by this tool to perform organizations-related operations
-- `s3`: name of the role that is assumed by this tool to perform s3-related operations
-- `ssm`: name of the role that is assumed by this tool to perform ssm-related operations
+- `cloudtrail`: name of the role that is assumed to perform cloudtrail-related operations
+- `organizations`: name of the role that is assumed to perform organizations-related operations
+- `s3`: name of the role that is assumed to perform s3-related operations
+- `ssm`: name of the role that is assumed to perform ssm-related operations
 - `username`: IAM user that is used to assume the above roles; can be superseded with `-u | --username` argument
 
 ## Session

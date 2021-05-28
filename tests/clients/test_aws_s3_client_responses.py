@@ -198,3 +198,5 @@ GET_BUCKET_ACL_ALL_USERS_GRANT = {"Grants": [{"Grantee": {"URI": "http://acs.ama
 GET_BUCKET_ACL_AUTHENTICATED_USERS_GRANT = {
     "Grants": [{"Grantee": {"URI": "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"}}]
 }
+
+PUT_OBJECT = {"VersionId": "some id"}

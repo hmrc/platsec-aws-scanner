@@ -1,7 +1,9 @@
 import os
 import sys
+
 from configparser import ConfigParser
 from logging import getLogger
+from typing import List
 
 from src.data.aws_organizations_types import Account
 
@@ -38,6 +40,20 @@ class AwsScannerConfig:
     def org_unit_parent(self) -> str:
         return self._get_config("organizational_unit", "parent")
 
+    def reports_account(self) -> Account:
+        return Account(self._get_config("reports", "account"), "reports")
+
+    def reports_bucket(self) -> str:
+        return self._get_config("reports", "bucket")
+
+    def reports_output(self) -> str:
+        output = self._get_config("reports", "output")
+        supported = ["stdout", "s3"]
+        return output if output.lower() in supported else sys.exit(self._unsupported("reports", "output", supported))
+
+    def reports_role(self) -> str:
+        return self._get_config("reports", "role")
+
     def role_cloudtrail(self) -> str:
         return self._get_config("roles", "cloudtrail")
 
@@ -70,3 +86,7 @@ class AwsScannerConfig:
         if not config.read("aws_scanner_config.ini"):
             self._logger.info("Config file 'aws_scanner_config.ini' not found, using environment variables instead")
         return config
+
+    @staticmethod
+    def _unsupported(section: str, key: str, supported: List[str]) -> str:
+        return f"unsupported config: section '{section}', key '{key}' (should be one of {supported})"

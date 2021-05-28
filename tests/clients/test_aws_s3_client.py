@@ -503,3 +503,24 @@ class TestAwsS3ClientGetBucketVersioning(AwsScannerTestCase):
         with redirect_stderr(StringIO()) as err:
             self.assertEqual(versioning, self.s3_client().get_bucket_versioning("access-denied"))
         self.assertIn("AccessDenied", err.getvalue())
+
+
+class TestAwsS3ClientPutObject(AwsScannerTestCase):
+    @staticmethod
+    def put_object(**kwargs) -> Dict[Any, Any]:
+        return (
+            responses.PUT_OBJECT
+            if kwargs.get("Bucket") == "buck" and kwargs.get("Key") == "obj" and kwargs.get("Body") == "bla"
+            else _raise(client_error("PutObject", "AccessDenied", "Access Denied"))
+        )
+
+    def s3_client(self) -> AwsS3Client:
+        return AwsS3Client(Mock(put_object=Mock(side_effect=self.put_object)))
+
+    def test_put_object_success(self) -> None:
+        self.assertEqual("some id", self.s3_client().put_object(bucket="buck", object_name="obj", object_content="bla"))
+
+    def test_put_object_failure(self) -> None:
+        with redirect_stderr(StringIO()) as err:
+            self.s3_client().put_object(bucket="denied", object_name="obj", object_content="bla")
+        self.assertIn("AccessDenied", err.getvalue())
