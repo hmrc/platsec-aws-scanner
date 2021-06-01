@@ -1,15 +1,15 @@
 import logging
 
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Tuple
 
 from src.aws_parallel_task_runner import AwsParallelTaskRunner
+from src.aws_scanner_output import AwsScannerOutput
 from src.aws_task_builder import AwsTaskBuilder
 from src.clients.aws_client_factory import AwsClientFactory
 from src.aws_scanner import AwsScanner
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_argument_parser import AwsScannerCommands as Commands
 from src.data.aws_scanner_exceptions import AwsScannerException
-from src.json_serializer import to_json
 
 
 class AwsScannerMain:
@@ -19,7 +19,9 @@ class AwsScannerMain:
     def _main(self, args: AwsScannerArguments) -> None:
         logger = self._configure_logging(args)
         try:
-            print(to_json(self._get_tasks_mapping(self._build_aws_scanner(args), args)[args.task]()))
+            scanner, output = self._build_aws_scanner(args)
+            reports = self._get_tasks_mapping(scanner, args)[args.task]()
+            output.write(args.task, reports)
         except AwsScannerException as ex:
             logger.error(f"{type(ex).__name__}: {ex}")
             raise SystemExit(1)
@@ -37,11 +39,11 @@ class AwsScannerMain:
         return logging.getLogger(self.__class__.__name__)
 
     @staticmethod
-    def _build_aws_scanner(args: AwsScannerArguments) -> AwsScanner:
+    def _build_aws_scanner(args: AwsScannerArguments) -> Tuple[AwsScanner, AwsScannerOutput]:
         factory = AwsClientFactory(mfa=args.mfa_token, username=args.username)
         task_builder = AwsTaskBuilder(factory.get_organizations_client(), args.accounts)
         task_runner = AwsParallelTaskRunner(factory)
-        return AwsScanner(task_builder, task_runner)
+        return AwsScanner(task_builder, task_runner), AwsScannerOutput(factory)
 
     @staticmethod
     def _get_tasks_mapping(scanner: AwsScanner, args: AwsScannerArguments) -> Dict[str, Callable[[], Any]]:

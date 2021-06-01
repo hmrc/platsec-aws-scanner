@@ -21,6 +21,12 @@ log_retention_days = 90
 include_root_accounts = true
 parent = Parent OU
 
+[reports]
+account = 333222333222
+bucket = scanner-reports-bucket
+output = stdout
+role = s3_reports_role
+
 [roles]
 cloudtrail = cloudtrail_role
 organizations = orgs_role

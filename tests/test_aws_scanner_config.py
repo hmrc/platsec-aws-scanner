@@ -19,6 +19,10 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual(90, aws_scanner_config.cloudtrail_log_retention_days())
         self.assertTrue(aws_scanner_config.org_unit_include_root_accounts())
         self.assertEqual("Parent OU", aws_scanner_config.org_unit_parent())
+        self.assertEqual(Account("333222333222", "reports"), aws_scanner_config.reports_account())
+        self.assertEqual("scanner-reports-bucket", aws_scanner_config.reports_bucket())
+        self.assertEqual("stdout", aws_scanner_config.reports_output())
+        self.assertEqual("s3_reports_role", aws_scanner_config.reports_role())
         self.assertEqual("cloudtrail_role", aws_scanner_config.role_cloudtrail())
         self.assertEqual("orgs_role", aws_scanner_config.role_organizations())
         self.assertEqual("s3_role", aws_scanner_config.role_s3())
@@ -39,6 +43,10 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_CLOUDTRAIL_LOG_RETENTION_DAYS": "30",
             "AWS_SCANNER_ORGANIZATIONAL_UNIT_INCLUDE_ROOT_ACCOUNTS": "false",
             "AWS_SCANNER_ORGANIZATIONAL_UNIT_PARENT": "The Parent OU",
+            "AWS_SCANNER_REPORTS_ACCOUNT": "565656565656",
+            "AWS_SCANNER_REPORTS_BUCKET": "a-scanner-reports-bucket",
+            "AWS_SCANNER_REPORTS_OUTPUT": "s3",
+            "AWS_SCANNER_REPORTS_ROLE": "the_s3_report_role",
             "AWS_SCANNER_ROLES_CLOUDTRAIL": "the_cloudtrail_role",
             "AWS_SCANNER_ROLES_ORGANIZATIONS": "the_orgs_role",
             "AWS_SCANNER_ROLES_S3": "the_s3_role",
@@ -60,6 +68,10 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual(30, aws_scanner_config.cloudtrail_log_retention_days())
         self.assertFalse(aws_scanner_config.org_unit_include_root_accounts())
         self.assertEqual("The Parent OU", aws_scanner_config.org_unit_parent())
+        self.assertEqual(Account("565656565656", "reports"), aws_scanner_config.reports_account())
+        self.assertEqual("a-scanner-reports-bucket", aws_scanner_config.reports_bucket())
+        self.assertEqual("s3", aws_scanner_config.reports_output())
+        self.assertEqual("the_s3_report_role", aws_scanner_config.reports_role())
         self.assertEqual("the_cloudtrail_role", aws_scanner_config.role_cloudtrail())
         self.assertEqual("the_orgs_role", aws_scanner_config.role_organizations())
         self.assertEqual("the_s3_role", aws_scanner_config.role_s3())
@@ -78,3 +90,8 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             with self.assertLogs("AwsScannerConfig", level="INFO") as info_log:
                 AwsScannerConfig()
         self.assertIn("Config file 'aws_scanner_config.ini' not found", info_log.output[0])
+
+    @patch.dict(os.environ, {"AWS_SCANNER_REPORTS_OUTPUT": "wat"}, clear=True)
+    def test_unsupported_reports_output(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "unsupported config: section 'reports', key 'output'"):
+            AwsScannerConfig().reports_output()
