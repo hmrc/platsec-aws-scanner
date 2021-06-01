@@ -8,7 +8,7 @@ from io import StringIO
 
 from src.aws_scanner_output import AwsScannerOutput
 
-from tests.test_types_generator import account, task_report
+from tests.test_types_generator import account, partition, task_report
 
 
 EXPECTED_JSON_REPORT = (
@@ -21,7 +21,7 @@ class TestAwsScannerOutput(AwsScannerTestCase):
     @patch.dict(os.environ, {"AWS_SCANNER_REPORTS_OUTPUT": "stdout"}, clear=True)
     def test_stdout_output(self) -> None:
         with redirect_stdout(StringIO()) as out:
-            AwsScannerOutput(Mock()).write("some_task", [task_report()])
+            AwsScannerOutput(Mock()).write("some_task", [task_report(partition=partition(2021, 5))])
         self.assertEqual(EXPECTED_JSON_REPORT, out.getvalue().strip())
 
     @patch.dict(
@@ -43,7 +43,7 @@ class TestAwsScannerOutput(AwsScannerTestCase):
                 else None
             )
         )
-        AwsScannerOutput(factory).write("some_task", [task_report()])
+        AwsScannerOutput(factory).write("some_task", [task_report(partition=partition(2021, 5))])
         mock_s3.put_object.assert_called_once_with(
             bucket="reports_bucket", object_name="some_task", object_content=EXPECTED_JSON_REPORT
         )
