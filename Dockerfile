@@ -28,11 +28,11 @@ RUN groupmod -g 64 dialout \
 
 FROM linter-base AS pipenv
 RUN apk add --no-cache \
-    bash=~5.1 \
-    gcc~=10.2 \
-    libc-dev~=0.7 \
-    make=~4.3 \
-    && pip install pipenv==2020.11.15
+    bash \
+    gcc \
+    libc-dev \
+    make \
+    && pip install pipenv==2021.5.29
 USER builder
 # Install Python dependencies so they are cached
 ARG workdir

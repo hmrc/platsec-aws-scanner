@@ -12,7 +12,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 ARG FUNCTION_DIR
 WORKDIR ${FUNCTION_DIR}
-RUN pip install --no-cache-dir pipenv==2020.11.15
+RUN pip install --no-cache-dir pipenv==2021.5.29
 RUN pip install --no-cache-dir --target ${FUNCTION_DIR} awslambdaric==1.0.0
 COPY Pipfile.lock ${FUNCTION_DIR}
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync
