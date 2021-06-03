@@ -45,5 +45,5 @@ class TestAwsScannerOutput(AwsScannerTestCase):
         )
         AwsScannerOutput(factory).write("some_task", [task_report(partition=partition(2021, 5))])
         mock_s3.put_object.assert_called_once_with(
-            bucket="reports_bucket", object_name="some_task", object_content=EXPECTED_JSON_REPORT
+            bucket="reports_bucket", object_name="some_task.json", object_content=EXPECTED_JSON_REPORT
         )

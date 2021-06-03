@@ -13,7 +13,7 @@ class AwsScannerOutput:
 
     def write(self, task: str, reports: Sequence[AwsTaskReport]) -> None:
         if self._config.reports_output().lower() == "s3":
-            self._write_to_s3(task, to_json(reports))
+            self._write_to_s3(f"{task}.json", to_json(reports))
         else:
             print(to_json(reports))
 
