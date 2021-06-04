@@ -152,4 +152,4 @@ class AwsScannerArgumentParser:
 
     @staticmethod
     def _fetch_username(args: Dict[str, Any]) -> str:
-        return args.get("username") or Config().username()
+        return args.get("username") or Config().user_name()

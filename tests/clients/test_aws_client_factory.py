@@ -41,8 +41,8 @@ class TestGetBotoClients(AwsScannerTestCase):
         self.assert_get_client(
             method_under_test="get_athena_boto_client",
             service="athena",
-            target_account=account(identifier="555666777888", name="cloudtrail"),
-            role="cloudtrail_role",
+            target_account=account(identifier="555666777888", name="athena"),
+            role="athena_role",
         )
 
     def test_get_s3_boto_client(self) -> None:
@@ -59,7 +59,7 @@ class TestGetBotoClients(AwsScannerTestCase):
         self.assert_get_client(
             method_under_test="get_organizations_boto_client",
             service="organizations",
-            target_account=account(identifier="999888777666", name="root"),
+            target_account=account(identifier="999888777666", name="organization"),
             role="orgs_role",
         )
 

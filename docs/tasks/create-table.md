@@ -5,8 +5,8 @@ the partition arguments passed in.
 
 **Notes**:
 
--   databases and tables are created in the `cloudtrail` account as configured in
-    [the configuration file](../configuration.md#accounts)
+-   databases and tables are created in the `athena` account as configured in
+    [the configuration file](../configuration.md#athena)
 
 -   database names are prefixed according to the `database_prefix` value in
     [the configuration file](../configuration.md#athena)

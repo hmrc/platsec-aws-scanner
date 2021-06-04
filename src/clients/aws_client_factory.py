@@ -31,19 +31,19 @@ class AwsClientFactory:
         self._session_token = self._get_session_token(mfa, username)
 
     def get_athena_boto_client(self) -> BaseClient:
-        return self._get_client("athena", self._config.account_cloudtrail(), self._config.role_cloudtrail())
+        return self._get_client("athena", self._config.athena_account(), self._config.athena_role())
 
     def get_s3_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("s3", account, role)
 
     def get_s3_client(self, account: Account, role: Optional[str] = None) -> AwsS3Client:
-        return AwsS3Client(self.get_s3_boto_client(account, role or self._config.role_s3()))
+        return AwsS3Client(self.get_s3_boto_client(account, role or self._config.s3_role()))
 
     def get_organizations_boto_client(self) -> BaseClient:
-        return self._get_client("organizations", self._config.account_root(), self._config.role_organizations())
+        return self._get_client("organizations", self._config.organization_account(), self._config.organization_role())
 
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("ssm", account, self._config.role_ssm())
+        return self._get_client("ssm", account, self._config.ssm_role())
 
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
@@ -62,7 +62,7 @@ class AwsClientFactory:
             else self._to_credentials(
                 lambda: boto3.client(service_name="sts").get_session_token(
                     DurationSeconds=self._config.session_duration_seconds(),
-                    SerialNumber=f"arn:aws:iam::{self._config.account_auth().identifier}:mfa/{username}",
+                    SerialNumber=f"arn:aws:iam::{self._config.user_account().identifier}:mfa/{username}",
                     TokenCode=mfa,
                 )
             )

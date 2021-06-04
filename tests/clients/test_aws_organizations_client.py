@@ -56,12 +56,14 @@ class TestAwsOrganizationsClient(AwsScannerTestCase):
         self.assertEqual(responses.EXPECTED_ALL_ACCOUNTS, self.get_org_client().get_all_accounts())
 
     def test_get_target_accounts_includes_root(self) -> None:
-        with patch("src.aws_scanner_config.AwsScannerConfig.org_unit_parent", return_value="Root 1 > Org Unit 2"):
+        with patch("src.aws_scanner_config.AwsScannerConfig.organization_parent", return_value="Root 1 > Org Unit 2"):
             self.assertEqual(responses.EXPECTED_TARGET_ACCOUNTS, self.get_org_client().get_target_accounts())
 
     def test_get_target_accounts_not_includes_root(self) -> None:
-        with patch("src.aws_scanner_config.AwsScannerConfig.org_unit_parent", return_value="Root 1 > Org Unit 2"):
-            with patch("src.aws_scanner_config.AwsScannerConfig.org_unit_include_root_accounts", return_value=False):
+        with patch("src.aws_scanner_config.AwsScannerConfig.organization_parent", return_value="Root 1 > Org Unit 2"):
+            with patch(
+                "src.aws_scanner_config.AwsScannerConfig.organization_include_root_accounts", return_value=False
+            ):
                 self.assertEqual(
                     responses.EXPECTED_TARGET_ACCOUNTS_WITHOUT_ROOT, self.get_org_client().get_target_accounts()
                 )

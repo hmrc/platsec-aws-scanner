@@ -37,7 +37,7 @@ class AwsAthenaAsyncClient:
         self._logger.info(f"creating table {account.identifier} in database {database}")
         return self.run_query(
             query=Template(queries.CREATE_TABLE).substitute(
-                account=account.identifier, cloudtrail_logs_bucket=Config().bucket_cloudtrail_logs()
+                account=account.identifier, cloudtrail_logs_bucket=Config().cloudtrail_logs_bucket()
             ),
             database=database,
             raise_on_failure=exceptions.CreateTableException,
@@ -56,7 +56,7 @@ class AwsAthenaAsyncClient:
         return self.run_query(
             query=Template(queries.ADD_PARTITION_YEAR_MONTH).substitute(
                 account=account.identifier,
-                cloudtrail_logs_bucket=Config().bucket_cloudtrail_logs(),
+                cloudtrail_logs_bucket=Config().cloudtrail_logs_bucket(),
                 year=partition.year,
                 month=partition.month,
             ),
@@ -92,7 +92,7 @@ class AwsAthenaAsyncClient:
             query_execution_response = self._boto_athena.start_query_execution(
                 QueryString=query,
                 QueryExecutionContext=self._build_exec_context(database),
-                ResultConfiguration={"OutputLocation": f"s3://{Config().bucket_athena_query_results()}"},
+                ResultConfiguration={"OutputLocation": f"s3://{Config().athena_query_results_bucket()}"},
             )
             return str(query_execution_response["QueryExecutionId"])
         except (BotoCoreError, ClientError) as error:

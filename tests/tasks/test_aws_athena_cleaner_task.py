@@ -15,7 +15,7 @@ class TestAwsAthenaCleanerTask(AwsScannerTestCase):
         "some_prefix_db_5": [],
     }
     expected_report = task_report(
-        account=account("555666777888", "cloudtrail"),
+        account=account("555666777888", "athena"),
         description="clean scanner leftovers",
         partition=None,
         results={

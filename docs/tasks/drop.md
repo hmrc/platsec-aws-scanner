@@ -7,8 +7,8 @@ The `drop` task drops Athena databases and tables that were created by previousl
 -   the `drop` task only drops Athena databases whose names start with the `database_prefix` as configured in
     [the configuration file](../configuration.md#athena)
 
--   the Athena databases and tables are expected to live in the `cloudtrail` account as configured in
-    [the configuration file](../configuration.md#accounts)
+-   the targeted Athena databases and tables are expected to be in the `athena` account as configured in
+    [the configuration file](../configuration.md#athena)
 
 ## Usage
 
