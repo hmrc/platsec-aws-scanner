@@ -9,7 +9,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 @dataclass
 class AwsAthenaCleanerTask(AwsAthenaTask):
     def __init__(self) -> None:
-        super().__init__("clean scanner leftovers", Config().account_cloudtrail())
+        super().__init__("clean scanner leftovers", Config().athena_account())
 
     def _run_task(self, client: AwsAthenaClient) -> Dict[Any, Any]:
         databases = self._list_scanner_databases(client)

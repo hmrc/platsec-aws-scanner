@@ -38,8 +38,8 @@ Arguments also have abbreviations:
 ```
 
 -   `-u / --username` (optional): actions performed by the tool will be under this username's identity (the related AWS
-    IAM user is required to exist in the [auth account](configuration.md#accounts)); supersedes `username` in [the
-    configuration file](configuration.md#roles) when present
+    IAM user is required to exist in the [user account](configuration.md#user)); supersedes `name` in [the
+    configuration file](configuration.md#user) when present
 
 -   `-t / --token` (required): MFA token for the above user
 
@@ -49,7 +49,7 @@ Arguments also have abbreviations:
 
 -   `-a / --accounts` (optional): comma-separated list of accounts to be targeted by the task being run (when omitted,
     the task will be run against all accounts that live in and under the [parent organizational unit specified in the
-    configuration file](configuration.md#organizational-unit))
+    configuration file](configuration.md#organization))
 
 -   `-v / --verbosity` (optional): log level configuration; one of \["error" (default), "warning", "info", "debug"\]
 

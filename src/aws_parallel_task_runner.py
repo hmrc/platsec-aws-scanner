@@ -10,7 +10,7 @@ from src.tasks.aws_task import AwsTask
 
 class AwsParallelTaskRunner(AwsTaskRunner):
     def _run_tasks(self, tasks: Sequence[AwsTask]) -> Sequence[AwsTaskReport]:
-        with ThreadPoolExecutor(max_workers=Config().tasks_executor()) as executor:
+        with ThreadPoolExecutor(max_workers=Config().tasks_executors()) as executor:
             futures = {executor.submit(self._run_task, task): task for task in tasks}
         return list(filter(None, [self._get_result(future, futures) for future in as_completed(futures)]))
 

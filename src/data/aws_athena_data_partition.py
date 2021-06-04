@@ -12,7 +12,7 @@ class AwsAthenaDataPartition:
     month: str
 
     def __init__(self, year: int, month: int):
-        self._validate(year, month, Config().cloudtrail_log_retention_days())
+        self._validate(year, month, Config().cloudtrail_logs_retention_days())
         self.year = str(year)
         self.month = "%02d" % month
 

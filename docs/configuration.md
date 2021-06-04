@@ -2,66 +2,57 @@
 
 This tool expects a configuration file named `aws_scanner_config.ini` and located at the root of the project. A template
 configuration file that shows how such file should look like [can be found here](../aws_scanner_config_template.ini).
+Refer to [Requirements][doc-requirements] for details on how the AWS infrastructure should look like.
 
 Here are details on the different config sections and what they are for:
-
-## Accounts
-
-```ini
-[accounts]
-auth = 111222333444
-cloudtrail = 555666777888
-root = 999888777666
-```
-
-These are identifiers of the AWS accounts that are of interest. Refer to [Requirements][doc-requirements] for details on
-how the AWS infrastructure should look like.
-
-- `auth`: an account with IAM users that have delegate access on the roles that are assumed by this tool
-- `cloudtrail`: an account where [CloudTrail logs][aws-cloudtrail] of all the other AWS accounts are centrally collected
-- `root`: an account that consolidates the other AWS accounts through the [AWS Organizations service][aws-organizations]
 
 ## Athena
 
 ```ini
 [athena]
+account = 555666777888
+role = athena_role
 database_prefix = some_prefix
+query_results_bucket = query-results-bucket
 ```
 
-- `database_prefix`: when this tool runs [Athena][aws-athena] related tasks, the databases that are created will have
-  their name prefixed with this value, which helps to avoid confusion with other databases that might already exist
+-   `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
+    
+-   `role`: name of the role that is assumed to perform Athena-related operations on Cloudtrail logs
+    
+-   `database_prefix`: when this tool runs [Athena][aws-athena] related tasks, the databases that are created will have
+    their names prefixed with this value, to avoid confusion with other databases that might already exist
 
-## Buckets
-
-```ini
-[buckets]
-athena_query_results = query-results-bucket
-cloudtrail_logs = cloudtrail-logs-bucket
-```
-
-- `athena_query_results`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
-- `cloudtrail_logs`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
-
-**Note**: these buckets should live in the `cloudtrail` account from the [Accounts configuration section](#accounts)
+-   `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
 
 ## CloudTrail
 
 ```ini
 [cloudtrail]
-log_retention_days = 90
+logs_bucket = cloudtrail-logs-bucket
+logs_retention_days = 90
 ```
 
-- `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this is
-  used to validate the data partition configuration in [AwsAthenaDataPartition][src-partition])
+-   `logs_bucket`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
+    
+-   `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this
+    is used to validate the data partition configuration in [AwsAthenaDataPartition][src-partition])
 
-## Organizational unit
+## Organization
 
 ```ini
-[organizational_unit]
+[organization]
+account = 999888777666
+role = orgs_role
 include_root_accounts = true
 parent = Parent OU
 ```
 
+-   `account`: an account that consolidates the other AWS accounts through the
+    [AWS Organizations service][aws-organizations]
+
+-   `role`: name of the role that is assumed to perform organizations-related operations
+    
 -   `include_root_accounts`: \[true|false\] indicate whether accounts in the
     [root organizational unit][aws-organizations-root] should be included in the accounts list that tasks will be run
     against
@@ -85,22 +76,14 @@ role = s3_reports_role
 - `output`: \[stdout|s3\] whether scanner reports should be printed in standard output or written in an S3 bucket
 - `role`: name of the role that is assumed to write scanner reports in `reports.bucket`
 
-## Roles
+## S3
 
 ```ini
-[roles]
-cloudtrail = cloudtrail_role
-organizations = orgs_role
-s3 = s3_role
-ssm = ssm_role
-username = joe.bloggs
+[s3]
+role = s3_role
 ```
 
-- `cloudtrail`: name of the role that is assumed to perform cloudtrail-related operations
-- `organizations`: name of the role that is assumed to perform organizations-related operations
-- `s3`: name of the role that is assumed to perform s3-related operations
-- `ssm`: name of the role that is assumed to perform ssm-related operations
-- `username`: IAM user that is used to assume the above roles; can be superseded with `-u | --username` argument
+- `role`: name of the role that is assumed to perform s3-related operations
 
 ## Session
 
@@ -111,14 +94,34 @@ duration_seconds = 3600
 
 - `duration_seconds`: number of seconds during which an assumed-role session is valid
 
+## SSM
+
+```ini
+[ssm]
+role = ssm_role
+```
+
+- `role`: name of the role that is assumed to perform ssm-related operations
+
 ## Tasks
 
 ```ini
 [tasks]
-executor = 10
+executors = 10
 ```
 
-- `executor`: number of task executors that run tasks in parallel
+- `executors`: number of executors that run tasks in parallel
+
+## User
+
+```ini
+[user]
+account = 111222333444
+name = joe.bloggs
+```
+
+- `account`: an account with an IAM user that have delegate access on the roles that are assumed
+- `name`: IAM user that is used to assume roles; can be superseded with `-u | --username` argument
 
 [aws-athena]: https://docs.aws.amazon.com/athena/latest/ug/what-is.html
 [aws-athena-querying]: https://docs.aws.amazon.com/athena/latest/ug/querying.html

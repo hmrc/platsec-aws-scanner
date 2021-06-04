@@ -13,67 +13,67 @@ class AwsScannerConfig:
         self._logger = getLogger(self.__class__.__name__)
         self._config = self._load_config()
 
-    def account_auth(self) -> Account:
-        return Account(self._get_config("accounts", "auth"), "auth")
+    def athena_account(self) -> Account:
+        return Account(self._get_config("athena", "account"), "athena")
 
-    def account_cloudtrail(self) -> Account:
-        return Account(self._get_config("accounts", "cloudtrail"), "cloudtrail")
-
-    def account_root(self) -> Account:
-        return Account(self._get_config("accounts", "root"), "root")
+    def athena_role(self) -> str:
+        return self._get_config("athena", "role")
 
     def athena_database_prefix(self) -> str:
         return self._get_config("athena", "database_prefix")
 
-    def bucket_athena_query_results(self) -> str:
-        return self._get_config("buckets", "athena_query_results")
+    def athena_query_results_bucket(self) -> str:
+        return self._get_config("athena", "query_results_bucket")
 
-    def bucket_cloudtrail_logs(self) -> str:
-        return self._get_config("buckets", "cloudtrail_logs")
+    def cloudtrail_logs_bucket(self) -> str:
+        return self._get_config("cloudtrail", "logs_bucket")
 
-    def cloudtrail_log_retention_days(self) -> int:
-        return int(self._get_config("cloudtrail", "log_retention_days"))
+    def cloudtrail_logs_retention_days(self) -> int:
+        return int(self._get_config("cloudtrail", "logs_retention_days"))
 
-    def org_unit_include_root_accounts(self) -> bool:
-        return str(self._get_config("organizational_unit", "include_root_accounts")).lower() == "true"
+    def organization_account(self) -> Account:
+        return Account(self._get_config("organization", "account"), "organization")
 
-    def org_unit_parent(self) -> str:
-        return self._get_config("organizational_unit", "parent")
+    def organization_role(self) -> str:
+        return self._get_config("organization", "role")
 
-    def reports_account(self) -> Account:
-        return Account(self._get_config("reports", "account"), "reports")
+    def organization_include_root_accounts(self) -> bool:
+        return str(self._get_config("organization", "include_root_accounts")).lower() == "true"
 
-    def reports_bucket(self) -> str:
-        return self._get_config("reports", "bucket")
+    def organization_parent(self) -> str:
+        return self._get_config("organization", "parent")
 
     def reports_output(self) -> str:
         output = self._get_config("reports", "output")
         supported = ["stdout", "s3"]
         return output if output.lower() in supported else sys.exit(self._unsupported("reports", "output", supported))
 
+    def reports_account(self) -> Account:
+        return Account(self._get_config("reports", "account"), "reports")
+
     def reports_role(self) -> str:
         return self._get_config("reports", "role")
 
-    def role_cloudtrail(self) -> str:
-        return self._get_config("roles", "cloudtrail")
+    def reports_bucket(self) -> str:
+        return self._get_config("reports", "bucket")
 
-    def role_organizations(self) -> str:
-        return self._get_config("roles", "organizations")
-
-    def role_s3(self) -> str:
-        return self._get_config("roles", "s3")
-
-    def role_ssm(self) -> str:
-        return self._get_config("roles", "ssm")
+    def s3_role(self) -> str:
+        return self._get_config("s3", "role")
 
     def session_duration_seconds(self) -> int:
         return int(self._get_config("session", "duration_seconds"))
 
-    def tasks_executor(self) -> int:
-        return int(self._get_config("tasks", "executor"))
+    def ssm_role(self) -> str:
+        return self._get_config("ssm", "role")
 
-    def username(self) -> str:
-        return self._get_config("roles", "username")
+    def tasks_executors(self) -> int:
+        return int(self._get_config("tasks", "executors"))
+
+    def user_account(self) -> Account:
+        return Account(self._get_config("user", "account"), "user")
+
+    def user_name(self) -> str:
+        return self._get_config("user", "name")
 
     def _get_config(self, section: str, key: str) -> str:
         try:
