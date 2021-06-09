@@ -21,34 +21,26 @@ class AwsTaskBuilder:
         self._accounts = accounts
 
     def principal_by_ip_finder_tasks(
-        self, year: int, month: int, source_ip: str
+        self, partition: AwsAthenaDataPartition, source_ip: str
     ) -> Sequence[AwsPrincipalByIPFinderTask]:
         self._logger.info(f"creating 'principal by ip finder' tasks for ip {source_ip}")
-        return [
-            AwsPrincipalByIPFinderTask(account, AwsAthenaDataPartition(year, month), source_ip)
-            for account in self._get_target_accounts()
-        ]
+        return [AwsPrincipalByIPFinderTask(account, partition, source_ip) for account in self._get_target_accounts()]
 
-    def service_usage_scanner_tasks(self, year: int, month: int, service: str) -> Sequence[AwsServiceUsageScannerTask]:
+    def service_usage_scanner_tasks(
+        self, partition: AwsAthenaDataPartition, service: str
+    ) -> Sequence[AwsServiceUsageScannerTask]:
         self._logger.info(f"creating 'service usage scanner' tasks for service {service}")
-        return [
-            AwsServiceUsageScannerTask(account, AwsAthenaDataPartition(year, month), service)
-            for account in self._get_target_accounts()
-        ]
+        return [AwsServiceUsageScannerTask(account, partition, service) for account in self._get_target_accounts()]
 
-    def role_usage_scanner_tasks(self, year: int, month: int, role: str) -> Sequence[AwsRoleUsageScannerTask]:
+    def role_usage_scanner_tasks(
+        self, partition: AwsAthenaDataPartition, role: str
+    ) -> Sequence[AwsRoleUsageScannerTask]:
         self._logger.info(f"creating 'role usage scanner' tasks for role {role}")
-        return [
-            AwsRoleUsageScannerTask(account, AwsAthenaDataPartition(year, month), role)
-            for account in self._get_target_accounts()
-        ]
+        return [AwsRoleUsageScannerTask(account, partition, role) for account in self._get_target_accounts()]
 
-    def create_athena_table_tasks(self, year: int, month: int) -> Sequence[AwsCreateAthenaTableTask]:
+    def create_athena_table_tasks(self, partition: AwsAthenaDataPartition) -> Sequence[AwsCreateAthenaTableTask]:
         self._logger.info("creating 'create Athena table' tasks")
-        return [
-            AwsCreateAthenaTableTask(account, AwsAthenaDataPartition(year, month))
-            for account in self._get_target_accounts()
-        ]
+        return [AwsCreateAthenaTableTask(account, partition) for account in self._get_target_accounts()]
 
     def clean_athena_tasks(self) -> Sequence[AwsAthenaCleanerTask]:
         self._logger.info("creating 'clean Athena' tasks")

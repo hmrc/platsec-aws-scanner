@@ -47,6 +47,9 @@ Arguments also have abbreviations:
 
 -   `-m / --month` (required): month for partitioning the CloudTrail data in Athena
 
+-   `-re / --region` (optional): AWS region for partitioning the CloudTrail data in Athena; supersedes `region` in [the
+    configuration file](configuration.md#cloudtrail) when present
+
 -   `-a / --accounts` (optional): comma-separated list of accounts to be targeted by the task being run (when omitted,
     the task will be run against all accounts that live in and under the [parent organizational unit specified in the
     configuration file](configuration.md#organization))
@@ -69,7 +72,8 @@ another program like `jq` for pretty printing/filtering, or redirect the report 
     "description": "create Athena table and load data partition",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "eu-west-1"
     },
     "results": {
       "database": "aws_scanner_999888777666_5305763905",
@@ -103,16 +107,19 @@ Invoking the tool with the `-h / --help` argument will print a helper message li
 
 ```sh
 ./platsec_aws_scanner.sh -h
-usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list_accounts,create_table,drop} ...
+usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3} ...
 
 positional arguments:
-  {service_usage,role_usage,find_principal,list_accounts,create_table,drop}
+  {service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3}
     service_usage       scan AWS service usage
     role_usage          scan AWS role usage
     find_principal      find principal by source IP
     list_accounts       list organization accounts
+    list_ssm_parameters
+                        list SSM parameters
     create_table        create Athena table
     drop                drop databases and tables created by tasks
+    audit_s3            audit S3 bucket compliance
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -122,7 +129,7 @@ It's also possible to print a helper message on a specific task with the `-h / -
 
 ```sh
 ./platsec_aws_scanner.sh service_usage -h
-usage: platsec_aws_scanner.py service_usage [-h] [-u USERNAME] -t TOKEN -y YEAR -m MONTH [-a ACCOUNTS] -s SERVICE [-v {error,warning,info,debug}]
+usage: platsec_aws_scanner.py service_usage [-h] [-u USERNAME] -t TOKEN -y YEAR -m MONTH [-re REGION] [-a ACCOUNTS] -s SERVICE [-v {error,warning,info,debug}]
 
 scan AWS service usage
 
@@ -135,6 +142,8 @@ optional arguments:
   -y YEAR, --year YEAR  year for AWS Athena data partition
   -m MONTH, --month MONTH
                         month for AWS Athena data partition
+  -re REGION, --region REGION
+                        region for AWS Athena data partition
   -a ACCOUNTS, --accounts ACCOUNTS
                         comma-separated list of target accounts
   -s SERVICE, --service SERVICE

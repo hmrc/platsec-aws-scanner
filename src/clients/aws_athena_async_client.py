@@ -57,6 +57,7 @@ class AwsAthenaAsyncClient:
             query=Template(queries.ADD_PARTITION_YEAR_MONTH).substitute(
                 account=account.identifier,
                 cloudtrail_logs_bucket=Config().cloudtrail_logs_bucket(),
+                region=partition.region,
                 year=partition.year,
                 month=partition.month,
             ),

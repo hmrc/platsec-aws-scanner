@@ -100,7 +100,7 @@ class TestQueries(AwsScannerTestCase):
             method_args={
                 "database": "some_database",
                 "account": account("908173625490", "some_account"),
-                "partition": partition(2020, 7),
+                "partition": partition(2020, 9, "eu"),
             },
             query=queries.ADD_PARTITION_YEAR_MONTH,
             raise_on_failure=exception.AddPartitionException,

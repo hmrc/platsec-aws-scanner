@@ -24,7 +24,7 @@ the partition arguments passed in.
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh create_table -u john.doo -t 123456 -y 2021 -m 3 -a 999888777666,111222111222
+./platsec_aws_scanner.sh create_table -u john.doo -t 123456 -y 2021 -m 3 -re eu-west-1 -a 999888777666,111222111222
 ```
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
@@ -41,7 +41,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "description": "create Athena table and load data partition",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "eu-west-1"
     },
     "results": {
       "database": "aws_scanner_999888777666_5305763905",
@@ -56,7 +57,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "description": "create Athena table and load data partition",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "eu-west-1"
     },
     "results": {
       "database": "aws_scanner_111222111222_0070162439",

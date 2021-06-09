@@ -6,7 +6,7 @@ event name that occurred for this particular role and how many times each event 
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh role_usage -u john.doo -t 123456 -y 2021 -m 3 -a 999888777666 --role SomeIAMRole
+./platsec_aws_scanner.sh role_usage -u john.doo -t 123456 -y 2021 -m 3 -re eu-central-1 -a 999888777666 --role SomeIAMRole
 ```
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
@@ -25,7 +25,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "description": "AWS SomeIAMRole usage scan",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "eu-central-1"
     },
     "results": {
       "role_usage": [

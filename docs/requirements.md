@@ -2,16 +2,19 @@
 
 ## 1. AWS infrastructure
 
-The scanning tasks will work out of the box for any AWS infrastructure where the following conditions are  met:
+The scanning tasks will work out of the box for any AWS infrastructure where the following conditions are met:
 
--   a root AWS account exists and consolidates the other AWS accounts through the
+-   an AWS account exists and consolidates the other AWS accounts through the
     [AWS Organizations service][aws-organizations]
 
--   a central AWS account exists and collects [CloudTrail logs][aws-cloudtrail] from some/all the other AWS accounts (
-    it could be the same as the root account above, but doesn't have to)
+-   an AWS account exists and collects [CloudTrail logs][aws-cloudtrail] from some/all the other AWS accounts
 
--   an authentication AWS account with IAM users exists and has delegate access on the roles that are assumed by the
-    scanning tasks
+-   an AWS account exists with IAM users that have delegate access on the roles that are assumed by the scanning tasks
+
+**Notes**
+
+- identifiers and roles for these AWS accounts should be present in [the configuration file](configuration.md)
+- these accounts can be distinct but do not have to, as long as all the above conditions are met
 
 ## 2. Machine setup
 

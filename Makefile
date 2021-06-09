@@ -67,3 +67,9 @@ build-lambda-image:
 		--tag platsec_aws_scanner_lambda:local . \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
 		>/dev/null
+
+.PHONY: push-lambda-image
+push-lambda-image: build-lambda-image
+	@aws --profile $(ROLE) ecr get-login-password | docker login --username AWS --password-stdin $(ECR)
+	@docker tag  platsec_aws_scanner_lambda:local $(ECR)/platsec-aws-scanner:latest
+	@docker push $(ECR)/platsec-aws-scanner:latest

@@ -25,7 +25,8 @@ Scanner.
     "description": "AWS SomeIAMRole usage scan",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "eu-west-1"
     },
     "results": {
       "role_usage": [

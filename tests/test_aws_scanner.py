@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 from typing import Sequence
 
+from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.aws_scanner import AwsScanner
@@ -12,24 +13,32 @@ from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
 
+from tests.test_types_generator import partition
+
 
 class TestAwsScanner(AwsScannerTestCase):
     mock_tasks = [Mock(), Mock()]
     mock_reports = [Mock(), Mock()]
 
-    year, month, service, source_ip, role = 2020, 7, "ssm", "127.0.0.1", "RoleSomething"
+    partition, service, source_ip, role = partition(2020, 11, "us"), "ssm", "127.0.0.1", "RoleSomething"
 
-    def principal_by_ip_finder_tasks(self, year: int, month: int, ip: str) -> Sequence[AwsPrincipalByIPFinderTask]:
-        return self.mock_tasks if year == self.year and month == self.month and ip == self.source_ip else []
+    def principal_by_ip_finder_tasks(
+        self, partition: AwsAthenaDataPartition, ip: str
+    ) -> Sequence[AwsPrincipalByIPFinderTask]:
+        return self.mock_tasks if partition == self.partition and ip == self.source_ip else []
 
-    def service_usage_scanner_tasks(self, year: int, month: int, service: str) -> Sequence[AwsServiceUsageScannerTask]:
-        return self.mock_tasks if year == self.year and month == self.month and service == self.service else []
+    def service_usage_scanner_tasks(
+        self, partition: AwsAthenaDataPartition, service: str
+    ) -> Sequence[AwsServiceUsageScannerTask]:
+        return self.mock_tasks if partition == self.partition and service == self.service else []
 
-    def role_usage_scanner_tasks(self, year: int, month: int, role: str) -> Sequence[AwsRoleUsageScannerTask]:
-        return self.mock_tasks if year == self.year and month == self.month and role == self.role else []
+    def role_usage_scanner_tasks(
+        self, partition: AwsAthenaDataPartition, role: str
+    ) -> Sequence[AwsRoleUsageScannerTask]:
+        return self.mock_tasks if partition == self.partition and role == self.role else []
 
-    def create_athena_table_tasks(self, year: int, month: int) -> Sequence[AwsCreateAthenaTableTask]:
-        return self.mock_tasks if year == self.year and month == self.month else []
+    def create_athena_table_tasks(self, partition: AwsAthenaDataPartition) -> Sequence[AwsCreateAthenaTableTask]:
+        return self.mock_tasks if partition == self.partition else []
 
     def clean_athena_tasks(self) -> Sequence[AwsAthenaCleanerTask]:
         return self.mock_tasks
@@ -62,19 +71,19 @@ class TestAwsScanner(AwsScannerTestCase):
         )
 
     def test_scan_service_usage(self) -> None:
-        reports = self.get_aws_scanner().scan_service_usage(year=2020, month=7, service="ssm")
+        reports = self.get_aws_scanner().scan_service_usage(self.partition, service="ssm")
         self.assertEqual(self.mock_reports, reports)
 
     def test_scan_role_usage(self) -> None:
-        reports = self.get_aws_scanner().scan_role_usage(year=2020, month=7, role="RoleSomething")
+        reports = self.get_aws_scanner().scan_role_usage(self.partition, role="RoleSomething")
         self.assertEqual(self.mock_reports, reports)
 
     def test_find_principal_by_ip(self) -> None:
-        reports = self.get_aws_scanner().find_principal_by_ip(year=2020, month=7, source_ip="127.0.0.1")
+        reports = self.get_aws_scanner().find_principal_by_ip(self.partition, source_ip="127.0.0.1")
         self.assertEqual(self.mock_reports, reports)
 
     def test_create_table(self) -> None:
-        reports = self.get_aws_scanner().create_table(year=2020, month=7)
+        reports = self.get_aws_scanner().create_table(self.partition)
         self.assertEqual(self.mock_reports, reports)
 
     def test_list_accounts(self) -> None:

@@ -48,10 +48,10 @@ class AwsScannerMain:
     @staticmethod
     def _get_tasks_mapping(scanner: AwsScanner, args: AwsScannerArguments) -> Dict[str, Callable[[], Any]]:
         return {
-            Commands.service_usage: lambda: scanner.scan_service_usage(args.year, args.month, args.service),
-            Commands.role_usage: lambda: scanner.scan_role_usage(args.year, args.month, args.role),
-            Commands.find_principal: lambda: scanner.find_principal_by_ip(args.year, args.month, args.source_ip),
-            Commands.create_table: lambda: scanner.create_table(args.year, args.month),
+            Commands.service_usage: lambda: scanner.scan_service_usage(args.partition, args.service),
+            Commands.role_usage: lambda: scanner.scan_role_usage(args.partition, args.role),
+            Commands.find_principal: lambda: scanner.find_principal_by_ip(args.partition, args.source_ip),
+            Commands.create_table: lambda: scanner.create_table(args.partition),
             Commands.list_accounts: lambda: scanner.list_accounts(),
             Commands.list_ssm_parameters: lambda: scanner.list_ssm_parameters(),
             Commands.drop: lambda: scanner.clean_athena(),

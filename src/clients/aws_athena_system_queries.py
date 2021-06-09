@@ -41,6 +41,6 @@ CREATE_TABLE = (
 DROP_TABLE = "DROP TABLE `$table`"
 
 ADD_PARTITION_YEAR_MONTH = (
-    "ALTER TABLE `$account` ADD PARTITION (region='eu-west-2', year='$year', month='$month') LOCATION "
-    "'s3://$cloudtrail_logs_bucket/AWSLogs/$account/CloudTrail/eu-west-2/$year/$month'"
+    "ALTER TABLE `$account` ADD PARTITION (region='$region', year='$year', month='$month') LOCATION "
+    "'s3://$cloudtrail_logs_bucket/AWSLogs/$account/CloudTrail/$region/$year/$month'"
 )

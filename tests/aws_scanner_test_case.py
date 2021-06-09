@@ -1,5 +1,7 @@
 from unittest import TestCase
-from unittest.mock import mock_open, patch
+from unittest.mock import Mock, mock_open, patch
+
+from datetime import date
 
 test_config = """
 [athena]
@@ -11,6 +13,7 @@ query_results_bucket = query-results-bucket
 [cloudtrail]
 logs_bucket = cloudtrail-logs-bucket
 logs_retention_days = 90
+region = eu
 
 [organization]
 account = 999888777666
@@ -44,3 +47,5 @@ name = joe.bloggs
 
 class AwsScannerTestCase(TestCase):
     patch("builtins.open", mock_open(read_data=test_config)).start()
+    patch("boto3.session.Session.get_available_regions", return_value=["us", "eu"]).start()
+    patch("datetime.date", Mock(today=Mock(return_value=date(2020, 11, 2)))).start()

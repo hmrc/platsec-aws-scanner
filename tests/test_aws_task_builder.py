@@ -1,8 +1,6 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock
 
-from datetime import date
-
 from src.aws_task_builder import AwsTaskBuilder
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
@@ -21,32 +19,28 @@ from tests.test_types_generator import account, partition
 class TestAwsTaskBuilder(AwsScannerTestCase):
     def test_principal_by_ip_finder_tasks(self) -> None:
         mock_orgs = Mock(get_target_accounts=Mock(return_value=[(account("1", "one")), (account("2", "two"))]))
-        year, month, source_ip = date.today().year, date.today().month, "127.0.0.1"
-        tasks = AwsTaskBuilder(mock_orgs).principal_by_ip_finder_tasks(year, month, source_ip)
+        tasks = AwsTaskBuilder(mock_orgs).principal_by_ip_finder_tasks(partition(), "127.0.0.1")
 
         self.assert_ip_tasks_equal(AwsPrincipalByIPFinderTask(account("1", "one"), partition(), "127.0.0.1"), tasks[0])
         self.assert_ip_tasks_equal(AwsPrincipalByIPFinderTask(account("2", "two"), partition(), "127.0.0.1"), tasks[1])
 
     def test_service_usage_scanner_tasks(self) -> None:
         mock_orgs = Mock(get_target_accounts=Mock(return_value=[(account("1", "one")), (account("2", "two"))]))
-        year, month, service = date.today().year, date.today().month, "s3"
-        tasks = AwsTaskBuilder(mock_orgs).service_usage_scanner_tasks(year, month, service)
+        tasks = AwsTaskBuilder(mock_orgs).service_usage_scanner_tasks(partition(), "s3")
 
         self.assert_service_tasks_equal(AwsServiceUsageScannerTask(account("1", "one"), partition(), "s3"), tasks[0])
         self.assert_service_tasks_equal(AwsServiceUsageScannerTask(account("2", "two"), partition(), "s3"), tasks[1])
 
     def test_role_usage_scanner_tasks(self) -> None:
         mock_orgs = Mock(get_target_accounts=Mock(return_value=[(account("1", "one")), (account("2", "two"))]))
-        year, month, role = date.today().year, date.today().month, "SomeRole"
-        tasks = AwsTaskBuilder(mock_orgs).role_usage_scanner_tasks(year, month, role)
+        tasks = AwsTaskBuilder(mock_orgs).role_usage_scanner_tasks(partition(), "SomeRole")
 
         self.assert_role_tasks_equal(AwsRoleUsageScannerTask(account("1", "one"), partition(), "SomeRole"), tasks[0])
         self.assert_role_tasks_equal(AwsRoleUsageScannerTask(account("2", "two"), partition(), "SomeRole"), tasks[1])
 
     def test_create_athena_table_tasks(self) -> None:
         mock_orgs = Mock(find_account_by_ids=Mock(return_value=[(account("8", "eight")), (account("3", "three"))]))
-        year, month = date.today().year, date.today().month
-        tasks = AwsTaskBuilder(mock_orgs, ["8", "3"]).create_athena_table_tasks(year, month)
+        tasks = AwsTaskBuilder(mock_orgs, ["8", "3"]).create_athena_table_tasks(partition())
 
         self.assert_cloudtrail_tasks_equal(AwsCreateAthenaTableTask(account("8", "eight"), partition()), tasks[0])
         self.assert_cloudtrail_tasks_equal(AwsCreateAthenaTableTask(account("3", "three"), partition()), tasks[1])

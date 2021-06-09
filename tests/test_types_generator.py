@@ -1,6 +1,3 @@
-from unittest.mock import patch
-
-from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
 from botocore.exceptions import ClientError
@@ -32,9 +29,8 @@ from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 
 
-def partition(year: int = date.today().year, month: int = date.today().month) -> AwsAthenaDataPartition:
-    with patch("src.data.aws_athena_data_partition.AwsAthenaDataPartition._today", return_value=date(year, month, 1)):
-        return AwsAthenaDataPartition(year, month)
+def partition(year: int = 2020, month: int = 11, region: str = "eu") -> AwsAthenaDataPartition:
+    return AwsAthenaDataPartition(year, month, region)
 
 
 def account(identifier: str = "account_id", name: str = "account_name") -> Account:
@@ -181,7 +177,8 @@ def aws_scanner_arguments(
     mfa_token: str = "123456",
     task: str = "a_task",
     year: int = 2020,
-    month: int = 2,
+    month: int = 11,
+    region: str = "eu",
     accounts: Optional[List[str]] = None,
     service: str = "a_service",
     role: str = "a_role",
@@ -194,6 +191,7 @@ def aws_scanner_arguments(
         task=task,
         year=year,
         month=month,
+        region=region,
         accounts=accounts or ["999888777666", "555444333222"],
         service=service,
         role=role,

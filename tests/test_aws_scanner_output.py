@@ -13,7 +13,7 @@ from tests.test_types_generator import account, partition, task_report
 
 EXPECTED_JSON_REPORT = (
     '[{"account": {"identifier": "account_id", "name": "account_name"}, "description": "task", "partition": '
-    '{"year": "2021", "month": "05"}, "results": {"key": "val"}}]'
+    '{"year": "2020", "month": "11", "region": "eu"}, "results": {"key": "val"}}]'
 )
 
 
@@ -21,7 +21,7 @@ class TestAwsScannerOutput(AwsScannerTestCase):
     @patch.dict(os.environ, {"AWS_SCANNER_REPORTS_OUTPUT": "stdout"}, clear=True)
     def test_stdout_output(self) -> None:
         with redirect_stdout(StringIO()) as out:
-            AwsScannerOutput(Mock()).write("some_task", [task_report(partition=partition(2021, 5))])
+            AwsScannerOutput(Mock()).write("some_task", [task_report(partition=partition())])
         self.assertEqual(EXPECTED_JSON_REPORT, out.getvalue().strip())
 
     @patch.dict(
@@ -43,7 +43,7 @@ class TestAwsScannerOutput(AwsScannerTestCase):
                 else None
             )
         )
-        AwsScannerOutput(factory).write("some_task", [task_report(partition=partition(2021, 5))])
+        AwsScannerOutput(factory).write("some_task", [task_report(partition=partition())])
         mock_s3.put_object.assert_called_once_with(
             bucket="reports_bucket", object_name="some_task.json", object_content=EXPECTED_JSON_REPORT
         )
