@@ -87,7 +87,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
 
     def test_config_file_is_missing(self) -> None:
         with patch("configparser.ConfigParser.read", return_value=[]):
-            with self.assertLogs("AwsScannerConfig", level="INFO") as info_log:
+            with self.assertLogs("AwsScannerConfig", level="DEBUG") as info_log:
                 AwsScannerConfig()
         self.assertIn("Config file 'aws_scanner_config.ini' not found", info_log.output[0])
 
