@@ -6,7 +6,7 @@ on which principal this IP address belongs to.
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh find_principal -u john.doo -t 123456 -y 2021 -m 3 -a 887766554433,545454545454 --ip 111.222.111.222
+./platsec_aws_scanner.sh find_principal -u john.doo -t 123456 -y 2021 -m 3 -re us-east-1 -a 887766554433,545454545454 --ip 111.222.111.222
 ```
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
@@ -25,7 +25,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "description": "principals for source IP 111.222.111.222",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "us-east-1"
     },
     "results": {
       "principals": []
@@ -39,7 +40,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "description": "principals for source IP 111.222.111.222",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "us-east-1"
     },
     "results": {
       "principals": [

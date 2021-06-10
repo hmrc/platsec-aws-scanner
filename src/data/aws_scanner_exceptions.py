@@ -40,6 +40,11 @@ class InvalidDataPartitionException(AwsScannerException):
         )
 
 
+class InvalidRegionException(AwsScannerException):
+    def __init__(self, region: str, regions: Iterable[str]):
+        super().__init__(f"invalid region '{region}'. Should be one of {regions}.")
+
+
 class ListTablesException(AwsScannerException):
     pass
 

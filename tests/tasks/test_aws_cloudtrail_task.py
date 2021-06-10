@@ -88,6 +88,9 @@ class TestAwsCloudTrailTask(AwsScannerTestCase):
 
     def test_str(self) -> None:
         self.assertEqual(
-            "task 'task' for 'account_name (account_id)' with AwsAthenaDataPartition(year='2020', month='09')",
+            (
+                "task 'task' for 'account_name (account_id)' with "
+                "AwsAthenaDataPartition(year='2020', month='09', region='eu')"
+            ),
             str(cloudtrail_task(partition=partition(2020, 9))),
         )

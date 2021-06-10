@@ -31,12 +31,16 @@ query_results_bucket = query-results-bucket
 [cloudtrail]
 logs_bucket = cloudtrail-logs-bucket
 logs_retention_days = 90
+region = us-east-1
 ```
 
 -   `logs_bucket`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
     
 -   `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this
     is used to validate the data partition configuration in [AwsAthenaDataPartition][src-partition])
+    
+-   `region`: AWS region for partitioning the CloudTrail data in Athena; can be superseded with `-re | --region`
+    argument
 
 ## Organization
 

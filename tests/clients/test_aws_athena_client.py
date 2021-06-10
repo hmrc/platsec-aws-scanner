@@ -112,7 +112,7 @@ class TestQueries(AwsScannerTestCase):
             method_args={
                 "database": "some_db",
                 "account": account(),
-                "partition": partition(2019, 8),
+                "partition": partition(2020, 8),
             },
             timeout_seconds=120,
             raise_on_failure=exceptions.AddPartitionException,

@@ -6,7 +6,7 @@ event name that occurred for this particular service and how many times each eve
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh service_usage -u john.doo -t 123456 -y 2021 -m 3 -a 999888777666 --service s3
+./platsec_aws_scanner.sh service_usage -u john.doo -t 123456 -y 2021 -m 3 -re ap-east-1 -a 999888777666 --service s3
 ```
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
@@ -25,7 +25,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
     "description": "AWS s3 service usage scan",
     "partition": {
       "year": "2021",
-      "month": "03"
+      "month": "03",
+      "region": "ap-east-1"
     },
     "results": {
       "event_source": "s3.amazonaws.com",

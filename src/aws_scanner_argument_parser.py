@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
+from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 
 
 @dataclass
@@ -14,11 +15,16 @@ class AwsScannerArguments:
     task: str
     year: int
     month: int
+    region: str
     accounts: Optional[List[str]]
     service: str
     role: str
     source_ip: str
     log_level: str
+
+    @property
+    def partition(self) -> AwsAthenaDataPartition:
+        return AwsAthenaDataPartition(year=self.year, month=self.month, region=self.region)
 
 
 class AwsScannerCommands:
@@ -46,6 +52,7 @@ class AwsScannerArgumentParser:
     def _add_athena_task_args(parser: ArgumentParser) -> None:
         parser.add_argument("-y", "--year", type=int, required=True, help="year for AWS Athena data partition")
         parser.add_argument("-m", "--month", type=int, required=True, help="month for AWS Athena data partition")
+        parser.add_argument("-re", "--region", type=str, help="region for AWS Athena data partition")
         AwsScannerArgumentParser._add_accounts_args(parser)
 
     @staticmethod
@@ -129,27 +136,28 @@ class AwsScannerArgumentParser:
         self._add_verbosity_arg(service_parser)
 
     def parse_cli_args(self) -> AwsScannerArguments:
-        return self.parse_args(vars(self._build_parser().parse_args()))
+        return self._parse_args()
 
     def parse_lambda_args(self, lambda_event: Dict[str, Any]) -> AwsScannerArguments:
         args = dict(lambda_event, **{"username": SERVICE_ACCOUNT_USER, "token": SERVICE_ACCOUNT_TOKEN})
         command = reduce(lambda cmd, arg: cmd + [f"--{arg[0]}", str(arg[1])], args.items(), [args.pop("task", "")])
-        return self.parse_args(vars(self._build_parser().parse_args(command)))
+        return self._parse_args(command)
 
-    def parse_args(self, args: Dict[str, Any]) -> AwsScannerArguments:
+    def _parse_args(self, command: Optional[List[str]] = None) -> AwsScannerArguments:
+        return self._build_args(vars(self._build_parser().parse_args(command)))
+
+    @staticmethod
+    def _build_args(args: Dict[str, Any]) -> AwsScannerArguments:
         return AwsScannerArguments(
-            username=self._fetch_username(args),
+            username=args.get("username") or Config().user_name(),
             mfa_token=str(args.get("token")),
             task=str(args.get("task")),
             year=int(args.get("year", -1)),
             month=int(args.get("month", -1)),
+            region=args.get("region") or Config().cloudtrail_region(),
             accounts=args.get("accounts", "").split(",") if args.get("accounts") else None,
             service=str(args.get("service")),
             role=str(args.get("role")),
             source_ip=str(args.get("ip")),
             log_level=str(args.get("verbosity")).upper(),
         )
-
-    @staticmethod
-    def _fetch_username(args: Dict[str, Any]) -> str:
-        return args.get("username") or Config().user_name()

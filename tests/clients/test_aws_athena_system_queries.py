@@ -41,6 +41,6 @@ CREATE_TABLE = (
 DROP_TABLE = "DROP TABLE `908173625490`"
 
 ADD_PARTITION_YEAR_MONTH = (
-    "ALTER TABLE `908173625490` ADD PARTITION (region='eu-west-2', year='2020', month='07') LOCATION "
-    "'s3://cloudtrail-logs-bucket/AWSLogs/908173625490/CloudTrail/eu-west-2/2020/07'"
+    "ALTER TABLE `908173625490` ADD PARTITION (region='eu', year='2020', month='09') LOCATION "
+    "'s3://cloudtrail-logs-bucket/AWSLogs/908173625490/CloudTrail/eu/2020/09'"
 )

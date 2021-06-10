@@ -31,6 +31,9 @@ class AwsScannerConfig:
     def cloudtrail_logs_retention_days(self) -> int:
         return int(self._get_config("cloudtrail", "logs_retention_days"))
 
+    def cloudtrail_region(self) -> str:
+        return self._get_config("cloudtrail", "region")
+
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")
 

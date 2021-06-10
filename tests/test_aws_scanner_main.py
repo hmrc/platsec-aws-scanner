@@ -10,7 +10,7 @@ from src.aws_scanner_main import AwsScannerMain
 from src.data.aws_scanner_exceptions import AwsScannerException
 from src.json_serializer import to_json
 
-from tests.test_types_generator import aws_scanner_arguments, task_report
+from tests.test_types_generator import aws_scanner_arguments, partition, task_report
 
 CLIENT_FACTORY_REF = "src.clients.aws_client_factory.AwsClientFactory"
 SCANNER_REF = "src.aws_scanner.AwsScanner"
@@ -56,24 +56,26 @@ class TestAwsScannerMain(AwsScannerTestCase):
         report = build_test_report("service_usage")
         with patch(f"{SCANNER_REF}.scan_service_usage", return_value=report) as mock_scan_service_usage:
             with redirect_stdout(StringIO()) as out:
-                AwsScannerMain(aws_scanner_arguments(task="service_usage", service="ssm", year=2021, month=2))
-        mock_scan_service_usage.assert_called_once_with(2021, 2, "ssm")
+                AwsScannerMain(
+                    aws_scanner_arguments(task="service_usage", service="ssm", year=2020, month=10, region="us")
+                )
+        mock_scan_service_usage.assert_called_once_with(partition(2020, 10, "us"), "ssm")
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_role_usage_cmd(self, _, __, ___, ____):
         report = build_test_report("role_usage")
         with patch(f"{SCANNER_REF}.scan_role_usage", return_value=report) as mock_scan_role_usage:
             with redirect_stdout(StringIO()) as out:
-                AwsScannerMain(aws_scanner_arguments(task="role_usage", role="SomeSensitiveRole", year=2021, month=2))
-        mock_scan_role_usage.assert_called_once_with(2021, 2, "SomeSensitiveRole")
+                AwsScannerMain(aws_scanner_arguments(task="role_usage", role="SomeSensitiveRole", year=2020, month=11))
+        mock_scan_role_usage.assert_called_once_with(partition(), "SomeSensitiveRole")
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_find_principal_by_ip_cmd(self, _, __, ___, ____):
         report = build_test_report("principal")
         with patch(f"{SCANNER_REF}.find_principal_by_ip", return_value=report) as mock_find_principal_by_ip:
             with redirect_stdout(StringIO()) as out:
-                AwsScannerMain(aws_scanner_arguments(task="find_principal", year=2022, month=4, source_ip="127.0.0.5"))
-        mock_find_principal_by_ip.assert_called_once_with(2022, 4, "127.0.0.5")
+                AwsScannerMain(aws_scanner_arguments(task="find_principal", year=2020, month=11, source_ip="127.0.0.5"))
+        mock_find_principal_by_ip.assert_called_once_with(partition(), "127.0.0.5")
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_create_table_cmd(self, _, __, ___, ____):
@@ -82,7 +84,7 @@ class TestAwsScannerMain(AwsScannerTestCase):
             with patch(f"{SCANNER_REF}.create_table", return_value=report) as mock_create_table:
                 with redirect_stdout(StringIO()) as out:
                     AwsScannerMain(aws_scanner_arguments(task="create_table", accounts=["1", "2", "3"]))
-        mock_create_table.assert_called_once_with(2020, 2)
+        mock_create_table.assert_called_once_with(partition())
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
     def test_main_with_list_accounts_cmd(self, _, __, ___, ____):
