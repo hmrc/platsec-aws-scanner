@@ -1,8 +1,8 @@
 SCAN_SERVICE_USAGE = (
-    "SELECT eventsource, eventname, COUNT(1) AS count "
+    "SELECT eventsource, eventname, errorcode, COUNT(1) AS count "
     'FROM "$database"."$account" '
     "WHERE eventsource LIKE '%$service%' "
-    "GROUP BY eventsource, eventname "
+    "GROUP BY eventsource, eventname, errorcode "
     "LIMIT 100"
 )
 

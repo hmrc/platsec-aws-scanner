@@ -16,8 +16,8 @@ class TestAwsServiceUsageScannerTask(GenericCloudTrailTestCase):
                 {
                     "event_source": "ssm.amazonaws.com",
                     "service_usage": [
-                        {"event_name": "describe_document", "count": 1024},
-                        {"event_name": "get_inventory", "count": 54},
+                        {"event_name": "describe_document", "error_code": "AccessDenied", "count": 1024},
+                        {"event_name": "get_inventory", "error_code": "", "count": 54},
                     ],
                 },
                 {"event_source": "ssm", "service_usage": []},

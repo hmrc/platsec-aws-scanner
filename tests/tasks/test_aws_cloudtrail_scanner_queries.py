@@ -1,13 +1,27 @@
 SCAN_SERVICE_USAGE = (
-    "SELECT eventsource, eventname, COUNT(1) AS count "
+    "SELECT eventsource, eventname, errorcode, COUNT(1) AS count "
     'FROM "some_db"."account_id" '
     "WHERE eventsource LIKE '%ssm%' "
-    "GROUP BY eventsource, eventname "
+    "GROUP BY eventsource, eventname, errorcode "
     "LIMIT 100"
 )
 SCAN_SERVICE_USAGE_RESULTS = [
-    {"Data": [{"VarCharValue": "ssm.amazonaws.com"}, {"VarCharValue": "describe_document"}, {"VarCharValue": "1024"}]},
-    {"Data": [{"VarCharValue": "ssm.amazonaws.com"}, {"VarCharValue": "get_inventory"}, {"VarCharValue": "54"}]},
+    {
+        "Data": [
+            {"VarCharValue": "ssm.amazonaws.com"},
+            {"VarCharValue": "describe_document"},
+            {"VarCharValue": "AccessDenied"},
+            {"VarCharValue": "1024"},
+        ]
+    },
+    {
+        "Data": [
+            {"VarCharValue": "ssm.amazonaws.com"},
+            {"VarCharValue": "get_inventory"},
+            {},
+            {"VarCharValue": "54"},
+        ]
+    },
 ]
 
 FIND_PRINCIPAL_BY_IP = (

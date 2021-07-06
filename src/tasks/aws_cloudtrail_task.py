@@ -47,7 +47,7 @@ class AwsCloudTrailTask(AwsAthenaTask):
 
     @staticmethod
     def _read_value(results: List[Any], row_index: int, item_index: int) -> str:
-        return str(results[row_index]["Data"][item_index]["VarCharValue"])
+        return str(results[row_index]["Data"][item_index].get("VarCharValue", ""))
 
     def __str__(self) -> str:
         return f"{super().__str__()} with {self._partition}"
