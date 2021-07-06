@@ -26,7 +26,8 @@ class AwsServiceUsageScannerTask(AwsCloudTrailTask):
             "service_usage": [
                 {
                     "event_name": self._read_value(results, row, 1),
-                    "count": int(self._read_value(results, row, 2)),
+                    "error_code": self._read_value(results, row, 2),
+                    "count": int(self._read_value(results, row, 3)),
                 }
                 for row in range(len(results))
             ],

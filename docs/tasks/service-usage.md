@@ -33,42 +33,52 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
       "service_usage": [
         {
           "event_name": "ListObjectVersions",
+          "error_code": "",
           "count": 15
         },
         {
           "event_name": "ListObjects",
+          "error_code": "AccessDenied",
           "count": 224
         },
         {
           "event_name": "GetBucketEncryption",
+          "error_code": "AccessDenied",
           "count": 11
         },
         {
           "event_name": "CreateMultipartUpload",
+          "error_code": "",
           "count": 6
         },
         {
           "event_name": "GetObject",
+          "error_code": "",
           "count": 205
         },
         {
           "event_name": "GetBucketLifecycle",
+          "error_code": "",
           "count": 1
         },
         {
           "event_name": "ListBuckets",
+          "error_code": "AccessDenied",
           "count": 125
         },
         {
           "event_name": "GetBucketPolicy",
+          "error_code": "",
           "count": 19
         },
         {
           "event_name": "GetBucketVersioning",
+          "error_code": "",
           "count": 52
         },
         {
           "event_name": "PutObject",
+          "error_code": "",
           "count": 31
         }
       ]
@@ -84,4 +94,5 @@ See the [task report section](../usage.md#task-report) for details on the common
   - `service_usage`: events list for this particular service in the requested account for the specified data partition
 
     - `event_name`: name of an event that occurred
+    - `error_code`: if the event errors, an error code will populate otherwise the field will be empty
     - `count`: how many times said event fired
