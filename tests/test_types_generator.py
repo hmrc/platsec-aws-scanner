@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_ec2_types import FlowLog, Vpc
+from src.data.aws_ec2_flow_log_actions import CreateFlowLogAction, DeleteFlowLogAction
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
@@ -209,7 +210,7 @@ def aws_scanner_arguments(
 
 
 def vpc(id: str = "vpc-1234", flow_logs: Optional[List[FlowLog]] = None) -> Vpc:
-    return Vpc(id=id, flow_logs=flow_logs or [flow_log(id="fl-1234"), flow_log(id="fl-5678")])
+    return Vpc(id=id, flow_logs=flow_logs or [flow_log(id="fl-1234")])
 
 
 def flow_log(
@@ -222,3 +223,11 @@ def flow_log(
     return FlowLog(
         id=id, status=status, traffic_type=traffic_type, log_destination=log_destination, log_format=log_format
     )
+
+
+def create_flow_log_action(vpc_id: str = vpc().id) -> CreateFlowLogAction:
+    return CreateFlowLogAction(vpc_id=vpc_id)
+
+
+def delete_flow_log_action(flow_log_id: str = flow_log().id) -> DeleteFlowLogAction:
+    return DeleteFlowLogAction(flow_log_id=flow_log_id)

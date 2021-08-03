@@ -9,7 +9,11 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 @dataclass
 class Vpc:
     id: str
-    flow_logs: Optional[List[FlowLog]] = None
+    flow_logs: List[FlowLog]
+
+    def __init__(self, id: str, flow_logs: Optional[List[FlowLog]] = None):
+        self.id = id
+        self.flow_logs = flow_logs or []
 
 
 def to_vpc(vpc: Dict[Any, Any]) -> Vpc:
