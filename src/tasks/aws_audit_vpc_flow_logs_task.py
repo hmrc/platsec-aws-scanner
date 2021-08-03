@@ -12,4 +12,4 @@ class AwsAuditVPCFlowLogsTask(AwsEC2Task):
         super().__init__("audit VPC flow logs compliance", account, enforce)
 
     def _run_task(self, client: AwsEC2Client) -> Dict[Any, Any]:
-        raise NotImplementedError("this is an abstract class")
+        return {"vpcs": client.list_vpcs()}
