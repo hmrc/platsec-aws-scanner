@@ -1,10 +1,12 @@
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class Vpc:
     id: str
+    flow_logs: Optional[List[FlowLog]] = None
 
 
 def to_vpc(vpc: Dict[Any, Any]) -> Vpc:

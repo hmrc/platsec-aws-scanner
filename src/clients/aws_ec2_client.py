@@ -12,12 +12,19 @@ class AwsEC2Client:
         self._logger = getLogger(self.__class__.__name__)
         self._ec2 = boto_ec2
 
-    def describe_vpcs(self) -> List[Vpc]:
+    def list_vpcs(self) -> List[Vpc]:
+        return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
+
+    def _enrich_vpc(self, vpc: Vpc) -> Vpc:
+        vpc.flow_logs = self._describe_flow_logs(vpc)
+        return vpc
+
+    def _describe_vpcs(self) -> List[Vpc]:
         return boto_try(
             lambda: [to_vpc(vpc) for vpc in self._ec2.describe_vpcs()["Vpcs"]], list, "unable to describe VPCs"
         )
 
-    def describe_flow_logs(self, vpc: Vpc) -> List[FlowLog]:
+    def _describe_flow_logs(self, vpc: Vpc) -> List[FlowLog]:
         filters = [{"Name": "resource-id", "Values": [vpc.id]}]
         return boto_try(
             lambda: [to_flow_log(flow_log) for flow_log in self._ec2.describe_flow_logs(Filters=filters)["FlowLogs"]],
