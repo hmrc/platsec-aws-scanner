@@ -35,3 +35,17 @@ EXPECTED_FLOW_LOGS = [
         log_format="${start} ${end} ${action} ${log-status}",
     ),
 ]
+
+DELETE_FLOW_LOGS_SUCCESS = {"Unsuccessful": []}
+
+DELETE_FLOW_LOGS_FAILURE = {
+    "Unsuccessful": [
+        {
+            "Error": {
+                "Code": "InvalidFlowLogId.NotFound",
+                "Message": "These flow log ids in the input list are not found: [TotalCount: 1] bad-fl",
+            },
+            "ResourceId": "bad-fl",
+        },
+    ]
+}
