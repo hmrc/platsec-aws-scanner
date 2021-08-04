@@ -210,7 +210,7 @@ def aws_scanner_arguments(
 
 
 def vpc(id: str = "vpc-1234", flow_logs: Optional[List[FlowLog]] = None) -> Vpc:
-    return Vpc(id=id, flow_logs=flow_logs or [flow_log(id="fl-1234")])
+    return Vpc(id=id, flow_logs=flow_logs if flow_logs is not None else [flow_log(id="fl-1234")])
 
 
 def flow_log(

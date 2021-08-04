@@ -6,6 +6,9 @@ from tests.test_types_generator import create_flow_log_action, delete_flow_log_a
 
 
 class TestAwsEC2FlowLogActions(AwsScannerTestCase):
+    def test_vpc_is_empty(self) -> None:
+        self.assertEqual({create_flow_log_action("a-vpc")}, to_flow_log_actions(vpc(id="a-vpc", flow_logs=[])))
+
     def test_vpc_no_flow_log_action(self) -> None:
         self.assertEqual(set(), to_flow_log_actions(vpc(flow_logs=[flow_log()])))
 
