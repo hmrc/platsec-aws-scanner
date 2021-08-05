@@ -1,75 +1,39 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
+from typing import AbstractSet
 
-from tests.test_types_generator import account, flow_log, task_report, vpc
+from src.clients.aws_ec2_client import AwsEC2Client
+from src.data.aws_ec2_actions import EC2Action
+from src.data.aws_ec2_types import Vpc
+
+from tests.test_types_generator import (
+    aws_audit_vpc_flow_logs_task,
+    create_flow_log_action,
+    delete_flow_log_action,
+    task_report,
+    vpc,
+)
+
+client = AwsEC2Client(Mock())
+vpcs = [vpc(id="vpc-1"), vpc(id="vpc-2")]
+actions = [delete_flow_log_action(flow_log_id="fl-4"), create_flow_log_action(vpc_id="vpc-7")]
+results = {"vpcs": vpcs, "enforcement_actions": actions}
+report = task_report(description="audit VPC flow logs compliance", partition=None, results=results)
 
 
+def enforcement_actions(v: Vpc) -> AbstractSet[EC2Action]:
+    return {"vpc-1": {delete_flow_log_action("fl-4")}, "vpc-2": {create_flow_log_action("vpc-7")}}[v.id]
+
+
+@patch("src.tasks.aws_audit_vpc_flow_logs_task.enforcement_actions", side_effect=enforcement_actions)
+@patch.object(AwsEC2Client, "list_vpcs", return_value=vpcs)
+@patch.object(AwsEC2Client, "apply", return_value=actions)
 class TestAwsAuditVPCFlowLogsTask(AwsScannerTestCase):
-    def test_run_task(self) -> None:
-        task = AwsAuditVPCFlowLogsTask(account(), enforce=False)
-        compliant_fl = flow_log()
-        non_compliant_fl_1 = flow_log(id="non-compliant-1", status="DISABLED")
-        non_compliant_fl_2 = flow_log(id="non-compliant-2", traffic_type="REJECT")
-        non_compliant_fl_3 = flow_log(id="non-compliant-3", log_destination="arn:aws:s3:::another-bucket")
-        non_compliant_fl_4 = flow_log(id="non-compliant-4", log_format="${something}")
-        vpcs = [
-            vpc(
-                flow_logs=[compliant_fl, non_compliant_fl_1, non_compliant_fl_2, non_compliant_fl_3, non_compliant_fl_4]
-            )
-        ]
-        ec2_client = Mock(list_vpcs=Mock(return_value=vpcs))
-        vpcs_audit = task.run(ec2_client)
+    def test_run_audit_task(self, mock_apply, _, __) -> None:
+        self.assertEqual(report, aws_audit_vpc_flow_logs_task(enforce=False).run(client))
+        mock_apply.assert_not_called()
 
-        report = task_report(
-            account=account(),
-            description="audit VPC flow logs compliance",
-            partition=None,
-            results={
-                "vpcs": [
-                    vpc(
-                        id="vpc-1234",
-                        flow_logs=[
-                            flow_log(
-                                id="fl-1234",
-                                status="ACTIVE",
-                                traffic_type="ALL",
-                                log_destination="arn:aws:s3:::central-flow-logs-bucket",
-                                log_format="${srcaddr} ${dstaddr}",
-                            ),
-                            flow_log(
-                                id="non-compliant-1",
-                                status="DISABLED",
-                                traffic_type="ALL",
-                                log_destination="arn:aws:s3:::central-flow-logs-bucket",
-                                log_format="${srcaddr} ${dstaddr}",
-                            ),
-                            flow_log(
-                                id="non-compliant-2",
-                                status="ACTIVE",
-                                traffic_type="REJECT",
-                                log_destination="arn:aws:s3:::central-flow-logs-bucket",
-                                log_format="${srcaddr} ${dstaddr}",
-                            ),
-                            flow_log(
-                                id="non-compliant-3",
-                                status="ACTIVE",
-                                traffic_type="ALL",
-                                log_destination="arn:aws:s3:::another-bucket",
-                                log_format="${srcaddr} ${dstaddr}",
-                            ),
-                            flow_log(
-                                id="non-compliant-4",
-                                status="ACTIVE",
-                                traffic_type="ALL",
-                                log_destination="arn:aws:s3:::central-flow-logs-bucket",
-                                log_format="${something}",
-                            ),
-                        ],
-                    )
-                ]
-            },
-        )
-
-        self.assertEqual(report, vpcs_audit)
+    def test_run_enforcement_task(self, mock_apply, _, __) -> None:
+        self.assertEqual(report, aws_audit_vpc_flow_logs_task(enforce=True).run(client))
+        mock_apply.assert_called_once_with(actions)
