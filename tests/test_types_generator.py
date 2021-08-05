@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_ec2_types import FlowLog, Vpc
-from src.data.aws_ec2_flow_log_actions import CreateFlowLogAction, DeleteFlowLogAction
+from src.data.aws_ec2_actions import CreateFlowLogAction, DeleteFlowLogAction
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,

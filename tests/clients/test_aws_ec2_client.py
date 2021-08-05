@@ -1,5 +1,5 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from contextlib import redirect_stderr
 from io import StringIO
@@ -7,10 +7,11 @@ from typing import Any, Dict
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.data.aws_ec2_types import Vpc
+from src.data.aws_scanner_exceptions import UnsupportedActionException
 
 from tests import _raise
 from tests.clients import test_aws_ec2_client_responses as responses
-from tests.test_types_generator import client_error, flow_log, vpc
+from tests.test_types_generator import client_error, create_flow_log_action, delete_flow_log_action, flow_log, vpc
 
 
 class TestAwsEC2ListVpcs(AwsScannerTestCase):
@@ -64,6 +65,12 @@ class TestAwsEC2ClientDescribeFlowLogs(AwsScannerTestCase):
         self.assertIn("vpc-error", err.getvalue())
 
 
+class TestAwsEC2ClientCreateFlowLog(AwsScannerTestCase):
+    def test_create_flow_log_not_implemented(self) -> None:
+        with self.assertRaises(UnsupportedActionException):
+            AwsEC2Client(Mock())._create_flow_log("vpc-1")
+
+
 class TestAwsEC2ClientDeleteFlowLog(AwsScannerTestCase):
     @staticmethod
     def delete_flow_logs(**kwargs) -> Dict[Any, Any]:
@@ -77,16 +84,29 @@ class TestAwsEC2ClientDeleteFlowLog(AwsScannerTestCase):
         return AwsEC2Client(Mock(delete_flow_logs=Mock(side_effect=self.delete_flow_logs)))
 
     def test_delete_flow_log(self) -> None:
-        self.assertTrue(self.ec2_client().delete_flow_log(flow_log_id="good-fl"))
+        self.assertTrue(self.ec2_client()._delete_flow_log(flow_log_id="good-fl"))
 
     def test_delete_flow_log_not_found(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client().delete_flow_log(flow_log_id="fl-not-found"))
+            self.assertFalse(self.ec2_client()._delete_flow_log(flow_log_id="fl-not-found"))
         self.assertIn("InvalidFlowLogId.NotFound", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())
 
     def test_delete_flow_log_failure(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client().delete_flow_log(flow_log_id="bad-fl"))
+            self.assertFalse(self.ec2_client()._delete_flow_log(flow_log_id="bad-fl"))
         self.assertIn("AccessDenied", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())
+
+
+class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
+    def test_apply_actions(self) -> None:
+        c1, c2 = create_flow_log_action(vpc_id="vpc-1"), create_flow_log_action(vpc_id="vpc-2")
+        d1, d2 = delete_flow_log_action(flow_log_id="fl-1"), delete_flow_log_action(flow_log_id="fl-2")
+        with patch.object(AwsEC2Client, "_create_flow_log", side_effect=[True, False]) as mock_create:
+            with patch.object(AwsEC2Client, "_delete_flow_log", side_effect=[False, True]) as mock_delete:
+                self.assertEqual([c1, d1, c2, d2], AwsEC2Client(Mock()).apply([c1, d1, c2, d2]))
+        mock_create.assert_has_calls([call("vpc-1"), call("vpc-2")])
+        mock_delete.assert_has_calls([call("fl-1"), call("fl-2")])
+        self.assertEqual(["applied", "failed"], [c1.status, c2.status])
+        self.assertEqual(["failed", "applied"], [d1.status, d2.status])
