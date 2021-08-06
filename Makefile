@@ -36,7 +36,7 @@ static-check: pipenv
 	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict ./**/*.py
 
 .PHONY: all-checks
-all-checks: python-test python-coverage fmt-check static-check md-check
+all-checks: python-test python-coverage fmt-check static-check md-check clean-up
 
 .PHONY: python-test
 python-test: pipenv
@@ -73,3 +73,8 @@ push-lambda-image: build-lambda-image
 	@aws --profile $(ROLE) ecr get-login-password | docker login --username AWS --password-stdin $(ECR)
 	@docker tag  platsec_aws_scanner_lambda:local $(ECR)/platsec-aws-scanner:latest
 	@docker push $(ECR)/platsec-aws-scanner:latest
+
+.PHONY: clean-up
+clean-up:
+	@rm -f .coverage
+	@rm -f coverage.xml
