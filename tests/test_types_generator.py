@@ -216,8 +216,8 @@ def flow_log(
     id: str = "fl-1234",
     status: str = "ACTIVE",
     traffic_type: str = "ALL",
-    log_destination: str = "arn:aws:s3:::some-bucket",
-    log_format: str = "${start} ${end} ${action} ${log-status}",
+    log_destination: str = "arn:aws:s3:::central-flow-logs-bucket",
+    log_format: str = "${srcaddr} ${dstaddr}",
 ) -> FlowLog:
     return FlowLog(
         id=id, status=status, traffic_type=traffic_type, log_destination=log_destination, log_format=log_format

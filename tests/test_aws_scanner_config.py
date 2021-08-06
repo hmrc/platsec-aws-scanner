@@ -17,6 +17,10 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("cloudtrail-logs-bucket", config.cloudtrail_logs_bucket())
         self.assertEqual(90, config.cloudtrail_logs_retention_days())
         self.assertEqual("ec2_role", config.ec2_role())
+        self.assertEqual("ACTIVE", config.ec2_flow_log_status())
+        self.assertEqual("ALL", config.ec2_flow_log_traffic_type())
+        self.assertEqual("arn:aws:s3:::central-flow-logs-bucket", config.ec2_flow_log_destination())
+        self.assertEqual("${srcaddr} ${dstaddr}", config.ec2_flow_log_format())
         self.assertEqual(Account("999888777666", "organization"), config.organization_account())
         self.assertEqual("orgs_role", config.organization_role())
         self.assertTrue(config.organization_include_root_accounts())
@@ -42,6 +46,10 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_CLOUDTRAIL_LOGS_BUCKET": "a-cloudtrail-logs-bucket",
             "AWS_SCANNER_CLOUDTRAIL_LOGS_RETENTION_DAYS": "30",
             "AWS_SCANNER_EC2_ROLE": "the_ec2_role",
+            "AWS_SCANNER_EC2_FLOW_LOG_STATUS": "FL_STATUS",
+            "AWS_SCANNER_EC2_FLOW_LOG_TRAFFIC_TYPE": "ACCEPT",
+            "AWS_SCANNER_EC2_FLOW_LOG_DESTINATION": "arn:aws:s3:::a-flow-log-bucket",
+            "AWS_SCANNER_EC2_FLOW_LOG_FORMAT": "${srcaddr}",
             "AWS_SCANNER_ORGANIZATION_ACCOUNT": "666777888999",
             "AWS_SCANNER_ORGANIZATION_ROLE": "the_orgs_role",
             "AWS_SCANNER_ORGANIZATION_INCLUDE_ROOT_ACCOUNTS": "false",
@@ -68,6 +76,10 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("a-cloudtrail-logs-bucket", config.cloudtrail_logs_bucket())
         self.assertEqual(30, config.cloudtrail_logs_retention_days())
         self.assertEqual("the_ec2_role", config.ec2_role())
+        self.assertEqual("FL_STATUS", config.ec2_flow_log_status())
+        self.assertEqual("ACCEPT", config.ec2_flow_log_traffic_type())
+        self.assertEqual("arn:aws:s3:::a-flow-log-bucket", config.ec2_flow_log_destination())
+        self.assertEqual("${srcaddr}", config.ec2_flow_log_format())
         self.assertEqual(Account("666777888999", "organization"), config.organization_account())
         self.assertEqual("the_orgs_role", config.organization_role())
         self.assertFalse(config.organization_include_root_accounts())

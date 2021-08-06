@@ -37,6 +37,18 @@ class AwsScannerConfig:
     def ec2_role(self) -> str:
         return self._get_config("ec2", "role")
 
+    def ec2_flow_log_status(self) -> str:
+        return self._get_config("ec2", "flow_log_status")
+
+    def ec2_flow_log_traffic_type(self) -> str:
+        return self._get_config("ec2", "flow_log_traffic_type")
+
+    def ec2_flow_log_destination(self) -> str:
+        return self._get_config("ec2", "flow_log_destination")
+
+    def ec2_flow_log_format(self) -> str:
+        return self._get_config("ec2", "flow_log_format")
+
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")
 
