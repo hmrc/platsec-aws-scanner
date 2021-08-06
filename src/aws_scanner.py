@@ -34,3 +34,6 @@ class AwsScanner:
 
     def audit_s3(self) -> Sequence[AwsTaskReport]:
         return self._task_runner.run(self._task_builder.audit_s3_tasks())
+
+    def audit_vpc_flow_logs(self, enforce: bool) -> Sequence[AwsTaskReport]:
+        return self._task_runner.run(self._task_builder.audit_vpc_flow_logs_tasks(enforce))

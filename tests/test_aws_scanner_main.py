@@ -111,6 +111,14 @@ class TestAwsScannerMain(AwsScannerTestCase):
         mock_audit_s3.assert_called_once_with()
         self.assertEqual(f"{to_json(report)}\n", out.getvalue())
 
+    def test_main_with_audit_vpc_flow_logs_cmd(self, _, __, ___, ____):
+        report = build_test_report("audit_vpc_flow_logs")
+        with patch(f"{SCANNER_REF}.audit_vpc_flow_logs", return_value=report) as mock_audit_vpc_flow_logs:
+            with redirect_stdout(StringIO()) as out:
+                AwsScannerMain(aws_scanner_arguments(task="audit_vpc_flow_logs", enforce=True))
+        mock_audit_vpc_flow_logs.assert_called_once_with(True)
+        self.assertEqual(f"{to_json(report)}\n", out.getvalue())
+
     def test_main_failure(self, _, __, ___, ____):
         with patch(f"{SCANNER_REF}.clean_athena", side_effect=AwsScannerException("got a problem")):
             with self.assertRaises(SystemExit) as se:

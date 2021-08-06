@@ -55,6 +55,9 @@ class TestAwsScanner(AwsScannerTestCase):
     def audit_s3_tasks(self) -> Sequence[AwsTaskReport]:
         return self.mock_tasks
 
+    def audit_vpc_flow_logs_tasks(self, enforce: bool) -> Sequence[AwsTaskReport]:
+        return self.mock_tasks if enforce else []
+
     def get_aws_scanner(self) -> AwsScanner:
         return AwsScanner(
             task_builder=Mock(
@@ -66,6 +69,7 @@ class TestAwsScanner(AwsScannerTestCase):
                 list_ssm_parameters_tasks=Mock(side_effect=self.list_ssm_parameters_tasks),
                 clean_athena_tasks=Mock(side_effect=self.clean_athena_tasks),
                 audit_s3_tasks=Mock(side_effect=self.audit_s3_tasks),
+                audit_vpc_flow_logs_tasks=Mock(side_effect=self.audit_vpc_flow_logs_tasks),
             ),
             task_runner=Mock(run=Mock(side_effect=self.mock_run)),
         )
@@ -97,3 +101,6 @@ class TestAwsScanner(AwsScannerTestCase):
 
     def test_audit_s3(self) -> None:
         self.assertEqual(self.mock_reports, self.get_aws_scanner().audit_s3())
+
+    def test_audit_vpc_flow_logs(self) -> None:
+        self.assertEqual(self.mock_reports, self.get_aws_scanner().audit_vpc_flow_logs(enforce=True))

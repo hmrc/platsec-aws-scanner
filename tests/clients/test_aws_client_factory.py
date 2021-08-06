@@ -45,6 +45,16 @@ class TestGetBotoClients(AwsScannerTestCase):
             role="athena_role",
         )
 
+    def test_get_ec2_boto_client(self) -> None:
+        ec2_account = account(identifier="999888777666", name="some_ec2_account")
+        self.assert_get_client(
+            method_under_test="get_ec2_boto_client",
+            method_args={"account": ec2_account},
+            service="ec2",
+            target_account=ec2_account,
+            role="ec2_role",
+        )
+
     def test_get_s3_boto_client(self) -> None:
         s3_account = account(identifier="122344566788", name="some_s3_account")
         self.assert_get_client(
@@ -83,6 +93,15 @@ class TestGetClients(AwsScannerTestCase):
         with patch(f"{self.factory_path}.get_athena_boto_client") as boto_client:
             athena_client = AwsClientFactory(self.mfa, self.username).get_athena_client()
             self.assertEqual(athena_client._athena_async._boto_athena, boto_client.return_value)
+
+    def test_get_ec2_client(self, _: Mock) -> None:
+        ec2_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_ec2_boto_client",
+            side_effect=lambda acc: ec2_boto_client if acc == account() else None,
+        ):
+            ec2_client = AwsClientFactory(self.mfa, self.username).get_ec2_client(account())
+            self.assertEqual(ec2_client._ec2, ec2_boto_client)
 
     def test_get_organizations_client(self, _: Mock) -> None:
         with patch(f"{self.factory_path}.get_organizations_boto_client") as boto_client:

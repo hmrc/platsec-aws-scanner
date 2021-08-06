@@ -23,6 +23,7 @@ from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
+from src.tasks.aws_ec2_task import AwsEC2Task
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -49,6 +50,10 @@ def aws_task(account: Account = account(), description: str = "task") -> AwsTask
 
 def athena_task(account: Account = account(), description: str = "athena_task") -> AwsAthenaTask:
     return AwsAthenaTask(description=description, account=account)
+
+
+def ec2_task(account: Account = account(), description: str = "ec2_task", enforce: bool = True) -> AwsEC2Task:
+    return AwsEC2Task(description=description, account=account, enforce=enforce)
 
 
 def s3_task(account: Account = account(), description: str = "s3_task") -> AwsS3Task:
@@ -184,6 +189,7 @@ def aws_scanner_arguments(
     role: str = "a_role",
     source_ip: str = "127.0.0.1",
     log_level: str = "ERROR",
+    enforce: bool = False,
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -197,4 +203,5 @@ def aws_scanner_arguments(
         role=role,
         source_ip=source_ip,
         log_level=log_level,
+        enforce=enforce,
     )

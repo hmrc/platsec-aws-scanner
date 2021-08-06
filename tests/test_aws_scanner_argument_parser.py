@@ -141,6 +141,20 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.accounts, ["1", "2"])
             self.assertEqual(args.log_level, "ERROR")
 
+    def test_parse_cli_args_for_audit_vpc_flow_logs_task(self) -> None:
+        with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -e -v debug".split()):
+            short_args = AwsScannerArgumentParser().parse_cli_args()
+
+        with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce".split()):
+            long_args = AwsScannerArgumentParser().parse_cli_args()
+
+        for args in [short_args, long_args]:
+            self.assertEqual(args.task, "audit_vpc_flow_logs")
+            self.assertEqual(args.username, "joe.bloggs")
+            self.assertEqual(args.mfa_token, "223344")
+            self.assertEqual(args.accounts, ["5", "9"])
+            self.assertEqual(args.enforce, True)
+
     def test_cli_task_is_mandatory(self) -> None:
         with redirect_stderr(StringIO()) as err:
             with self.assertRaises(SystemExit):

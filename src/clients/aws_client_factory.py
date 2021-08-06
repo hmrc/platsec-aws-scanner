@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError, BotoCoreError
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_athena_client import AwsAthenaClient
+from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
@@ -47,6 +48,12 @@ class AwsClientFactory:
 
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
+
+    def get_ec2_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("ec2", account, self._config.ec2_role())
+
+    def get_ec2_client(self, account: Account) -> AwsEC2Client:
+        return AwsEC2Client(self.get_ec2_boto_client(account))
 
     def get_organizations_client(self) -> AwsOrganizationsClient:
         return AwsOrganizationsClient(self.get_organizations_boto_client())

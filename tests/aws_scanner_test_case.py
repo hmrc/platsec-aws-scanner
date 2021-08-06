@@ -15,6 +15,9 @@ logs_bucket = cloudtrail-logs-bucket
 logs_retention_days = 90
 region = eu
 
+[ec2]
+role = ec2_role
+
 [organization]
 account = 999888777666
 role = orgs_role

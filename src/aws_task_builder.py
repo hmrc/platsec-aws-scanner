@@ -6,6 +6,7 @@ from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
+from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
 from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
@@ -57,6 +58,10 @@ class AwsTaskBuilder:
     def audit_s3_tasks(self) -> Sequence[AwsAuditS3Task]:
         self._logger.info("creating 'audit S3' tasks")
         return [AwsAuditS3Task(account) for account in self._get_target_accounts()]
+
+    def audit_vpc_flow_logs_tasks(self, enforce: bool) -> Sequence[AwsAuditVPCFlowLogsTask]:
+        self._logger.info("creating 'audit VPC flow logs' tasks")
+        return [AwsAuditVPCFlowLogsTask(account, enforce) for account in self._get_target_accounts()]
 
     def _get_target_accounts(self) -> Sequence[Account]:
         return self._orgs.find_account_by_ids(self._accounts) if self._accounts else self._orgs.get_target_accounts()

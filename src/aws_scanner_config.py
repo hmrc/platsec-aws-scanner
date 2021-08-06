@@ -34,6 +34,9 @@ class AwsScannerConfig:
     def cloudtrail_region(self) -> str:
         return self._get_config("cloudtrail", "region")
 
+    def ec2_role(self) -> str:
+        return self._get_config("ec2", "role")
+
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")
 

@@ -56,4 +56,5 @@ class AwsScannerMain:
             Commands.list_ssm_parameters: lambda: scanner.list_ssm_parameters(),
             Commands.drop: lambda: scanner.clean_athena(),
             Commands.audit_s3: lambda: scanner.audit_s3(),
+            Commands.audit_vpc_flow_logs: lambda: scanner.audit_vpc_flow_logs(args.enforce),
         }

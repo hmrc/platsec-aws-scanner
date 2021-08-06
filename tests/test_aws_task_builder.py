@@ -4,8 +4,10 @@ from unittest.mock import Mock
 from src.aws_task_builder import AwsTaskBuilder
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
+from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
+from src.tasks.aws_ec2_task import AwsEC2Task
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
 from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
@@ -65,6 +67,13 @@ class TestAwsTaskBuilder(AwsScannerTestCase):
         self.assert_tasks_equal(AwsAuditS3Task(account("3", "three")), tasks[0])
         self.assert_tasks_equal(AwsAuditS3Task(account("5", "five")), tasks[1])
 
+    def test_audit_vpc_flow_logs_tasks(self) -> None:
+        mock_orgs = Mock(find_account_by_ids=Mock(return_value=[(account("4", "four")), (account("1", "one"))]))
+        tasks = AwsTaskBuilder(mock_orgs, ["4", "1"]).audit_vpc_flow_logs_tasks(enforce=False)
+
+        self.assert_ec2_tasks_equal(AwsAuditVPCFlowLogsTask(account("4", "four"), False), tasks[0])
+        self.assert_ec2_tasks_equal(AwsAuditVPCFlowLogsTask(account("1", "one"), False), tasks[1])
+
     def assert_tasks_equal(self, expected: AwsTask, actual: AwsTask) -> None:
         self.assertEqual(expected._account, actual._account)
 
@@ -85,3 +94,7 @@ class TestAwsTaskBuilder(AwsScannerTestCase):
     def assert_role_tasks_equal(self, expected: AwsRoleUsageScannerTask, actual: AwsRoleUsageScannerTask) -> None:
         self.assert_cloudtrail_tasks_equal(expected, actual)
         self.assertEqual(expected._role, actual._role)
+
+    def assert_ec2_tasks_equal(self, expected: AwsEC2Task, actual: AwsEC2Task) -> None:
+        self.assert_tasks_equal(expected, actual)
+        self.assertEqual(expected.enforce, actual.enforce)
