@@ -1,7 +1,8 @@
 from logging import getLogger
-from typing import List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type
 
-from src.data.aws_athena_data_partition import AwsAthenaDataPartition
+from src.aws_scanner_argument_parser import AwsScannerArguments
+from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
@@ -13,55 +14,41 @@ from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
+from src.tasks.aws_task import AwsTask
 
 
 class AwsTaskBuilder:
-    def __init__(self, orgs: AwsOrganizationsClient, accounts: Optional[List[str]] = None):
+    def __init__(self, orgs: AwsOrganizationsClient):
         self._logger = getLogger(self.__class__.__name__)
         self._orgs = orgs
-        self._accounts = accounts
 
-    def principal_by_ip_finder_tasks(
-        self, partition: AwsAthenaDataPartition, source_ip: str
-    ) -> Sequence[AwsPrincipalByIPFinderTask]:
-        self._logger.info(f"creating 'principal by ip finder' tasks for ip {source_ip}")
-        return [AwsPrincipalByIPFinderTask(account, partition, source_ip) for account in self._get_target_accounts()]
+    def build_tasks(self, args: AwsScannerArguments) -> Sequence[AwsTask]:
+        task_mapping: Dict[str, Callable[[], Sequence[AwsTask]]] = {
+            Cmd.service_usage: lambda: self._tasks(
+                AwsServiceUsageScannerTask, args.accounts, partition=args.partition, service=args.service
+            ),
+            Cmd.role_usage: lambda: self._tasks(
+                AwsRoleUsageScannerTask, args.accounts, partition=args.partition, role=args.role
+            ),
+            Cmd.find_principal: lambda: self._tasks(
+                AwsPrincipalByIPFinderTask, args.accounts, partition=args.partition, source_ip=args.source_ip
+            ),
+            Cmd.create_table: lambda: self._tasks(AwsCreateAthenaTableTask, args.accounts, partition=args.partition),
+            Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask),
+            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, args.accounts),
+            Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
+            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
+            Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, args.accounts, enforce=args.enforce),
+        }
+        return task_mapping[args.task]()
 
-    def service_usage_scanner_tasks(
-        self, partition: AwsAthenaDataPartition, service: str
-    ) -> Sequence[AwsServiceUsageScannerTask]:
-        self._logger.info(f"creating 'service usage scanner' tasks for service {service}")
-        return [AwsServiceUsageScannerTask(account, partition, service) for account in self._get_target_accounts()]
+    def _tasks(self, task: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
+        self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
+        return [task(account=account, **kwargs) for account in self._get_target_accounts(accounts)]
 
-    def role_usage_scanner_tasks(
-        self, partition: AwsAthenaDataPartition, role: str
-    ) -> Sequence[AwsRoleUsageScannerTask]:
-        self._logger.info(f"creating 'role usage scanner' tasks for role {role}")
-        return [AwsRoleUsageScannerTask(account, partition, role) for account in self._get_target_accounts()]
+    def _standalone_task(self, task: Type[AwsTask], **kwargs: Any) -> Sequence[AwsTask]:
+        self._logger.info(f"creating {task.__name__}")
+        return [task(**kwargs)]
 
-    def create_athena_table_tasks(self, partition: AwsAthenaDataPartition) -> Sequence[AwsCreateAthenaTableTask]:
-        self._logger.info("creating 'create Athena table' tasks")
-        return [AwsCreateAthenaTableTask(account, partition) for account in self._get_target_accounts()]
-
-    def clean_athena_tasks(self) -> Sequence[AwsAthenaCleanerTask]:
-        self._logger.info("creating 'clean Athena' tasks")
-        return [AwsAthenaCleanerTask()]
-
-    def list_accounts_tasks(self) -> Sequence[AwsListAccountsTask]:
-        self._logger.info("creating 'list organization accounts' tasks")
-        return [AwsListAccountsTask()]
-
-    def list_ssm_parameters_tasks(self) -> Sequence[AwsListSSMParametersTask]:
-        self._logger.info("creating 'list SSM parameters' tasks")
-        return [AwsListSSMParametersTask(account) for account in self._get_target_accounts()]
-
-    def audit_s3_tasks(self) -> Sequence[AwsAuditS3Task]:
-        self._logger.info("creating 'audit S3' tasks")
-        return [AwsAuditS3Task(account) for account in self._get_target_accounts()]
-
-    def audit_vpc_flow_logs_tasks(self, enforce: bool) -> Sequence[AwsAuditVPCFlowLogsTask]:
-        self._logger.info("creating 'audit VPC flow logs' tasks")
-        return [AwsAuditVPCFlowLogsTask(account, enforce) for account in self._get_target_accounts()]
-
-    def _get_target_accounts(self) -> Sequence[Account]:
-        return self._orgs.find_account_by_ids(self._accounts) if self._accounts else self._orgs.get_target_accounts()
+    def _get_target_accounts(self, accounts: Optional[List[str]]) -> Sequence[Account]:
+        return self._orgs.find_account_by_ids(accounts) if accounts else self._orgs.get_target_accounts()

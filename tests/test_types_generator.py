@@ -201,7 +201,7 @@ def aws_scanner_arguments(
         year=year,
         month=month,
         region=region,
-        accounts=accounts or ["999888777666", "555444333222"],
+        accounts=accounts if accounts is not None else ["999888777666", "555444333222"],
         service=service,
         role=role,
         source_ip=source_ip,
