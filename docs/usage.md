@@ -12,7 +12,7 @@ $ ./platsec_aws_scanner.py
 usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list_accounts,create_table,drop} ...
 ```
 
-Alternatively, an executable shell script wraps the Python script in a `pipenv run` command for convenience:
+Alternatively, an executable shell script wraps the Python script in a container for convenience:
 
 ```sh
 ./platsec_aws_scanner.sh

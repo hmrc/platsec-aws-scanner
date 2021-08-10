@@ -1,2 +1,23 @@
 #!/usr/bin/env bash
-pipenv run python platsec_aws_scanner.py "$@"
+
+PYTHON_VERSION=$(head -1 .python-version)
+PIP_PIPENV_VERSION=$(head -1 .pipenv-version)
+CONFIG_FILE="_temp_config.ini"
+IMAGE_TAG="platsec_aws_scanner:local"
+
+cp "$(readlink -f aws_scanner_config.ini)" "$CONFIG_FILE"
+
+docker build \
+  --tag "$IMAGE_TAG" \
+  --build-arg PYTHON_VERSION="$PYTHON_VERSION" \
+  --build-arg PIP_PIPENV_VERSION="$PIP_PIPENV_VERSION" \
+  --build-arg CONFIG_FILE="$CONFIG_FILE" \
+  -f local.Dockerfile \
+  . > /dev/null
+
+rm -f "$CONFIG_FILE"
+
+docker run \
+  --rm \
+  -v "$HOME"/.aws/:/home/scanner/.aws/ \
+  "$IMAGE_TAG" "$@"
