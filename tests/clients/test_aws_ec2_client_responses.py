@@ -1,4 +1,4 @@
-from src.data.aws_ec2_types import FlowLog
+from tests.test_types_generator import flow_log
 
 EMPTY_FLOW_LOGS = {"FlowLogs": []}
 FLOW_LOGS = {
@@ -6,6 +6,7 @@ FLOW_LOGS = {
         {
             "FlowLogId": "fl-465fe654de123f54a",
             "FlowLogStatus": "ACTIVE",
+            "LogGroupName": "/vpc/flow_log",
             "TrafficType": "ALL",
             "LogDestination": "arn:aws:logs:us-east-1:111222333444:log-group:/vpc/flow_log",
             "LogFormat": "${version} ${account-id} ${interface-id}",
@@ -20,18 +21,18 @@ FLOW_LOGS = {
     ]
 }
 EXPECTED_FLOW_LOGS = [
-    FlowLog(
+    flow_log(
         id="fl-465fe654de123f54a",
         status="ACTIVE",
+        log_group_name="/vpc/flow_log",
         traffic_type="ALL",
-        log_destination="arn:aws:logs:us-east-1:111222333444:log-group:/vpc/flow_log",
         log_format="${version} ${account-id} ${interface-id}",
     ),
-    FlowLog(
+    flow_log(
         id="fl-4654ef654d12321cb",
         status="ACTIVE",
+        log_group_name=None,
         traffic_type="ACCEPT",
-        log_destination="arn:aws:s3:::some-bucket",
         log_format="${start} ${end} ${action} ${log-status}",
     ),
 ]

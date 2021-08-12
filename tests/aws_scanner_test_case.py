@@ -18,8 +18,8 @@ region = eu
 [ec2]
 role = ec2_role
 flow_log_status = ACTIVE
+flow_log_group_name = /vpc/flow_log
 flow_log_traffic_type = ALL
-flow_log_destination = arn:aws:s3:::central-flow-logs-bucket
 flow_log_format = ${srcaddr} ${dstaddr}
 
 [organization]

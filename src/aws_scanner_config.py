@@ -40,11 +40,11 @@ class AwsScannerConfig:
     def ec2_flow_log_status(self) -> str:
         return self._get_config("ec2", "flow_log_status")
 
+    def ec2_flow_log_group_name(self) -> str:
+        return self._get_config("ec2", "flow_log_group_name")
+
     def ec2_flow_log_traffic_type(self) -> str:
         return self._get_config("ec2", "flow_log_traffic_type")
-
-    def ec2_flow_log_destination(self) -> str:
-        return self._get_config("ec2", "flow_log_destination")
 
     def ec2_flow_log_format(self) -> str:
         return self._get_config("ec2", "flow_log_format")

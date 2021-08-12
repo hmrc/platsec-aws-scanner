@@ -27,7 +27,7 @@ class TestAwsEC2FlowLogActions(AwsScannerTestCase):
     def test_vpc_create_centralised(self) -> None:
         self.assertEqual(
             {create_flow_log_action("vpc-1")},
-            enforcement_actions(vpc(id="vpc-1", flow_logs=[flow_log(log_destination="a")])),
+            enforcement_actions(vpc(id="vpc-1", flow_logs=[flow_log(log_group_name="a")])),
         )
 
     def test_vpc_delete_misconfigured_and_create_centralised(self) -> None:

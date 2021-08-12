@@ -5,14 +5,15 @@ from tests.test_types_generator import flow_log
 
 class TestAwsEC2TypesFlowLog(AwsScannerTestCase):
     def test_flow_log_centralised(self) -> None:
-        self.assertTrue(flow_log(log_destination="arn:aws:s3:::central-flow-logs-bucket").compliance.centralised)
+        self.assertTrue(flow_log(log_group_name="/vpc/flow_log").compliance.centralised)
 
     def test_flow_log_not_centralised(self) -> None:
-        self.assertFalse(flow_log(log_destination="arn:aws:s3:::some-bucket").compliance.centralised)
+        self.assertFalse(flow_log(log_group_name=None).compliance.centralised)
+        self.assertFalse(flow_log(log_group_name="/vpc/something_else").compliance.centralised)
 
     def test_flow_log_not_misconfigured(self) -> None:
         self.assertFalse(flow_log().compliance.misconfigured)
-        self.assertFalse(flow_log(log_destination="somewhere-else").compliance.misconfigured)
+        self.assertFalse(flow_log(log_group_name="/vpc/something_else").compliance.misconfigured)
 
     def test_flow_log_misconfigured(self) -> None:
         self.assertTrue(flow_log(status="a").compliance.misconfigured)

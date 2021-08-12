@@ -24,8 +24,8 @@ def to_vpc(vpc: Dict[Any, Any]) -> Vpc:
 class FlowLog:
     id: str
     status: str
+    log_group_name: Optional[str]
     traffic_type: str
-    log_destination: str
     log_format: str
 
     @property
@@ -37,8 +37,8 @@ def to_flow_log(flow_log: Dict[Any, Any]) -> FlowLog:
     return FlowLog(
         id=flow_log["FlowLogId"],
         status=flow_log["FlowLogStatus"],
+        log_group_name=flow_log.get("LogGroupName"),
         traffic_type=flow_log["TrafficType"],
-        log_destination=flow_log["LogDestination"],
         log_format=flow_log["LogFormat"],
     )
 
@@ -51,7 +51,7 @@ class FlowLogCompliance:
 
 def to_flow_log_compliance(flow_log: FlowLog) -> FlowLogCompliance:
     config = Config()
-    centralised = flow_log.log_destination == config.ec2_flow_log_destination()
+    centralised = flow_log.log_group_name == config.ec2_flow_log_group_name()
     misconfigured = centralised and (
         flow_log.status != config.ec2_flow_log_status()
         or flow_log.traffic_type != config.ec2_flow_log_traffic_type()
