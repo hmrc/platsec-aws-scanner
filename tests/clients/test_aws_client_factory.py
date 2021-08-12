@@ -83,6 +83,16 @@ class TestGetBotoClients(AwsScannerTestCase):
             role="ssm_role",
         )
 
+    def test_get_logs_boto_client(self) -> None:
+        logs_account = account(identifier="654654654654", name="some_logs_account")
+        self.assert_get_client(
+            method_under_test="get_logs_boto_client",
+            method_args={"account": logs_account},
+            service="logs",
+            target_account=logs_account,
+            role="logs_role",
+        )
+
 
 @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
 class TestGetClients(AwsScannerTestCase):
@@ -134,6 +144,15 @@ class TestGetClients(AwsScannerTestCase):
         ):
             s3_client = AwsClientFactory(self.mfa, self.username).get_s3_client(account("id"), "role")
             self.assertEqual(s3_client._s3, s3_boto_client)
+
+    def test_get_logs_client(self, _: Mock) -> None:
+        logs_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_logs_boto_client",
+            side_effect=lambda acc: logs_boto_client if acc == account() else None,
+        ):
+            logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account())
+            self.assertEqual(logs_client._logs, logs_boto_client)
 
 
 class TestAwsClientFactory(AwsScannerTestCase):

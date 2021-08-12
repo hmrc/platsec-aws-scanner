@@ -10,6 +10,7 @@ from botocore.exceptions import ClientError, BotoCoreError
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_athena_client import AwsAthenaClient
 from src.clients.aws_ec2_client import AwsEC2Client
+from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
@@ -46,6 +47,9 @@ class AwsClientFactory:
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("ssm", account, self._config.ssm_role())
 
+    def get_logs_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("logs", account, self._config.logs_role())
+
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
 
@@ -60,6 +64,9 @@ class AwsClientFactory:
 
     def get_ssm_client(self, account: Account) -> AwsSSMClient:
         return AwsSSMClient(self.get_ssm_boto_client(account))
+
+    def get_logs_client(self, account: Account) -> AwsLogsClient:
+        return AwsLogsClient(self.get_logs_boto_client(account))
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:
         self._logger.info(f"getting session token for {username}")

@@ -21,6 +21,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("/vpc/flow_log", config.ec2_flow_log_group_name())
         self.assertEqual("ALL", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr} ${dstaddr}", config.ec2_flow_log_format())
+        self.assertEqual("logs_role", config.logs_role())
         self.assertEqual(Account("999888777666", "organization"), config.organization_account())
         self.assertEqual("orgs_role", config.organization_role())
         self.assertTrue(config.organization_include_root_accounts())
@@ -50,6 +51,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_EC2_FLOW_LOG_GROUP_NAME": "/vpc/a_flow_log",
             "AWS_SCANNER_EC2_FLOW_LOG_TRAFFIC_TYPE": "ACCEPT",
             "AWS_SCANNER_EC2_FLOW_LOG_FORMAT": "${srcaddr}",
+            "AWS_SCANNER_LOGS_ROLE": "some_logs_role",
             "AWS_SCANNER_ORGANIZATION_ACCOUNT": "666777888999",
             "AWS_SCANNER_ORGANIZATION_ROLE": "the_orgs_role",
             "AWS_SCANNER_ORGANIZATION_INCLUDE_ROOT_ACCOUNTS": "false",
@@ -80,6 +82,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("/vpc/a_flow_log", config.ec2_flow_log_group_name())
         self.assertEqual("ACCEPT", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr}", config.ec2_flow_log_format())
+        self.assertEqual("some_logs_role", config.logs_role())
         self.assertEqual(Account("666777888999", "organization"), config.organization_account())
         self.assertEqual("the_orgs_role", config.organization_role())
         self.assertFalse(config.organization_include_root_accounts())

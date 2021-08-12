@@ -49,6 +49,9 @@ class AwsScannerConfig:
     def ec2_flow_log_format(self) -> str:
         return self._get_config("ec2", "flow_log_format")
 
+    def logs_role(self) -> str:
+        return self._get_config("logs", "role")
+
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")
 
