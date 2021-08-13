@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from botocore.exceptions import ClientError
 
@@ -6,6 +6,7 @@ from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_ec2_actions import CreateFlowLogAction, DeleteFlowLogAction
+from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
@@ -236,3 +237,23 @@ def delete_flow_log_action(flow_log_id: str = flow_log().id) -> DeleteFlowLogAct
 
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce)
+
+
+def log_group(
+    name: str = "/vpc/flow_log", subscription_filters: Optional[Sequence[SubscriptionFilter]] = None
+) -> LogGroup:
+    return LogGroup(name=name, subscription_filters=subscription_filters or [subscription_filter()])
+
+
+def subscription_filter(
+    log_group_name: str = "/vpc/flow_log",
+    filter_name: str = "VpcFlowLogsForward",
+    filter_pattern: str = "[version, account_id, interface_id]",
+    destination_arn: str = "arn:aws:logs:us-east-1:112233445566:destination:CentralVpcFlowLogDestination",
+) -> SubscriptionFilter:
+    return SubscriptionFilter(
+        log_group_name=log_group_name,
+        filter_name=filter_name,
+        filter_pattern=filter_pattern,
+        destination_arn=destination_arn,
+    )

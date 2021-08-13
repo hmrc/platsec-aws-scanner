@@ -53,6 +53,10 @@ class ListSSMParametersException(AwsScannerException):
     pass
 
 
+class LogsException(AwsScannerException):
+    pass
+
+
 class RunQueryException(AwsScannerException):
     pass
 
