@@ -1,14 +1,37 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
 
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import LogsException
 
 from tests.clients import test_aws_logs_client_responses as responses
-from tests.test_types_generator import client_error, subscription_filter
+from tests.test_types_generator import client_error, log_group, subscription_filter
 
 
 class TestAwsLogsClient(AwsScannerTestCase):
+    def test_provide_central_vpc_log_group(self) -> None:
+        log_groups = [log_group(name="/something_else"), log_group()]
+        with patch.object(AwsLogsClient, "describe_log_groups", return_value=log_groups):
+            self.assertEqual(log_groups[1], AwsLogsClient(Mock()).provide_central_vpc_log_group())
+
+    def test_provide_central_vpc_log_group_creates_if_not_exists(self) -> None:
+        lg = log_group(name="the-log-group")
+        with patch.object(AwsLogsClient, "describe_log_groups", return_value=[]):
+            with patch.object(AwsLogsClient, "create_central_vpc_log_group", return_value=lg) as create:
+                self.assertEqual(lg, AwsLogsClient(Mock()).provide_central_vpc_log_group())
+        create.assert_called_once()
+
+    def test_create_central_vpc_log_group(self) -> None:
+        with patch.object(AwsLogsClient, "create_log_group") as create_log_group:
+            with patch.object(AwsLogsClient, "put_subscription_filter") as put_subscription_filter:
+                clg = AwsLogsClient(Mock()).create_central_vpc_log_group()
+        self.assertTrue(clg.central_vpc_log_group)
+        self.assertRegex(clg.name, r"/vpc/central_flow_log_\d{4}")
+        self.assertRegex(create_log_group.call_args[1]["name"], clg.name)
+        sub_filter = put_subscription_filter.call_args[1]["subscription_filter"]
+        self.assertEqual(clg.name, sub_filter.log_group_name)
+        self.assertEqual(clg.subscription_filters[0], sub_filter)
+
     def test_describe_log_groups(self) -> None:
         boto = Mock(
             describe_log_groups=Mock(return_value=responses.DESCRIBE_LOG_GROUPS),
