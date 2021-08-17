@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 PYTHON_VERSION=$(head -1 .python-version)
 PIP_PIPENV_VERSION=$(head -1 .pipenv-version)
 CONFIG_FILE="_temp_config.ini"
 IMAGE_TAG="platsec_aws_scanner:local"
 
-cp "$(readlink -f aws_scanner_config.ini)" "$CONFIG_FILE"
+if [[ "$(uname)" == "Darwin" ]]; then
+  cp "$(greadlink -f aws_scanner_config.ini)" "$CONFIG_FILE"
+else
+  cp "$(readlink -f aws_scanner_config.ini)" "$CONFIG_FILE"
+fi
 
 docker build \
   --tag "$IMAGE_TAG" \
