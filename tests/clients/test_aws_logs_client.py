@@ -12,19 +12,21 @@ class TestAwsLogsClient(AwsScannerTestCase):
     def test_provide_central_vpc_log_group(self) -> None:
         log_groups = [log_group(name="/something_else"), log_group()]
         with patch.object(AwsLogsClient, "describe_log_groups", return_value=log_groups):
-            self.assertEqual(log_groups[1], AwsLogsClient(Mock()).provide_central_vpc_log_group())
+            with patch.object(AwsLogsClient, "_create_central_vpc_log_group") as create:
+                self.assertEqual(log_groups[1], AwsLogsClient(Mock()).provide_central_vpc_log_group())
+        create.assert_not_called()
 
     def test_provide_central_vpc_log_group_creates_if_not_exists(self) -> None:
         lg = log_group(name="the-log-group")
         with patch.object(AwsLogsClient, "describe_log_groups", return_value=[]):
-            with patch.object(AwsLogsClient, "create_central_vpc_log_group", return_value=lg) as create:
+            with patch.object(AwsLogsClient, "_create_central_vpc_log_group", return_value=lg) as create:
                 self.assertEqual(lg, AwsLogsClient(Mock()).provide_central_vpc_log_group())
         create.assert_called_once()
 
     def test_create_central_vpc_log_group(self) -> None:
         with patch.object(AwsLogsClient, "create_log_group") as create_log_group:
             with patch.object(AwsLogsClient, "put_subscription_filter") as put_subscription_filter:
-                clg = AwsLogsClient(Mock()).create_central_vpc_log_group()
+                clg = AwsLogsClient(Mock())._create_central_vpc_log_group()
         self.assertTrue(clg.central_vpc_log_group)
         self.assertRegex(clg.name, r"/vpc/central_flow_log_\d{4}")
         self.assertRegex(create_log_group.call_args[1]["name"], clg.name)

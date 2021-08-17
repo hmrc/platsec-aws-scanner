@@ -1,6 +1,6 @@
 from logging import getLogger
 from random import randint
-from typing import Sequence
+from typing import Optional, Sequence
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
@@ -17,15 +17,16 @@ class AwsLogsClient:
         self._logs = boto_logs
 
     def provide_central_vpc_log_group(self) -> LogGroup:
-        return next(
-            filter(
-                lambda lg: lg.central_vpc_log_group,
-                self.describe_log_groups(self._config.logs_central_vpc_log_group_prefix()),
-            ),
-            self.create_central_vpc_log_group(),
-        )
+        return self._find_central_vpc_log_group() or self._create_central_vpc_log_group()
 
-    def create_central_vpc_log_group(self) -> LogGroup:
+    def _find_central_vpc_log_group(self) -> Optional[LogGroup]:
+        central_log_groups = filter(
+            lambda lg: lg.central_vpc_log_group,
+            self.describe_log_groups(self._config.logs_central_vpc_log_group_prefix()),
+        )
+        return next(central_log_groups, None)
+
+    def _create_central_vpc_log_group(self) -> LogGroup:
         name = f"{self._config.logs_central_vpc_log_group_prefix()}_{''.join([str(randint(0, 9)) for _ in range(4)])}"
         subscription_filter = SubscriptionFilter(
             log_group_name=name,
@@ -34,7 +35,9 @@ class AwsLogsClient:
             destination_arn=self._config.logs_central_vpc_log_group_destination(),
         )
         log_group = LogGroup(name=name, subscription_filters=[subscription_filter])
+        self._logger.debug(f"creating log group {name}")
         self.create_log_group(name=log_group.name)
+        self._logger.debug(f"creating subscription filter {subscription_filter}")
         self.put_subscription_filter(subscription_filter=subscription_filter)
         return log_group
 
