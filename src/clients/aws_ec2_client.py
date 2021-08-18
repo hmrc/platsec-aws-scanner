@@ -6,16 +6,17 @@ from botocore.client import BaseClient
 from src.clients import boto_try
 from src.data.aws_ec2_types import FlowLog, Vpc, to_flow_log, to_vpc
 from src.data.aws_ec2_actions import CreateFlowLogAction, EC2Action, DeleteFlowLogAction
-from src.data.aws_scanner_exceptions import UnsupportedActionException
+from src.aws_scanner_config import AwsScannerConfig as Config
 
 
 class AwsEC2Client:
     def __init__(self, boto_ec2: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
+        self._config = Config()
         self._ec2 = boto_ec2
         self._action_map = {
-            CreateFlowLogAction: lambda a: self._create_flow_log(a.vpc_id),
-            DeleteFlowLogAction: lambda a: self._delete_flow_log(a.flow_log_id),
+            CreateFlowLogAction: lambda a: self._create_flow_logs(a.vpc_id),
+            DeleteFlowLogAction: lambda a: self._delete_flow_logs(a.flow_log_id),
         }
 
     def list_vpcs(self) -> List[Vpc]:
@@ -27,10 +28,24 @@ class AwsEC2Client:
     def _apply_action(self, action: EC2Action) -> EC2Action:
         return action.update_status("applied" if self._action_map[type(action)](action) else "failed")  # type: ignore
 
-    def _create_flow_log(self, vpc_id: str) -> bool:
-        raise UnsupportedActionException("create centralised flow log action hasn't been implemented yet")
+    def _create_flow_logs(self, vpc_id: str, log_group_name: str = "", permission: str = "") -> bool:
+        return boto_try(
+            lambda: self._is_success(
+                self._ec2.create_flow_logs(
+                    DeliverLogsPermissionArn=permission,
+                    LogGroupName=log_group_name,
+                    ResourceIds=[vpc_id],
+                    ResourceType="VPC",
+                    TrafficType="ALL",
+                    LogDestinationType="cloud-watch-logs",
+                    LogFormat=self._config.ec2_flow_log_format(),
+                )
+            ),
+            bool,
+            f"unable to create flow log for VPC {vpc_id}",
+        )
 
-    def _delete_flow_log(self, flow_log_id: str) -> bool:
+    def _delete_flow_logs(self, flow_log_id: str) -> bool:
         return boto_try(
             lambda: self._is_success(self._ec2.delete_flow_logs(FlowLogIds=[flow_log_id])),
             bool,

@@ -50,3 +50,17 @@ DELETE_FLOW_LOGS_FAILURE = {
         },
     ]
 }
+
+CREATE_FLOW_LOGS_SUCCESS = {"Unsuccessful": []}
+
+CREATE_FLOW_LOGS_FAILURE = {
+    "Unsuccessful": [
+        {
+            "Error": {
+                "Code": "InvalidVpcId.NotFound",
+                "Message": "Unknown resource vpc-00112233344556677",
+            },
+            "ResourceId": "bad-vpc",
+        },
+    ]
+}

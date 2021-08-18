@@ -7,7 +7,6 @@ from typing import Any, Dict
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.data.aws_ec2_types import Vpc
-from src.data.aws_scanner_exceptions import UnsupportedActionException
 
 from tests import _raise
 from tests.clients import test_aws_ec2_client_responses as responses
@@ -66,9 +65,35 @@ class TestAwsEC2ClientDescribeFlowLogs(AwsScannerTestCase):
 
 
 class TestAwsEC2ClientCreateFlowLog(AwsScannerTestCase):
-    def test_create_flow_log_not_implemented(self) -> None:
-        with self.assertRaises(UnsupportedActionException):
-            AwsEC2Client(Mock())._create_flow_log("vpc-1")
+    def create_flow_logs(self, **kwargs) -> Dict[Any, Any]:
+        self.assertEqual("VPC", kwargs["ResourceType"])
+        self.assertEqual("ALL", kwargs["TrafficType"])
+        self.assertEqual("cloud-watch-logs", kwargs["LogDestinationType"])
+        self.assertEqual("${srcaddr} ${dstaddr}", kwargs["LogFormat"])
+        resp_mapping = {
+            ("good-vpc", "lg-1", "perm-1"): lambda: responses.CREATE_FLOW_LOGS_SUCCESS,
+            ("bad-vpc", "lg-2", "perm-2"): lambda: responses.CREATE_FLOW_LOGS_FAILURE,
+            ("except-vpc", "lg-3", "perm-3"): lambda: _raise(client_error("CreateFlowLogs", "AccessDenied", "nope")),
+        }
+        return resp_mapping[(kwargs["ResourceIds"][0], kwargs["LogGroupName"], kwargs["DeliverLogsPermissionArn"])]()
+
+    def ec2_client(self) -> AwsEC2Client:
+        return AwsEC2Client(Mock(create_flow_logs=Mock(side_effect=self.create_flow_logs)))
+
+    def test_create_flow_log(self) -> None:
+        self.assertTrue(self.ec2_client()._create_flow_logs("good-vpc", "lg-1", "perm-1"))
+
+    def test_create_flow_log_failure(self) -> None:
+        with redirect_stderr(StringIO()) as err:
+            self.assertFalse(self.ec2_client()._create_flow_logs("bad-vpc", "lg-2", "perm-2"))
+        self.assertIn("InvalidVpcId.NotFound", err.getvalue())
+        self.assertIn("bad-vpc", err.getvalue())
+
+    def test_create_flow_log_client_error(self) -> None:
+        with redirect_stderr(StringIO()) as err:
+            self.assertFalse(self.ec2_client()._create_flow_logs("except-vpc", "lg-3", "perm-3"))
+        self.assertIn("AccessDenied", err.getvalue())
+        self.assertIn("except-vpc", err.getvalue())
 
 
 class TestAwsEC2ClientDeleteFlowLog(AwsScannerTestCase):
@@ -84,17 +109,17 @@ class TestAwsEC2ClientDeleteFlowLog(AwsScannerTestCase):
         return AwsEC2Client(Mock(delete_flow_logs=Mock(side_effect=self.delete_flow_logs)))
 
     def test_delete_flow_log(self) -> None:
-        self.assertTrue(self.ec2_client()._delete_flow_log(flow_log_id="good-fl"))
+        self.assertTrue(self.ec2_client()._delete_flow_logs(flow_log_id="good-fl"))
 
     def test_delete_flow_log_not_found(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client()._delete_flow_log(flow_log_id="fl-not-found"))
+            self.assertFalse(self.ec2_client()._delete_flow_logs(flow_log_id="fl-not-found"))
         self.assertIn("InvalidFlowLogId.NotFound", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())
 
     def test_delete_flow_log_failure(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client()._delete_flow_log(flow_log_id="bad-fl"))
+            self.assertFalse(self.ec2_client()._delete_flow_logs(flow_log_id="bad-fl"))
         self.assertIn("AccessDenied", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())
 
@@ -103,8 +128,8 @@ class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
     def test_apply_actions(self) -> None:
         c1, c2 = create_flow_log_action(vpc_id="vpc-1"), create_flow_log_action(vpc_id="vpc-2")
         d1, d2 = delete_flow_log_action(flow_log_id="fl-1"), delete_flow_log_action(flow_log_id="fl-2")
-        with patch.object(AwsEC2Client, "_create_flow_log", side_effect=[True, False]) as mock_create:
-            with patch.object(AwsEC2Client, "_delete_flow_log", side_effect=[False, True]) as mock_delete:
+        with patch.object(AwsEC2Client, "_create_flow_logs", side_effect=[True, False]) as mock_create:
+            with patch.object(AwsEC2Client, "_delete_flow_logs", side_effect=[False, True]) as mock_delete:
                 self.assertEqual([c1, d1, c2, d2], AwsEC2Client(Mock()).apply([c1, d1, c2, d2]))
         mock_create.assert_has_calls([call("vpc-1"), call("vpc-2")])
         mock_delete.assert_has_calls([call("fl-1"), call("fl-2")])
