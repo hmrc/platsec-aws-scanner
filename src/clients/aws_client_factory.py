@@ -15,6 +15,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data import SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
@@ -74,6 +75,13 @@ class AwsClientFactory:
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account))
+
+    def get_vpc_client(self, account: Account) -> AwsVpcClient:
+        return AwsVpcClient(
+            ec2=self.get_ec2_client(account),
+            iam=self.get_iam_client(account),
+            logs=self.get_logs_client(account),
+        )
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:
         self._logger.info(f"getting session token for {username}")

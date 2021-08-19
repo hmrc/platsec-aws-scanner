@@ -174,6 +174,20 @@ class TestGetClients(AwsScannerTestCase):
             self.assertEqual(iam_client._iam, iam_boto_client)
 
 
+@patch.object(AwsClientFactory, "_get_session_token")
+class TestGetCompositeClients(AwsScannerTestCase):
+    def test_get_vpc_client(self, _: Mock) -> None:
+        acc = account(identifier="1234", name="some_account")
+        ec2, iam, logs = Mock(), Mock(), Mock()
+        with patch.object(AwsClientFactory, "get_ec2_client", side_effect=lambda a: ec2 if a == acc else None):
+            with patch.object(AwsClientFactory, "get_logs_client", side_effect=lambda a: logs if a == acc else None):
+                with patch.object(AwsClientFactory, "get_iam_client", side_effect=lambda a: iam if a == acc else None):
+                    vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
+        self.assertEqual(ec2, vpc_client.ec2)
+        self.assertEqual(iam, vpc_client.iam)
+        self.assertEqual(logs, vpc_client.logs)
+
+
 class TestAwsClientFactory(AwsScannerTestCase):
     mfa, username = "123456", "joe.bloggs"
     service_name, role = "some_service", "some_role"

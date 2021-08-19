@@ -1,10 +1,10 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock
 
-from tests.test_types_generator import ec2_task
+from tests.test_types_generator import vpc_task
 
 
-class TestAwsEC2Task(AwsScannerTestCase):
+class TestAwsVpcTask(AwsScannerTestCase):
     def test_run_task(self) -> None:
         with self.assertRaises(NotImplementedError):
-            ec2_task()._run_task(Mock())
+            vpc_task()._run_task(Mock())

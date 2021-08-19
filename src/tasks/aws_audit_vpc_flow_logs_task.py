@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from src.clients.aws_ec2_client import AwsEC2Client
-from src.data.aws_organizations_types import Account
-from src.tasks.aws_ec2_task import AwsEC2Task
+from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_ec2_actions import enforcement_actions
+from src.data.aws_organizations_types import Account
+from src.tasks.aws_vpc_task import AwsVpcTask
 
 
 @dataclass
-class AwsAuditVPCFlowLogsTask(AwsEC2Task):
+class AwsAuditVPCFlowLogsTask(AwsVpcTask):
     def __init__(self, account: Account, enforce: bool) -> None:
         super().__init__("audit VPC flow logs compliance", account, enforce)
 
-    def _run_task(self, client: AwsEC2Client) -> Dict[Any, Any]:
-        vpcs = client.list_vpcs()
+    def _run_task(self, c: AwsVpcClient) -> Dict[Any, Any]:
+        vpcs = c.ec2.list_vpcs()
         actions = [action for vpc in vpcs for action in enforcement_actions(vpc)]
-        return {"vpcs": client.list_vpcs(), "enforcement_actions": client.apply(actions) if self.enforce else actions}
+        return {"vpcs": c.ec2.list_vpcs(), "enforcement_actions": c.ec2.apply(actions) if self.enforce else actions}
