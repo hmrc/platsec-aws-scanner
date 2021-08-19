@@ -49,6 +49,9 @@ class AwsScannerConfig:
     def ec2_flow_log_format(self) -> str:
         return self._get_config("ec2", "flow_log_format")
 
+    def iam_role(self) -> str:
+        return self._get_config("iam", "role")
+
     def logs_central_vpc_log_group_prefix(self) -> str:
         return self._get_config("logs", "central_vpc_log_group_prefix")
 

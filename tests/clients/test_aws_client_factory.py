@@ -93,6 +93,16 @@ class TestGetBotoClients(AwsScannerTestCase):
             role="logs_role",
         )
 
+    def test_get_iam_boto_client(self) -> None:
+        iam_account = account(identifier="977644311255", name="some_iam_account")
+        self.assert_get_client(
+            method_under_test="get_iam_boto_client",
+            method_args={"account": iam_account},
+            service="iam",
+            target_account=iam_account,
+            role="iam_role",
+        )
+
 
 @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
 class TestGetClients(AwsScannerTestCase):
@@ -153,6 +163,15 @@ class TestGetClients(AwsScannerTestCase):
         ):
             logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account())
             self.assertEqual(logs_client._logs, logs_boto_client)
+
+    def test_get_iam_client(self, _: Mock) -> None:
+        iam_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_iam_boto_client",
+            side_effect=lambda acc: iam_boto_client if acc == account() else None,
+        ):
+            iam_client = AwsClientFactory(self.mfa, self.username).get_iam_client(account())
+            self.assertEqual(iam_client._iam, iam_boto_client)
 
 
 class TestAwsClientFactory(AwsScannerTestCase):

@@ -22,6 +22,9 @@ flow_log_group_name = /vpc/flow_log
 flow_log_traffic_type = ALL
 flow_log_format = ${srcaddr} ${dstaddr}
 
+[iam]
+role = iam_role
+
 [logs]
 central_vpc_log_group_prefix = /vpc/central_flow_log
 central_vpc_log_group_pattern = [version, account_id, interface_id]
