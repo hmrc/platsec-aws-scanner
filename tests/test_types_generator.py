@@ -6,6 +6,7 @@ from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_ec2_actions import CreateFlowLogAction, DeleteFlowLogAction
+from src.data.aws_iam_types import Policy, Role
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -259,4 +260,30 @@ def subscription_filter(
         filter_name=filter_name,
         filter_pattern=filter_pattern,
         destination_arn=destination_arn,
+    )
+
+
+def policy(
+    name: str = "a_policy",
+    arn: str = "arn:aws:iam::112233445566:policy/a_policy",
+    default_version: str = "v3",
+    document: Optional[Dict[str, Any]] = None,
+) -> Policy:
+    return Policy(name=name, arn=arn, default_version=default_version, document=document or {})
+
+
+def role(
+    name: str = "a_role",
+    arn: str = "arn:aws:iam::112233445566:role/a_role",
+    assume_policy: Optional[Dict[str, Any]] = None,
+    policies: Optional[Sequence[Policy]] = None,
+) -> Role:
+    return Role(
+        name=name,
+        arn=arn,
+        assume_policy=assume_policy
+        or {
+            "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]
+        },
+        policies=policies or [policy()],
     )
