@@ -22,8 +22,10 @@ class TestAwsIamClient(AwsScannerTestCase):
         return GET_ROLE if kwargs["RoleName"] == "a_role" else None
 
     @staticmethod
-    def list_attached_role_policies(**kwargs) -> Dict[str, Any]:
-        return LIST_ATTACHED_ROLE_POLICIES if kwargs["RoleName"] == "a_role" else None
+    def list_attached_role_policies_paginator() -> Mock:
+        return Mock(
+            paginate=Mock(side_effect=lambda **k: [LIST_ATTACHED_ROLE_POLICIES] if k["RoleName"] == "a_role" else None)
+        )
 
     @staticmethod
     def get_policy(**kwargs) -> Dict[str, Any]:
@@ -40,9 +42,13 @@ class TestAwsIamClient(AwsScannerTestCase):
     def test_get_role(self) -> None:
         mock_boto_iam = Mock(
             get_role=Mock(side_effect=self.get_role),
-            list_attached_role_policies=Mock(side_effect=self.list_attached_role_policies),
             get_policy=Mock(side_effect=self.get_policy),
             get_policy_version=Mock(side_effect=self.get_policy_version),
+            get_paginator=Mock(
+                side_effect=lambda op: self.list_attached_role_policies_paginator()
+                if op == "list_attached_role_policies"
+                else None
+            ),
         )
         self.assertEqual(EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
 
@@ -53,8 +59,10 @@ class TestAwsIamClient(AwsScannerTestCase):
 
     def test_list_attached_role_policies_failure(self) -> None:
         mock_boto_iam = Mock(
-            list_attached_role_policies=Mock(
-                side_effect=client_error("ListAttachedRolePolicies", "NoSuchEntity", "not found")
+            get_paginator=Mock(
+                return_value=Mock(
+                    paginate=Mock(side_effect=client_error("ListAttachedRolePolicies", "NoSuchEntity", "not found"))
+                )
             )
         )
         with self.assertRaisesRegex(IamException, "a_role"):

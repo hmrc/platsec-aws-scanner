@@ -25,7 +25,11 @@ class AwsIamClient:
 
     def _list_attached_role_policies(self, role: str) -> Sequence[str]:
         try:
-            return [p["PolicyArn"] for p in self._iam.list_attached_role_policies(RoleName=role)["AttachedPolicies"]]
+            return [
+                p["PolicyArn"]
+                for page in self._iam.get_paginator("list_attached_role_policies").paginate(RoleName=role)
+                for p in page["AttachedPolicies"]
+            ]
         except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to list attached role policies for role with name {role}: {err}") from None
 
