@@ -269,7 +269,7 @@ def policy(
     default_version: str = "v3",
     document: Optional[Dict[str, Any]] = None,
 ) -> Policy:
-    return Policy(name=name, arn=arn, default_version=default_version, document=document or {})
+    return Policy(name=name, arn=arn, default_version=default_version, document=document)
 
 
 def role(
@@ -285,5 +285,5 @@ def role(
         or {
             "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]
         },
-        policies=policies or [policy()],
+        policies=policies,
     )

@@ -1,3 +1,4 @@
+from json import dumps
 from logging import getLogger
 from typing import Any, Dict, Sequence
 
@@ -12,6 +13,28 @@ class AwsIamClient:
     def __init__(self, boto_iam: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
         self._iam = boto_iam
+
+    def create_role(self, name: str, assume_policy: Dict[str, Any]) -> Role:
+        try:
+            return to_role(self._iam.create_role(RoleName=name, AssumeRolePolicyDocument=dumps(assume_policy))["Role"])
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(
+                f"unable to create role with name {name} and assume role policy document {assume_policy}: {err}"
+            ) from None
+
+    def create_policy(self, name: str, document: Dict[str, Any]) -> Policy:
+        try:
+            return to_policy(self._iam.create_policy(PolicyName=name, PolicyDocument=dumps(document))["Policy"])
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(
+                f"unable to create policy with name {name} and policy document {document}: {err}"
+            ) from None
+
+    def attach_role_policy(self, role_name: str, policy_arn: str) -> None:
+        try:
+            self._iam.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to attach role {role_name} and policy {policy_arn}: {err}") from None
 
     def get_role(self, name: str) -> Role:
         try:

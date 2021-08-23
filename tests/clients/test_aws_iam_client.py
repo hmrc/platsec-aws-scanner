@@ -13,7 +13,7 @@ from tests.clients.test_aws_iam_client_responses import (
     GET_ROLE,
     LIST_ATTACHED_ROLE_POLICIES,
 )
-from tests.test_types_generator import client_error
+from tests.test_types_generator import client_error, policy, role
 
 
 class TestAwsIamClient(AwsScannerTestCase):
@@ -79,3 +79,44 @@ class TestAwsIamClient(AwsScannerTestCase):
         )
         with self.assertRaisesRegex(IamException, "a_policy"):
             AwsIamClient(mock_boto_iam)._get_policy_document("a_policy", "v3")
+
+    def test_create_role(self) -> None:
+        name, arn, assume_policy = "a_name", "an_arn", {"key": "val"}
+        mock_boto_iam = Mock(
+            create_role=Mock(
+                return_value={"Role": {"RoleName": name, "Arn": arn, "AssumeRolePolicyDocument": assume_policy}}
+            )
+        )
+        created = AwsIamClient(mock_boto_iam).create_role(name, assume_policy)
+        self.assertEqual(role(name=name, arn=arn, assume_policy=assume_policy), created)
+        mock_boto_iam.create_role.assert_called_once_with(RoleName=name, AssumeRolePolicyDocument='{"key": "val"}')
+
+    def test_create_role_failure(self) -> None:
+        mock_boto_iam = Mock(create_role=Mock(side_effect=client_error("CreateRole", "EntityAlreadyExists", "failed")))
+        with self.assertRaisesRegex(IamException, "a_role"):
+            AwsIamClient(mock_boto_iam).create_role("a_role", {})
+
+    def test_create_policy(self) -> None:
+        name, arn, version, document = "a_name", "an_arn", "v2", {"key": "val"}
+        mock_boto_iam = Mock(
+            create_policy=Mock(return_value={"Policy": {"PolicyName": name, "Arn": arn, "DefaultVersionId": version}})
+        )
+        created = AwsIamClient(mock_boto_iam).create_policy(name, document)
+        self.assertEqual(policy(name=name, arn=arn, default_version=version), created)
+        mock_boto_iam.create_policy.assert_called_once_with(PolicyName=name, PolicyDocument='{"key": "val"}')
+
+    def test_create_policy_failure(self) -> None:
+        mock_boto_iam = Mock(create_policy=Mock(side_effect=client_error("CreatePolicy", "EntityAlreadyExists", "no")))
+        with self.assertRaisesRegex(IamException, "a_policy"):
+            AwsIamClient(mock_boto_iam).create_policy("a_policy", {})
+
+    def test_attach_role_policy(self) -> None:
+        role_name, policy_arn = "a_role", "a_policy_arn"
+        mock_boto_iam = Mock()
+        AwsIamClient(mock_boto_iam).attach_role_policy(role_name, policy_arn)
+        mock_boto_iam.attach_role_policy.assert_called_once_with(RoleName=role_name, PolicyArn=policy_arn)
+
+    def test_attach_role_policy_failure(self) -> None:
+        mock_iam = Mock(attach_role_policy=Mock(side_effect=client_error("AttachRolePolicy", "NoSuchEntity", "no")))
+        with self.assertRaisesRegex(IamException, "unable to attach role a_role and policy a_policy_arn"):
+            AwsIamClient(mock_iam).attach_role_policy("a_role", "a_policy_arn")
