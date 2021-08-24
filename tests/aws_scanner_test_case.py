@@ -26,9 +26,12 @@ flow_log_format = ${srcaddr} ${dstaddr}
 role = iam_role
 
 [logs]
-central_vpc_log_group_prefix = /vpc/central_flow_log
-central_vpc_log_group_pattern = [version, account_id, interface_id]
-central_vpc_log_group_destination = arn:aws:logs:::destination:central
+vpc_log_group_prefix = /vpc/central_flow_log
+vpc_log_group_pattern = [version, account_id, interface_id]
+vpc_log_group_destination = arn:aws:logs:::destination:central
+vpc_log_group_delivery_role = vpc_flow_log_role
+vpc_log_group_delivery_role_assume_policy = {"Statement": [{"Action": "sts:AssumeRole"}]}
+vpc_log_group_delivery_role_policy_document = {"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]}
 role = logs_role
 
 [organization]

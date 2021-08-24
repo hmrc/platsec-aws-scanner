@@ -9,7 +9,13 @@ class Role:
     name: str
     arn: str
     assume_policy: Dict[str, Any]
-    policies: Optional[Sequence[Policy]] = None
+    policies: Sequence[Policy]
+
+    def __init__(self, name: str, arn: str, assume_policy: Dict[str, Any], policies: Optional[Sequence[Policy]] = None):
+        self.name = name
+        self.arn = arn
+        self.assume_policy = assume_policy
+        self.policies = policies or []
 
 
 def to_role(role: Dict[Any, Any]) -> Role:

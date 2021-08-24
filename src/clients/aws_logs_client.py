@@ -22,17 +22,17 @@ class AwsLogsClient:
     def _find_central_vpc_log_group(self) -> Optional[LogGroup]:
         central_log_groups = filter(
             lambda lg: lg.central_vpc_log_group,
-            self.describe_log_groups(self._config.logs_central_vpc_log_group_prefix()),
+            self.describe_log_groups(self._config.logs_vpc_log_group_prefix()),
         )
         return next(central_log_groups, None)
 
     def _create_central_vpc_log_group(self) -> LogGroup:
-        name = f"{self._config.logs_central_vpc_log_group_prefix()}_{''.join([str(randint(0, 9)) for _ in range(4)])}"
+        name = f"{self._config.logs_vpc_log_group_prefix()}_{''.join([str(randint(0, 9)) for _ in range(4)])}"
         subscription_filter = SubscriptionFilter(
             log_group_name=name,
             filter_name=f"filter_{name}",
-            filter_pattern=self._config.logs_central_vpc_log_group_pattern(),
-            destination_arn=self._config.logs_central_vpc_log_group_destination(),
+            filter_pattern=self._config.logs_vpc_log_group_pattern(),
+            destination_arn=self._config.logs_vpc_log_group_destination(),
         )
         log_group = LogGroup(name=name, subscription_filters=[subscription_filter])
         self._logger.debug(f"creating log group {name}")

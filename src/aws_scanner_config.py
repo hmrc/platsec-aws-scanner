@@ -2,8 +2,9 @@ import os
 import sys
 
 from configparser import ConfigParser
+from json import JSONDecodeError, loads
 from logging import getLogger
-from typing import List
+from typing import Any, Dict, List
 
 from src.data.aws_organizations_types import Account
 
@@ -52,14 +53,23 @@ class AwsScannerConfig:
     def iam_role(self) -> str:
         return self._get_config("iam", "role")
 
-    def logs_central_vpc_log_group_prefix(self) -> str:
-        return self._get_config("logs", "central_vpc_log_group_prefix")
+    def logs_vpc_log_group_prefix(self) -> str:
+        return self._get_config("logs", "vpc_log_group_prefix")
 
-    def logs_central_vpc_log_group_pattern(self) -> str:
-        return self._get_config("logs", "central_vpc_log_group_pattern")
+    def logs_vpc_log_group_pattern(self) -> str:
+        return self._get_config("logs", "vpc_log_group_pattern")
 
-    def logs_central_vpc_log_group_destination(self) -> str:
-        return self._get_config("logs", "central_vpc_log_group_destination")
+    def logs_vpc_log_group_destination(self) -> str:
+        return self._get_config("logs", "vpc_log_group_destination")
+
+    def logs_vpc_log_group_delivery_role(self) -> str:
+        return self._get_config("logs", "vpc_log_group_delivery_role")
+
+    def logs_vpc_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
+        return self._get_json_config("logs", "vpc_log_group_delivery_role_assume_policy")
+
+    def logs_vpc_log_group_delivery_role_policy_document(self) -> Dict[str, Any]:
+        return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
 
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
@@ -113,6 +123,12 @@ class AwsScannerConfig:
             return os.environ.get(f"AWS_SCANNER_{section.upper()}_{key.upper()}") or self._config[section][key]
         except KeyError:
             sys.exit(f"missing config: section '{section}', key '{key}'")
+
+    def _get_json_config(self, section: str, key: str) -> Dict[str, Any]:
+        try:
+            return dict(loads(self._get_config(section, key)))
+        except JSONDecodeError as err:
+            sys.exit(f"invalid config: section '{section}', key '{key}', error: {err}")
 
     def _load_config(self) -> ConfigParser:
         config = ConfigParser()

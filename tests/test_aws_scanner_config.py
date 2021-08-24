@@ -22,9 +22,17 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("ALL", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr} ${dstaddr}", config.ec2_flow_log_format())
         self.assertEqual("iam_role", config.iam_role())
-        self.assertEqual("/vpc/central_flow_log", config.logs_central_vpc_log_group_prefix())
-        self.assertEqual("[version, account_id, interface_id]", config.logs_central_vpc_log_group_pattern())
-        self.assertEqual("arn:aws:logs:::destination:central", config.logs_central_vpc_log_group_destination())
+        self.assertEqual("/vpc/central_flow_log", config.logs_vpc_log_group_prefix())
+        self.assertEqual("[version, account_id, interface_id]", config.logs_vpc_log_group_pattern())
+        self.assertEqual("arn:aws:logs:::destination:central", config.logs_vpc_log_group_destination())
+        self.assertEqual("vpc_flow_log_role", config.logs_vpc_log_group_delivery_role())
+        self.assertEqual(
+            {"Statement": [{"Action": "sts:AssumeRole"}]}, config.logs_vpc_log_group_delivery_role_assume_policy()
+        )
+        self.assertEqual(
+            {"Statement": [{"Action": ["logs:PutLogEvents"], "Effect": "Allow"}]},
+            config.logs_vpc_log_group_delivery_role_policy_document(),
+        )
         self.assertEqual("logs_role", config.logs_role())
         self.assertEqual(Account("999888777666", "organization"), config.organization_account())
         self.assertEqual("orgs_role", config.organization_role())
@@ -56,9 +64,12 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_EC2_FLOW_LOG_TRAFFIC_TYPE": "ACCEPT",
             "AWS_SCANNER_EC2_FLOW_LOG_FORMAT": "${srcaddr}",
             "AWS_SCANNER_IAM_ROLE": "the_iam_role",
-            "AWS_SCANNER_LOGS_CENTRAL_VPC_LOG_GROUP_PREFIX": "/vpc/central_flow_log_prefix",
-            "AWS_SCANNER_LOGS_CENTRAL_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
-            "AWS_SCANNER_LOGS_CENTRAL_VPC_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
+            "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PREFIX": "/vpc/central_flow_log_prefix",
+            "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
+            "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
+            "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE": "the_flow_log_delivery_role",
+            "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": '{"Statement": [{"Action": "s3:something"}]}',
+            "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": '{"Statement": [{"Action": ["sts:hi"]}]}',
             "AWS_SCANNER_LOGS_ROLE": "some_logs_role",
             "AWS_SCANNER_ORGANIZATION_ACCOUNT": "666777888999",
             "AWS_SCANNER_ORGANIZATION_ROLE": "the_orgs_role",
@@ -91,9 +102,16 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("ACCEPT", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr}", config.ec2_flow_log_format())
         self.assertEqual("the_iam_role", config.iam_role())
-        self.assertEqual("/vpc/central_flow_log_prefix", config.logs_central_vpc_log_group_prefix())
-        self.assertEqual("[version, account_id]", config.logs_central_vpc_log_group_pattern())
-        self.assertEqual("arn:aws:logs:::destination:some-central", config.logs_central_vpc_log_group_destination())
+        self.assertEqual("/vpc/central_flow_log_prefix", config.logs_vpc_log_group_prefix())
+        self.assertEqual("[version, account_id]", config.logs_vpc_log_group_pattern())
+        self.assertEqual("arn:aws:logs:::destination:some-central", config.logs_vpc_log_group_destination())
+        self.assertEqual("the_flow_log_delivery_role", config.logs_vpc_log_group_delivery_role())
+        self.assertEqual(
+            {"Statement": [{"Action": "s3:something"}]}, config.logs_vpc_log_group_delivery_role_assume_policy()
+        )
+        self.assertEqual(
+            {"Statement": [{"Action": ["sts:hi"]}]}, config.logs_vpc_log_group_delivery_role_policy_document()
+        )
         self.assertEqual("some_logs_role", config.logs_role())
         self.assertEqual(Account("666777888999", "organization"), config.organization_account())
         self.assertEqual("the_orgs_role", config.organization_role())
@@ -125,3 +143,13 @@ class TestAwsScannerConfig(AwsScannerTestCase):
     def test_unsupported_reports_output(self) -> None:
         with self.assertRaisesRegex(SystemExit, "unsupported config: section 'reports', key 'output'"):
             AwsScannerConfig().reports_output()
+
+    @patch.dict(os.environ, {"AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": "{"}, clear=True)
+    def test_invalid_format_logs_vpc_log_group_delivery_role_assume_policy(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "vpc_log_group_delivery_role_assume_policy"):
+            AwsScannerConfig().logs_vpc_log_group_delivery_role_assume_policy()
+
+    @patch.dict(os.environ, {"AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": "}"}, clear=True)
+    def test_invalid_format_logs_vpc_log_group_delivery_role_policy_document(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "vpc_log_group_delivery_role_policy_document"):
+            AwsScannerConfig().logs_vpc_log_group_delivery_role_policy_document()

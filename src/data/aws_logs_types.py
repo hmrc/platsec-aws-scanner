@@ -12,7 +12,7 @@ class LogGroup:
 
     @property
     def central_vpc_log_group(self) -> bool:
-        return self.name.startswith(Config().logs_central_vpc_log_group_prefix()) and bool(
+        return self.name.startswith(Config().logs_vpc_log_group_prefix()) and bool(
             self.subscription_filters and [sf for sf in self.subscription_filters if sf.central_vpc_destination_filter]
         )
 
@@ -32,8 +32,8 @@ class SubscriptionFilter:
     def central_vpc_destination_filter(self) -> bool:
         config = Config()
         return (
-            self.filter_pattern == config.logs_central_vpc_log_group_pattern()
-            and self.destination_arn == config.logs_central_vpc_log_group_destination()
+            self.filter_pattern == config.logs_vpc_log_group_pattern()
+            and self.destination_arn == config.logs_vpc_log_group_destination()
         )
 
 
