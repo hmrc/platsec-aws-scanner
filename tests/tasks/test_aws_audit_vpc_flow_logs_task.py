@@ -27,7 +27,7 @@ def enforcement_actions(v: Vpc) -> AbstractSet[EC2Action]:
     return {"vpc-1": {delete_flow_log_action("fl-4")}, "vpc-2": {create_flow_log_action("vpc-7")}}[v.id]
 
 
-@patch("src.tasks.aws_audit_vpc_flow_logs_task.enforcement_actions", side_effect=enforcement_actions)
+@patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
 @patch.object(AwsEC2Client, "list_vpcs", return_value=vpcs)
 @patch.object(AwsEC2Client, "apply", return_value=actions)
 class TestAwsAuditVPCFlowLogsTask(AwsScannerTestCase):
