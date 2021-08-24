@@ -8,6 +8,7 @@ FLOW_LOGS = {
             "FlowLogStatus": "ACTIVE",
             "LogGroupName": "/vpc/flow_log",
             "TrafficType": "ALL",
+            "DeliverLogsPermissionArn": "a_role_arn",
             "LogDestination": "arn:aws:logs:us-east-1:111222333444:log-group:/vpc/flow_log",
             "LogFormat": "${version} ${account-id} ${interface-id}",
         },
@@ -15,6 +16,7 @@ FLOW_LOGS = {
             "FlowLogId": "fl-4654ef654d12321cb",
             "FlowLogStatus": "ACTIVE",
             "TrafficType": "ACCEPT",
+            "DeliverLogsPermissionArn": "another_role_arn",
             "LogDestination": "arn:aws:s3:::some-bucket",
             "LogFormat": "${start} ${end} ${action} ${log-status}",
         },
@@ -26,6 +28,7 @@ EXPECTED_FLOW_LOGS = [
         status="ACTIVE",
         log_group_name="/vpc/flow_log",
         traffic_type="ALL",
+        deliver_log_permission_arn="a_role_arn",
         log_format="${version} ${account-id} ${interface-id}",
     ),
     flow_log(
@@ -33,6 +36,7 @@ EXPECTED_FLOW_LOGS = [
         status="ACTIVE",
         log_group_name=None,
         traffic_type="ACCEPT",
+        deliver_log_permission_arn="another_role_arn",
         log_format="${start} ${end} ${action} ${log-status}",
     ),
 ]

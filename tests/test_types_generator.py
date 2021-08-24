@@ -222,9 +222,15 @@ def flow_log(
     log_group_name: Optional[str] = "/vpc/flow_log",
     traffic_type: str = "ALL",
     log_format: str = "${srcaddr} ${dstaddr}",
+    deliver_log_permission_arn: str = "some_role_arn",
 ) -> FlowLog:
     return FlowLog(
-        id=id, status=status, log_group_name=log_group_name, traffic_type=traffic_type, log_format=log_format
+        id=id,
+        status=status,
+        log_group_name=log_group_name,
+        traffic_type=traffic_type,
+        log_format=log_format,
+        deliver_log_permission_arn=deliver_log_permission_arn,
     )
 
 
