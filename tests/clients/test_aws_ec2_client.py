@@ -1,5 +1,5 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 from contextlib import redirect_stderr
 from io import StringIO
@@ -10,7 +10,7 @@ from src.data.aws_ec2_types import Vpc
 
 from tests import _raise
 from tests.clients import test_aws_ec2_client_responses as responses
-from tests.test_types_generator import client_error, create_flow_log_action, delete_flow_log_action, flow_log, vpc
+from tests.test_types_generator import client_error, flow_log, vpc
 
 
 class TestAwsEC2ListVpcs(AwsScannerTestCase):
@@ -122,16 +122,3 @@ class TestAwsEC2ClientDeleteFlowLog(AwsScannerTestCase):
             self.assertFalse(self.ec2_client()._delete_flow_logs(flow_log_id="bad-fl"))
         self.assertIn("AccessDenied", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())
-
-
-class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
-    def test_apply_actions(self) -> None:
-        c1, c2 = create_flow_log_action(vpc_id="vpc-1"), create_flow_log_action(vpc_id="vpc-2")
-        d1, d2 = delete_flow_log_action(flow_log_id="fl-1"), delete_flow_log_action(flow_log_id="fl-2")
-        with patch.object(AwsEC2Client, "_create_flow_logs", side_effect=[True, False]) as mock_create:
-            with patch.object(AwsEC2Client, "_delete_flow_logs", side_effect=[False, True]) as mock_delete:
-                self.assertEqual([c1, d1, c2, d2], AwsEC2Client(Mock()).apply([c1, d1, c2, d2]))
-        mock_create.assert_has_calls([call("vpc-1"), call("vpc-2")])
-        mock_delete.assert_has_calls([call("fl-1"), call("fl-2")])
-        self.assertEqual(["applied", "failed"], [c1.status, c2.status])
-        self.assertEqual(["failed", "applied"], [d1.status, d2.status])

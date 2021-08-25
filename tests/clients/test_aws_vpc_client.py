@@ -1,5 +1,5 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
@@ -183,3 +183,17 @@ class TestCentralVpcLogGroup(AwsScannerTestCase):
         sub_filter = put_subscription_filter.call_args[1]["subscription_filter"]
         self.assertEqual(clg.name, sub_filter.log_group_name)
         self.assertEqual(clg.subscription_filters[0], sub_filter)
+
+
+class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
+    def test_apply_actions(self) -> None:
+        client = AwsVpcClient(AwsEC2Client(Mock()), Mock(), Mock())
+        c1, c2 = create_flow_log_action(vpc_id="vpc-1"), create_flow_log_action(vpc_id="vpc-2")
+        d1, d2 = delete_flow_log_action(flow_log_id="fl-1"), delete_flow_log_action(flow_log_id="fl-2")
+        with patch.object(AwsEC2Client, "_create_flow_logs", side_effect=[True, False]) as mock_create:
+            with patch.object(AwsEC2Client, "_delete_flow_logs", side_effect=[False, True]) as mock_delete:
+                self.assertEqual([c1, d1, c2, d2], client.apply([c1, d1, c2, d2]))
+        mock_create.assert_has_calls([call("vpc-1"), call("vpc-2")])
+        mock_delete.assert_has_calls([call("fl-1"), call("fl-2")])
+        self.assertEqual(["applied", "failed"], [c1.status, c2.status])
+        self.assertEqual(["failed", "applied"], [d1.status, d2.status])

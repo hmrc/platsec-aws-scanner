@@ -1,6 +1,6 @@
 from logging import getLogger
 from random import randint
-from typing import AbstractSet, List, Optional
+from typing import AbstractSet, Any, Callable, Dict, List, Optional, Sequence
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
@@ -103,3 +103,10 @@ class AwsVpcClient:
         self._logger.debug(f"creating subscription filter {subscription_filter}")
         self.logs.put_subscription_filter(subscription_filter=subscription_filter)
         return log_group
+
+    def apply(self, actions: Sequence[EC2Action]) -> Sequence[EC2Action]:
+        action_map: Dict[Any, Callable[[Any], bool]] = {
+            CreateFlowLogAction: lambda a: self.ec2._create_flow_logs(a.vpc_id),
+            DeleteFlowLogAction: lambda a: self.ec2._delete_flow_logs(a.flow_log_id),
+        }
+        return [action.update_status("applied" if action_map[type(action)](action) else "failed") for action in actions]

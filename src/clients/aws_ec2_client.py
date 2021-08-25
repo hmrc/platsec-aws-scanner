@@ -1,11 +1,10 @@
 from logging import getLogger
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List
 
 from botocore.client import BaseClient
 
 from src.clients import boto_try
 from src.data.aws_ec2_types import FlowLog, Vpc, to_flow_log, to_vpc
-from src.data.aws_ec2_actions import CreateFlowLogAction, EC2Action, DeleteFlowLogAction
 from src.aws_scanner_config import AwsScannerConfig as Config
 
 
@@ -14,19 +13,9 @@ class AwsEC2Client:
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._ec2 = boto_ec2
-        self._action_map = {
-            CreateFlowLogAction: lambda a: self._create_flow_logs(a.vpc_id),
-            DeleteFlowLogAction: lambda a: self._delete_flow_logs(a.flow_log_id),
-        }
 
     def list_vpcs(self) -> List[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
-
-    def apply(self, actions: Sequence[EC2Action]) -> Sequence[EC2Action]:
-        return [self._apply_action(action) for action in actions]
-
-    def _apply_action(self, action: EC2Action) -> EC2Action:
-        return action.update_status("applied" if self._action_map[type(action)](action) else "failed")  # type: ignore
 
     def _create_flow_logs(self, vpc_id: str, log_group_name: str = "", permission: str = "") -> bool:
         return boto_try(

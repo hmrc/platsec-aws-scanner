@@ -73,9 +73,5 @@ class UnknownQueryStateException(AwsScannerException):
     pass
 
 
-class UnsupportedActionException(AwsScannerException):
-    pass
-
-
 class UnsupportedTaskException(AwsScannerException):
     pass
