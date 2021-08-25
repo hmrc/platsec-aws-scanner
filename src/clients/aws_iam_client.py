@@ -42,6 +42,9 @@ class AwsIamClient:
         except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to get role with name {name}: {err}") from None
 
+    def get_role_by_arn(self, arn: str) -> Role:
+        return self.get_role(arn.split(":")[-1].removeprefix("role/"))
+
     def _enrich_role(self, role: Role) -> Role:
         role.policies = [self._enrich_policy(self._get_policy(p)) for p in self._list_attached_role_policies(role.name)]
         return role

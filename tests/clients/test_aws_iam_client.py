@@ -1,5 +1,5 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, call, patch
 
 from typing import Any, Dict
 
@@ -51,6 +51,14 @@ class TestAwsIamClient(AwsScannerTestCase):
             ),
         )
         self.assertEqual(EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
+
+    def test_get_role_by_arn(self) -> None:
+        client = AwsIamClient(Mock())
+        with patch.object(AwsIamClient, "get_role") as get_role:
+            client.get_role_by_arn("arn:aws:iam::account:role/some_role")
+            client.get_role_by_arn("arn:aws:iam:region:account:role/with/path")
+            client.get_role_by_arn("not_an_arn_works_too")
+        self.assertEqual([call("some_role"), call("with/path"), call("not_an_arn_works_too")], get_role.mock_calls)
 
     def test_get_role_failure(self) -> None:
         mock_boto_iam = Mock(get_role=Mock(side_effect=client_error("GetRole", "NoSuchEntity", "not found")))
