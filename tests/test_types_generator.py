@@ -216,13 +216,44 @@ def vpc(id: str = "vpc-1234", flow_logs: Optional[List[FlowLog]] = None) -> Vpc:
     return Vpc(id=id, flow_logs=flow_logs if flow_logs is not None else [flow_log(id="fl-1234")])
 
 
+def policy(
+    name: str = "a_policy",
+    arn: str = "arn:aws:iam::112233445566:policy/a_policy",
+    default_version: str = "v3",
+    document: Optional[Dict[str, Any]] = None,
+) -> Policy:
+    return Policy(
+        name=name,
+        arn=arn,
+        default_version=default_version,
+        document=document,
+    )
+
+
+def role(
+    name: str = "a_role",
+    arn: str = "arn:aws:iam::112233445566:role/a_role",
+    assume_policy: Optional[Dict[str, Any]] = None,
+    policies: Optional[Sequence[Policy]] = None,
+) -> Role:
+    return Role(
+        name=name,
+        arn=arn,
+        assume_policy=assume_policy if assume_policy is not None else {"Statement": [{"Action": "sts:AssumeRole"}]},
+        policies=policies
+        if policies is not None
+        else [policy(document={"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]})],
+    )
+
+
 def flow_log(
     id: str = "fl-1234",
     status: str = "ACTIVE",
     log_group_name: Optional[str] = "/vpc/flow_log",
     traffic_type: str = "ALL",
     log_format: str = "${srcaddr} ${dstaddr}",
-    deliver_log_permission_arn: str = "some_role_arn",
+    deliver_log_role_arn: Optional[str] = "role_arn",
+    deliver_log_role: Optional[Role] = role(),
 ) -> FlowLog:
     return FlowLog(
         id=id,
@@ -230,7 +261,8 @@ def flow_log(
         log_group_name=log_group_name,
         traffic_type=traffic_type,
         log_format=log_format,
-        deliver_log_permission_arn=deliver_log_permission_arn,
+        deliver_log_role_arn=deliver_log_role_arn,
+        deliver_log_role=deliver_log_role,
     )
 
 
@@ -266,30 +298,4 @@ def subscription_filter(
         filter_name=filter_name,
         filter_pattern=filter_pattern,
         destination_arn=destination_arn,
-    )
-
-
-def policy(
-    name: str = "a_policy",
-    arn: str = "arn:aws:iam::112233445566:policy/a_policy",
-    default_version: str = "v3",
-    document: Optional[Dict[str, Any]] = None,
-) -> Policy:
-    return Policy(name=name, arn=arn, default_version=default_version, document=document)
-
-
-def role(
-    name: str = "a_role",
-    arn: str = "arn:aws:iam::112233445566:role/a_role",
-    assume_policy: Optional[Dict[str, Any]] = None,
-    policies: Optional[Sequence[Policy]] = None,
-) -> Role:
-    return Role(
-        name=name,
-        arn=arn,
-        assume_policy=assume_policy
-        or {
-            "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]
-        },
-        policies=policies,
     )

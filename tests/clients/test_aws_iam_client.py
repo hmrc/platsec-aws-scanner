@@ -96,7 +96,7 @@ class TestAwsIamClient(AwsScannerTestCase):
             )
         )
         created = AwsIamClient(mock_boto_iam).create_role(name, assume_policy)
-        self.assertEqual(role(name=name, arn=arn, assume_policy=assume_policy), created)
+        self.assertEqual(role(name=name, arn=arn, assume_policy=assume_policy, policies=[]), created)
         mock_boto_iam.create_role.assert_called_once_with(RoleName=name, AssumeRolePolicyDocument='{"key": "val"}')
 
     def test_create_role_failure(self) -> None:

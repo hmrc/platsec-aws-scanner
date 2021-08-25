@@ -28,7 +28,7 @@ def enforcement_actions(v: Vpc) -> AbstractSet[EC2Action]:
 
 
 @patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
-@patch.object(AwsEC2Client, "list_vpcs", return_value=vpcs)
+@patch.object(AwsVpcClient, "list_vpcs", return_value=vpcs)
 @patch.object(AwsEC2Client, "apply", return_value=actions)
 class TestAwsAuditVPCFlowLogsTask(AwsScannerTestCase):
     def test_run_audit_task(self, mock_apply, _, __) -> None:

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from src.data.aws_iam_types import Role
+
 
 @dataclass
 class Vpc:
@@ -25,7 +27,8 @@ class FlowLog:
     log_group_name: Optional[str]
     traffic_type: str
     log_format: str
-    deliver_log_permission_arn: Optional[str]
+    deliver_log_role_arn: Optional[str]
+    deliver_log_role: Optional[Role] = None
 
 
 def to_flow_log(flow_log: Dict[Any, Any]) -> FlowLog:
@@ -35,5 +38,5 @@ def to_flow_log(flow_log: Dict[Any, Any]) -> FlowLog:
         log_group_name=flow_log.get("LogGroupName"),
         traffic_type=flow_log["TrafficType"],
         log_format=flow_log["LogFormat"],
-        deliver_log_permission_arn=flow_log["DeliverLogsPermissionArn"],
+        deliver_log_role_arn=flow_log.get("DeliverLogsPermissionArn"),
     )

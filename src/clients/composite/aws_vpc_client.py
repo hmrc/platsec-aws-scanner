@@ -20,12 +20,25 @@ class AwsVpcClient:
         self.logs = logs
         self.config = Config()
 
+    def list_vpcs(self) -> List[Vpc]:
+        return [self._enrich_vpc(vpc) for vpc in self.ec2.list_vpcs()]
+
+    def _enrich_vpc(self, vpc: Vpc) -> Vpc:
+        vpc.flow_logs = [self._enrich_flow_log(fl) for fl in vpc.flow_logs]
+        return vpc
+
+    def _enrich_flow_log(self, fl: FlowLog) -> FlowLog:
+        fl.deliver_log_role = self.iam.get_role_by_arn(fl.deliver_log_role_arn) if fl.deliver_log_role_arn else None
+        return fl
+
     def find_flow_log_delivery_role(self) -> Role:
         return self.iam.get_role(self.config.logs_vpc_log_group_delivery_role())
 
-    def is_flow_log_delivery_role_compliant(self, role: Role) -> bool:
-        return role.assume_policy == self.config.logs_vpc_log_group_delivery_role_assume_policy() and bool(
-            [p for p in role.policies if p.document == self.config.logs_vpc_log_group_delivery_role_policy_document()]
+    def is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
+        return bool(
+            role
+            and role.assume_policy == self.config.logs_vpc_log_group_delivery_role_assume_policy()
+            and [p.document for p in role.policies] == [self.config.logs_vpc_log_group_delivery_role_policy_document()]
         )
 
     def is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
@@ -36,6 +49,7 @@ class AwsVpcClient:
             flow_log.status != self.config.ec2_flow_log_status()
             or flow_log.traffic_type != self.config.ec2_flow_log_traffic_type()
             or flow_log.log_format != self.config.ec2_flow_log_format()
+            or not self.is_flow_log_role_compliant(flow_log.deliver_log_role)
         )
 
     def enforcement_actions(self, vpc: Vpc) -> AbstractSet[EC2Action]:
