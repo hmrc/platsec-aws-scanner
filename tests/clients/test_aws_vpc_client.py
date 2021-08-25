@@ -190,8 +190,8 @@ class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
         client = AwsVpcClient(AwsEC2Client(Mock()), Mock(), Mock())
         c1, c2 = create_flow_log_action(vpc_id="vpc-1"), create_flow_log_action(vpc_id="vpc-2")
         d1, d2 = delete_flow_log_action(flow_log_id="fl-1"), delete_flow_log_action(flow_log_id="fl-2")
-        with patch.object(AwsEC2Client, "_create_flow_logs", side_effect=[True, False]) as mock_create:
-            with patch.object(AwsEC2Client, "_delete_flow_logs", side_effect=[False, True]) as mock_delete:
+        with patch.object(AwsEC2Client, "create_flow_logs", side_effect=[True, False]) as mock_create:
+            with patch.object(AwsEC2Client, "delete_flow_logs", side_effect=[False, True]) as mock_delete:
                 self.assertEqual([c1, d1, c2, d2], client.apply([c1, d1, c2, d2]))
         mock_create.assert_has_calls([call("vpc-1"), call("vpc-2")])
         mock_delete.assert_has_calls([call("fl-1"), call("fl-2")])

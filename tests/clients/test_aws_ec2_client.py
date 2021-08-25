@@ -81,17 +81,17 @@ class TestAwsEC2ClientCreateFlowLog(AwsScannerTestCase):
         return AwsEC2Client(Mock(create_flow_logs=Mock(side_effect=self.create_flow_logs)))
 
     def test_create_flow_log(self) -> None:
-        self.assertTrue(self.ec2_client()._create_flow_logs("good-vpc", "lg-1", "perm-1"))
+        self.assertTrue(self.ec2_client().create_flow_logs("good-vpc", "lg-1", "perm-1"))
 
     def test_create_flow_log_failure(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client()._create_flow_logs("bad-vpc", "lg-2", "perm-2"))
+            self.assertFalse(self.ec2_client().create_flow_logs("bad-vpc", "lg-2", "perm-2"))
         self.assertIn("InvalidVpcId.NotFound", err.getvalue())
         self.assertIn("bad-vpc", err.getvalue())
 
     def test_create_flow_log_client_error(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client()._create_flow_logs("except-vpc", "lg-3", "perm-3"))
+            self.assertFalse(self.ec2_client().create_flow_logs("except-vpc", "lg-3", "perm-3"))
         self.assertIn("AccessDenied", err.getvalue())
         self.assertIn("except-vpc", err.getvalue())
 
@@ -109,16 +109,16 @@ class TestAwsEC2ClientDeleteFlowLog(AwsScannerTestCase):
         return AwsEC2Client(Mock(delete_flow_logs=Mock(side_effect=self.delete_flow_logs)))
 
     def test_delete_flow_log(self) -> None:
-        self.assertTrue(self.ec2_client()._delete_flow_logs(flow_log_id="good-fl"))
+        self.assertTrue(self.ec2_client().delete_flow_logs(flow_log_id="good-fl"))
 
     def test_delete_flow_log_not_found(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client()._delete_flow_logs(flow_log_id="fl-not-found"))
+            self.assertFalse(self.ec2_client().delete_flow_logs(flow_log_id="fl-not-found"))
         self.assertIn("InvalidFlowLogId.NotFound", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())
 
     def test_delete_flow_log_failure(self) -> None:
         with redirect_stderr(StringIO()) as err:
-            self.assertFalse(self.ec2_client()._delete_flow_logs(flow_log_id="bad-fl"))
+            self.assertFalse(self.ec2_client().delete_flow_logs(flow_log_id="bad-fl"))
         self.assertIn("AccessDenied", err.getvalue())
         self.assertIn("bad-fl", err.getvalue())

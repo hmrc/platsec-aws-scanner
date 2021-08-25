@@ -106,7 +106,7 @@ class AwsVpcClient:
 
     def apply(self, actions: Sequence[EC2Action]) -> Sequence[EC2Action]:
         action_map: Dict[Any, Callable[[Any], bool]] = {
-            CreateFlowLogAction: lambda a: self.ec2._create_flow_logs(a.vpc_id),
-            DeleteFlowLogAction: lambda a: self.ec2._delete_flow_logs(a.flow_log_id),
+            CreateFlowLogAction: lambda a: self.ec2.create_flow_logs(a.vpc_id),
+            DeleteFlowLogAction: lambda a: self.ec2.delete_flow_logs(a.flow_log_id),
         }
         return [action.update_status("applied" if action_map[type(action)](action) else "failed") for action in actions]

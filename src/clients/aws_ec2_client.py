@@ -17,7 +17,7 @@ class AwsEC2Client:
     def list_vpcs(self) -> List[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
 
-    def _create_flow_logs(self, vpc_id: str, log_group_name: str = "", permission: str = "") -> bool:
+    def create_flow_logs(self, vpc_id: str, log_group_name: str = "", permission: str = "") -> bool:
         return boto_try(
             lambda: self._is_success(
                 self._ec2.create_flow_logs(
@@ -34,7 +34,7 @@ class AwsEC2Client:
             f"unable to create flow log for VPC {vpc_id}",
         )
 
-    def _delete_flow_logs(self, flow_log_id: str) -> bool:
+    def delete_flow_logs(self, flow_log_id: str) -> bool:
         return boto_try(
             lambda: self._is_success(self._ec2.delete_flow_logs(FlowLogIds=[flow_log_id])),
             bool,
