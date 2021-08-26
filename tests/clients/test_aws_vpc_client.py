@@ -83,7 +83,7 @@ class TestAwsFlowLogCompliance(AwsScannerTestCase):
         self.assertTrue(self.client().is_flow_log_misconfigured(flow_log(traffic_type="b")))
         self.assertTrue(self.client().is_flow_log_misconfigured(flow_log(log_format="c")))
         self.assertTrue(self.client().is_flow_log_misconfigured(flow_log(deliver_log_role=None)))
-        self.assertTrue(self.client().is_flow_log_misconfigured(flow_log(deliver_log_role=role(assume_policy={}))))
+        self.assertTrue(self.client().is_flow_log_misconfigured(flow_log(deliver_log_role=role(name="another_role"))))
 
 
 class TestAwsVpcEnforcementActions(AwsScannerTestCase):
