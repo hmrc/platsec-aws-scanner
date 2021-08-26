@@ -18,7 +18,6 @@ region = eu
 [ec2]
 role = ec2_role
 flow_log_status = ACTIVE
-flow_log_group_name = /vpc/flow_log
 flow_log_traffic_type = ALL
 flow_log_format = ${srcaddr} ${dstaddr}
 
@@ -26,7 +25,7 @@ flow_log_format = ${srcaddr} ${dstaddr}
 role = iam_role
 
 [logs]
-vpc_log_group_prefix = /vpc/central_flow_log
+vpc_log_group_name = /vpc/flow_log
 vpc_log_group_pattern = [version, account_id, interface_id]
 vpc_log_group_destination = arn:aws:logs:::destination:central
 vpc_log_group_delivery_role = vpc_flow_log_role

@@ -133,7 +133,7 @@ class TestLogsTypesCompliance(AwsScannerTestCase):
         self.assertTrue(
             self.client().is_central_vpc_log_group(
                 log_group(
-                    name="/vpc/central_flow_log_5678",
+                    name="/vpc/flow_log",
                     subscription_filters=[
                         subscription_filter(
                             filter_pattern="[version, account_id, interface_id]",
@@ -181,7 +181,6 @@ class TestCentralVpcLogGroup(AwsScannerTestCase):
         client = AwsVpcClient(Mock(), Mock(), logs_client)
         clg = client._create_central_vpc_log_group()
         self.assertTrue(client.is_central_vpc_log_group(clg))
-        self.assertRegex(clg.name, r"/vpc/central_flow_log_\d{4}")
         self.assertRegex(create_log_group.call_args[1]["name"], clg.name)
         sub_filter = put_subscription_filter.call_args[1]["subscription_filter"]
         self.assertEqual(clg.name, sub_filter.log_group_name)

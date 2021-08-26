@@ -279,7 +279,7 @@ def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = F
 
 
 def log_group(
-    name: str = "/vpc/central_flow_log_1234", subscription_filters: Optional[Sequence[SubscriptionFilter]] = None
+    name: str = "/vpc/flow_log", subscription_filters: Optional[Sequence[SubscriptionFilter]] = None
 ) -> LogGroup:
     return LogGroup(
         name=name,
@@ -288,7 +288,7 @@ def log_group(
 
 
 def subscription_filter(
-    log_group_name: str = "/vpc/central_flow_log_1234",
+    log_group_name: str = "/vpc/central_flow_log",
     filter_name: str = "VpcFlowLogsForward",
     filter_pattern: str = "[version, account_id, interface_id]",
     destination_arn: str = "arn:aws:logs:::destination:central",

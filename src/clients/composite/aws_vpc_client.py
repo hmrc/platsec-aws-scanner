@@ -1,5 +1,4 @@
 from logging import getLogger
-from random import randint
 from typing import AbstractSet, Any, Callable, Dict, List, Optional, Sequence
 
 from src.aws_scanner_config import AwsScannerConfig as Config
@@ -43,7 +42,7 @@ class AwsVpcClient:
         )
 
     def is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
-        return flow_log.log_group_name == self.config.ec2_flow_log_group_name()
+        return flow_log.log_group_name == self.config.logs_vpc_log_group_name()
 
     def is_flow_log_misconfigured(self, flow_log: FlowLog) -> bool:
         return self.is_flow_log_centralised(flow_log) and (
@@ -70,7 +69,7 @@ class AwsVpcClient:
         return list(filter(lambda fl: self.is_flow_log_misconfigured(fl), flow_logs))
 
     def is_central_vpc_log_group(self, log_group: LogGroup) -> bool:
-        return log_group.name.startswith(self.config.logs_vpc_log_group_prefix()) and bool(
+        return log_group.name == self.config.logs_vpc_log_group_name() and bool(
             log_group.subscription_filters
             and [sf for sf in log_group.subscription_filters if self.is_central_vpc_destination_filter(sf)]
         )
@@ -87,15 +86,15 @@ class AwsVpcClient:
     def _find_central_vpc_log_group(self) -> Optional[LogGroup]:
         central_log_groups = filter(
             lambda lg: self.is_central_vpc_log_group(lg),
-            self.logs.describe_log_groups(self.config.logs_vpc_log_group_prefix()),
+            self.logs.describe_log_groups(self.config.logs_vpc_log_group_name()),
         )
         return next(central_log_groups, None)
 
     def _create_central_vpc_log_group(self) -> LogGroup:
-        name = f"{self.config.logs_vpc_log_group_prefix()}_{''.join([str(randint(0, 9)) for _ in range(4)])}"
+        name = self.config.logs_vpc_log_group_name()
         subscription_filter = SubscriptionFilter(
             log_group_name=name,
-            filter_name=f"filter_{name}",
+            filter_name=f"{name}_sub_filter",
             filter_pattern=self.config.logs_vpc_log_group_pattern(),
             destination_arn=self.config.logs_vpc_log_group_destination(),
         )
