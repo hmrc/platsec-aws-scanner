@@ -175,8 +175,7 @@ class TestCentralVpcLogGroup(AwsScannerTestCase):
         create.assert_called_once()
 
     def test_create_central_vpc_log_group(self) -> None:
-        create_log_group = Mock()
-        put_subscription_filter = Mock()
+        create_log_group, put_subscription_filter = Mock(), Mock()
         logs_client = Mock(create_log_group=create_log_group, put_subscription_filter=put_subscription_filter)
         client = AwsVpcClient(Mock(), Mock(), logs_client)
         clg = client._create_central_vpc_log_group()
@@ -185,6 +184,19 @@ class TestCentralVpcLogGroup(AwsScannerTestCase):
         sub_filter = put_subscription_filter.call_args[1]["subscription_filter"]
         self.assertEqual(clg.name, sub_filter.log_group_name)
         self.assertEqual(clg.subscription_filters[0], sub_filter)
+
+
+class TestLogGroupDeliveryRole(AwsScannerTestCase):
+    def test_create_log_group_delivery_role(self) -> None:
+        a_role = role(name="vpc_flow_log_role")
+        pol = a_role.policies[0]
+        create_policy = Mock(side_effect=lambda p, d: pol if p == pol.name and d == pol.document else None)
+        create_role = Mock(side_effect=lambda n, p: a_role if n == a_role.name and p == a_role.assume_policy else None)
+        attach_role_policy = Mock()
+        iam_client = Mock(create_policy=create_policy, create_role=create_role, attach_role_policy=attach_role_policy)
+        client = AwsVpcClient(Mock(), iam_client, Mock())
+        self.assertEqual(a_role, client._create_log_group_delivery_role())
+        attach_role_policy.assert_called_once_with("vpc_flow_log_role", "arn:vpc_flow_log_role_policy")
 
 
 class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
