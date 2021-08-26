@@ -29,6 +29,7 @@ class AwsVpcClient:
 
     def _enrich_flow_log(self, fl: FlowLog) -> FlowLog:
         fl.deliver_log_role = self.iam.get_role_by_arn(fl.deliver_log_role_arn) if fl.deliver_log_role_arn else None
+        fl.log_group = self.logs.describe_log_groups(fl.log_group_name)[0] if fl.log_group_name else None
         return fl
 
     def find_flow_log_delivery_role(self) -> Role:

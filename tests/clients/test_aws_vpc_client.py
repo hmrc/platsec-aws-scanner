@@ -3,7 +3,6 @@ from unittest.mock import Mock, call, patch
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 
 from tests.test_types_generator import (
@@ -21,13 +20,17 @@ from tests.test_types_generator import (
 class TestAwsVpcClient(AwsScannerTestCase):
     def test_list_vpcs(self) -> None:
         log_role = role(name="a_log_role")
-        vpcs = [vpc(flow_logs=[flow_log(deliver_log_role_arn=None)]), vpc()]
-        client = AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()))
-        with patch.object(AwsIamClient, "get_role_by_arn", side_effect=lambda a: log_role if a == "role_arn" else None):
-            with patch.object(AwsEC2Client, "list_vpcs", return_value=vpcs):
-                enriched = client.list_vpcs()
+        group = log_group(name="a_log_group")
+        vpcs = [vpc(flow_logs=[flow_log(deliver_log_role_arn=None)]), vpc(flow_logs=[flow_log(log_group_name=None)])]
+        client = AwsVpcClient(
+            Mock(list_vpcs=Mock(return_value=vpcs)),
+            Mock(get_role_by_arn=Mock(side_effect=lambda a: log_role if a == "role_arn" else None)),
+            Mock(describe_log_groups=Mock(side_effect=lambda n: [group] if n == "/vpc/flow_log" else None)),
+        )
+        enriched = client.list_vpcs()
         self.assertEqual(vpcs, enriched)
         self.assertEqual([None, log_role], [fl.deliver_log_role for v in vpcs for fl in v.flow_logs])
+        self.assertEqual([group, None], [fl.log_group for v in vpcs for fl in v.flow_logs])
 
     def test_find_flow_log_delivery_role(self) -> None:
         delivery_role = role(name="the_delivery_role")
