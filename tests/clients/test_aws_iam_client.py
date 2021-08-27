@@ -119,12 +119,14 @@ class TestAwsIamClient(AwsScannerTestCase):
             AwsIamClient(mock_boto_iam).create_policy("a_policy", {})
 
     def test_attach_role_policy(self) -> None:
-        role_name, policy_arn = "a_role", "a_policy_arn"
+        a_role, a_policy = role(name="some_role", policies=[]), policy(arn="some_policy_arn")
+        updated_role = role(name="some_role", policies=[a_policy])
         mock_boto_iam = Mock()
-        AwsIamClient(mock_boto_iam).attach_role_policy(role_name, policy_arn)
-        mock_boto_iam.attach_role_policy.assert_called_once_with(RoleName=role_name, PolicyArn=policy_arn)
+        with patch.object(AwsIamClient, "get_role", side_effect=lambda n: updated_role if n == "some_role" else None):
+            self.assertEqual(updated_role, AwsIamClient(mock_boto_iam).attach_role_policy(a_role, a_policy))
+        mock_boto_iam.attach_role_policy.assert_called_once_with(RoleName="some_role", PolicyArn="some_policy_arn")
 
     def test_attach_role_policy_failure(self) -> None:
         mock_iam = Mock(attach_role_policy=Mock(side_effect=client_error("AttachRolePolicy", "NoSuchEntity", "no")))
         with self.assertRaisesRegex(IamException, "unable to attach role a_role and policy a_policy_arn"):
-            AwsIamClient(mock_iam).attach_role_policy("a_role", "a_policy_arn")
+            AwsIamClient(mock_iam).attach_role_policy(role(name="a_role"), policy(arn="a_policy_arn"))

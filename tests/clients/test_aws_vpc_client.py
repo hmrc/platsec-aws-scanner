@@ -190,13 +190,13 @@ class TestLogGroupDeliveryRole(AwsScannerTestCase):
     def test_create_log_group_delivery_role(self) -> None:
         a_role = role(name="vpc_flow_log_role")
         pol = a_role.policies[0]
+        delivery_role = role(name="vpc_flow_log_role", policies=[policy(), pol])
         create_policy = Mock(side_effect=lambda p, d: pol if p == pol.name and d == pol.document else None)
         create_role = Mock(side_effect=lambda n, p: a_role if n == a_role.name and p == a_role.assume_policy else None)
-        attach_role_policy = Mock()
+        attach_role_policy = Mock(side_effect=lambda r, p: delivery_role if r == a_role and p == pol else None)
         iam_client = Mock(create_policy=create_policy, create_role=create_role, attach_role_policy=attach_role_policy)
         client = AwsVpcClient(Mock(), iam_client, Mock())
-        self.assertEqual(a_role, client._create_log_group_delivery_role())
-        attach_role_policy.assert_called_once_with("vpc_flow_log_role", "arn:vpc_flow_log_role_policy")
+        self.assertEqual(delivery_role, client._create_log_group_delivery_role())
 
 
 class TestAwsEC2ClientApplyActions(AwsScannerTestCase):

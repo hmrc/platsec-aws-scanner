@@ -30,11 +30,12 @@ class AwsIamClient:
                 f"unable to create policy with name {name} and policy document {document}: {err}"
             ) from None
 
-    def attach_role_policy(self, role_name: str, policy_arn: str) -> None:
+    def attach_role_policy(self, role: Role, policy: Policy) -> Role:
         try:
-            self._iam.attach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
+            self._iam.attach_role_policy(RoleName=role.name, PolicyArn=policy.arn)
+            return self.get_role(role.name)
         except (BotoCoreError, ClientError) as err:
-            raise IamException(f"unable to attach role {role_name} and policy {policy_arn}: {err}") from None
+            raise IamException(f"unable to attach role {role.name} and policy {policy.arn}: {err}") from None
 
     def get_role(self, name: str) -> Role:
         try:

@@ -106,15 +106,16 @@ class AwsVpcClient:
         return log_group
 
     def _create_log_group_delivery_role(self) -> Role:
-        policy = self.iam.create_policy(
-            f"{self.config.logs_vpc_log_group_delivery_role()}_policy",
-            self.config.logs_vpc_log_group_delivery_role_policy_document(),
+        return self.iam.attach_role_policy(
+            self.iam.create_role(
+                self.config.logs_vpc_log_group_delivery_role(),
+                self.config.logs_vpc_log_group_delivery_role_assume_policy(),
+            ),
+            self.iam.create_policy(
+                f"{self.config.logs_vpc_log_group_delivery_role()}_policy",
+                self.config.logs_vpc_log_group_delivery_role_policy_document(),
+            ),
         )
-        role = self.iam.create_role(
-            self.config.logs_vpc_log_group_delivery_role(), self.config.logs_vpc_log_group_delivery_role_assume_policy()
-        )
-        self.iam.attach_role_policy(role.name, policy.arn)
-        return role
 
     def apply(self, actions: Sequence[EC2Action]) -> Sequence[EC2Action]:
         action_map: Dict[Any, Callable[[Any], bool]] = {
