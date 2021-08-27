@@ -55,7 +55,7 @@ python-test: pipenv
 .PHONY: python-coverage
 python-coverage:
 	@$(DOCKER) pipenv run coverage xml --omit $(PYTHON_COVERAGE_OMIT)
-	@$(DOCKER) pipenv run coverage report --omit $(PYTHON_COVERAGE_OMIT) --fail-under $(PYTHON_COVERAGE_FAIL_UNDER_PERCENT)
+	@$(DOCKER) pipenv run coverage report -m --omit $(PYTHON_COVERAGE_OMIT) --fail-under $(PYTHON_COVERAGE_FAIL_UNDER_PERCENT)
 
 .PHONY: md-check
 md-check:
