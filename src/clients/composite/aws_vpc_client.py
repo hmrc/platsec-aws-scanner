@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import AbstractSet, Any, Callable, Dict, List, Optional, Sequence
+from typing import AbstractSet, List, Optional, Sequence
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
@@ -118,8 +118,5 @@ class AwsVpcClient:
         )
 
     def apply(self, actions: Sequence[EC2Action]) -> Sequence[EC2Action]:
-        action_map: Dict[Any, Callable[[Any], bool]] = {
-            CreateFlowLogAction: lambda a: self.ec2.create_flow_logs(a.vpc_id),
-            DeleteFlowLogAction: lambda a: self.ec2.delete_flow_logs(a.flow_log_id),
-        }
-        return [action.update_status("applied" if action_map[type(action)](action) else "failed") for action in actions]
+        client_map = {CreateFlowLogAction: self.ec2, DeleteFlowLogAction: self.ec2}
+        return [action.apply(client_map[type(action)]) for action in actions]
