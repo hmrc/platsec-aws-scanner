@@ -1,6 +1,6 @@
 from json import dumps
 from logging import getLogger
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
@@ -45,6 +45,12 @@ class AwsIamClient:
 
     def get_role_by_arn(self, arn: str) -> Role:
         return self.get_role(arn.split(":")[-1].removeprefix("role/"))
+
+    def find_role(self, name: str) -> Optional[Role]:
+        try:
+            return self.get_role(name)
+        except IamException:
+            return None
 
     def _enrich_role(self, role: Role) -> Role:
         role.policies = [self._enrich_policy(self._get_policy(p)) for p in self._list_attached_role_policies(role.name)]

@@ -29,6 +29,10 @@ class DropTableException(AwsScannerException):
     pass
 
 
+class EC2Exception(AwsScannerException):
+    pass
+
+
 class GetQueryResultsException(AwsScannerException):
     pass
 

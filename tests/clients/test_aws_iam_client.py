@@ -65,6 +65,15 @@ class TestAwsIamClient(AwsScannerTestCase):
         with self.assertRaisesRegex(IamException, "a_role"):
             AwsIamClient(mock_boto_iam).get_role("a_role")
 
+    def test_find_role(self) -> None:
+        a_role = role("a_role")
+        with patch.object(AwsIamClient, "get_role", side_effect=lambda r: a_role if r == a_role.name else None):
+            self.assertEqual(a_role, AwsIamClient(Mock()).find_role("a_role"))
+
+    def test_find_role_not_found(self) -> None:
+        with patch.object(AwsIamClient, "get_role", side_effect=IamException):
+            self.assertIsNone(AwsIamClient(Mock()).find_role("a_role"))
+
     def test_list_attached_role_policies_failure(self) -> None:
         mock_boto_iam = Mock(
             get_paginator=Mock(

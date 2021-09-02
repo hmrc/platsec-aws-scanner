@@ -1,11 +1,11 @@
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 from botocore.exceptions import ClientError
 
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
+from src.data.aws_compliance_actions import CreateFlowLogAction, CreateFlowLogDeliveryRoleAction, DeleteFlowLogAction
 from src.data.aws_ec2_types import FlowLog, Vpc
-from src.data.aws_ec2_actions import CreateFlowLogAction, DeleteFlowLogAction
 from src.data.aws_iam_types import Policy, Role
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
@@ -272,12 +272,20 @@ def flow_log(
     )
 
 
-def create_flow_log_action(vpc_id: str = vpc().id) -> CreateFlowLogAction:
-    return CreateFlowLogAction(vpc_id=vpc_id)
+def create_flow_log_action(
+    vpc_id: str = vpc().id,
+    log_group_name: str = "/vpc/flow_log",
+    permission_resolver: Callable[[], str] = lambda: "arn:aws:iam::112233445566:role/a_role",
+) -> CreateFlowLogAction:
+    return CreateFlowLogAction(vpc_id=vpc_id, log_group_name=log_group_name, permission_resolver=permission_resolver)
 
 
 def delete_flow_log_action(flow_log_id: str = flow_log().id) -> DeleteFlowLogAction:
     return DeleteFlowLogAction(flow_log_id=flow_log_id)
+
+
+def create_flow_log_delivery_role_action() -> CreateFlowLogDeliveryRoleAction:
+    return CreateFlowLogDeliveryRoleAction()
 
 
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:

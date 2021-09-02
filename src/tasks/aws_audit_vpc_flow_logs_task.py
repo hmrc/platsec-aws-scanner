@@ -11,7 +11,7 @@ class AwsAuditVPCFlowLogsTask(AwsVpcTask):
     def __init__(self, account: Account, enforce: bool) -> None:
         super().__init__("audit VPC flow logs compliance", account, enforce)
 
-    def _run_task(self, c: AwsVpcClient) -> Dict[Any, Any]:
-        vpcs = c.list_vpcs()
-        actions = [action for vpc in vpcs for action in c.enforcement_actions(vpc)]
-        return {"vpcs": vpcs, "enforcement_actions": c.apply(actions) if self.enforce else actions}
+    def _run_task(self, client: AwsVpcClient) -> Dict[Any, Any]:
+        vpcs = client.list_vpcs()
+        actions = [action for vpc in vpcs for action in client.enforcement_actions(vpc)]
+        return {"vpcs": vpcs, "enforcement_actions": client.apply(actions) if self.enforce else actions}

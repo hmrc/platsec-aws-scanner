@@ -2,10 +2,12 @@ from logging import getLogger
 from typing import Any, Dict, List
 
 from botocore.client import BaseClient
+from botocore.exceptions import BotoCoreError, ClientError
 
+from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
 from src.data.aws_ec2_types import FlowLog, Vpc, to_flow_log, to_vpc
-from src.aws_scanner_config import AwsScannerConfig as Config
+from src.data.aws_scanner_exceptions import EC2Exception
 
 
 class AwsEC2Client:
@@ -17,9 +19,10 @@ class AwsEC2Client:
     def list_vpcs(self) -> List[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
 
-    def create_flow_logs(self, vpc_id: str, log_group_name: str = "", permission: str = "") -> bool:
-        return boto_try(
-            lambda: self._is_success(
+    def create_flow_logs(self, vpc_id: str, log_group_name: str, permission: str) -> None:
+        try:
+            self._is_success(
+                "create_flow_logs",
                 self._ec2.create_flow_logs(
                     DeliverLogsPermissionArn=permission,
                     LogGroupName=log_group_name,
@@ -28,18 +31,16 @@ class AwsEC2Client:
                     TrafficType="ALL",
                     LogDestinationType="cloud-watch-logs",
                     LogFormat=self._config.ec2_flow_log_format(),
-                )
-            ),
-            bool,
-            f"unable to create flow log for VPC {vpc_id}",
-        )
+                ),
+            )
+        except (BotoCoreError, ClientError) as err:
+            raise EC2Exception(f"unable to create flow log for VPC {vpc_id}: {err}")
 
-    def delete_flow_logs(self, flow_log_id: str) -> bool:
-        return boto_try(
-            lambda: self._is_success(self._ec2.delete_flow_logs(FlowLogIds=[flow_log_id])),
-            bool,
-            f"unable to delete flow log {flow_log_id}",
-        )
+    def delete_flow_logs(self, flow_log_id: str) -> None:
+        try:
+            self._is_success("delete_flow_logs", self._ec2.delete_flow_logs(FlowLogIds=[flow_log_id]))
+        except (BotoCoreError, ClientError) as err:
+            raise EC2Exception(f"unable to delete flow log with id {flow_log_id}: {err}")
 
     def _enrich_vpc(self, vpc: Vpc) -> Vpc:
         vpc.flow_logs = self._describe_flow_logs(vpc)
@@ -58,8 +59,8 @@ class AwsEC2Client:
             f"unable to describe flow logs for {vpc}",
         )
 
-    def _is_success(self, resp: Dict[Any, Any]) -> bool:
+    @staticmethod
+    def _is_success(operation: str, resp: Dict[Any, Any]) -> None:
         errors = resp["Unsuccessful"]
         if errors:
-            self._logger.error(errors)
-        return not len(errors)
+            raise EC2Exception(f"unable to perform {operation}: {errors}")

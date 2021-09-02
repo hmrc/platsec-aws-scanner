@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from typing import AbstractSet
 
 from src.clients.composite.aws_vpc_client import AwsVpcClient
-from src.data.aws_ec2_actions import EC2Action
+from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_ec2_types import Vpc
 
 from tests.test_types_generator import (
@@ -22,7 +22,7 @@ results = {"vpcs": vpcs, "enforcement_actions": actions}
 report = task_report(description="audit VPC flow logs compliance", partition=None, results=results)
 
 
-def enforcement_actions(v: Vpc) -> AbstractSet[EC2Action]:
+def enforcement_actions(v: Vpc) -> AbstractSet[ComplianceAction]:
     return {"vpc-1": {delete_flow_log_action("fl-4")}, "vpc-2": {create_flow_log_action("vpc-7")}}[v.id]
 
 

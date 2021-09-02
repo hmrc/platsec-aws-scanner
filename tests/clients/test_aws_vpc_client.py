@@ -1,12 +1,15 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
+from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
+from src.data.aws_compliance_actions import CreateFlowLogAction, DeleteFlowLogAction
 
 from tests.test_types_generator import (
     create_flow_log_action,
+    create_flow_log_delivery_role_action,
     delete_flow_log_action,
     flow_log,
     log_group,
@@ -35,8 +38,14 @@ class TestAwsVpcClient(AwsScannerTestCase):
     def test_find_flow_log_delivery_role(self) -> None:
         delivery_role = role(name="the_delivery_role")
         ec2, iam, logs = Mock(), Mock(), Mock()
-        with patch.object(iam, "get_role", side_effect=lambda n: delivery_role if n == "vpc_flow_log_role" else None):
+        with patch.object(iam, "find_role", side_effect=lambda n: delivery_role if n == "vpc_flow_log_role" else None):
             self.assertEqual(delivery_role, AwsVpcClient(ec2, iam, logs).find_flow_log_delivery_role())
+
+    def test_get_flow_log_delivery_role_arn(self) -> None:
+        delivery_role = role(arn="the_arn")
+        ec2, iam, logs = Mock(), Mock(), Mock()
+        with patch.object(iam, "get_role", side_effect=lambda n: delivery_role if n == "vpc_flow_log_role" else None):
+            self.assertEqual("the_arn", AwsVpcClient(ec2, iam, logs).get_flow_log_delivery_role_arn())
 
     def test_flow_log_role_compliant(self) -> None:
         delivery_role = role(
@@ -86,42 +95,75 @@ class TestAwsFlowLogCompliance(AwsScannerTestCase):
         self.assertTrue(self.client().is_flow_log_misconfigured(flow_log(deliver_log_role=role(name="another_role"))))
 
 
-class TestAwsVpcEnforcementActions(AwsScannerTestCase):
+class TestAwsEnforcementActions(AwsScannerTestCase):
+    def test_apply_actions(self) -> None:
+        applied_del, applied_cre = Mock(), Mock()
+        ec2, iam, logs = Mock(), Mock(), Mock()
+        del_fl = Mock(spec=DeleteFlowLogAction, apply=Mock(side_effect=lambda c: applied_del if c == ec2 else None))
+        cre_fl = Mock(spec=CreateFlowLogAction, apply=Mock(side_effect=lambda c: applied_cre if c == ec2 else None))
+        client = AwsVpcClient(ec2, iam, logs)
+        self.assertEqual([applied_del, applied_cre], client.apply([del_fl, cre_fl]))
+
     @staticmethod
     def client() -> AwsVpcClient:
-        return AwsVpcClient(Mock(), Mock(), Mock())
+        return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()))
 
-    def test_vpc_is_empty(self) -> None:
-        self.assertEqual(
-            {create_flow_log_action("a-vpc")}, self.client().enforcement_actions(vpc(id="a-vpc", flow_logs=[]))
-        )
+    def test_enforcement_actions(self) -> None:
+        a_vpc = vpc()
+        vpc_act_1, vpc_act_2 = delete_flow_log_action("42"), create_flow_log_action("99")
+        acts = {vpc_act_1, vpc_act_2}
+        role_act_1 = create_flow_log_delivery_role_action()
+        role_acts = {role_act_1}
+        with patch.object(AwsVpcClient, "_vpc_enforcement_actions", side_effect=lambda v: acts if v == a_vpc else None):
+            with patch.object(AwsVpcClient, "_create_delivery_role_action", return_value=role_acts):
+                self.assertEqual({vpc_act_1, vpc_act_2, role_act_1}, self.client().enforcement_actions(a_vpc))
+
+    def test_vpc_has_no_flow_logs(self) -> None:
+        with patch.object(AwsVpcClient, "get_flow_log_delivery_role_arn", return_value="an_arn"):
+            actions = self.client()._vpc_enforcement_actions(vpc(id="a-vpc", flow_logs=[]))
+        self.assertEqual({create_flow_log_action("a-vpc")}, actions)
+        self.assertEqual("an_arn", next(iter(actions)).permission_resolver())
 
     def test_vpc_no_flow_log_action(self) -> None:
-        self.assertEqual(set(), self.client().enforcement_actions(vpc(flow_logs=[flow_log()])))
+        self.assertEqual(set(), self.client()._vpc_enforcement_actions(vpc(flow_logs=[flow_log()])))
 
     def test_vpc_delete_redundant_centralised(self) -> None:
         self.assertEqual(
             {delete_flow_log_action("2"), delete_flow_log_action("3")},
-            self.client().enforcement_actions(vpc(flow_logs=[flow_log("1"), flow_log("2"), flow_log("3")])),
+            self.client()._vpc_enforcement_actions(vpc(flow_logs=[flow_log("1"), flow_log("2"), flow_log("3")])),
         )
 
     def test_vpc_delete_misconfigured_centralised(self) -> None:
         self.assertEqual(
             {delete_flow_log_action("1"), delete_flow_log_action("3")},
-            self.client().enforcement_actions(vpc(flow_logs=[flow_log("1", status="a"), flow_log("2"), flow_log("3")])),
+            self.client()._vpc_enforcement_actions(
+                vpc(flow_logs=[flow_log("1", status="a"), flow_log("2"), flow_log("3")])
+            ),
         )
 
     def test_vpc_create_centralised(self) -> None:
         self.assertEqual(
             {create_flow_log_action("vpc-1")},
-            self.client().enforcement_actions(vpc(id="vpc-1", flow_logs=[flow_log(log_group_name="a")])),
+            self.client()._vpc_enforcement_actions(vpc(id="vpc-1", flow_logs=[flow_log(log_group_name="a")])),
         )
 
     def test_vpc_delete_misconfigured_and_create_centralised(self) -> None:
         self.assertEqual(
             {create_flow_log_action("vpc-a"), delete_flow_log_action("1")},
-            self.client().enforcement_actions(vpc(id="vpc-a", flow_logs=[flow_log(id="1", status="a")])),
+            self.client()._vpc_enforcement_actions(vpc(id="vpc-a", flow_logs=[flow_log(id="1", status="a")])),
         )
+
+    def test_no_create_delivery_role_action_when_role_is_compliant(self) -> None:
+        compliant_role = role(name="compliant")
+        with patch.object(AwsVpcClient, "is_flow_log_role_compliant", side_effect=lambda r: r == compliant_role):
+            with patch.object(AwsVpcClient, "find_flow_log_delivery_role", return_value=compliant_role):
+                self.assertEqual(set(), self.client()._create_delivery_role_action())
+
+    def test_create_delivery_role_action_when_role_is_not_compliant(self) -> None:
+        non_compliant_role = role(name="non_compliant")
+        with patch.object(AwsVpcClient, "is_flow_log_role_compliant", side_effect=lambda r: r != non_compliant_role):
+            with patch.object(AwsVpcClient, "find_flow_log_delivery_role", return_value=non_compliant_role):
+                self.assertEqual({create_flow_log_delivery_role_action()}, self.client()._create_delivery_role_action())
 
 
 class TestLogsTypesCompliance(AwsScannerTestCase):
@@ -184,30 +226,3 @@ class TestCentralVpcLogGroup(AwsScannerTestCase):
         sub_filter = put_subscription_filter.call_args[1]["subscription_filter"]
         self.assertEqual(clg.name, sub_filter.log_group_name)
         self.assertEqual(clg.subscription_filters[0], sub_filter)
-
-
-class TestLogGroupDeliveryRole(AwsScannerTestCase):
-    def test_create_log_group_delivery_role(self) -> None:
-        a_role = role(name="vpc_flow_log_role")
-        pol = a_role.policies[0]
-        delivery_role = role(name="vpc_flow_log_role", policies=[policy(), pol])
-        create_policy = Mock(side_effect=lambda p, d: pol if p == pol.name and d == pol.document else None)
-        create_role = Mock(side_effect=lambda n, p: a_role if n == a_role.name and p == a_role.assume_policy else None)
-        attach_role_policy = Mock(side_effect=lambda r, p: delivery_role if r == a_role and p == pol else None)
-        iam_client = Mock(create_policy=create_policy, create_role=create_role, attach_role_policy=attach_role_policy)
-        client = AwsVpcClient(Mock(), iam_client, Mock())
-        self.assertEqual(delivery_role, client._create_log_group_delivery_role())
-
-
-class TestAwsEC2ClientApplyActions(AwsScannerTestCase):
-    def test_apply_actions(self) -> None:
-        client = AwsVpcClient(AwsEC2Client(Mock()), Mock(), Mock())
-        c1, c2 = create_flow_log_action(vpc_id="vpc-1"), create_flow_log_action(vpc_id="vpc-2")
-        d1, d2 = delete_flow_log_action(flow_log_id="fl-1"), delete_flow_log_action(flow_log_id="fl-2")
-        with patch.object(AwsEC2Client, "create_flow_logs", side_effect=[True, False]) as mock_create:
-            with patch.object(AwsEC2Client, "delete_flow_logs", side_effect=[False, True]) as mock_delete:
-                self.assertEqual([c1, d1, c2, d2], client.apply([c1, d1, c2, d2]))
-        mock_create.assert_has_calls([call("vpc-1"), call("vpc-2")])
-        mock_delete.assert_has_calls([call("fl-1"), call("fl-2")])
-        self.assertEqual(["applied", "failed"], [c1.status, c2.status])
-        self.assertEqual(["failed", "applied"], [d1.status, d2.status])
