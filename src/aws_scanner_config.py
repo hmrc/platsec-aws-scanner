@@ -62,6 +62,9 @@ class AwsScannerConfig:
     def logs_vpc_log_group_delivery_role(self) -> str:
         return self._get_config("logs", "vpc_log_group_delivery_role")
 
+    def logs_vpc_log_group_delivery_role_policy_name(self) -> str:
+        return f"{self.logs_vpc_log_group_delivery_role()}_policy"
+
     def logs_vpc_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_assume_policy")
 

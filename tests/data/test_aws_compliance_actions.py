@@ -1,7 +1,5 @@
-from typing import Any
-
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
@@ -13,6 +11,7 @@ from tests.test_types_generator import (
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_action,
+    delete_flow_log_delivery_role_action,
     role,
 )
 
@@ -55,12 +54,9 @@ class TestAwsComplianceActions(AwsScannerTestCase):
                     create_flow_log_delivery_role_action()._apply(AwsIamClient(Mock()))
         attach_role_policy.assert_called_once_with(a_role, pol)
 
-
-class SuccessAction(ComplianceAction):
-    def _apply(self, client: Any) -> None:
-        pass
-
-
-class FailureAction(ComplianceAction):
-    def _apply(self, client: Any) -> None:
-        pass
+    def test_delete_flow_log_delivery_role_action(self) -> None:
+        client = Mock(spec=AwsIamClient)
+        delete_flow_log_delivery_role_action()._apply(client)
+        self.assertEqual(
+            [call.delete_role("delete_me"), call.delete_policy("vpc_flow_log_role_policy")], client.mock_calls
+        )

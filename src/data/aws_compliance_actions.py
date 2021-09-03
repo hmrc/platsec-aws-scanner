@@ -77,7 +77,20 @@ class CreateFlowLogDeliveryRoleAction(ComplianceAction):
                 config.logs_vpc_log_group_delivery_role_assume_policy(),
             ),
             client.create_policy(
-                f"{config.logs_vpc_log_group_delivery_role()}_policy",
+                config.logs_vpc_log_group_delivery_role_policy_name(),
                 config.logs_vpc_log_group_delivery_role_policy_document(),
             ),
         )
+
+
+@dataclass(unsafe_hash=True)
+class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
+    role_name: str
+
+    def __init__(self, role_name: str) -> None:
+        super().__init__("Delete delivery role for VPC flow log")
+        self.role_name = role_name
+
+    def _apply(self, client: AwsIamClient) -> None:
+        client.delete_role(self.role_name)
+        client.delete_policy(Config().logs_vpc_log_group_delivery_role_policy_name())

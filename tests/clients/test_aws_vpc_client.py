@@ -11,6 +11,7 @@ from tests.test_types_generator import (
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_action,
+    delete_flow_log_delivery_role_action,
     flow_log,
     log_group,
     policy,
@@ -115,7 +116,7 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         role_act_1 = create_flow_log_delivery_role_action()
         role_acts = {role_act_1}
         with patch.object(AwsVpcClient, "_vpc_enforcement_actions", side_effect=lambda v: acts if v == a_vpc else None):
-            with patch.object(AwsVpcClient, "_create_delivery_role_action", return_value=role_acts):
+            with patch.object(AwsVpcClient, "_delivery_role_enforcement_actions", return_value=role_acts):
                 self.assertEqual({vpc_act_1, vpc_act_2, role_act_1}, self.client().enforcement_actions(a_vpc))
 
     def test_vpc_has_no_flow_logs(self) -> None:
@@ -153,17 +154,26 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             self.client()._vpc_enforcement_actions(vpc(id="vpc-a", flow_logs=[flow_log(id="1", status="a")])),
         )
 
-    def test_no_create_delivery_role_action_when_role_is_compliant(self) -> None:
+    def test_no_delivery_role_action_when_role_is_compliant(self) -> None:
         compliant_role = role(name="compliant")
         with patch.object(AwsVpcClient, "is_flow_log_role_compliant", side_effect=lambda r: r == compliant_role):
             with patch.object(AwsVpcClient, "find_flow_log_delivery_role", return_value=compliant_role):
-                self.assertEqual(set(), self.client()._create_delivery_role_action())
+                self.assertEqual(set(), self.client()._delivery_role_enforcement_actions())
 
-    def test_create_delivery_role_action_when_role_is_not_compliant(self) -> None:
+    def test_only_create_delivery_role_action_when_role_is_missing(self) -> None:
+        with patch.object(AwsVpcClient, "find_flow_log_delivery_role", return_value=None):
+            self.assertEqual(
+                {create_flow_log_delivery_role_action()}, self.client()._delivery_role_enforcement_actions()
+            )
+
+    def test_delete_and_create_delivery_role_action_when_role_is_not_compliant(self) -> None:
         non_compliant_role = role(name="non_compliant")
         with patch.object(AwsVpcClient, "is_flow_log_role_compliant", side_effect=lambda r: r != non_compliant_role):
             with patch.object(AwsVpcClient, "find_flow_log_delivery_role", return_value=non_compliant_role):
-                self.assertEqual({create_flow_log_delivery_role_action()}, self.client()._create_delivery_role_action())
+                self.assertEqual(
+                    {delete_flow_log_delivery_role_action("non_compliant"), create_flow_log_delivery_role_action()},
+                    self.client()._delivery_role_enforcement_actions(),
+                )
 
 
 class TestLogsTypesCompliance(AwsScannerTestCase):

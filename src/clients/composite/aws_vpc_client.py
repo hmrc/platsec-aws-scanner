@@ -11,6 +11,7 @@ from src.data.aws_compliance_actions import (
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
+    DeleteFlowLogDeliveryRoleAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
@@ -63,7 +64,7 @@ class AwsVpcClient:
         )
 
     def enforcement_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
-        return set(chain(self._vpc_enforcement_actions(vpc), self._create_delivery_role_action()))
+        return set(chain(self._vpc_enforcement_actions(vpc), self._delivery_role_enforcement_actions()))
 
     def _vpc_enforcement_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
         return set(
@@ -87,6 +88,17 @@ class AwsVpcClient:
         return (
             {CreateFlowLogAction(vpc.id, self.config.logs_vpc_log_group_name(), self.get_flow_log_delivery_role_arn)}
             if not self._centralised(vpc.flow_logs)
+            else set()
+        )
+
+    def _delivery_role_enforcement_actions(self) -> AbstractSet[ComplianceAction]:
+        return set(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
+
+    def _delete_delivery_role_action(self) -> AbstractSet[ComplianceAction]:
+        delivery_role = self.find_flow_log_delivery_role()
+        return (
+            {DeleteFlowLogDeliveryRoleAction(delivery_role.name)}
+            if delivery_role and not self.is_flow_log_role_compliant(delivery_role)
             else set()
         )
 

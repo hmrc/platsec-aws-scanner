@@ -52,10 +52,10 @@ class AwsIamClient:
         except IamException:
             return None
 
-    def delete_role(self, role: Role) -> None:
-        for policy in role.policies:
-            self._detach_role_policy(role.name, policy.arn)
-        self._delete_role(role.name)
+    def delete_role(self, role_name: str) -> None:
+        for policy in self.get_role(role_name).policies:
+            self._detach_role_policy(role_name, policy.arn)
+        self._delete_role(role_name)
 
     def _delete_role(self, role_name: str) -> None:
         try:

@@ -162,22 +162,24 @@ class TestAwsIamClient(AwsScannerTestCase):
             AwsIamClient(mock_iam).attach_role_policy(role(name="a_role"), policy(arn="a_policy_arn"))
 
     def test_delete_role(self) -> None:
-        r = role(name="delete_me_role", policies=[policy(arn="delete_me_pol_1_arn"), policy(arn="delete_me_pol_2_arn")])
+        a_role = role(name="some_role", policies=[policy(arn="pol_1_arn"), policy(arn="pol_2_arn")])
         boto_iam = Mock()
-        AwsIamClient(boto_iam).delete_role(r)
+        with patch.object(AwsIamClient, "get_role", side_effect=lambda r: a_role if r == "some_role" else None):
+            AwsIamClient(boto_iam).delete_role("some_role")
         self.assertEqual(
             [
-                call.detach_role_policy(RoleName="delete_me_role", PolicyArn="delete_me_pol_1_arn"),
-                call.detach_role_policy(RoleName="delete_me_role", PolicyArn="delete_me_pol_2_arn"),
-                call.delete_role(RoleName="delete_me_role"),
+                call.detach_role_policy(RoleName="some_role", PolicyArn="pol_1_arn"),
+                call.detach_role_policy(RoleName="some_role", PolicyArn="pol_2_arn"),
+                call.delete_role(RoleName="some_role"),
             ],
             boto_iam.mock_calls,
         )
 
     def test_delete_role_failure(self) -> None:
         mock_iam = Mock(delete_role=Mock(side_effect=client_error("DeleteRole", "DeleteConflictException", "nope")))
-        with self.assertRaisesRegex(IamException, "unable to delete role some_role: An error occurred"):
-            AwsIamClient(mock_iam).delete_role(role(name="some_role"))
+        with patch.object(AwsIamClient, "get_role"):
+            with self.assertRaisesRegex(IamException, "unable to delete role broken_role: An error occurred"):
+                AwsIamClient(mock_iam).delete_role("broken_role")
 
     def test_delete_policy(self) -> None:
         mock_iam = Mock(
