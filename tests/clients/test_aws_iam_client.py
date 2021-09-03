@@ -161,6 +161,24 @@ class TestAwsIamClient(AwsScannerTestCase):
         with self.assertRaisesRegex(IamException, "unable to attach role a_role and policy a_policy_arn"):
             AwsIamClient(mock_iam).attach_role_policy(role(name="a_role"), policy(arn="a_policy_arn"))
 
+    def test_delete_role(self) -> None:
+        r = role(name="delete_me_role", policies=[policy(arn="delete_me_pol_1_arn"), policy(arn="delete_me_pol_2_arn")])
+        boto_iam = Mock()
+        AwsIamClient(boto_iam).delete_role(r)
+        self.assertEqual(
+            [
+                call.detach_role_policy(RoleName="delete_me_role", PolicyArn="delete_me_pol_1_arn"),
+                call.detach_role_policy(RoleName="delete_me_role", PolicyArn="delete_me_pol_2_arn"),
+                call.delete_role(RoleName="delete_me_role"),
+            ],
+            boto_iam.mock_calls,
+        )
+
+    def test_delete_role_failure(self) -> None:
+        mock_iam = Mock(delete_role=Mock(side_effect=client_error("DeleteRole", "DeleteConflictException", "nope")))
+        with self.assertRaisesRegex(IamException, "unable to delete role some_role: An error occurred"):
+            AwsIamClient(mock_iam).delete_role(role(name="some_role"))
+
     def test_delete_policy(self) -> None:
         mock_iam = Mock(
             get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None),

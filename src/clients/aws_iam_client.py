@@ -52,6 +52,17 @@ class AwsIamClient:
         except IamException:
             return None
 
+    def delete_role(self, role: Role) -> None:
+        for policy in role.policies:
+            self._detach_role_policy(role.name, policy.arn)
+        self._delete_role(role.name)
+
+    def _delete_role(self, role_name: str) -> None:
+        try:
+            self._iam.delete_role(RoleName=role_name)
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to delete role {role_name}: {err}")
+
     def delete_policy(self, policy_name: str) -> None:
         arn = self._get_policy_arn(policy_name)
         for entity in self._list_entities_for_policy(arn):
