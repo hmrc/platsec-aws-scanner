@@ -52,6 +52,66 @@ class AwsIamClient:
         except IamException:
             return None
 
+    def delete_policy(self, policy_name: str) -> None:
+        arn = self._get_policy_arn(policy_name)
+        for entity in self._list_entities_for_policy(arn):
+            self._detach_role_policy(entity, arn)
+        for version in self._list_policy_versions(arn):
+            self._delete_policy_version(arn, version)
+        self._delete_policy(arn)
+
+    def _get_policy_arn(self, policy_name: str) -> str:
+        try:
+            return next(
+                iter(
+                    [
+                        str(policy["Arn"])
+                        for page in self._iam.get_paginator("list_policies").paginate(Scope="Local")
+                        for policy in page["Policies"]
+                        if policy["PolicyName"] == policy_name
+                    ]
+                ),
+            )
+        except (BotoCoreError, ClientError, StopIteration) as err:
+            raise IamException(f"unable to find arn for policy {policy_name}: {err}") from None
+
+    def _delete_policy(self, policy_arn: str) -> None:
+        try:
+            self._iam.delete_policy(PolicyArn=policy_arn)
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to delete policy {policy_arn}: {err}")
+
+    def _list_entities_for_policy(self, policy_arn: str) -> Sequence[str]:
+        try:
+            return [
+                role["RoleName"]
+                for role in self._iam.list_entities_for_policy(PolicyArn=policy_arn, EntityFilter="Role")["PolicyRoles"]
+            ]
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to list entities for policy {policy_arn}: {err}") from None
+
+    def _detach_role_policy(self, role_name: str, policy_arn: str) -> None:
+        try:
+            self._iam.detach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to detach role {role_name} from policy {policy_arn}: {err}") from None
+
+    def _list_policy_versions(self, policy_arn: str) -> Sequence[str]:
+        try:
+            return [
+                version["VersionId"]
+                for version in self._iam.list_policy_versions(PolicyArn=policy_arn)["Versions"]
+                if not version["IsDefaultVersion"]
+            ]
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to list policy versions for policy {policy_arn}: {err}") from None
+
+    def _delete_policy_version(self, policy_arn: str, version_id: str) -> None:
+        try:
+            self._iam.delete_policy_version(PolicyArn=policy_arn, VersionId=version_id)
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to delete version {version_id} from policy {policy_arn}: {err}") from None
+
     def _enrich_role(self, role: Role) -> Role:
         role.policies = [self._enrich_policy(self._get_policy(p)) for p in self._list_attached_role_policies(role.name)]
         return role

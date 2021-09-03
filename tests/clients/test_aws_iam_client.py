@@ -11,7 +11,10 @@ from tests.clients.test_aws_iam_client_responses import (
     GET_POLICY,
     GET_POLICY_VERSION,
     GET_ROLE,
-    LIST_ATTACHED_ROLE_POLICIES,
+    LIST_ATTACHED_ROLE_POLICIES_PAGES,
+    LIST_ENTITIES_FOR_POLICY,
+    LIST_POLICIES_PAGES,
+    LIST_POLICY_VERSIONS,
 )
 from tests.test_types_generator import client_error, policy, role
 
@@ -24,8 +27,14 @@ class TestAwsIamClient(AwsScannerTestCase):
     @staticmethod
     def list_attached_role_policies_paginator() -> Mock:
         return Mock(
-            paginate=Mock(side_effect=lambda **k: [LIST_ATTACHED_ROLE_POLICIES] if k["RoleName"] == "a_role" else None)
+            paginate=Mock(
+                side_effect=lambda **k: iter(LIST_ATTACHED_ROLE_POLICIES_PAGES) if k["RoleName"] == "a_role" else None
+            )
         )
+
+    @staticmethod
+    def list_policies() -> Mock:
+        return Mock(paginate=Mock(side_effect=lambda **k: iter(LIST_POLICIES_PAGES) if k["Scope"] == "Local" else None))
 
     @staticmethod
     def get_policy(**kwargs) -> Dict[str, Any]:
@@ -73,6 +82,18 @@ class TestAwsIamClient(AwsScannerTestCase):
     def test_find_role_not_found(self) -> None:
         with patch.object(AwsIamClient, "get_role", side_effect=IamException):
             self.assertIsNone(AwsIamClient(Mock()).find_role("a_role"))
+
+    def test_get_policy_arn_not_found(self) -> None:
+        mock_iam = Mock(
+            get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None)
+        )
+        with self.assertRaisesRegex(IamException, "unable to find arn for policy pol_6"):
+            AwsIamClient(mock_iam)._get_policy_arn("pol_6")
+
+    def test_get_policy_arn_failure(self) -> None:
+        mock_iam = Mock(get_paginator=Mock(side_effect=client_error("GetPaginator", "OpNotSupported", "boom")))
+        with self.assertRaisesRegex(IamException, "boom"):
+            AwsIamClient(mock_iam)._get_policy_arn("some_policy")
 
     def test_list_attached_role_policies_failure(self) -> None:
         mock_boto_iam = Mock(
@@ -139,3 +160,49 @@ class TestAwsIamClient(AwsScannerTestCase):
         mock_iam = Mock(attach_role_policy=Mock(side_effect=client_error("AttachRolePolicy", "NoSuchEntity", "no")))
         with self.assertRaisesRegex(IamException, "unable to attach role a_role and policy a_policy_arn"):
             AwsIamClient(mock_iam).attach_role_policy(role(name="a_role"), policy(arn="a_policy_arn"))
+
+    def test_delete_policy(self) -> None:
+        mock_iam = Mock(
+            get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None),
+            list_entities_for_policy=Mock(return_value=LIST_ENTITIES_FOR_POLICY),
+            list_policy_versions=Mock(return_value=LIST_POLICY_VERSIONS),
+        )
+        AwsIamClient(mock_iam).delete_policy("pol_5")
+        self.assertEqual(
+            [
+                call.get_paginator("list_policies"),
+                call.list_entities_for_policy(PolicyArn="pol_5_arn", EntityFilter="Role"),
+                call.detach_role_policy(RoleName="a_role", PolicyArn="pol_5_arn"),
+                call.detach_role_policy(RoleName="another_role", PolicyArn="pol_5_arn"),
+                call.list_policy_versions(PolicyArn="pol_5_arn"),
+                call.delete_policy_version(PolicyArn="pol_5_arn", VersionId="v2"),
+                call.delete_policy_version(PolicyArn="pol_5_arn", VersionId="v1"),
+                call.delete_policy(PolicyArn="pol_5_arn"),
+            ],
+            mock_iam.mock_calls,
+        )
+
+    def test_delete_policy_failure(self) -> None:
+        mock_iam = Mock(delete_policy=Mock(side_effect=client_error("DeletePolicy", "Boom", "nope")))
+        with self.assertRaisesRegex(IamException, "unable to delete policy pol_arn"):
+            AwsIamClient(mock_iam)._delete_policy("pol_arn")
+
+    def test_list_entities_for_policy_failure(self) -> None:
+        mock_iam = Mock(list_entities_for_policy=Mock(side_effect=client_error("ListEntitiesForPolicy", "Boom", "no")))
+        with self.assertRaisesRegex(IamException, "unable to list entities for policy a_policy"):
+            AwsIamClient(mock_iam)._list_entities_for_policy("a_policy")
+
+    def test_detach_role_policy_failure(self) -> None:
+        mock_iam = Mock(detach_role_policy=Mock(side_effect=client_error("ListEntitiesForPolicy", "Boom", "no")))
+        with self.assertRaisesRegex(IamException, "unable to detach role some_role from policy some_policy_arn"):
+            AwsIamClient(mock_iam)._detach_role_policy("some_role", "some_policy_arn")
+
+    def test_list_policy_versions_failure(self) -> None:
+        mock_iam = Mock(list_policy_versions=Mock(side_effect=client_error("ListEntitiesForPolicy", "Boom", "no")))
+        with self.assertRaisesRegex(IamException, "unable to list policy versions for policy some_policy_arn"):
+            AwsIamClient(mock_iam)._list_policy_versions("some_policy_arn")
+
+    def test_delete_policy_version_failure(self) -> None:
+        mock_iam = Mock(delete_policy_version=Mock(side_effect=client_error("DeletePolicyVersion", "Boom", "nope")))
+        with self.assertRaisesRegex(IamException, "unable to delete version v9 from policy a_pol"):
+            AwsIamClient(mock_iam)._delete_policy_version("a_pol", "v9")

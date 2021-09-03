@@ -10,9 +10,9 @@ GET_ROLE = {
     }
 }
 
-LIST_ATTACHED_ROLE_POLICIES = {
-    "AttachedPolicies": [{"PolicyName": "a_policy", "PolicyArn": "arn:aws:iam::112233445566:policy/a_policy"}]
-}
+LIST_ATTACHED_ROLE_POLICIES_PAGES = [
+    {"AttachedPolicies": [{"PolicyName": "a_policy", "PolicyArn": "arn:aws:iam::112233445566:policy/a_policy"}]}
+]
 
 GET_POLICY = {
     "Policy": {"PolicyName": "a_policy", "Arn": "arn:aws:iam::112233445566:policy/a_policy", "DefaultVersionId": "v3"}
@@ -65,3 +65,29 @@ EXPECTED_ROLE = role(
         )
     ],
 )
+
+LIST_ENTITIES_FOR_POLICY = {"PolicyRoles": [{"RoleName": "a_role"}, {"RoleName": "another_role"}]}
+
+LIST_POLICY_VERSIONS = {
+    "Versions": [
+        {"VersionId": "v3", "IsDefaultVersion": True},
+        {"VersionId": "v2", "IsDefaultVersion": False},
+        {"VersionId": "v1", "IsDefaultVersion": False},
+    ]
+}
+
+LIST_POLICIES_PAGES = [
+    {
+        "Policies": [
+            {"PolicyName": "pol_1", "Arn": "pol_1_arn"},
+            {"PolicyName": "pol_2", "Arn": "pol_2_arn"},
+            {"PolicyName": "pol_3", "Arn": "pol_3_arn"},
+        ]
+    },
+    {
+        "Policies": [
+            {"PolicyName": "pol_4", "Arn": "pol_4_arn"},
+            {"PolicyName": "pol_5", "Arn": "pol_5_arn"},
+        ]
+    },
+]
