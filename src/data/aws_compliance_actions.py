@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
@@ -11,11 +11,11 @@ from src.data.aws_scanner_exceptions import AwsScannerException
 
 class ComplianceAction(ABC):
     description: str
-    status: str
+    status: Optional[str]
 
     def __init__(self, description: str):
         self.description = description
-        self.status = "not applied"
+        self.status = None
 
     def update_status(self, s: str) -> ComplianceAction:
         self.status = s
