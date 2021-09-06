@@ -5,7 +5,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import LogsException
 
 from tests.clients import test_aws_logs_client_responses as responses
-from tests.test_types_generator import client_error, subscription_filter
+from tests.test_types_generator import client_error
 
 
 class TestAwsLogsClient(AwsScannerTestCase):
@@ -46,18 +46,20 @@ class TestAwsLogsClient(AwsScannerTestCase):
             AwsLogsClient(boto).create_log_group("a_log_group")
 
     def test_put_subscription_filter(self) -> None:
-        sub_filter = subscription_filter()
+        log_group_name = "/vpc/central_flow_log"
+        filter_name = "VpcFlowLogsForward"
+        filter_pattern = "[version, account_id, interface_id]"
+        destination_arn = "arn:aws:logs:::destination:central"
         boto = Mock()
-        AwsLogsClient(boto).put_subscription_filter(sub_filter)
+        AwsLogsClient(boto).put_subscription_filter(log_group_name, filter_name, filter_pattern, destination_arn)
         boto.put_subscription_filter.assert_called_once_with(
-            logGroupName=sub_filter.log_group_name,
-            filterName=sub_filter.filter_name,
-            filterPattern=sub_filter.filter_pattern,
-            destinationArn=sub_filter.destination_arn,
+            logGroupName=log_group_name,
+            filterName=filter_name,
+            filterPattern=filter_pattern,
+            destinationArn=destination_arn,
         )
 
     def test_put_subscription_filter_failure(self) -> None:
-        sub_filter = subscription_filter()
         boto = Mock(put_subscription_filter=Mock(side_effect=client_error("PubSubscriptionFilter", "Error", "nope")))
-        with self.assertRaisesRegex(LogsException, sub_filter.filter_name):
-            AwsLogsClient(boto).put_subscription_filter(sub_filter)
+        with self.assertRaisesRegex(LogsException, "some_filter_name"):
+            AwsLogsClient(boto).put_subscription_filter("lg", "some_filter_name", "pattern", "dest")

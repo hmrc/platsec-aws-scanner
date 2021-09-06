@@ -6,7 +6,11 @@ from typing import Any, Dict, Optional, Sequence
 @dataclass
 class LogGroup:
     name: str
-    subscription_filters: Optional[Sequence[SubscriptionFilter]] = None
+    subscription_filters: Sequence[SubscriptionFilter]
+
+    def __init__(self, name: str, subscription_filters: Optional[Sequence[SubscriptionFilter]] = None):
+        self.name = name
+        self.subscription_filters = subscription_filters or []
 
 
 def to_log_group(log_group: Dict[str, Any]) -> LogGroup:

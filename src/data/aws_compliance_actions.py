@@ -6,6 +6,7 @@ from typing import Any, Callable, Optional
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
+from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import AwsScannerException
 
 
@@ -94,3 +95,28 @@ class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
     def _apply(self, client: AwsIamClient) -> None:
         client.delete_role(self.role_name)
         client.delete_policy(Config().logs_vpc_log_group_delivery_role_policy_name())
+
+
+@dataclass(unsafe_hash=True)
+class CreateCentralVpcLogGroupAction(ComplianceAction):
+    def __init__(self) -> None:
+        super().__init__("Create central VPC log group")
+
+    def _apply(self, client: AwsLogsClient) -> None:
+        client.create_log_group(Config().logs_vpc_log_group_name())
+
+
+@dataclass(unsafe_hash=True)
+class PutCentralVpcLogGroupSubscriptionFilterAction(ComplianceAction):
+    def __init__(self) -> None:
+        super().__init__("Put central VPC log group subscription filter")
+
+    def _apply(self, client: AwsLogsClient) -> None:
+        config = Config()
+        log_group_name = config.logs_vpc_log_group_name()
+        client.put_subscription_filter(
+            log_group_name=log_group_name,
+            filter_name=f"{log_group_name}_sub_filter",
+            filter_pattern=config.logs_vpc_log_group_pattern(),
+            destination_arn=config.logs_vpc_log_group_destination(),
+        )

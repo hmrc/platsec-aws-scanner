@@ -3,15 +3,18 @@ from unittest.mock import Mock, call, patch
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
+from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_scanner_exceptions import AwsScannerException
 
 from tests import _raise
 from tests.test_types_generator import (
+    create_central_vpc_log_group_action,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_action,
     delete_flow_log_delivery_role_action,
+    put_central_vpc_log_group_subscription_filter_action,
     role,
 )
 
@@ -59,4 +62,19 @@ class TestAwsComplianceActions(AwsScannerTestCase):
         delete_flow_log_delivery_role_action()._apply(client)
         self.assertEqual(
             [call.delete_role("delete_me"), call.delete_policy("vpc_flow_log_role_policy")], client.mock_calls
+        )
+
+    def test_create_central_vpc_log_group_action(self) -> None:
+        with patch.object(AwsLogsClient, "create_log_group") as create_log_group:
+            create_central_vpc_log_group_action()._apply(AwsLogsClient(Mock()))
+        create_log_group.assert_called_once_with("/vpc/flow_log")
+
+    def test_put_central_vpc_log_group_subscription_filter_action(self) -> None:
+        with patch.object(AwsLogsClient, "put_subscription_filter") as put_subscription_filter:
+            put_central_vpc_log_group_subscription_filter_action()._apply(AwsLogsClient(Mock()))
+        put_subscription_filter.assert_called_once_with(
+            log_group_name="/vpc/flow_log",
+            filter_name="/vpc/flow_log_sub_filter",
+            filter_pattern="[version, account_id, interface_id]",
+            destination_arn="arn:aws:logs:::destination:central",
         )

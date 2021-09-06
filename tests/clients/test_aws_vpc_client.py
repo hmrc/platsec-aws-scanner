@@ -8,6 +8,7 @@ from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import CreateFlowLogAction, DeleteFlowLogAction
 
 from tests.test_types_generator import (
+    create_central_vpc_log_group_action,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_action,
@@ -15,6 +16,7 @@ from tests.test_types_generator import (
     flow_log,
     log_group,
     policy,
+    put_central_vpc_log_group_subscription_filter_action,
     role,
     subscription_filter,
     vpc,
@@ -110,14 +112,18 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()))
 
     def test_enforcement_actions(self) -> None:
-        a_vpc = vpc()
-        vpc_act_1, vpc_act_2 = delete_flow_log_action("42"), create_flow_log_action("99")
+        a_vpc, vpc_act_1, vpc_act_2 = vpc(), delete_flow_log_action("42"), create_flow_log_action("99")
         acts = {vpc_act_1, vpc_act_2}
         role_act_1 = create_flow_log_delivery_role_action()
         role_acts = {role_act_1}
+        lg_act_1 = put_central_vpc_log_group_subscription_filter_action()
+        lg_acts = {lg_act_1}
         with patch.object(AwsVpcClient, "_vpc_enforcement_actions", side_effect=lambda v: acts if v == a_vpc else None):
             with patch.object(AwsVpcClient, "_delivery_role_enforcement_actions", return_value=role_acts):
-                self.assertEqual({vpc_act_1, vpc_act_2, role_act_1}, self.client().enforcement_actions(a_vpc))
+                with patch.object(AwsVpcClient, "_central_vpc_log_group_enforcement_actions", return_value=lg_acts):
+                    self.assertEqual(
+                        {vpc_act_1, vpc_act_2, role_act_1, lg_act_1}, self.client().enforcement_actions(a_vpc)
+                    )
 
     def test_vpc_has_no_flow_logs(self) -> None:
         with patch.object(AwsVpcClient, "get_flow_log_delivery_role_arn", return_value="an_arn"):
@@ -175,15 +181,42 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
                     self.client()._delivery_role_enforcement_actions(),
                 )
 
+    def test_create_central_vpc_log_group_with_subscription_filter_when_missing(self) -> None:
+        with patch.object(AwsVpcClient, "_find_central_vpc_log_group", return_value=None):
+            self.assertEqual(
+                {create_central_vpc_log_group_action(), put_central_vpc_log_group_subscription_filter_action()},
+                self.client()._central_vpc_log_group_enforcement_actions(),
+            )
 
-class TestLogsTypesCompliance(AwsScannerTestCase):
+    def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
+        with patch.object(AwsVpcClient, "_find_central_vpc_log_group", return_value=log_group(subscription_filters=[])):
+            self.assertEqual(
+                {put_central_vpc_log_group_subscription_filter_action()},
+                self.client()._central_vpc_log_group_enforcement_actions(),
+            )
+
+    def test_no_central_vpc_log_group_action_when_log_group_is_compliant(self) -> None:
+        with patch.object(AwsVpcClient, "_find_central_vpc_log_group", return_value=log_group()):
+            self.assertEqual(set(), self.client()._central_vpc_log_group_enforcement_actions())
+
+
+class TestLogGroupCompliance(AwsScannerTestCase):
     @staticmethod
     def client() -> AwsVpcClient:
-        return AwsVpcClient(Mock(), Mock(), Mock())
+        return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()))
+
+    def test_find_central_vpc_log_group(self) -> None:
+        lg = log_group(name="/vpc/flow_log")
+        with patch.object(AwsLogsClient, "describe_log_groups", side_effect=lambda p: [lg] if p == lg.name else []):
+            self.assertEqual(lg, self.client()._find_central_vpc_log_group())
+
+    def test_find_central_vpc_log_group_not_found(self) -> None:
+        with patch.object(AwsLogsClient, "describe_log_groups", return_value=[]):
+            self.assertIsNone(self.client()._find_central_vpc_log_group())
 
     def test_central_vpc_log_group(self) -> None:
         self.assertTrue(
-            self.client().is_central_vpc_log_group(
+            self.client()._is_central_vpc_log_group(
                 log_group(
                     name="/vpc/flow_log",
                     subscription_filters=[
@@ -197,42 +230,15 @@ class TestLogsTypesCompliance(AwsScannerTestCase):
         )
 
     def test_log_group_is_not_vpc_central(self) -> None:
-        self.assertFalse(self.client().is_central_vpc_log_group(log_group(name="/vpc/something_else")))
-        self.assertFalse(self.client().is_central_vpc_log_group(log_group(subscription_filters=[])))
+        self.assertFalse(self.client()._is_central_vpc_log_group(log_group(name="/vpc/something_else")))
+        self.assertFalse(self.client()._is_central_vpc_log_group(log_group(subscription_filters=[])))
         self.assertFalse(
-            self.client().is_central_vpc_log_group(
+            self.client()._is_central_vpc_log_group(
                 log_group(subscription_filters=[subscription_filter(filter_pattern="something")])
             )
         )
         self.assertFalse(
-            self.client().is_central_vpc_log_group(
+            self.client()._is_central_vpc_log_group(
                 log_group(subscription_filters=[subscription_filter(destination_arn="somewhere")])
             )
         )
-
-
-class TestCentralVpcLogGroup(AwsScannerTestCase):
-    def test_provide_central_vpc_log_group(self) -> None:
-        log_groups = [log_group(name="/something_else"), log_group()]
-        logs_client = Mock(describe_log_groups=Mock(return_value=log_groups))
-        with patch.object(AwsVpcClient, "_create_central_vpc_log_group") as create:
-            self.assertEqual(log_groups[1], AwsVpcClient(Mock(), Mock(), logs_client).provide_central_vpc_log_group())
-        create.assert_not_called()
-
-    def test_provide_central_vpc_log_group_creates_if_not_exists(self) -> None:
-        lg = log_group(name="the-log-group")
-        logs_client = Mock(describe_log_groups=Mock(return_value=[]))
-        with patch.object(AwsVpcClient, "_create_central_vpc_log_group", return_value=lg) as create:
-            self.assertEqual(lg, AwsVpcClient(Mock(), Mock(), logs_client).provide_central_vpc_log_group())
-        create.assert_called_once()
-
-    def test_create_central_vpc_log_group(self) -> None:
-        create_log_group, put_subscription_filter = Mock(), Mock()
-        logs_client = Mock(create_log_group=create_log_group, put_subscription_filter=put_subscription_filter)
-        client = AwsVpcClient(Mock(), Mock(), logs_client)
-        clg = client._create_central_vpc_log_group()
-        self.assertTrue(client.is_central_vpc_log_group(clg))
-        self.assertRegex(create_log_group.call_args[1]["name"], clg.name)
-        sub_filter = put_subscription_filter.call_args[1]["subscription_filter"]
-        self.assertEqual(clg.name, sub_filter.log_group_name)
-        self.assertEqual(clg.subscription_filters[0], sub_filter)

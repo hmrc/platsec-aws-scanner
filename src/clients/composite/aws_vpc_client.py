@@ -8,10 +8,12 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
+    CreateCentralVpcLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
+    PutCentralVpcLogGroupSubscriptionFilterAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
@@ -64,7 +66,13 @@ class AwsVpcClient:
         )
 
     def enforcement_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
-        return set(chain(self._vpc_enforcement_actions(vpc), self._delivery_role_enforcement_actions()))
+        return set(
+            chain(
+                self._vpc_enforcement_actions(vpc),
+                self._delivery_role_enforcement_actions(),
+                self._central_vpc_log_group_enforcement_actions(),
+            )
+        )
 
     def _vpc_enforcement_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
         return set(
@@ -106,45 +114,32 @@ class AwsVpcClient:
         delivery_role = self.find_flow_log_delivery_role()
         return {CreateFlowLogDeliveryRoleAction()} if not self.is_flow_log_role_compliant(delivery_role) else set()
 
+    def _central_vpc_log_group_enforcement_actions(self) -> AbstractSet[ComplianceAction]:
+        lg = self._find_central_vpc_log_group()
+        return (
+            {CreateCentralVpcLogGroupAction(), PutCentralVpcLogGroupSubscriptionFilterAction()}
+            if not lg
+            else {PutCentralVpcLogGroupSubscriptionFilterAction()}
+            if not self._is_central_vpc_log_group(lg)
+            else set()
+        )
+
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(filter(lambda fl: self.is_flow_log_centralised(fl) and not self.is_flow_log_misconfigured(fl), fls))
 
-    def is_central_vpc_log_group(self, log_group: LogGroup) -> bool:
-        return log_group.name == self.config.logs_vpc_log_group_name() and bool(
-            log_group.subscription_filters
-            and [sf for sf in log_group.subscription_filters if self.is_central_vpc_destination_filter(sf)]
+    def _find_central_vpc_log_group(self) -> Optional[LogGroup]:
+        return next(iter(self.logs.describe_log_groups(self.config.logs_vpc_log_group_name())), None)
+
+    def _is_central_vpc_log_group(self, log_group: LogGroup) -> bool:
+        return log_group.name == self.config.logs_vpc_log_group_name() and any(
+            map(self._is_central_vpc_destination_filter, log_group.subscription_filters)
         )
 
-    def is_central_vpc_destination_filter(self, sub_filter: SubscriptionFilter) -> bool:
+    def _is_central_vpc_destination_filter(self, sub_filter: SubscriptionFilter) -> bool:
         return (
             sub_filter.filter_pattern == self.config.logs_vpc_log_group_pattern()
             and sub_filter.destination_arn == self.config.logs_vpc_log_group_destination()
         )
-
-    def provide_central_vpc_log_group(self) -> LogGroup:
-        return self._find_central_vpc_log_group() or self._create_central_vpc_log_group()
-
-    def _find_central_vpc_log_group(self) -> Optional[LogGroup]:
-        central_log_groups = filter(
-            lambda lg: self.is_central_vpc_log_group(lg),
-            self.logs.describe_log_groups(self.config.logs_vpc_log_group_name()),
-        )
-        return next(central_log_groups, None)
-
-    def _create_central_vpc_log_group(self) -> LogGroup:
-        name = self.config.logs_vpc_log_group_name()
-        subscription_filter = SubscriptionFilter(
-            log_group_name=name,
-            filter_name=f"{name}_sub_filter",
-            filter_pattern=self.config.logs_vpc_log_group_pattern(),
-            destination_arn=self.config.logs_vpc_log_group_destination(),
-        )
-        log_group = LogGroup(name=name, subscription_filters=[subscription_filter])
-        self._logger.debug(f"creating log group {name}")
-        self.logs.create_log_group(name=log_group.name)
-        self._logger.debug(f"creating subscription filter {subscription_filter}")
-        self.logs.put_subscription_filter(subscription_filter=subscription_filter)
-        return log_group
 
     def apply(self, actions: Sequence[ComplianceAction]) -> Sequence[ComplianceAction]:
         client_map = {CreateFlowLogAction: self.ec2, DeleteFlowLogAction: self.ec2}

@@ -43,13 +43,15 @@ class AwsLogsClient:
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to create log group with name '{name}': {err}") from None
 
-    def put_subscription_filter(self, subscription_filter: SubscriptionFilter) -> None:
+    def put_subscription_filter(
+        self, log_group_name: str, filter_name: str, filter_pattern: str, destination_arn: str
+    ) -> None:
         try:
             self._logs.put_subscription_filter(
-                logGroupName=subscription_filter.log_group_name,
-                filterName=subscription_filter.filter_name,
-                filterPattern=subscription_filter.filter_pattern,
-                destinationArn=subscription_filter.destination_arn,
+                logGroupName=log_group_name,
+                filterName=filter_name,
+                filterPattern=filter_pattern,
+                destinationArn=destination_arn,
             )
         except (BotoCoreError, ClientError) as err:
-            raise LogsException(f"unable to put subscription filter {subscription_filter}: {err}") from None
+            raise LogsException(f"unable to put subscription filter '{filter_name}': {err}") from None
