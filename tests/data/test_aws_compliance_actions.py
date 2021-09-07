@@ -1,6 +1,9 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock, call, patch
 
+from contextlib import redirect_stderr
+from io import StringIO
+
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
@@ -28,7 +31,9 @@ class TestAwsComplianceActions(AwsScannerTestCase):
     def test_apply_failure(self) -> None:
         client = Mock()
         action = type("TestAction", (ComplianceAction,), {"_apply": lambda s, c: _raise(AwsScannerException("boom"))})
-        self.assertEqual("failed: boom", action("something").apply(client).status)
+        with redirect_stderr(StringIO()) as err:
+            self.assertEqual("failed: boom", action("an_action").apply(client).status)
+        self.assertIn("an_action failed: boom", err.getvalue())
 
     def test_delete_flow_log_action(self) -> None:
         with patch.object(AwsEC2Client, "delete_flow_logs") as delete_flow_logs:

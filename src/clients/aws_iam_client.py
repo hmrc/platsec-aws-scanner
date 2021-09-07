@@ -15,6 +15,7 @@ class AwsIamClient:
         self._iam = boto_iam
 
     def create_role(self, name: str, assume_policy: Dict[str, Any]) -> Role:
+        self._logger.debug(f"creating role with name {name} and assume role policy document {assume_policy}")
         try:
             return to_role(self._iam.create_role(RoleName=name, AssumeRolePolicyDocument=dumps(assume_policy))["Role"])
         except (BotoCoreError, ClientError) as err:
@@ -23,6 +24,7 @@ class AwsIamClient:
             ) from None
 
     def create_policy(self, name: str, document: Dict[str, Any]) -> Policy:
+        self._logger.debug(f"creating policy with name {name} and policy document {document}")
         try:
             return to_policy(self._iam.create_policy(PolicyName=name, PolicyDocument=dumps(document))["Policy"])
         except (BotoCoreError, ClientError) as err:
@@ -31,6 +33,7 @@ class AwsIamClient:
             ) from None
 
     def attach_role_policy(self, role: Role, policy: Policy) -> Role:
+        self._logger.debug(f"attaching role {role.name} and policy {policy.arn}")
         try:
             self._iam.attach_role_policy(RoleName=role.name, PolicyArn=policy.arn)
             return self.get_role(role.name)
@@ -58,6 +61,7 @@ class AwsIamClient:
         self._delete_role(role_name)
 
     def _delete_role(self, role_name: str) -> None:
+        self._logger.debug(f"deleting role {role_name}")
         try:
             self._iam.delete_role(RoleName=role_name)
         except (BotoCoreError, ClientError) as err:
@@ -87,6 +91,7 @@ class AwsIamClient:
             raise IamException(f"unable to find arn for policy {policy_name}: {err}") from None
 
     def _delete_policy(self, policy_arn: str) -> None:
+        self._logger.debug(f"deleting policy {policy_arn}")
         try:
             self._iam.delete_policy(PolicyArn=policy_arn)
         except (BotoCoreError, ClientError) as err:
@@ -102,6 +107,7 @@ class AwsIamClient:
             raise IamException(f"unable to list entities for policy {policy_arn}: {err}") from None
 
     def _detach_role_policy(self, role_name: str, policy_arn: str) -> None:
+        self._logger.debug(f"detaching role {role_name} from policy {policy_arn}")
         try:
             self._iam.detach_role_policy(RoleName=role_name, PolicyArn=policy_arn)
         except (BotoCoreError, ClientError) as err:
@@ -118,6 +124,7 @@ class AwsIamClient:
             raise IamException(f"unable to list policy versions for policy {policy_arn}: {err}") from None
 
     def _delete_policy_version(self, policy_arn: str, version_id: str) -> None:
+        self._logger.debug(f"deleting version {version_id} from policy {policy_arn}")
         try:
             self._iam.delete_policy_version(PolicyArn=policy_arn, VersionId=version_id)
         except (BotoCoreError, ClientError) as err:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from logging import getLogger
 from typing import Any, Callable, Optional
 
 from src.aws_scanner_config import AwsScannerConfig as Config
@@ -27,6 +28,7 @@ class ComplianceAction(ABC):
             self._apply(client)
             return self.update_status("applied")
         except AwsScannerException as ex:
+            getLogger(self.__class__.__name__).error(f"{self.description} failed: {ex}")
             return self.update_status(f"failed: {ex}")
 
     @abstractmethod
