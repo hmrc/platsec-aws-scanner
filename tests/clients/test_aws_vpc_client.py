@@ -1,11 +1,21 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock, patch
 
+from typing import Any, Callable
+
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
-from src.data.aws_compliance_actions import CreateFlowLogAction, DeleteFlowLogAction
+from src.data.aws_compliance_actions import (
+    ComplianceAction,
+    CreateCentralVpcLogGroupAction,
+    CreateFlowLogAction,
+    CreateFlowLogDeliveryRoleAction,
+    DeleteFlowLogAction,
+    DeleteFlowLogDeliveryRoleAction,
+    PutCentralVpcLogGroupSubscriptionFilterAction,
+)
 
 from tests.test_types_generator import (
     create_central_vpc_log_group_action,
@@ -99,13 +109,27 @@ class TestAwsFlowLogCompliance(AwsScannerTestCase):
 
 
 class TestAwsEnforcementActions(AwsScannerTestCase):
+    @staticmethod
+    def apply(expected_client: Any, applied_action: ComplianceAction) -> Callable[[Any], ComplianceAction]:
+        return lambda c: applied_action if c == expected_client else None
+
     def test_apply_actions(self) -> None:
-        applied_del, applied_cre = Mock(), Mock()
         ec2, iam, logs = Mock(), Mock(), Mock()
-        del_fl = Mock(spec=DeleteFlowLogAction, apply=Mock(side_effect=lambda c: applied_del if c == ec2 else None))
-        cre_fl = Mock(spec=CreateFlowLogAction, apply=Mock(side_effect=lambda c: applied_cre if c == ec2 else None))
+        applied1, applied2, applied3, applied4, applied5, applied6 = Mock(), Mock(), Mock(), Mock(), Mock(), Mock()
+        act1 = Mock(spec=CreateCentralVpcLogGroupAction, apply=Mock(side_effect=self.apply(logs, applied1)))
+        act2 = Mock(spec=CreateFlowLogAction, apply=Mock(side_effect=self.apply(ec2, applied2)))
+        act3 = Mock(spec=CreateFlowLogDeliveryRoleAction, apply=Mock(side_effect=self.apply(iam, applied3)))
+        act4 = Mock(spec=DeleteFlowLogAction, apply=Mock(side_effect=self.apply(ec2, applied4)))
+        act5 = Mock(spec=DeleteFlowLogDeliveryRoleAction, apply=Mock(side_effect=self.apply(iam, applied5)))
+        act6 = Mock(
+            spec=PutCentralVpcLogGroupSubscriptionFilterAction, apply=Mock(side_effect=self.apply(logs, applied6))
+        )
+
         client = AwsVpcClient(ec2, iam, logs)
-        self.assertEqual([applied_del, applied_cre], client.apply([del_fl, cre_fl]))
+        self.assertEqual(
+            [applied1, applied2, applied3, applied4, applied5, applied6],
+            client.apply([act1, act2, act3, act4, act5, act6]),
+        )
 
     @staticmethod
     def client() -> AwsVpcClient:

@@ -141,5 +141,12 @@ class AwsVpcClient:
         )
 
     def apply(self, actions: Sequence[ComplianceAction]) -> Sequence[ComplianceAction]:
-        client_map = {CreateFlowLogAction: self.ec2, DeleteFlowLogAction: self.ec2}
+        client_map = {
+            CreateCentralVpcLogGroupAction: self.logs,
+            CreateFlowLogAction: self.ec2,
+            CreateFlowLogDeliveryRoleAction: self.iam,
+            DeleteFlowLogAction: self.ec2,
+            DeleteFlowLogDeliveryRoleAction: self.iam,
+            PutCentralVpcLogGroupSubscriptionFilterAction: self.logs,
+        }
         return [a.apply(client) for a in actions for typ, client in client_map.items() if isinstance(a, typ)]
