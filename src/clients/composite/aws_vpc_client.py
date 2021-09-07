@@ -8,12 +8,12 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
-    CreateCentralVpcLogGroupAction,
+    CreateVpcLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    PutCentralVpcLogGroupSubscriptionFilterAction,
+    PutVpcLogGroupSubscriptionFilterAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
@@ -114,9 +114,9 @@ class AwsVpcClient:
     def _central_vpc_log_group_enforcement_actions(self) -> Sequence[ComplianceAction]:
         lg = self._find_central_vpc_log_group()
         return (
-            [CreateCentralVpcLogGroupAction(), PutCentralVpcLogGroupSubscriptionFilterAction()]
+            [CreateVpcLogGroupAction(), PutVpcLogGroupSubscriptionFilterAction()]
             if not lg
-            else [PutCentralVpcLogGroupSubscriptionFilterAction()]
+            else [PutVpcLogGroupSubscriptionFilterAction()]
             if not self._is_central_vpc_log_group(lg)
             else []
         )
@@ -142,11 +142,11 @@ class AwsVpcClient:
 
     def apply(self, actions: Sequence[ComplianceAction]) -> Sequence[ComplianceAction]:
         client_map = {
-            CreateCentralVpcLogGroupAction: self.logs,
+            CreateVpcLogGroupAction: self.logs,
             CreateFlowLogAction: self.ec2,
             CreateFlowLogDeliveryRoleAction: self.iam,
             DeleteFlowLogAction: self.ec2,
             DeleteFlowLogDeliveryRoleAction: self.iam,
-            PutCentralVpcLogGroupSubscriptionFilterAction: self.logs,
+            PutVpcLogGroupSubscriptionFilterAction: self.logs,
         }
         return [a.apply(client) for a in actions for typ, client in client_map.items() if isinstance(a, typ)]

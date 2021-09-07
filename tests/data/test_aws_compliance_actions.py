@@ -9,12 +9,12 @@ from src.data.aws_scanner_exceptions import AwsScannerException
 
 from tests import _raise
 from tests.test_types_generator import (
-    create_central_vpc_log_group_action,
+    create_vpc_log_group_action,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_action,
     delete_flow_log_delivery_role_action,
-    put_central_vpc_log_group_subscription_filter_action,
+    put_vpc_log_group_subscription_filter_action,
     role,
 )
 
@@ -66,12 +66,12 @@ class TestAwsComplianceActions(AwsScannerTestCase):
 
     def test_create_central_vpc_log_group_action(self) -> None:
         with patch.object(AwsLogsClient, "create_log_group") as create_log_group:
-            create_central_vpc_log_group_action()._apply(AwsLogsClient(Mock()))
+            create_vpc_log_group_action()._apply(AwsLogsClient(Mock()))
         create_log_group.assert_called_once_with("/vpc/flow_log")
 
     def test_put_central_vpc_log_group_subscription_filter_action(self) -> None:
         with patch.object(AwsLogsClient, "put_subscription_filter") as put_subscription_filter:
-            put_central_vpc_log_group_subscription_filter_action()._apply(AwsLogsClient(Mock()))
+            put_vpc_log_group_subscription_filter_action()._apply(AwsLogsClient(Mock()))
         put_subscription_filter.assert_called_once_with(
             log_group_name="/vpc/flow_log",
             filter_name="/vpc/flow_log_sub_filter",

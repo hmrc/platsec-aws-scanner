@@ -9,16 +9,16 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
-    CreateCentralVpcLogGroupAction,
+    CreateVpcLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    PutCentralVpcLogGroupSubscriptionFilterAction,
+    PutVpcLogGroupSubscriptionFilterAction,
 )
 
 from tests.test_types_generator import (
-    create_central_vpc_log_group_action,
+    create_vpc_log_group_action,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_action,
@@ -26,7 +26,7 @@ from tests.test_types_generator import (
     flow_log,
     log_group,
     policy,
-    put_central_vpc_log_group_subscription_filter_action,
+    put_vpc_log_group_subscription_filter_action,
     role,
     subscription_filter,
     vpc,
@@ -116,19 +116,17 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
     def test_apply_actions(self) -> None:
         ec2, iam, logs = Mock(), Mock(), Mock()
         applied1, applied2, applied3, applied4, applied5, applied6 = Mock(), Mock(), Mock(), Mock(), Mock(), Mock()
-        act1 = Mock(spec=CreateCentralVpcLogGroupAction, apply=Mock(side_effect=self.apply(logs, applied1)))
-        act2 = Mock(spec=CreateFlowLogAction, apply=Mock(side_effect=self.apply(ec2, applied2)))
-        act3 = Mock(spec=CreateFlowLogDeliveryRoleAction, apply=Mock(side_effect=self.apply(iam, applied3)))
-        act4 = Mock(spec=DeleteFlowLogAction, apply=Mock(side_effect=self.apply(ec2, applied4)))
-        act5 = Mock(spec=DeleteFlowLogDeliveryRoleAction, apply=Mock(side_effect=self.apply(iam, applied5)))
-        act6 = Mock(
-            spec=PutCentralVpcLogGroupSubscriptionFilterAction, apply=Mock(side_effect=self.apply(logs, applied6))
-        )
+        action1 = Mock(spec=CreateVpcLogGroupAction, apply=Mock(side_effect=self.apply(logs, applied1)))
+        action2 = Mock(spec=CreateFlowLogAction, apply=Mock(side_effect=self.apply(ec2, applied2)))
+        action3 = Mock(spec=CreateFlowLogDeliveryRoleAction, apply=Mock(side_effect=self.apply(iam, applied3)))
+        action4 = Mock(spec=DeleteFlowLogAction, apply=Mock(side_effect=self.apply(ec2, applied4)))
+        action5 = Mock(spec=DeleteFlowLogDeliveryRoleAction, apply=Mock(side_effect=self.apply(iam, applied5)))
+        action6 = Mock(spec=PutVpcLogGroupSubscriptionFilterAction, apply=Mock(side_effect=self.apply(logs, applied6)))
 
         client = AwsVpcClient(ec2, iam, logs)
         self.assertEqual(
             [applied1, applied2, applied3, applied4, applied5, applied6],
-            client.apply([act1, act2, act3, act4, act5, act6]),
+            client.apply([action1, action2, action3, action4, action5, action6]),
         )
 
     @staticmethod
@@ -140,7 +138,7 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         acts = [vpc_act_1, vpc_act_2]
         role_act_1 = create_flow_log_delivery_role_action()
         role_acts = [role_act_1]
-        lg_act_1 = put_central_vpc_log_group_subscription_filter_action()
+        lg_act_1 = put_vpc_log_group_subscription_filter_action()
         lg_acts = [lg_act_1]
         with patch.object(AwsVpcClient, "_vpc_enforcement_actions", side_effect=lambda v: acts if v == a_vpc else None):
             with patch.object(AwsVpcClient, "_delivery_role_enforcement_actions", return_value=role_acts):
@@ -208,14 +206,14 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
     def test_create_central_vpc_log_group_with_subscription_filter_when_missing(self) -> None:
         with patch.object(AwsVpcClient, "_find_central_vpc_log_group", return_value=None):
             self.assertEqual(
-                [create_central_vpc_log_group_action(), put_central_vpc_log_group_subscription_filter_action()],
+                [create_vpc_log_group_action(), put_vpc_log_group_subscription_filter_action()],
                 self.client()._central_vpc_log_group_enforcement_actions(),
             )
 
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
         with patch.object(AwsVpcClient, "_find_central_vpc_log_group", return_value=log_group(subscription_filters=[])):
             self.assertEqual(
-                [put_central_vpc_log_group_subscription_filter_action()],
+                [put_vpc_log_group_subscription_filter_action()],
                 self.client()._central_vpc_log_group_enforcement_actions(),
             )
 

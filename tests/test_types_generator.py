@@ -5,12 +5,12 @@ from botocore.exceptions import ClientError
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_compliance_actions import (
-    CreateCentralVpcLogGroupAction,
+    CreateVpcLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    PutCentralVpcLogGroupSubscriptionFilterAction,
+    PutVpcLogGroupSubscriptionFilterAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Policy, Role
@@ -299,12 +299,12 @@ def delete_flow_log_delivery_role_action(role_name: str = "delete_me") -> Delete
     return DeleteFlowLogDeliveryRoleAction(role_name=role_name)
 
 
-def create_central_vpc_log_group_action() -> CreateCentralVpcLogGroupAction:
-    return CreateCentralVpcLogGroupAction()
+def create_vpc_log_group_action() -> CreateVpcLogGroupAction:
+    return CreateVpcLogGroupAction()
 
 
-def put_central_vpc_log_group_subscription_filter_action() -> PutCentralVpcLogGroupSubscriptionFilterAction:
-    return PutCentralVpcLogGroupSubscriptionFilterAction()
+def put_vpc_log_group_subscription_filter_action() -> PutVpcLogGroupSubscriptionFilterAction:
+    return PutVpcLogGroupSubscriptionFilterAction()
 
 
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:

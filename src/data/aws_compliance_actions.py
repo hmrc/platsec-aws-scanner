@@ -98,7 +98,7 @@ class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
 
 
 @dataclass(unsafe_hash=True)
-class CreateCentralVpcLogGroupAction(ComplianceAction):
+class CreateVpcLogGroupAction(ComplianceAction):
     def __init__(self) -> None:
         super().__init__("Create central VPC log group")
 
@@ -107,7 +107,7 @@ class CreateCentralVpcLogGroupAction(ComplianceAction):
 
 
 @dataclass(unsafe_hash=True)
-class PutCentralVpcLogGroupSubscriptionFilterAction(ComplianceAction):
+class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
     def __init__(self) -> None:
         super().__init__("Put central VPC log group subscription filter")
 
