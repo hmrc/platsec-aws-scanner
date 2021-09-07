@@ -1,6 +1,6 @@
 from itertools import chain
 from logging import getLogger
-from typing import AbstractSet, Optional, Sequence
+from typing import Optional, Sequence
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
@@ -40,24 +40,24 @@ class AwsVpcClient:
         fl.log_group = self.logs.describe_log_groups(fl.log_group_name)[0] if fl.log_group_name else None
         return fl
 
-    def find_flow_log_delivery_role(self) -> Optional[Role]:
+    def _find_flow_log_delivery_role(self) -> Optional[Role]:
         return self.iam.find_role(self.config.logs_vpc_log_group_delivery_role())
 
-    def get_flow_log_delivery_role_arn(self) -> str:
+    def _get_flow_log_delivery_role_arn(self) -> str:
         return self.iam.get_role(self.config.logs_vpc_log_group_delivery_role()).arn
 
-    def is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
+    def _is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(
             role
             and role.assume_policy == self.config.logs_vpc_log_group_delivery_role_assume_policy()
             and [p.document for p in role.policies] == [self.config.logs_vpc_log_group_delivery_role_policy_document()]
         )
 
-    def is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
+    def _is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
         return flow_log.log_group_name == self.config.logs_vpc_log_group_name()
 
-    def is_flow_log_misconfigured(self, flow_log: FlowLog) -> bool:
-        return self.is_flow_log_centralised(flow_log) and (
+    def _is_flow_log_misconfigured(self, flow_log: FlowLog) -> bool:
+        return self._is_flow_log_centralised(flow_log) and (
             flow_log.status != self.config.ec2_flow_log_status()
             or flow_log.traffic_type != self.config.ec2_flow_log_traffic_type()
             or flow_log.log_format != self.config.ec2_flow_log_format()
@@ -65,17 +65,14 @@ class AwsVpcClient:
             or flow_log.deliver_log_role.name != self.config.logs_vpc_log_group_delivery_role()
         )
 
-    def enforcement_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
-        return set(
-            chain(
-                self._vpc_enforcement_actions(vpc),
-                self._delivery_role_enforcement_actions(),
-                self._central_vpc_log_group_enforcement_actions(),
-            )
-        )
+    def enforcement_actions(self, vpcs: Sequence[Vpc]) -> Sequence[ComplianceAction]:
+        log_group_actions = self._central_vpc_log_group_enforcement_actions()
+        delivery_role_actions = self._delivery_role_enforcement_actions()
+        vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
+        return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
 
-    def _vpc_enforcement_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
-        return set(
+    def _vpc_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
+        return list(
             chain(
                 self._delete_misconfigured_flow_log_actions(vpc),
                 self._delete_redundant_flow_log_actions(vpc),
@@ -83,49 +80,51 @@ class AwsVpcClient:
             )
         )
 
-    def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
-        return {DeleteFlowLogAction(flow_log.id) for flow_log in self._find_misconfigured_flow_logs(vpc.flow_logs)}
+    def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
+        return [DeleteFlowLogAction(flow_log.id) for flow_log in self._find_misconfigured_flow_logs(vpc.flow_logs)]
 
     def _find_misconfigured_flow_logs(self, flow_logs: Sequence[FlowLog]) -> Sequence[FlowLog]:
-        return list(filter(lambda fl: self.is_flow_log_misconfigured(fl), flow_logs))
+        return list(filter(lambda fl: self._is_flow_log_misconfigured(fl), flow_logs))
 
-    def _delete_redundant_flow_log_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
-        return {DeleteFlowLogAction(flow_log.id) for flow_log in self._centralised(vpc.flow_logs)[1:]}
+    def _delete_redundant_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
+        return [DeleteFlowLogAction(flow_log.id) for flow_log in self._centralised(vpc.flow_logs)[1:]]
 
-    def _create_flow_log_actions(self, vpc: Vpc) -> AbstractSet[ComplianceAction]:
+    def _create_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return (
-            {CreateFlowLogAction(vpc.id, self.config.logs_vpc_log_group_name(), self.get_flow_log_delivery_role_arn)}
+            [CreateFlowLogAction(vpc.id, self.config.logs_vpc_log_group_name(), self._get_flow_log_delivery_role_arn)]
             if not self._centralised(vpc.flow_logs)
-            else set()
+            else []
         )
 
-    def _delivery_role_enforcement_actions(self) -> AbstractSet[ComplianceAction]:
-        return set(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
+    def _delivery_role_enforcement_actions(self) -> Sequence[ComplianceAction]:
+        return list(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
 
-    def _delete_delivery_role_action(self) -> AbstractSet[ComplianceAction]:
-        delivery_role = self.find_flow_log_delivery_role()
+    def _delete_delivery_role_action(self) -> Sequence[ComplianceAction]:
+        delivery_role = self._find_flow_log_delivery_role()
         return (
-            {DeleteFlowLogDeliveryRoleAction(delivery_role.name)}
-            if delivery_role and not self.is_flow_log_role_compliant(delivery_role)
-            else set()
+            [DeleteFlowLogDeliveryRoleAction(delivery_role.name)]
+            if delivery_role and not self._is_flow_log_role_compliant(delivery_role)
+            else []
         )
 
-    def _create_delivery_role_action(self) -> AbstractSet[ComplianceAction]:
-        delivery_role = self.find_flow_log_delivery_role()
-        return {CreateFlowLogDeliveryRoleAction()} if not self.is_flow_log_role_compliant(delivery_role) else set()
+    def _create_delivery_role_action(self) -> Sequence[ComplianceAction]:
+        delivery_role = self._find_flow_log_delivery_role()
+        return [CreateFlowLogDeliveryRoleAction()] if not self._is_flow_log_role_compliant(delivery_role) else []
 
-    def _central_vpc_log_group_enforcement_actions(self) -> AbstractSet[ComplianceAction]:
+    def _central_vpc_log_group_enforcement_actions(self) -> Sequence[ComplianceAction]:
         lg = self._find_central_vpc_log_group()
         return (
-            {CreateCentralVpcLogGroupAction(), PutCentralVpcLogGroupSubscriptionFilterAction()}
+            [CreateCentralVpcLogGroupAction(), PutCentralVpcLogGroupSubscriptionFilterAction()]
             if not lg
-            else {PutCentralVpcLogGroupSubscriptionFilterAction()}
+            else [PutCentralVpcLogGroupSubscriptionFilterAction()]
             if not self._is_central_vpc_log_group(lg)
-            else set()
+            else []
         )
 
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
-        return list(filter(lambda fl: self.is_flow_log_centralised(fl) and not self.is_flow_log_misconfigured(fl), fls))
+        return list(
+            filter(lambda fl: self._is_flow_log_centralised(fl) and not self._is_flow_log_misconfigured(fl), fls)
+        )
 
     def _find_central_vpc_log_group(self) -> Optional[LogGroup]:
         return next(iter(self.logs.describe_log_groups(self.config.logs_vpc_log_group_name())), None)

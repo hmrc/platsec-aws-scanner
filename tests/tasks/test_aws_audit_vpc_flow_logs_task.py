@@ -1,7 +1,7 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock, patch
 
-from typing import AbstractSet
+from typing import Sequence
 
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import ComplianceAction
@@ -22,8 +22,8 @@ results = {"vpcs": vpcs, "enforcement_actions": actions}
 report = task_report(description="audit VPC flow logs compliance", partition=None, results=results)
 
 
-def enforcement_actions(v: Vpc) -> AbstractSet[ComplianceAction]:
-    return {"vpc-1": {delete_flow_log_action("fl-4")}, "vpc-2": {create_flow_log_action("vpc-7")}}[v.id]
+def enforcement_actions(v: Sequence[Vpc]) -> Sequence[ComplianceAction]:
+    return [delete_flow_log_action("fl-4"), create_flow_log_action("vpc-7")] if v == vpcs else None
 
 
 @patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
