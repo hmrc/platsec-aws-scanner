@@ -61,8 +61,8 @@ class AwsVpcClient:
             flow_log.status != self.config.ec2_flow_log_status()
             or flow_log.traffic_type != self.config.ec2_flow_log_traffic_type()
             or flow_log.log_format != self.config.ec2_flow_log_format()
-            or flow_log.deliver_log_role is None
-            or flow_log.deliver_log_role.name != self.config.logs_vpc_log_group_delivery_role()
+            or flow_log.deliver_log_role_arn is None
+            or not flow_log.deliver_log_role_arn.endswith(f":role/{self.config.logs_vpc_log_group_delivery_role()}")
         )
 
     def enforcement_actions(self, vpcs: Sequence[Vpc]) -> Sequence[ComplianceAction]:

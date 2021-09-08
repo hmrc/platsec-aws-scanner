@@ -265,7 +265,7 @@ def flow_log(
     log_group_name: Optional[str] = "/vpc/flow_log",
     traffic_type: str = "ALL",
     log_format: str = "${srcaddr} ${dstaddr}",
-    deliver_log_role_arn: Optional[str] = "role_arn",
+    deliver_log_role_arn: Optional[str] = ":role/vpc_flow_log_role",
     deliver_log_role: Optional[Role] = role(name="vpc_flow_log_role"),
 ) -> FlowLog:
     return FlowLog(

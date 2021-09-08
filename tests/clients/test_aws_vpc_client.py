@@ -37,7 +37,7 @@ class TestAwsVpcClient(AwsScannerTestCase):
         vpcs = [vpc(flow_logs=[flow_log(deliver_log_role_arn=None)]), vpc(flow_logs=[flow_log(log_group_name=None)])]
         client = AwsVpcClient(
             Mock(list_vpcs=Mock(return_value=vpcs)),
-            Mock(find_role_by_arn=Mock(side_effect=lambda a: log_role if a == "role_arn" else None)),
+            Mock(find_role_by_arn=Mock(side_effect=lambda a: log_role if a == ":role/vpc_flow_log_role" else None)),
             Mock(describe_log_groups=Mock(side_effect=lambda n: [group] if n == "/vpc/flow_log" else None)),
         )
         enriched = client.list_vpcs()
@@ -101,8 +101,8 @@ class TestAwsFlowLogCompliance(AwsScannerTestCase):
         self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(status="a")))
         self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(traffic_type="b")))
         self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(log_format="c")))
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role=None)))
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role=role(name="another_role"))))
+        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role_arn=None)))
+        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role_arn="bla")))
 
 
 class TestAwsEnforcementActions(AwsScannerTestCase):
