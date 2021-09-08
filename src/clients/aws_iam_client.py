@@ -56,9 +56,11 @@ class AwsIamClient:
             return None
 
     def delete_role(self, role_name: str) -> None:
-        for policy in self.get_role(role_name).policies:
-            self._detach_role_policy(role_name, policy.arn)
-        self._delete_role(role_name)
+        role = self.find_role(role_name)
+        if role:
+            for policy in role.policies:
+                self._detach_role_policy(role_name, policy.arn)
+            self._delete_role(role_name)
 
     def _delete_role(self, role_name: str) -> None:
         self._logger.debug(f"deleting role {role_name}")
@@ -68,14 +70,15 @@ class AwsIamClient:
             raise IamException(f"unable to delete role {role_name}: {err}")
 
     def delete_policy(self, policy_name: str) -> None:
-        arn = self._get_policy_arn(policy_name)
-        for entity in self._list_entities_for_policy(arn):
-            self._detach_role_policy(entity, arn)
-        for version in self._list_policy_versions(arn):
-            self._delete_policy_version(arn, version)
-        self._delete_policy(arn)
+        policy_arn = self._find_policy_arn(policy_name)
+        if policy_arn:
+            for entity in self._list_entities_for_policy(policy_arn):
+                self._detach_role_policy(entity, policy_arn)
+            for version in self._list_policy_versions(policy_arn):
+                self._delete_policy_version(policy_arn, version)
+            self._delete_policy(policy_arn)
 
-    def _get_policy_arn(self, policy_name: str) -> str:
+    def _find_policy_arn(self, policy_name: str) -> Optional[str]:
         try:
             return next(
                 iter(
@@ -86,8 +89,9 @@ class AwsIamClient:
                         if policy["PolicyName"] == policy_name
                     ]
                 ),
+                None,
             )
-        except (BotoCoreError, ClientError, StopIteration) as err:
+        except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to find arn for policy {policy_name}: {err}") from None
 
     def _delete_policy(self, policy_arn: str) -> None:

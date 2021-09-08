@@ -66,7 +66,7 @@ class TestAwsComplianceActions(AwsScannerTestCase):
         client = Mock(spec=AwsIamClient)
         delete_flow_log_delivery_role_action()._apply(client)
         self.assertEqual(
-            [call.delete_role("delete_me"), call.delete_policy("vpc_flow_log_role_policy")], client.mock_calls
+            [call.delete_policy("vpc_flow_log_role_policy"), call.delete_role("delete_me")], client.mock_calls
         )
 
     def test_create_central_vpc_log_group_action(self) -> None:

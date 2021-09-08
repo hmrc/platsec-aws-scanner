@@ -95,8 +95,8 @@ class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
         self.role_name = role_name
 
     def _apply(self, client: AwsIamClient) -> None:
-        client.delete_role(self.role_name)
         client.delete_policy(Config().logs_vpc_log_group_delivery_role_policy_name())
+        client.delete_role(self.role_name)
 
 
 @dataclass(unsafe_hash=True)

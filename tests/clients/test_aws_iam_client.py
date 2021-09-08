@@ -87,13 +87,12 @@ class TestAwsIamClient(AwsScannerTestCase):
         mock_iam = Mock(
             get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None)
         )
-        with self.assertRaisesRegex(IamException, "unable to find arn for policy pol_6"):
-            AwsIamClient(mock_iam)._get_policy_arn("pol_6")
+        self.assertIsNone(AwsIamClient(mock_iam)._find_policy_arn("pol_6"))
 
     def test_get_policy_arn_failure(self) -> None:
         mock_iam = Mock(get_paginator=Mock(side_effect=client_error("GetPaginator", "OpNotSupported", "boom")))
         with self.assertRaisesRegex(IamException, "boom"):
-            AwsIamClient(mock_iam)._get_policy_arn("some_policy")
+            AwsIamClient(mock_iam)._find_policy_arn("some_policy")
 
     def test_list_attached_role_policies_failure(self) -> None:
         mock_boto_iam = Mock(
@@ -175,6 +174,12 @@ class TestAwsIamClient(AwsScannerTestCase):
             boto_iam.mock_calls,
         )
 
+    def test_delete_role_that_does_not_exist(self) -> None:
+        boto_iam = Mock()
+        with patch.object(AwsIamClient, "find_role", return_value=None):
+            AwsIamClient(boto_iam).delete_role("ghost_role")
+        self.assertFalse(boto_iam.mock_calls)
+
     def test_delete_role_failure(self) -> None:
         mock_iam = Mock(delete_role=Mock(side_effect=client_error("DeleteRole", "DeleteConflictException", "nope")))
         with patch.object(AwsIamClient, "get_role"):
@@ -201,6 +206,12 @@ class TestAwsIamClient(AwsScannerTestCase):
             ],
             mock_iam.mock_calls,
         )
+
+    def test_delete_policy_that_does_not_exist(self) -> None:
+        mock_iam = Mock()
+        with patch.object(AwsIamClient, "_find_policy_arn", return_value=None):
+            AwsIamClient(mock_iam).delete_policy("ghost_policy")
+        self.assertFalse(mock_iam.mock_calls)
 
     def test_delete_policy_failure(self) -> None:
         mock_iam = Mock(delete_policy=Mock(side_effect=client_error("DeletePolicy", "Boom", "nope")))
