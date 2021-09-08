@@ -61,12 +61,12 @@ class TestAwsIamClient(AwsScannerTestCase):
         )
         self.assertEqual(EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
 
-    def test_get_role_by_arn(self) -> None:
+    def test_find_role_by_arn(self) -> None:
         client = AwsIamClient(Mock())
-        with patch.object(AwsIamClient, "get_role") as get_role:
-            client.get_role_by_arn("arn:aws:iam::account:role/some_role")
-            client.get_role_by_arn("arn:aws:iam:region:account:role/with/path")
-            client.get_role_by_arn("not_an_arn_works_too")
+        with patch.object(AwsIamClient, "find_role") as get_role:
+            client.find_role_by_arn("arn:aws:iam::account:role/some_role")
+            client.find_role_by_arn("arn:aws:iam:region:account:role/with/path")
+            client.find_role_by_arn("not_an_arn_works_too")
         self.assertEqual([call("some_role"), call("with/path"), call("not_an_arn_works_too")], get_role.mock_calls)
 
     def test_get_role_failure(self) -> None:

@@ -46,8 +46,8 @@ class AwsIamClient:
         except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to get role with name {name}: {err}") from None
 
-    def get_role_by_arn(self, arn: str) -> Role:
-        return self.get_role(arn.split(":")[-1].removeprefix("role/"))
+    def find_role_by_arn(self, arn: str) -> Optional[Role]:
+        return self.find_role(arn.split(":")[-1].removeprefix("role/"))
 
     def find_role(self, name: str) -> Optional[Role]:
         try:

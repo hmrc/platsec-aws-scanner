@@ -37,7 +37,7 @@ class TestAwsVpcClient(AwsScannerTestCase):
         vpcs = [vpc(flow_logs=[flow_log(deliver_log_role_arn=None)]), vpc(flow_logs=[flow_log(log_group_name=None)])]
         client = AwsVpcClient(
             Mock(list_vpcs=Mock(return_value=vpcs)),
-            Mock(get_role_by_arn=Mock(side_effect=lambda a: log_role if a == "role_arn" else None)),
+            Mock(find_role_by_arn=Mock(side_effect=lambda a: log_role if a == "role_arn" else None)),
             Mock(describe_log_groups=Mock(side_effect=lambda n: [group] if n == "/vpc/flow_log" else None)),
         )
         enriched = client.list_vpcs()
