@@ -70,7 +70,7 @@ class AwsIamClient:
             raise IamException(f"unable to delete role {role_name}: {err}")
 
     def delete_policy(self, policy_name: str) -> None:
-        policy_arn = self._find_policy_arn(policy_name)
+        policy_arn = self.find_policy_arn(policy_name)
         if policy_arn:
             for entity in self._list_entities_for_policy(policy_arn):
                 self._detach_role_policy(entity, policy_arn)
@@ -78,7 +78,7 @@ class AwsIamClient:
                 self._delete_policy_version(policy_arn, version)
             self._delete_policy(policy_arn)
 
-    def _find_policy_arn(self, policy_name: str) -> Optional[str]:
+    def find_policy_arn(self, policy_name: str) -> Optional[str]:
         try:
             return next(
                 iter(

@@ -87,12 +87,12 @@ class TestAwsIamClient(AwsScannerTestCase):
         mock_iam = Mock(
             get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None)
         )
-        self.assertIsNone(AwsIamClient(mock_iam)._find_policy_arn("pol_6"))
+        self.assertIsNone(AwsIamClient(mock_iam).find_policy_arn("pol_6"))
 
     def test_get_policy_arn_failure(self) -> None:
         mock_iam = Mock(get_paginator=Mock(side_effect=client_error("GetPaginator", "OpNotSupported", "boom")))
         with self.assertRaisesRegex(IamException, "boom"):
-            AwsIamClient(mock_iam)._find_policy_arn("some_policy")
+            AwsIamClient(mock_iam).find_policy_arn("some_policy")
 
     def test_list_attached_role_policies_failure(self) -> None:
         mock_boto_iam = Mock(
@@ -209,7 +209,7 @@ class TestAwsIamClient(AwsScannerTestCase):
 
     def test_delete_policy_that_does_not_exist(self) -> None:
         mock_iam = Mock()
-        with patch.object(AwsIamClient, "_find_policy_arn", return_value=None):
+        with patch.object(AwsIamClient, "find_policy_arn", return_value=None):
             AwsIamClient(mock_iam).delete_policy("ghost_policy")
         self.assertFalse(mock_iam.mock_calls)
 

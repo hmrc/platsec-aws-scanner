@@ -45,6 +45,8 @@ class TestAwsVpcClient(AwsScannerTestCase):
         self.assertEqual([None, log_role], [fl.deliver_log_role for v in vpcs for fl in v.flow_logs])
         self.assertEqual([group, None], [fl.log_group for v in vpcs for fl in v.flow_logs])
 
+
+class TestAwsLogDeliveryRoleCompliance(AwsScannerTestCase):
     def test_find_flow_log_delivery_role(self) -> None:
         delivery_role = role(name="the_delivery_role")
         ec2, iam, logs = Mock(), Mock(), Mock()
@@ -79,6 +81,14 @@ class TestAwsVpcClient(AwsScannerTestCase):
         self.assertFalse(AwsVpcClient(ec2, iam, logs)._is_flow_log_role_compliant(invalid_assume_policy))
         self.assertFalse(AwsVpcClient(ec2, iam, logs)._is_flow_log_role_compliant(invalid_policy_document))
         self.assertFalse(AwsVpcClient(ec2, iam, logs)._is_flow_log_role_compliant(missing_policy_document))
+
+    def test_delivery_role_policy_exists(self) -> None:
+        client = AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()))
+        with patch.object(AwsIamClient, "find_policy_arn", side_effect=[None, "", "some_policy_arn"]) as find_policy:
+            self.assertFalse(client._delivery_role_policy_exists())
+            self.assertFalse(client._delivery_role_policy_exists())
+            self.assertTrue(client._delivery_role_policy_exists())
+        find_policy.assert_called_with("vpc_flow_log_role_policy")
 
 
 class TestAwsFlowLogCompliance(AwsScannerTestCase):
@@ -182,18 +192,27 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=compliant_role):
                 self.assertEqual([], self.client()._delivery_role_enforcement_actions())
 
-    def test_only_create_delivery_role_action_when_role_is_missing(self) -> None:
+    def test_create_delivery_role_action_when_role_is_missing(self) -> None:
         with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=None):
-            self.assertEqual(
-                [create_flow_log_delivery_role_action()], self.client()._delivery_role_enforcement_actions()
-            )
+            with patch.object(AwsVpcClient, "_delivery_role_policy_exists", return_value=False):
+                self.assertEqual(
+                    [create_flow_log_delivery_role_action()], self.client()._delivery_role_enforcement_actions()
+                )
+
+    def test_delete_and_create_delivery_role_action_when_role_is_missing_and_policy_exists(self) -> None:
+        with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=None):
+            with patch.object(AwsVpcClient, "_delivery_role_policy_exists", return_value=True):
+                self.assertEqual(
+                    [delete_flow_log_delivery_role_action(), create_flow_log_delivery_role_action()],
+                    self.client()._delivery_role_enforcement_actions(),
+                )
 
     def test_delete_and_create_delivery_role_action_when_role_is_not_compliant(self) -> None:
         non_compliant_role = role(name="non_compliant")
         with patch.object(AwsVpcClient, "_is_flow_log_role_compliant", side_effect=lambda r: r != non_compliant_role):
             with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=non_compliant_role):
                 self.assertEqual(
-                    [delete_flow_log_delivery_role_action("non_compliant"), create_flow_log_delivery_role_action()],
+                    [delete_flow_log_delivery_role_action(), create_flow_log_delivery_role_action()],
                     self.client()._delivery_role_enforcement_actions(),
                 )
 

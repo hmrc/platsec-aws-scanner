@@ -295,8 +295,8 @@ def create_flow_log_delivery_role_action() -> CreateFlowLogDeliveryRoleAction:
     return CreateFlowLogDeliveryRoleAction()
 
 
-def delete_flow_log_delivery_role_action(role_name: str = "delete_me") -> DeleteFlowLogDeliveryRoleAction:
-    return DeleteFlowLogDeliveryRoleAction(role_name=role_name)
+def delete_flow_log_delivery_role_action() -> DeleteFlowLogDeliveryRoleAction:
+    return DeleteFlowLogDeliveryRoleAction()
 
 
 def create_vpc_log_group_action() -> CreateVpcLogGroupAction:

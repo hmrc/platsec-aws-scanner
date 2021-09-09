@@ -102,14 +102,18 @@ class AwsVpcClient:
     def _delete_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
         return (
-            [DeleteFlowLogDeliveryRoleAction(delivery_role.name)]
-            if delivery_role and not self._is_flow_log_role_compliant(delivery_role)
+            [DeleteFlowLogDeliveryRoleAction()]
+            if (delivery_role and not self._is_flow_log_role_compliant(delivery_role))
+            or (not delivery_role and self._delivery_role_policy_exists())
             else []
         )
 
     def _create_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
         return [CreateFlowLogDeliveryRoleAction()] if not self._is_flow_log_role_compliant(delivery_role) else []
+
+    def _delivery_role_policy_exists(self) -> bool:
+        return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy_name()))
 
     def _central_vpc_log_group_enforcement_actions(self) -> Sequence[ComplianceAction]:
         lg = self._find_central_vpc_log_group()
