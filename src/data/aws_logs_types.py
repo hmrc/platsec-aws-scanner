@@ -6,15 +6,22 @@ from typing import Any, Dict, Optional, Sequence
 @dataclass
 class LogGroup:
     name: str
+    kms_key_id: Optional[str]
     subscription_filters: Sequence[SubscriptionFilter]
 
-    def __init__(self, name: str, subscription_filters: Optional[Sequence[SubscriptionFilter]] = None):
+    def __init__(
+        self,
+        name: str,
+        kms_key_id: Optional[str] = None,
+        subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
+    ):
         self.name = name
+        self.kms_key_id = kms_key_id
         self.subscription_filters = subscription_filters or []
 
 
 def to_log_group(log_group: Dict[str, Any]) -> LogGroup:
-    return LogGroup(name=log_group["logGroupName"])
+    return LogGroup(name=log_group["logGroupName"], kms_key_id=log_group.get("kmsKeyId"))
 
 
 @dataclass

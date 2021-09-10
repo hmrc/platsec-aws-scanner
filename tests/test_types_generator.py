@@ -312,10 +312,13 @@ def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = F
 
 
 def log_group(
-    name: str = "/vpc/flow_log", subscription_filters: Optional[Sequence[SubscriptionFilter]] = None
+    name: str = "/vpc/flow_log",
+    kms_key_id: Optional[str] = None,
+    subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
 ) -> LogGroup:
     return LogGroup(
         name=name,
+        kms_key_id=kms_key_id,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
     )
 

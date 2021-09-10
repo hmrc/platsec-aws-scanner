@@ -14,11 +14,9 @@ class TestAwsLogsClient(AwsScannerTestCase):
             describe_log_groups=Mock(return_value=responses.DESCRIBE_LOG_GROUPS),
             describe_subscription_filters=Mock(side_effect=responses.DESCRIBE_SUBSCRIPTION_FILTERS),
         )
-        log_groups = AwsLogsClient(boto).describe_log_groups("/vpc/flow_log")
-        boto.describe_log_groups.assert_called_once_with(logGroupNamePrefix="/vpc/flow_log")
-        boto.describe_subscription_filters.assert_has_calls(
-            [call(logGroupName="/vpc/flow_log"), call(logGroupName="/vpc/flow_log_2")]
-        )
+        log_groups = AwsLogsClient(boto).describe_log_groups("lg")
+        boto.describe_log_groups.assert_called_once_with(logGroupNamePrefix="lg")
+        boto.describe_subscription_filters.assert_has_calls([call(logGroupName="lg_1"), call(logGroupName="lg_2")])
         self.assertEqual(responses.EXPECTED_LOG_GROUPS, log_groups)
 
     def test_describe_log_groups_failure(self) -> None:
