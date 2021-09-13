@@ -53,6 +53,10 @@ class InvalidRegionException(AwsScannerException):
         super().__init__(f"invalid region '{region}'. Should be one of {regions}.")
 
 
+class KmsException(AwsScannerException):
+    pass
+
+
 class ListTablesException(AwsScannerException):
     pass
 

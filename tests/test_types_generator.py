@@ -14,6 +14,7 @@ from src.data.aws_compliance_actions import (
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Policy, Role
+from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -335,3 +336,13 @@ def subscription_filter(
         filter_pattern=filter_pattern,
         destination_arn=destination_arn,
     )
+
+
+def key(
+    id: str = "1234abcd",
+    arn: str = "arn:aws:kms:us-east-1:112233445566:key/1234abcd",
+    description: str = "some key desc",
+    state: str = "Enabled",
+    policy: Optional[Dict[str, Any]] = None,
+) -> Key:
+    return Key(id=id, arn=arn, description=description, state=state, policy=policy)
