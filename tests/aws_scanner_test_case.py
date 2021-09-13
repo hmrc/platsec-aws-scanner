@@ -24,6 +24,9 @@ flow_log_format = ${srcaddr} ${dstaddr}
 [iam]
 role = iam_role
 
+[kms]
+role = kms_role
+
 [logs]
 vpc_log_group_name = /vpc/flow_log
 vpc_log_group_pattern = [version, account_id, interface_id]

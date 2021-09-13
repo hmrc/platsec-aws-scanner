@@ -11,6 +11,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_athena_client import AwsAthenaClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
+from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
@@ -55,6 +56,9 @@ class AwsClientFactory:
     def get_iam_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("iam", account, self._config.iam_role())
 
+    def get_kms_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("kms", account, self._config.kms_role())
+
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
 
@@ -76,11 +80,15 @@ class AwsClientFactory:
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account))
 
+    def get_kms_client(self, account: Account) -> AwsKmsClient:
+        return AwsKmsClient(self.get_kms_boto_client(account))
+
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
             ec2=self.get_ec2_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account),
+            kms=self.get_kms_client(account),
         )
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:

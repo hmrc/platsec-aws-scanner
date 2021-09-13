@@ -103,6 +103,16 @@ class TestGetBotoClients(AwsScannerTestCase):
             role="iam_role",
         )
 
+    def test_get_kms_boto_client(self) -> None:
+        kms_account = account(identifier="887331665442", name="some_kms_account")
+        self.assert_get_client(
+            method_under_test="get_kms_boto_client",
+            method_args={"account": kms_account},
+            service="kms",
+            target_account=kms_account,
+            role="kms_role",
+        )
+
 
 @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
 class TestGetClients(AwsScannerTestCase):
@@ -173,19 +183,31 @@ class TestGetClients(AwsScannerTestCase):
             iam_client = AwsClientFactory(self.mfa, self.username).get_iam_client(account())
             self.assertEqual(iam_client._iam, iam_boto_client)
 
+    def test_get_kms_client(self, _: Mock) -> None:
+        kms_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_kms_boto_client",
+            side_effect=lambda acc: kms_boto_client if acc == account() else None,
+        ):
+            kms_client = AwsClientFactory(self.mfa, self.username).get_kms_client(account())
+            self.assertEqual(kms_client._kms, kms_boto_client)
+
 
 @patch.object(AwsClientFactory, "_get_session_token")
 class TestGetCompositeClients(AwsScannerTestCase):
+    @staticmethod
+    def mock_client(client, expected_account):
+        return lambda acc: client if acc == expected_account else None
+
     def test_get_vpc_client(self, _: Mock) -> None:
         acc = account(identifier="1234", name="some_account")
-        ec2, iam, logs = Mock(), Mock(), Mock()
-        with patch.object(AwsClientFactory, "get_ec2_client", side_effect=lambda a: ec2 if a == acc else None):
-            with patch.object(AwsClientFactory, "get_logs_client", side_effect=lambda a: logs if a == acc else None):
-                with patch.object(AwsClientFactory, "get_iam_client", side_effect=lambda a: iam if a == acc else None):
-                    vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
-        self.assertEqual(ec2, vpc_client.ec2)
-        self.assertEqual(iam, vpc_client.iam)
-        self.assertEqual(logs, vpc_client.logs)
+        ec2, iam, logs, kms = Mock(name="ec2"), Mock(name="iam"), Mock(name="logs"), Mock(name="kms")
+        with patch.object(AwsClientFactory, "get_ec2_client", side_effect=self.mock_client(ec2, acc)):
+            with patch.object(AwsClientFactory, "get_logs_client", side_effect=self.mock_client(logs, acc)):
+                with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
+                    with patch.object(AwsClientFactory, "get_kms_client", side_effect=self.mock_client(kms, acc)):
+                        vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
+        self.assertEqual([ec2, iam, logs, kms], [vpc_client.ec2, vpc_client.iam, vpc_client.logs, vpc_client.kms])
 
 
 class TestAwsClientFactory(AwsScannerTestCase):

@@ -21,6 +21,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("ALL", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr} ${dstaddr}", config.ec2_flow_log_format())
         self.assertEqual("iam_role", config.iam_role())
+        self.assertEqual("kms_role", config.kms_role())
         self.assertEqual("/vpc/flow_log", config.logs_vpc_log_group_name())
         self.assertEqual("[version, account_id, interface_id]", config.logs_vpc_log_group_pattern())
         self.assertEqual("arn:aws:logs:::destination:central", config.logs_vpc_log_group_destination())
@@ -62,6 +63,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_EC2_FLOW_LOG_TRAFFIC_TYPE": "ACCEPT",
             "AWS_SCANNER_EC2_FLOW_LOG_FORMAT": "${srcaddr}",
             "AWS_SCANNER_IAM_ROLE": "the_iam_role",
+            "AWS_SCANNER_KMS_ROLE": "the_kms_role",
             "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
             "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
             "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
@@ -99,6 +101,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("ACCEPT", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr}", config.ec2_flow_log_format())
         self.assertEqual("the_iam_role", config.iam_role())
+        self.assertEqual("the_kms_role", config.kms_role())
         self.assertEqual("/vpc/central_flow_log_name", config.logs_vpc_log_group_name())
         self.assertEqual("[version, account_id]", config.logs_vpc_log_group_pattern())
         self.assertEqual("arn:aws:logs:::destination:some-central", config.logs_vpc_log_group_destination())

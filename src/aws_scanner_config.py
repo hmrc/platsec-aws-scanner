@@ -50,6 +50,9 @@ class AwsScannerConfig:
     def iam_role(self) -> str:
         return self._get_config("iam", "role")
 
+    def kms_role(self) -> str:
+        return self._get_config("kms", "role")
+
     def logs_vpc_log_group_name(self) -> str:
         return self._get_config("logs", "vpc_log_group_name")
 
