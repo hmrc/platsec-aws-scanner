@@ -1,5 +1,6 @@
 DESCRIBE_KEY = {
     "KeyMetadata": {
+        "AWSAccountId": "112233445566",
         "KeyId": "1234abcd",
         "Arn": "arn:aws:kms:us-east-1:112233445566:key/1234abcd",
         "Description": "some key desc",

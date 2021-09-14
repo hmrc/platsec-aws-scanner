@@ -11,7 +11,7 @@ from tests.clients.test_aws_kms_responses import DESCRIBE_KEY, GET_KEY_POLICY
 from tests.test_types_generator import client_error, key
 
 
-class TestAwsIamClient(AwsScannerTestCase):
+class TestAwsKmsClient(AwsScannerTestCase):
     def test_find_key(self) -> None:
         key_id = "1234"
         a_key, a_policy = key(id=key_id), {"something": "some value"}

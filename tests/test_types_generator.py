@@ -341,10 +341,14 @@ def subscription_filter(
 
 
 def key(
+    account_id: str = "112233445566",
+    region: str = "us-east-1",
     id: str = "1234abcd",
     arn: str = "arn:aws:kms:us-east-1:112233445566:key/1234abcd",
     description: str = "some key desc",
     state: str = "Enabled",
     policy: Optional[Dict[str, Any]] = None,
 ) -> Key:
-    return Key(id=id, arn=arn, description=description, state=state, policy=policy)
+    return Key(
+        account_id=account_id, region=region, id=id, arn=arn, description=description, state=state, policy=policy
+    )
