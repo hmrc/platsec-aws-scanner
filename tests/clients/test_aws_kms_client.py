@@ -7,7 +7,7 @@ from io import StringIO
 from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_scanner_exceptions import KmsException
 
-from tests.clients.test_aws_kms_responses import DESCRIBE_KEY, GET_KEY_POLICY
+from tests.clients.test_aws_kms_responses import CREATE_KEY, DESCRIBE_KEY, GET_KEY_POLICY
 from tests.test_types_generator import client_error, key
 
 
@@ -45,3 +45,19 @@ class TestAwsKmsClient(AwsScannerTestCase):
         boto_kms = Mock(get_key_policy=Mock(side_effect=client_error("GetKeyPolicy", "NotFoundException", "no")))
         with self.assertRaisesRegex(KmsException, "ghost-key"):
             AwsKmsClient(boto_kms)._get_key_policy("ghost-key")
+
+    def test_create_key(self) -> None:
+        boto_kms = Mock(create_key=Mock(return_value=CREATE_KEY), create_alias=Mock(return_value=None))
+        self.assertIsNone(AwsKmsClient(boto_kms).create_key("brand-new-alias", "brand new key"))
+        boto_kms.create_key.assert_called_with(Description="brand new key")
+        boto_kms.create_alias.assert_called_with(TargetKeyId="5678ffff", AliasName="alias/brand-new-alias")
+
+    def test_create_key_failure(self) -> None:
+        boto_kms = Mock(create_key=Mock(side_effect=client_error("CreateKey", "AccessDeniedException", "nope!")))
+        with self.assertRaisesRegex(KmsException, "some_description"):
+            AwsKmsClient(boto_kms).create_key("some_alias", "some_description")
+
+    def test_create_alias_failure(self) -> None:
+        boto_kms = Mock(create_alias=Mock(side_effect=client_error("CreateAlias", "AccessDeniedException", "no!!!")))
+        with self.assertRaisesRegex(KmsException, "unable to create alias 'some_alias' for key 'some_key': An error"):
+            AwsKmsClient(boto_kms)._create_alias("some_key", "some_alias")

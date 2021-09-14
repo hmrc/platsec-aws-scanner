@@ -36,3 +36,15 @@ class AwsKmsClient:
             return dict(loads(self._kms.get_key_policy(KeyId=key_id)["Policy"]))
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to get policy for kms key with id '{key_id}': {err}") from None
+
+    def create_key(self, alias: str, description: str) -> None:
+        try:
+            self._create_alias(to_key(self._kms.create_key(Description=description)["KeyMetadata"]).id, alias)
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to create kms key with description '{description}': {err}") from None
+
+    def _create_alias(self, key_id: str, alias: str) -> None:
+        try:
+            self._kms.create_alias(TargetKeyId=key_id, AliasName=f"alias/{alias}")
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to create alias '{alias}' for key '{key_id}': {err}") from None
