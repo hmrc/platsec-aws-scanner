@@ -39,8 +39,13 @@ class AwsVpcClient:
 
     def _enrich_flow_log(self, fl: FlowLog) -> FlowLog:
         fl.deliver_log_role = self.iam.find_role_by_arn(fl.deliver_log_role_arn) if fl.deliver_log_role_arn else None
-        fl.log_group = self.logs.describe_log_groups(fl.log_group_name)[0] if fl.log_group_name else None
+        fl.log_group = self._find_log_group(fl.log_group_name) if fl.log_group_name else None
         return fl
+
+    def _find_log_group(self, name: str) -> Optional[LogGroup]:
+        log_group = next(iter(self.logs.describe_log_groups(name)), None)
+        kms_key = self.kms.find_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
+        return log_group.with_kms_key(kms_key) if log_group else None
 
     def _find_flow_log_delivery_role(self) -> Optional[Role]:
         return self.iam.find_role(self.config.logs_vpc_log_group_delivery_role())

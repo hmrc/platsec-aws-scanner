@@ -22,6 +22,7 @@ from tests.test_types_generator import (
     delete_flow_log_action,
     delete_flow_log_delivery_role_action,
     flow_log,
+    key,
     log_group,
     policy,
     put_vpc_log_group_subscription_filter_action,
@@ -34,18 +35,20 @@ from tests.test_types_generator import (
 class TestAwsVpcClient(AwsScannerTestCase):
     def test_list_vpcs(self) -> None:
         log_role = role(name="a_log_role")
-        group = log_group(name="a_log_group")
+        a_key = key(id="the_key")
+        group = log_group(name="a_log_group", kms_key_id=a_key.id)
         vpcs = [vpc(flow_logs=[flow_log(deliver_log_role_arn=None)]), vpc(flow_logs=[flow_log(log_group_name=None)])]
         client = AwsVpcClient(
             Mock(list_vpcs=Mock(return_value=vpcs)),
             Mock(find_role_by_arn=Mock(side_effect=lambda a: log_role if a == ":role/vpc_flow_log_role" else None)),
             Mock(describe_log_groups=Mock(side_effect=lambda n: [group] if n == "/vpc/flow_log" else None)),
-            Mock(),
+            Mock(find_key=Mock(side_effect=lambda k: a_key if k == a_key.id else None)),
         )
         enriched = client.list_vpcs()
         self.assertEqual(vpcs, enriched)
         self.assertEqual([None, log_role], [fl.deliver_log_role for v in vpcs for fl in v.flow_logs])
         self.assertEqual([group, None], [fl.log_group for v in vpcs for fl in v.flow_logs])
+        self.assertEqual([a_key], [fl.log_group.kms_key for v in vpcs for fl in v.flow_logs if fl.log_group])
 
 
 class TestAwsLogDeliveryRoleCompliance(AwsScannerTestCase):
