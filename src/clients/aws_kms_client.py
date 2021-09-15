@@ -1,9 +1,9 @@
-from json import loads
+from json import dumps, loads
 from logging import getLogger
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 from src.data.aws_scanner_exceptions import KmsException
 from src.data.aws_kms_types import Key, to_key
@@ -48,3 +48,11 @@ class AwsKmsClient:
             self._kms.create_alias(TargetKeyId=key_id, AliasName=f"alias/{alias}")
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to create alias '{alias}' for key '{key_id}': {err}") from None
+
+    def _put_key_policy_statements(self, key_id: str, statements: Sequence[Dict[str, Any]]) -> None:
+        policy = self._get_key_policy(key_id)
+        policy["Statement"].extend(statements)
+        try:
+            self._kms.put_key_policy(KeyId=key_id, PolicyName="default", Policy=dumps(policy))
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to put policy '{policy}' for key '{key_id}': {err}") from None

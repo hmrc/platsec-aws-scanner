@@ -61,3 +61,20 @@ class TestAwsKmsClient(AwsScannerTestCase):
         boto_kms = Mock(create_alias=Mock(side_effect=client_error("CreateAlias", "AccessDeniedException", "no!!!")))
         with self.assertRaisesRegex(KmsException, "unable to create alias 'some_alias' for key 'some_key': An error"):
             AwsKmsClient(boto_kms)._create_alias("some_key", "some_alias")
+
+    def test_put_key_policy_statements(self) -> None:
+        boto_kms = Mock(put_key_policy=Mock(return_value=None))
+        policy = {"Statement": [{"a": 1}]}
+        with patch.object(AwsKmsClient, "_get_key_policy", side_effect=lambda k: policy if k == "1234" else None):
+            AwsKmsClient(boto_kms)._put_key_policy_statements("1234", [{"b": 2}, {"c": 3}])
+        boto_kms.put_key_policy.assert_called_once_with(
+            KeyId="1234", PolicyName="default", Policy='{"Statement": [{"a": 1}, {"b": 2}, {"c": 3}]}'
+        )
+
+    def test_put_key_policy_statements_failure(self) -> None:
+        boto_kms = Mock(
+            get_key_policy=Mock(return_value=GET_KEY_POLICY),
+            put_key_policy=Mock(side_effect=client_error("PutKeyPolicy", "AccessDeniedException", "no!")),
+        )
+        with self.assertRaisesRegex(KmsException, "some_key"):
+            AwsKmsClient(boto_kms)._put_key_policy_statements("some_key", [{}])
