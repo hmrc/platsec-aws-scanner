@@ -39,7 +39,7 @@ class TestAwsKmsClient(AwsScannerTestCase):
     def test_get_key_policy(self) -> None:
         boto_kms = Mock(get_key_policy=Mock(return_value=GET_KEY_POLICY))
         self.assertEqual({"Statement": [{"Effect": "Allow"}]}, AwsKmsClient(boto_kms)._get_key_policy("1234abcd"))
-        boto_kms.get_key_policy.assert_called_with(KeyId="1234abcd")
+        boto_kms.get_key_policy.assert_called_with(KeyId="1234abcd", PolicyName="default")
 
     def test_get_key_policy_failure(self) -> None:
         boto_kms = Mock(get_key_policy=Mock(side_effect=client_error("GetKeyPolicy", "NotFoundException", "no")))

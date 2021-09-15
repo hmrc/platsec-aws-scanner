@@ -33,7 +33,7 @@ class AwsKmsClient:
 
     def _get_key_policy(self, key_id: str) -> Dict[str, Any]:
         try:
-            return dict(loads(self._kms.get_key_policy(KeyId=key_id)["Policy"]))
+            return dict(loads(self._kms.get_key_policy(KeyId=key_id, PolicyName="default")["Policy"]))
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to get policy for kms key with id '{key_id}': {err}") from None
 
