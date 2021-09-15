@@ -25,6 +25,8 @@ flow_log_format = ${srcaddr} ${dstaddr}
 role = iam_role
 
 [kms]
+key_policy_default_statement = {"account": "$account_id"}
+key_policy_log_group_statement = {"account": "$account_id", "region": "$region", "log_group_name": "$log_group_name"}
 role = kms_role
 
 [logs]
