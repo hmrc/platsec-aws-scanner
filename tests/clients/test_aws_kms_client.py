@@ -1,30 +1,26 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock, patch
 
-from contextlib import redirect_stderr
-from io import StringIO
-
 from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_scanner_exceptions import KmsException
 
-from tests.clients.test_aws_kms_responses import CREATE_KEY, DESCRIBE_KEY, GET_KEY_POLICY
+from tests.clients.test_aws_kms_responses import (
+    CREATE_KEY,
+    DESCRIBE_KEY,
+    EXPECTED_ALIASES,
+    GET_KEY_POLICY,
+    LIST_ALIASES_PAGES,
+)
 from tests.test_types_generator import client_error, key
 
 
 class TestAwsKmsClient(AwsScannerTestCase):
-    def test_find_key(self) -> None:
+    def test_get_key(self) -> None:
         key_id = "1234"
         a_key, a_policy = key(id=key_id), {"something": "some value"}
         with patch.object(AwsKmsClient, "_describe_key", side_effect=lambda k: a_key if k == key_id else None):
             with patch.object(AwsKmsClient, "_get_key_policy", side_effect=lambda k: a_policy if k == key_id else None):
-                self.assertEqual(key(id=key_id, policy=a_policy), AwsKmsClient(Mock()).find_key(key_id))
-
-    def test_find_key_not_found(self) -> None:
-        with patch.object(AwsKmsClient, "_describe_key", side_effect=KmsException("key not found")):
-            with redirect_stderr(StringIO()) as err:
-                self.assertIsNone(AwsKmsClient(Mock()).find_key("does-not-exist"))
-        self.assertIn("does-not-exist", err.getvalue())
-        self.assertIn("key not found", err.getvalue())
+                self.assertEqual(key(id=key_id, policy=a_policy), AwsKmsClient(Mock()).get_key(key_id))
 
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))
@@ -81,3 +77,16 @@ class TestAwsKmsClient(AwsScannerTestCase):
         )
         with self.assertRaisesRegex(KmsException, "some_key"):
             AwsKmsClient(boto_kms)._put_key_policy_statements("some_key", [{}])
+
+    @staticmethod
+    def list_aliases() -> Mock:
+        return Mock(paginate=Mock(side_effect=lambda: iter(LIST_ALIASES_PAGES)))
+
+    def test_list_aliases(self) -> None:
+        kms = Mock(get_paginator=Mock(side_effect=lambda op: self.list_aliases() if op == "list_aliases" else None))
+        self.assertEqual(EXPECTED_ALIASES, AwsKmsClient(kms)._list_aliases())
+
+    def test_list_aliases_failure(self) -> None:
+        kms = Mock(get_paginator=Mock(side_effect=client_error("ListAliases", "AccessDeniedException", "nope!")))
+        with self.assertRaisesRegex(KmsException, "unable to list kms key aliases: An error occurred"):
+            AwsKmsClient(kms)._list_aliases()

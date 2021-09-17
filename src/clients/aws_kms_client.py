@@ -3,10 +3,10 @@ from logging import getLogger
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Sequence
 
 from src.data.aws_scanner_exceptions import KmsException
-from src.data.aws_kms_types import Key, to_key
+from src.data.aws_kms_types import Alias, Key, to_alias, to_key
 
 
 class AwsKmsClient:
@@ -14,12 +14,8 @@ class AwsKmsClient:
         self._logger = getLogger(self.__class__.__name__)
         self._kms = boto_kms
 
-    def find_key(self, key_id: str) -> Optional[Key]:
-        try:
-            return self._enrich_key(self._describe_key(key_id))
-        except KmsException as ex:
-            self._logger.warning(f"unable to find key with id '{key_id}': {ex}")
-            return None
+    def get_key(self, key_id: str) -> Key:
+        return self._enrich_key(self._describe_key(key_id))
 
     def _enrich_key(self, key: Key) -> Key:
         key.policy = self._get_key_policy(key.id)
@@ -60,3 +56,9 @@ class AwsKmsClient:
             self._kms.put_key_policy(KeyId=key_id, PolicyName="default", Policy=dumps(policy))
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to put policy '{policy}' for key '{key_id}': {err}") from None
+
+    def _list_aliases(self) -> Sequence[Alias]:
+        try:
+            return [to_alias(a) for page in self._kms.get_paginator("list_aliases").paginate() for a in page["Aliases"]]
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to list kms key aliases: {err}") from None

@@ -14,7 +14,7 @@ from src.data.aws_compliance_actions import (
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Policy, Role
-from src.data.aws_kms_types import Key
+from src.data.aws_kms_types import Alias, Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -352,3 +352,11 @@ def key(
     return Key(
         account_id=account_id, region=region, id=id, arn=arn, description=description, state=state, policy=policy
     )
+
+
+def alias(
+    name: str = "alias/alias-1",
+    arn: str = "arn:aws:kms:us-east-1:111222333444:alias/alias-1",
+    target_key_id: Optional[str] = "1234-5678",
+) -> Alias:
+    return Alias(name=name, arn=arn, target_key_id=target_key_id)

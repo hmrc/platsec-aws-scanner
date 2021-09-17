@@ -24,3 +24,14 @@ def to_key(key: Dict[Any, Any]) -> Key:
         description=key["Description"],
         state=key["KeyState"],
     )
+
+
+@dataclass
+class Alias:
+    name: str
+    arn: str
+    target_key_id: Optional[str]
+
+
+def to_alias(alias: Dict[str, Any]) -> Alias:
+    return Alias(name=alias["AliasName"], arn=alias["AliasArn"], target_key_id=alias.get("TargetKeyId"))

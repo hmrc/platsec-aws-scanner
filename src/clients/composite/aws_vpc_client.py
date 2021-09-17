@@ -44,7 +44,7 @@ class AwsVpcClient:
 
     def _find_log_group(self, name: str) -> Optional[LogGroup]:
         log_group = next(iter(self.logs.describe_log_groups(name)), None)
-        kms_key = self.kms.find_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
+        kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
         return log_group.with_kms_key(kms_key) if log_group else None
 
     def _find_flow_log_delivery_role(self) -> Optional[Role]:
@@ -73,10 +73,11 @@ class AwsVpcClient:
         )
 
     def enforcement_actions(self, vpcs: Sequence[Vpc]) -> Sequence[ComplianceAction]:
+        kms_actions = self._kms_enforcement_actions()
         log_group_actions = self._vpc_log_group_enforcement_actions()
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
-        return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
+        return list(chain(kms_actions, log_group_actions, delivery_role_actions, vpc_actions))
 
     def _vpc_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return list(
@@ -86,6 +87,13 @@ class AwsVpcClient:
                 self._create_flow_log_actions(vpc),
             )
         )
+
+    def _kms_enforcement_actions(self) -> Sequence[ComplianceAction]:
+        # TODO
+        # 1. find the key based on predictable alias
+        # 2. if no alias -> [CreateLogGroupKmsKeyAction]
+        # 3. if key policy is as per config -> [], else [DeleteKmsKeyAliasAction, CreateLogGroupKmsKeyAction]
+        return []
 
     def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return [DeleteFlowLogAction(flow_log.id) for flow_log in self._find_misconfigured_flow_logs(vpc.flow_logs)]
@@ -131,6 +139,7 @@ class AwsVpcClient:
             if not self._is_central_vpc_log_group(lg)
             else []
         )
+        # TODO if lg.key is not the expected key, AssociateLogGroupWithKmsKey action needs to be appended
 
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(
