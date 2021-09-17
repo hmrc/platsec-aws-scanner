@@ -2,7 +2,7 @@ DOCKER = docker run \
 	--interactive \
 	--rm \
 	--env "PYTHONWARNINGS=ignore:ResourceWarning" \
-	--volume "$(PWD):${PWD}" \
+	--volume "$(PWD):${PWD}:Z" \
 	--workdir "${PWD}"
 PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
