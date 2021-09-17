@@ -3,7 +3,7 @@ from logging import getLogger
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 from src.data.aws_scanner_exceptions import KmsException
 from src.data.aws_kms_types import Alias, Key, to_alias, to_key
@@ -16,6 +16,10 @@ class AwsKmsClient:
 
     def get_key(self, key_id: str) -> Key:
         return self._enrich_key(self._describe_key(key_id))
+
+    def find_alias(self, alias_name: str) -> Optional[Alias]:
+        aliases = filter(lambda a: a.name == f"alias/{alias_name}", self._list_aliases())
+        return next(aliases, None)
 
     def _enrich_key(self, key: Key) -> Key:
         key.policy = self._get_key_policy(key.id)

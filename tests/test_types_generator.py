@@ -5,10 +5,12 @@ from botocore.exceptions import ClientError
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_compliance_actions import (
+    CreateLogGroupKmsKeyAction,
     CreateVpcLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
+    DeleteLogGroupKmsKeyAliasAction,
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupSubscriptionFilterAction,
 )
@@ -308,6 +310,14 @@ def put_vpc_log_group_subscription_filter_action() -> PutVpcLogGroupSubscription
     return PutVpcLogGroupSubscriptionFilterAction()
 
 
+def create_log_group_kms_key_action() -> CreateLogGroupKmsKeyAction:
+    return CreateLogGroupKmsKeyAction()
+
+
+def delete_log_group_kms_key_alias_action() -> DeleteLogGroupKmsKeyAliasAction:
+    return DeleteLogGroupKmsKeyAliasAction()
+
+
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce)
 
@@ -354,9 +364,18 @@ def key(
     )
 
 
+def compliant_key_policy() -> Dict[str, Any]:
+    return {
+        "Statement": [
+            {"account": "112233445566"},
+            {"account": "112233445566", "region": "us-east-1", "log_group_name": "/vpc/flow_log"},
+        ]
+    }
+
+
 def alias(
     name: str = "alias/alias-1",
     arn: str = "arn:aws:kms:us-east-1:111222333444:alias/alias-1",
-    target_key_id: Optional[str] = "1234-5678",
+    target_key_id: Optional[str] = key().id,
 ) -> Alias:
     return Alias(name=name, arn=arn, target_key_id=target_key_id)

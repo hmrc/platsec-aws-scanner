@@ -16,11 +16,15 @@ from src.data.aws_compliance_actions import (
 )
 
 from tests.test_types_generator import (
-    create_vpc_log_group_action,
+    alias,
+    compliant_key_policy,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
+    create_log_group_kms_key_action,
+    create_vpc_log_group_action,
     delete_flow_log_action,
     delete_flow_log_delivery_role_action,
+    delete_log_group_kms_key_alias_action,
     flow_log,
     key,
     log_group,
@@ -96,10 +100,34 @@ class TestAwsLogDeliveryRoleCompliance(AwsScannerTestCase):
         find_policy.assert_called_with("vpc_flow_log_role_policy")
 
 
+class TestAwsKmsKeyCompliance(AwsScannerTestCase):
+    @staticmethod
+    def client() -> AwsVpcClient:
+        return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()), AwsKmsClient(Mock()))
+
+    def test_create_kms_if_not_exists(self) -> None:
+        with patch.object(AwsKmsClient, "find_alias", return_value=None):
+            self.assertEqual([create_log_group_kms_key_action()], self.client()._kms_enforcement_actions())
+
+    def test_recreate_alias_and_key_when_incorrect_policy(self) -> None:
+        with patch.object(AwsKmsClient, "find_alias", side_effect=lambda a: alias() if a == "an_alias" else None):
+            with patch.object(AwsKmsClient, "get_key", side_effect=lambda k: key() if k == "1234abcd" else None):
+                self.assertEqual(
+                    [delete_log_group_kms_key_alias_action(), create_log_group_kms_key_action()],
+                    self.client()._kms_enforcement_actions(),
+                )
+
+    def test_do_nothing_when_all_correct(self) -> None:
+        good_key = key(policy=compliant_key_policy())
+        with patch.object(AwsKmsClient, "get_key", side_effect=lambda k: good_key if k == good_key.id else None):
+            with patch.object(AwsKmsClient, "find_alias", side_effect=lambda a: alias() if a == "an_alias" else None):
+                self.assertEqual([], self.client()._kms_enforcement_actions())
+
+
 class TestAwsFlowLogCompliance(AwsScannerTestCase):
     @staticmethod
     def client() -> AwsVpcClient:
-        return AwsVpcClient(Mock(), AwsIamClient(Mock()), AwsLogsClient(Mock()), AwsKmsClient(Mock()))
+        return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()), AwsKmsClient(Mock()))
 
     def test_flow_log_centralised(self) -> None:
         self.assertTrue(self.client()._is_flow_log_centralised(flow_log(log_group_name="/vpc/flow_log")))
@@ -149,12 +177,16 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         role_acts = [role_act_1]
         lg_act_1 = put_vpc_log_group_subscription_filter_action()
         lg_acts = [lg_act_1]
+        kms_act_1 = create_log_group_kms_key_action()
+        kms_acts = [kms_act_1]
         with patch.object(AwsVpcClient, "_vpc_enforcement_actions", side_effect=lambda v: acts if v == a_vpc else None):
             with patch.object(AwsVpcClient, "_delivery_role_enforcement_actions", return_value=role_acts):
                 with patch.object(AwsVpcClient, "_vpc_log_group_enforcement_actions", return_value=lg_acts):
-                    self.assertEqual(
-                        [lg_act_1, role_act_1, vpc_act_1, vpc_act_2], self.client().enforcement_actions([a_vpc])
-                    )
+                    with patch.object(AwsVpcClient, "_kms_enforcement_actions", return_value=kms_acts):
+                        self.assertEqual(
+                            [kms_act_1, lg_act_1, role_act_1, vpc_act_1, vpc_act_2],
+                            self.client().enforcement_actions([a_vpc]),
+                        )
 
     def test_vpc_has_no_flow_logs(self) -> None:
         with patch.object(AwsVpcClient, "_get_flow_log_delivery_role_arn", return_value="an_arn"):

@@ -5,7 +5,7 @@ from configparser import ConfigParser
 from json import JSONDecodeError, loads
 from logging import getLogger
 from string import Template
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 
 from src.data.aws_organizations_types import Account
 
@@ -51,15 +51,24 @@ class AwsScannerConfig:
     def iam_role(self) -> str:
         return self._get_config("iam", "role")
 
+    def kms_key_alias(self) -> str:
+        return self._get_config("kms", "key_alias")
+
     def kms_key_policy_default_statement(self, account_id: str) -> Dict[str, Any]:
         return self._get_templated_json_config("kms", "key_policy_default_statement", {"account_id": account_id})
 
-    def kms_key_policy_log_group_statement(self, account_id: str, region: str, log_group_name: str) -> Dict[str, Any]:
+    def kms_key_policy_log_group_statement(self, account_id: str, region: str) -> Dict[str, Any]:
         return self._get_templated_json_config(
             "kms",
             "key_policy_log_group_statement",
-            {"account_id": account_id, "region": region, "log_group_name": log_group_name},
+            {"account_id": account_id, "region": region, "log_group_name": self.logs_vpc_log_group_name()},
         )
+
+    def kms_key_policy_statements(self, account_id: str, region: str) -> Sequence[Dict[str, Any]]:
+        return [
+            self.kms_key_policy_default_statement(account_id),
+            self.kms_key_policy_log_group_statement(account_id, region),
+        ]
 
     def kms_role(self) -> str:
         return self._get_config("kms", "role")

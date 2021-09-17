@@ -7,6 +7,7 @@ from typing import Any, Callable, Optional
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
+from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import AwsScannerException
 
@@ -120,3 +121,21 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
             filter_pattern=config.logs_vpc_log_group_pattern(),
             destination_arn=config.logs_vpc_log_group_destination(),
         )
+
+
+@dataclass
+class DeleteLogGroupKmsKeyAliasAction(ComplianceAction):
+    def __init__(self) -> None:
+        super().__init__("Delete log group kms key alias")
+
+    def _apply(self, client: AwsKmsClient) -> None:
+        """"""
+
+
+@dataclass
+class CreateLogGroupKmsKeyAction(ComplianceAction):
+    def __init__(self) -> None:
+        super().__init__("Create log group kms key")
+
+    def _apply(self, client: AwsKmsClient) -> None:
+        """"""

@@ -1,5 +1,3 @@
-from tests.test_types_generator import alias
-
 DESCRIBE_KEY = {
     "KeyMetadata": {
         "AWSAccountId": "112233445566",
@@ -37,9 +35,4 @@ LIST_ALIASES_PAGES = [
             {"AliasName": "alias/alias-2", "AliasArn": "arn:aws:kms:us-east-1:111222333444:alias/alias-2"},
         ]
     },
-]
-
-EXPECTED_ALIASES = [
-    alias(name="alias/alias-1", arn="arn:aws:kms:us-east-1:111222333444:alias/alias-1", target_key_id="1234-5678"),
-    alias(name="alias/alias-2", arn="arn:aws:kms:us-east-1:111222333444:alias/alias-2", target_key_id=None),
 ]

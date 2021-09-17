@@ -15,9 +15,12 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupSubscriptionFilterAction,
+    CreateLogGroupKmsKeyAction,
+    DeleteLogGroupKmsKeyAliasAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
+from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 
 
@@ -89,11 +92,23 @@ class AwsVpcClient:
         )
 
     def _kms_enforcement_actions(self) -> Sequence[ComplianceAction]:
-        # TODO
-        # 1. find the key based on predictable alias
-        # 2. if no alias -> [CreateLogGroupKmsKeyAction]
-        # 3. if key policy is as per config -> [], else [DeleteKmsKeyAliasAction, CreateLogGroupKmsKeyAction]
-        return []
+        alias = self.kms.find_alias(self.config.kms_key_alias())
+        key = self.kms.get_key(alias.target_key_id) if alias and alias.target_key_id else None
+        return (
+            [CreateLogGroupKmsKeyAction()]
+            if alias is None
+            else [DeleteLogGroupKmsKeyAliasAction(), CreateLogGroupKmsKeyAction()]
+            if not self._is_key_compliant(key)
+            else []
+        )
+
+    def _is_key_compliant(self, key: Optional[Key]) -> bool:
+        return key is not None and self._is_key_policy_compliant(key)
+
+    def _is_key_policy_compliant(self, key: Key) -> bool:
+        return key.policy is not None and key.policy["Statement"] == self.config.kms_key_policy_statements(
+            key.account_id, key.region
+        )
 
     def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return [DeleteFlowLogAction(flow_log.id) for flow_log in self._find_misconfigured_flow_logs(vpc.flow_logs)]
@@ -139,7 +154,6 @@ class AwsVpcClient:
             if not self._is_central_vpc_log_group(lg)
             else []
         )
-        # TODO if lg.key is not the expected key, AssociateLogGroupWithKmsKey action needs to be appended
 
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(

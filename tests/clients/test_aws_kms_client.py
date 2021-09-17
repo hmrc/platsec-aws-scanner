@@ -7,11 +7,10 @@ from src.data.aws_scanner_exceptions import KmsException
 from tests.clients.test_aws_kms_responses import (
     CREATE_KEY,
     DESCRIBE_KEY,
-    EXPECTED_ALIASES,
     GET_KEY_POLICY,
     LIST_ALIASES_PAGES,
 )
-from tests.test_types_generator import client_error, key
+from tests.test_types_generator import alias, client_error, key
 
 
 class TestAwsKmsClient(AwsScannerTestCase):
@@ -24,7 +23,7 @@ class TestAwsKmsClient(AwsScannerTestCase):
 
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))
-        self.assertEqual(key(), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
+        self.assertEqual(key(policy=None), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
         boto_kms.describe_key.assert_called_with(KeyId="1234abcd")
 
     def test_describe_key_failure(self) -> None:
@@ -82,9 +81,14 @@ class TestAwsKmsClient(AwsScannerTestCase):
     def list_aliases() -> Mock:
         return Mock(paginate=Mock(side_effect=lambda: iter(LIST_ALIASES_PAGES)))
 
-    def test_list_aliases(self) -> None:
+    def test_find_alias(self) -> None:
         kms = Mock(get_paginator=Mock(side_effect=lambda op: self.list_aliases() if op == "list_aliases" else None))
-        self.assertEqual(EXPECTED_ALIASES, AwsKmsClient(kms)._list_aliases())
+        client = AwsKmsClient(kms)
+        self.assertIsNone(client.find_alias("not-a-alias"))
+        self.assertEqual(
+            alias(name="alias/alias-2", arn="arn:aws:kms:us-east-1:111222333444:alias/alias-2", target_key_id=None),
+            client.find_alias("alias-2"),
+        )
 
     def test_list_aliases_failure(self) -> None:
         kms = Mock(get_paginator=Mock(side_effect=client_error("ListAliases", "AccessDeniedException", "nope!")))

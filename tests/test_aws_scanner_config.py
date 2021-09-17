@@ -21,10 +21,11 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("ALL", config.ec2_flow_log_traffic_type())
         self.assertEqual("${srcaddr} ${dstaddr}", config.ec2_flow_log_format())
         self.assertEqual("iam_role", config.iam_role())
+        self.assertEqual("an_alias", config.kms_key_alias())
         self.assertEqual({"account": "1234"}, config.kms_key_policy_default_statement("1234"))
         self.assertEqual(
-            {"account": "89", "log_group_name": "a_log_group", "region": "us"},
-            config.kms_key_policy_log_group_statement("89", "us", "a_log_group"),
+            {"account": "89", "log_group_name": "/vpc/flow_log", "region": "us"},
+            config.kms_key_policy_log_group_statement("89", "us"),
         )
         self.assertEqual("kms_role", config.kms_role())
         self.assertEqual("/vpc/flow_log", config.logs_vpc_log_group_name())
@@ -70,6 +71,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_IAM_ROLE": "the_iam_role",
             "AWS_SCANNER_KMS_KEY_POLICY_DEFAULT_STATEMENT": '{"arn": ":$account_id:"}',
             "AWS_SCANNER_KMS_KEY_POLICY_LOG_GROUP_STATEMENT": '{"region": "$region-west-1"}',
+            "AWS_SCANNER_KMS_KEY_ALIAS": "the_kms_key_alias",
             "AWS_SCANNER_KMS_ROLE": "the_kms_role",
             "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
             "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
@@ -109,7 +111,8 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("${srcaddr}", config.ec2_flow_log_format())
         self.assertEqual("the_iam_role", config.iam_role())
         self.assertEqual({"arn": ":0:"}, config.kms_key_policy_default_statement("0"))
-        self.assertEqual({"region": "eu-west-1"}, config.kms_key_policy_log_group_statement("9", "eu", "a_name"))
+        self.assertEqual({"region": "eu-west-1"}, config.kms_key_policy_log_group_statement("9", "eu"))
+        self.assertEqual("the_kms_key_alias", config.kms_key_alias())
         self.assertEqual("the_kms_role", config.kms_role())
         self.assertEqual("/vpc/central_flow_log_name", config.logs_vpc_log_group_name())
         self.assertEqual("[version, account_id]", config.logs_vpc_log_group_pattern())
@@ -171,4 +174,4 @@ class TestAwsScannerConfig(AwsScannerTestCase):
     @patch.dict(os.environ, {"AWS_SCANNER_KMS_KEY_POLICY_LOG_GROUP_STATEMENT": "$missing"}, clear=True)
     def test_templated_config_missing_keyword(self) -> None:
         with self.assertRaisesRegex(SystemExit, "key_policy_log_group_statement"):
-            AwsScannerConfig().kms_key_policy_log_group_statement("1", "us", "name")
+            AwsScannerConfig().kms_key_policy_log_group_statement("1", "us")
