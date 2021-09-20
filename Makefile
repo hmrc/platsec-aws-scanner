@@ -2,12 +2,13 @@ DOCKER = docker run \
 	--interactive \
 	--rm \
 	--env "PYTHONWARNINGS=ignore:ResourceWarning" \
-	--volume "$(PWD):${PWD}" \
+	--volume "$(PWD):${PWD}:Z" \
 	--workdir "${PWD}"
 PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
 PYTHON_TEST_PATTERN ?= "test_*.py"
 PYTHON_VERSION = $(shell head -1 .python-version)
+PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
 SHELL := /bin/bash
 
 .PHONY: pipenv
@@ -15,6 +16,7 @@ pipenv:
 	@docker build \
 		--tag $@ \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
 		--build-arg "user_id=$(shell id -u)" \
 		--build-arg "group_id=$(shell id -g)" \
 		--build-arg "home=${HOME}" \
@@ -36,7 +38,7 @@ static-check: pipenv
 	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict ./**/*.py
 
 .PHONY: all-checks
-all-checks: python-test python-coverage fmt-check static-check md-check
+all-checks: python-test python-coverage fmt-check static-check md-check clean-up
 
 .PHONY: python-test
 python-test: pipenv
@@ -53,7 +55,7 @@ python-test: pipenv
 .PHONY: python-coverage
 python-coverage:
 	@$(DOCKER) pipenv run coverage xml --omit $(PYTHON_COVERAGE_OMIT)
-	@$(DOCKER) pipenv run coverage report --omit $(PYTHON_COVERAGE_OMIT) --fail-under $(PYTHON_COVERAGE_FAIL_UNDER_PERCENT)
+	@$(DOCKER) pipenv run coverage report -m --omit $(PYTHON_COVERAGE_OMIT) --fail-under $(PYTHON_COVERAGE_FAIL_UNDER_PERCENT)
 
 .PHONY: md-check
 md-check:
@@ -64,12 +66,18 @@ md-check:
 build-lambda-image:
 	@docker build \
 		--file lambda.Dockerfile \
-		--tag platsec_aws_scanner_lambda:local . \
+		--tag platsec_aws_scanner_lambda:lambda . \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
 		>/dev/null
 
 .PHONY: push-lambda-image
 push-lambda-image: build-lambda-image
 	@aws --profile $(ROLE) ecr get-login-password | docker login --username AWS --password-stdin $(ECR)
-	@docker tag  platsec_aws_scanner_lambda:local $(ECR)/platsec-aws-scanner:latest
+	@docker tag  platsec_aws_scanner_lambda:lambda $(ECR)/platsec-aws-scanner:latest
 	@docker push $(ECR)/platsec-aws-scanner:latest
+
+.PHONY: clean-up
+clean-up:
+	@rm -f .coverage
+	@rm -f coverage.xml

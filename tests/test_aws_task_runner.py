@@ -6,7 +6,7 @@ from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 
-from tests.test_types_generator import account, athena_task, s3_task, ssm_task, task_report
+from tests.test_types_generator import account, athena_task, s3_task, ssm_task, task_report, vpc_task
 
 
 class TestAwsTaskRunner(AwsScannerTestCase):
@@ -53,6 +53,13 @@ class TestAwsTaskRunner(AwsScannerTestCase):
         client = Mock()
         client_factory = Mock(get_s3_client=Mock(side_effect=lambda acc: client if acc == account() else None))
         task = s3_task()
+        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
+    def test_run_vpc_task(self) -> None:
+        client = Mock()
+        client_factory = Mock(get_vpc_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+        task = vpc_task()
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 

@@ -29,7 +29,15 @@ class DropTableException(AwsScannerException):
     pass
 
 
+class EC2Exception(AwsScannerException):
+    pass
+
+
 class GetQueryResultsException(AwsScannerException):
+    pass
+
+
+class IamException(AwsScannerException):
     pass
 
 
@@ -45,11 +53,19 @@ class InvalidRegionException(AwsScannerException):
         super().__init__(f"invalid region '{region}'. Should be one of {regions}.")
 
 
+class KmsException(AwsScannerException):
+    pass
+
+
 class ListTablesException(AwsScannerException):
     pass
 
 
 class ListSSMParametersException(AwsScannerException):
+    pass
+
+
+class LogsException(AwsScannerException):
     pass
 
 

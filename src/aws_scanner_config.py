@@ -2,8 +2,10 @@ import os
 import sys
 
 from configparser import ConfigParser
+from json import JSONDecodeError, loads
 from logging import getLogger
-from typing import List
+from string import Template
+from typing import Any, Dict, List, Sequence
 
 from src.data.aws_organizations_types import Account
 
@@ -33,6 +35,67 @@ class AwsScannerConfig:
 
     def cloudtrail_region(self) -> str:
         return self._get_config("cloudtrail", "region")
+
+    def ec2_role(self) -> str:
+        return self._get_config("ec2", "role")
+
+    def ec2_flow_log_status(self) -> str:
+        return self._get_config("ec2", "flow_log_status")
+
+    def ec2_flow_log_traffic_type(self) -> str:
+        return self._get_config("ec2", "flow_log_traffic_type")
+
+    def ec2_flow_log_format(self) -> str:
+        return self._get_config("ec2", "flow_log_format")
+
+    def iam_role(self) -> str:
+        return self._get_config("iam", "role")
+
+    def kms_key_alias(self) -> str:
+        return self._get_config("kms", "key_alias")
+
+    def kms_key_policy_default_statement(self, account_id: str) -> Dict[str, Any]:
+        return self._get_templated_json_config("kms", "key_policy_default_statement", {"account_id": account_id})
+
+    def kms_key_policy_log_group_statement(self, account_id: str, region: str) -> Dict[str, Any]:
+        return self._get_templated_json_config(
+            "kms",
+            "key_policy_log_group_statement",
+            {"account_id": account_id, "region": region, "log_group_name": self.logs_vpc_log_group_name()},
+        )
+
+    def kms_key_policy_statements(self, account_id: str, region: str) -> Sequence[Dict[str, Any]]:
+        return [
+            self.kms_key_policy_default_statement(account_id),
+            self.kms_key_policy_log_group_statement(account_id, region),
+        ]
+
+    def kms_role(self) -> str:
+        return self._get_config("kms", "role")
+
+    def logs_vpc_log_group_name(self) -> str:
+        return self._get_config("logs", "vpc_log_group_name")
+
+    def logs_vpc_log_group_pattern(self) -> str:
+        return self._get_config("logs", "vpc_log_group_pattern")
+
+    def logs_vpc_log_group_destination(self) -> str:
+        return self._get_config("logs", "vpc_log_group_destination")
+
+    def logs_vpc_log_group_delivery_role(self) -> str:
+        return self._get_config("logs", "vpc_log_group_delivery_role")
+
+    def logs_vpc_log_group_delivery_role_policy_name(self) -> str:
+        return f"{self.logs_vpc_log_group_delivery_role()}_policy"
+
+    def logs_vpc_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
+        return self._get_json_config("logs", "vpc_log_group_delivery_role_assume_policy")
+
+    def logs_vpc_log_group_delivery_role_policy_document(self) -> Dict[str, Any]:
+        return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
+
+    def logs_role(self) -> str:
+        return self._get_config("logs", "role")
 
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")
@@ -83,6 +146,25 @@ class AwsScannerConfig:
             return os.environ.get(f"AWS_SCANNER_{section.upper()}_{key.upper()}") or self._config[section][key]
         except KeyError:
             sys.exit(f"missing config: section '{section}', key '{key}'")
+
+    def _get_templated_config(self, section: str, key: str, keywords: Dict[str, str]) -> str:
+        try:
+            return Template(self._get_config(section, key)).substitute(**keywords)
+        except (ValueError, KeyError) as err:
+            sys.exit(f"invalid config: section '{section}', key '{key}', error: {err}")
+
+    @staticmethod
+    def _to_json(json_str: str, section: str, key: str) -> Dict[str, Any]:
+        try:
+            return dict(loads(json_str))
+        except JSONDecodeError as err:
+            sys.exit(f"invalid config: section '{section}', key '{key}', error: {err}")
+
+    def _get_json_config(self, section: str, key: str) -> Dict[str, Any]:
+        return self._to_json(self._get_config(section, key), section, key)
+
+    def _get_templated_json_config(self, section: str, key: str, keywords: Dict[str, str]) -> Dict[str, Any]:
+        return self._to_json(self._get_templated_config(section, key, keywords), section, key)
 
     def _load_config(self) -> ConfigParser:
         config = ConfigParser()

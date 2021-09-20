@@ -9,6 +9,7 @@ from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
+from src.tasks.aws_vpc_task import AwsVpcTask
 
 
 class AwsTaskRunner:
@@ -31,4 +32,6 @@ class AwsTaskRunner:
             return task.run(self._client_factory.get_ssm_client(task.account))
         elif isinstance(task, AwsS3Task):
             return task.run(self._client_factory.get_s3_client(task.account))
+        elif isinstance(task, AwsVpcTask):
+            return task.run(self._client_factory.get_vpc_client(task.account))
         raise UnsupportedTaskException(task)

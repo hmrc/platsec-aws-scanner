@@ -21,6 +21,7 @@ class AwsScannerArguments:
     role: str
     source_ip: str
     log_level: str
+    enforce: bool
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
@@ -36,6 +37,7 @@ class AwsScannerCommands:
     list_ssm_parameters: str = "list_ssm_parameters"
     drop: str = "drop"
     audit_s3: str = "audit_s3"
+    audit_vpc_flow_logs: str = "audit_vpc_flow_logs"
 
 
 class AwsScannerArgumentParser:
@@ -47,6 +49,10 @@ class AwsScannerArgumentParser:
     @staticmethod
     def _add_accounts_args(parser: ArgumentParser) -> None:
         parser.add_argument("-a", "--accounts", type=str, help="comma-separated list of target accounts")
+
+    @staticmethod
+    def _add_enforce_arg(parser: ArgumentParser, cmd_help: str) -> None:
+        parser.add_argument("-e", "--enforce", action="store_true", help=cmd_help)
 
     @staticmethod
     def _add_athena_task_args(parser: ArgumentParser) -> None:
@@ -76,6 +82,7 @@ class AwsScannerArgumentParser:
         self._add_create_table_command(subparsers)
         self._add_drop_command(subparsers)
         self._add_audit_s3_command(subparsers)
+        self._add_audit_vpc_flow_logs_command(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -89,6 +96,14 @@ class AwsScannerArgumentParser:
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_s3, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+
+    def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
+        desc = "audit VPC flow logs compliance"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_flow_logs, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
         self._add_verbosity_arg(audit_parser)
 
     def _add_create_table_command(self, subparsers: Any) -> None:
@@ -160,4 +175,5 @@ class AwsScannerArgumentParser:
             role=str(args.get("role")),
             source_ip=str(args.get("ip")),
             log_level=str(args.get("verbosity")).upper(),
+            enforce=bool(args.get("enforce")),
         )

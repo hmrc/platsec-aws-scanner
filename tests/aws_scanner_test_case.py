@@ -15,6 +15,30 @@ logs_bucket = cloudtrail-logs-bucket
 logs_retention_days = 90
 region = eu
 
+[ec2]
+role = ec2_role
+flow_log_status = ACTIVE
+flow_log_traffic_type = ALL
+flow_log_format = ${srcaddr} ${dstaddr}
+
+[iam]
+role = iam_role
+
+[kms]
+key_alias = an_alias
+key_policy_default_statement = {"account": "$account_id"}
+key_policy_log_group_statement = {"account": "$account_id", "region": "$region", "log_group_name": "$log_group_name"}
+role = kms_role
+
+[logs]
+vpc_log_group_name = /vpc/flow_log
+vpc_log_group_pattern = [version, account_id, interface_id]
+vpc_log_group_destination = arn:aws:logs:::destination:central
+vpc_log_group_delivery_role = vpc_flow_log_role
+vpc_log_group_delivery_role_assume_policy = {"Statement": [{"Action": "sts:AssumeRole"}]}
+vpc_log_group_delivery_role_policy_document = {"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]}
+role = logs_role
+
 [organization]
 account = 999888777666
 role = orgs_role
