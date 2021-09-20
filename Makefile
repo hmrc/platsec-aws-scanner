@@ -2,7 +2,7 @@ DOCKER = docker run \
 	--interactive \
 	--rm \
 	--env "PYTHONWARNINGS=ignore:ResourceWarning" \
-	--volume "$(PWD):${PWD}:Z" \
+	--volume "$(PWD):${PWD}:z" \
 	--workdir "${PWD}"
 PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
@@ -53,7 +53,7 @@ python-coverage:
 	@$(DOCKER) pipenv run coverage report -m --omit $(PYTHON_COVERAGE_OMIT) --fail-under $(PYTHON_COVERAGE_FAIL_UNDER_PERCENT)
 
 md-check:
-	@docker pull zemanlx/remark-lint:0.2.0 >/dev/null
+	@docker pull zemanlx/remark-lint:0.2.0
 	@docker run --rm -i -v $(PWD):/lint/input:ro zemanlx/remark-lint:0.2.0 --frail .
 
 build-lambda-image:
