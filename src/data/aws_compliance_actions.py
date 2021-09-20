@@ -129,7 +129,8 @@ class DeleteLogGroupKmsKeyAliasAction(ComplianceAction):
         super().__init__("Delete log group kms key alias")
 
     def _apply(self, client: AwsKmsClient) -> None:
-        """"""
+        config = Config()
+        client.delete_alias(name=config.kms_key_alias())
 
 
 @dataclass

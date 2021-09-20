@@ -10,6 +10,8 @@ from src.data.aws_kms_types import Alias, Key, to_alias, to_key
 
 
 class AwsKmsClient:
+    _kms: BaseClient
+
     def __init__(self, boto_kms: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
         self._kms = boto_kms
@@ -66,3 +68,10 @@ class AwsKmsClient:
             return [to_alias(a) for page in self._kms.get_paginator("list_aliases").paginate() for a in page["Aliases"]]
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to list kms key aliases: {err}") from None
+
+    def delete_alias(self, name: str) -> None:
+        target_name = f"alias/{name}"
+        try:
+            self._kms.delete_alias(AliasName=target_name)
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to delete kms key alias named '{target_name}': {err}") from None

@@ -94,3 +94,21 @@ class TestAwsKmsClient(AwsScannerTestCase):
         kms = Mock(get_paginator=Mock(side_effect=client_error("ListAliases", "AccessDeniedException", "nope!")))
         with self.assertRaisesRegex(KmsException, "unable to list kms key aliases: An error occurred"):
             AwsKmsClient(kms)._list_aliases()
+
+    def test_delete_alias(self) -> None:
+        boto_kms = Mock(delete_alias=Mock(return_value=None))
+
+        AwsKmsClient(boto_kms).delete_alias(name="testName")
+
+        boto_kms.delete_alias.assert_called_with(AliasName="alias/testName")
+
+    def test_delete_alias_failure(self) -> None:
+        boto_kms = Mock(delete_alias=Mock(side_effect=client_error("DeleteAlias", "AccessDeniedException", "nope!")))
+
+        with self.assertRaisesRegex(
+            expected_exception=KmsException,
+            expected_regex="unable to delete kms key alias named 'alias/testName': An error occurred",
+        ):
+            AwsKmsClient(boto_kms).delete_alias(name="testName")
+
+        boto_kms.delete_alias.assert_called_with(AliasName="alias/testName")
