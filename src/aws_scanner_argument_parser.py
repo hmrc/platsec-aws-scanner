@@ -38,6 +38,7 @@ class AwsScannerCommands:
     drop: str = "drop"
     audit_s3: str = "audit_s3"
     audit_vpc_flow_logs: str = "audit_vpc_flow_logs"
+    cost_usage: str = "cost_usage"
 
 
 class AwsScannerArgumentParser:
@@ -83,6 +84,7 @@ class AwsScannerArgumentParser:
         self._add_drop_command(subparsers)
         self._add_audit_s3_command(subparsers)
         self._add_audit_vpc_flow_logs_command(subparsers)
+        self._add_cost_usage_command(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -97,6 +99,15 @@ class AwsScannerArgumentParser:
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
+
+    def _add_cost_usage_command(self, subparsers: Any) -> None:
+        desc = "audit service cost usage"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.cost_usage, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+        audit_parser.add_argument("-s", "--service", type=str, required=True, help="which service to scan cost \
+         usage for")
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC flow logs compliance"

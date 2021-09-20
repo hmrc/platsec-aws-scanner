@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError, BotoCoreError
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_athena_client import AwsAthenaClient
+from src.clients.aws_cost_usage_client import AwsCostUsageClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
@@ -43,6 +44,12 @@ class AwsClientFactory:
 
     def get_s3_client(self, account: Account, role: Optional[str] = None) -> AwsS3Client:
         return AwsS3Client(self.get_s3_boto_client(account, role or self._config.s3_role()))
+
+    def get_cost_usage_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("ce", account, self._config.cost_usage_role())
+
+    def get_cost_usage_client(self, account: Account) -> AwsCostUsageClient:
+        return AwsCostUsageClient(self.get_cost_usage_boto_client(account))
 
     def get_organizations_boto_client(self) -> BaseClient:
         return self._get_client("organizations", self._config.organization_account(), self._config.organization_role())
