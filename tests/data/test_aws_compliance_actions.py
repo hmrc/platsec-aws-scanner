@@ -105,5 +105,5 @@ class TestAwsComplianceActions(AwsScannerTestCase):
         expected_key_id = "231424234234234234"
         with patch.object(AwsLogsClient, "associate_kms_key") as associate_kms_key:
             UpdateLogGroupKmsKey(kms_key_id_resolver=lambda: expected_key_id)._apply(AwsLogsClient(Mock()))
-                        
-        associate_kms_key.assert_called_once_with(log_group_name='/vpc/flow_log', kms_key_id=expected_key_id)
+
+        associate_kms_key.assert_called_once_with(log_group_name="/vpc/flow_log", kms_key_id=expected_key_id)
