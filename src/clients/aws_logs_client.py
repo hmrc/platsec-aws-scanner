@@ -44,6 +44,9 @@ class AwsLogsClient:
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to create log group with name '{name}': {err}") from None
 
+    def associate_kms_key(self, log_group_name, kms_key_id) -> None:
+        self._logs.associate_kms_key(logGroupName=log_group_name, kmsKeyId=kms_key_id)
+
     def put_subscription_filter(
         self, log_group_name: str, filter_name: str, filter_pattern: str, destination_arn: str
     ) -> None:

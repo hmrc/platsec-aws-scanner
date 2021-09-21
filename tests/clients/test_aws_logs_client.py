@@ -38,6 +38,11 @@ class TestAwsLogsClient(AwsScannerTestCase):
         AwsLogsClient(boto).create_log_group("some_log_group")
         boto.create_log_group.assert_called_once_with(logGroupName="some_log_group")
 
+    def test_associate_kms_key(self) -> None:
+        boto = Mock()
+        AwsLogsClient(boto).associate_kms_key(log_group_name="some_log_group", kms_key_id="kms_key_id")
+        boto.associate_kms_key.assert_called_once_with(logGroupName="some_log_group", kmsKeyId="kms_key_id")
+
     def test_create_log_group_failure(self) -> None:
         boto = Mock(create_log_group=Mock(side_effect=client_error("CreateLogGroup", "AccessDenied", "nope")))
         with self.assertRaisesRegex(LogsException, "a_log_group"):
