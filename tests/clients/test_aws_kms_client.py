@@ -44,7 +44,7 @@ class TestAwsKmsClient(AwsScannerTestCase):
 
     def test_create_key(self) -> None:
         boto_kms = Mock(create_key=Mock(return_value=CREATE_KEY), create_alias=Mock(return_value=None))
-        actual_key = AwsKmsClient(boto_kms).create_key("brand-new-alias", "brand new key", [])
+        actual_key = AwsKmsClient(boto_kms).create_key("brand-new-alias", "brand new key")
         expected_key = to_key(CREATE_KEY["KeyMetadata"])
         self.assertEqual(expected_key, actual_key)
 
@@ -54,7 +54,7 @@ class TestAwsKmsClient(AwsScannerTestCase):
     def test_create_key_failure(self) -> None:
         boto_kms = Mock(create_key=Mock(side_effect=client_error("CreateKey", "AccessDeniedException", "nope!")))
         with self.assertRaisesRegex(KmsException, "some_description"):
-            AwsKmsClient(boto_kms).create_key("some_alias", "some_description", [])
+            AwsKmsClient(boto_kms).create_key("some_alias", "some_description")
 
     def test_put_key_policy(self) -> None:
         boto_kms = Mock(put_key_policy=Mock())
