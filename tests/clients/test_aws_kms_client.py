@@ -58,7 +58,7 @@ class TestAwsKmsClient(AwsScannerTestCase):
 
     def test_put_key_policy(self) -> None:
         boto_kms = Mock(put_key_policy=Mock())
-        expected_policy = '{"Policy": {"Statement": [{"first": "foo"}, {"second": "bar"}]}}'
+        expected_policy = '{"Version": "2008-10-17", "Statement": [{"first": "foo"}, {"second": "bar"}]}'
         expected_key = key()
 
         policy_statements = [{"first": "foo"}, {"second": "bar"}]

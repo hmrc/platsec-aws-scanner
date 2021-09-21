@@ -13,6 +13,8 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupSubscriptionFilterAction,
+    CreateLogGroupKmsKeyAction,
+    DeleteLogGroupKmsKeyAliasAction,
 )
 
 from tests.test_types_generator import (
@@ -155,7 +157,7 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
 
     def test_apply_actions(self) -> None:
         ec2, iam, logs, kms = Mock(), Mock(), Mock(), Mock()
-        applied = [Mock(name=f"applied_action_{i}") for i in range(6)]
+        applied = [Mock(name=f"applied_action_{i}") for i in range(8)]
         actions = [
             self.mock_action(CreateVpcLogGroupAction, logs, applied[0]),
             self.mock_action(CreateFlowLogAction, ec2, applied[1]),
@@ -163,6 +165,8 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             self.mock_action(DeleteFlowLogAction, ec2, applied[3]),
             self.mock_action(DeleteFlowLogDeliveryRoleAction, iam, applied[4]),
             self.mock_action(PutVpcLogGroupSubscriptionFilterAction, logs, applied[5]),
+            self.mock_action(CreateLogGroupKmsKeyAction, kms, applied[6]),
+            self.mock_action(DeleteLogGroupKmsKeyAliasAction, kms, applied[7]),
         ]
         self.assertEqual(applied, AwsVpcClient(ec2, iam, logs, kms).apply(actions))
 

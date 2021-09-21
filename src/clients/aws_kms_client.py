@@ -55,7 +55,7 @@ class AwsKmsClient:
             raise KmsException(f"unable to create alias '{alias}' for key '{key_id}': {err}") from None
 
     def put_key_policy_statements(self, key_id: str, statements: Sequence[Dict[str, Any]]) -> None:
-        policy = {"Policy": {"Statement": statements}}
+        policy = {"Version": "2008-10-17", "Statement": statements}
 
         try:
             self._kms.put_key_policy(KeyId=key_id, PolicyName="default", Policy=dumps(policy))

@@ -173,6 +173,8 @@ class AwsVpcClient:
 
     def apply(self, actions: Sequence[ComplianceAction]) -> Sequence[ComplianceAction]:
         client_map = {
+            CreateLogGroupKmsKeyAction: self.kms,
+            DeleteLogGroupKmsKeyAliasAction: self.kms,
             CreateVpcLogGroupAction: self.logs,
             CreateFlowLogAction: self.ec2,
             CreateFlowLogDeliveryRoleAction: self.iam,
