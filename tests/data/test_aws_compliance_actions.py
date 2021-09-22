@@ -8,7 +8,7 @@ from io import StringIO
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
-from src.data.aws_compliance_actions import ComplianceAction, UpdateLogGroupKmsKey
+from src.data.aws_compliance_actions import ComplianceAction, UpdateLogGroupKmsKeyAction
 from src.data.aws_scanner_exceptions import AwsScannerException
 
 from tests import _raise, test_types_generator
@@ -102,8 +102,8 @@ class TestAwsComplianceActions(AwsScannerTestCase):
         )
 
     def test_update_log_group_kms_key(self) -> None:
-        expected_key_id = "231424234234234234"
+        expected_key_arn = "aws:foo:23849234234:key/231424234234234234"
         with patch.object(AwsLogsClient, "associate_kms_key") as associate_kms_key:
-            UpdateLogGroupKmsKey(kms_key_id_resolver=lambda: expected_key_id)._apply(AwsLogsClient(Mock()))
+            UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=lambda: expected_key_arn)._apply(AwsLogsClient(Mock()))
 
-        associate_kms_key.assert_called_once_with(log_group_name="/vpc/flow_log", kms_key_id=expected_key_id)
+        associate_kms_key.assert_called_once_with(log_group_name="/vpc/flow_log", kms_key_arn=expected_key_arn)

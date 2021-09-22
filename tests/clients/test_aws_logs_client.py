@@ -40,8 +40,8 @@ class TestAwsLogsClient(AwsScannerTestCase):
 
     def test_associate_kms_key(self) -> None:
         boto = Mock()
-        AwsLogsClient(boto).associate_kms_key(log_group_name="some_log_group", kms_key_id="kms_key_id")
-        boto.associate_kms_key.assert_called_once_with(logGroupName="some_log_group", kmsKeyId="kms_key_id")
+        AwsLogsClient(boto).associate_kms_key(log_group_name="some_log_group", kms_key_arn="kms_key_arn")
+        boto.associate_kms_key.assert_called_once_with(logGroupName="some_log_group", kmsKeyId="kms_key_arn")
 
     def test_associate_kms_key_failure(self) -> None:
         boto = Mock(associate_kms_key=Mock(side_effect=client_error("AssociateKmsKey", "AccessDenied", "no!")))

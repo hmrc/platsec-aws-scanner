@@ -15,6 +15,7 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupSubscriptionFilterAction,
     CreateLogGroupKmsKeyAction,
     DeleteLogGroupKmsKeyAliasAction,
+    UpdateLogGroupKmsKeyAction,
 )
 
 from tests.test_types_generator import (
@@ -34,6 +35,7 @@ from tests.test_types_generator import (
     put_vpc_log_group_subscription_filter_action,
     role,
     subscription_filter,
+    update_log_group_kms_key_action,
     vpc,
 )
 
@@ -157,16 +159,17 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
 
     def test_apply_actions(self) -> None:
         ec2, iam, logs, kms = Mock(), Mock(), Mock(), Mock()
-        applied = [Mock(name=f"applied_action_{i}") for i in range(8)]
+        applied = [Mock(name=f"applied_action_{i}") for i in range(9)]
         actions = [
             self.mock_action(CreateVpcLogGroupAction, logs, applied[0]),
             self.mock_action(CreateFlowLogAction, ec2, applied[1]),
             self.mock_action(CreateFlowLogDeliveryRoleAction, iam, applied[2]),
-            self.mock_action(DeleteFlowLogAction, ec2, applied[3]),
-            self.mock_action(DeleteFlowLogDeliveryRoleAction, iam, applied[4]),
-            self.mock_action(PutVpcLogGroupSubscriptionFilterAction, logs, applied[5]),
-            self.mock_action(CreateLogGroupKmsKeyAction, kms, applied[6]),
-            self.mock_action(DeleteLogGroupKmsKeyAliasAction, kms, applied[7]),
+            self.mock_action(UpdateLogGroupKmsKeyAction, logs, applied[3]),
+            self.mock_action(DeleteFlowLogAction, ec2, applied[4]),
+            self.mock_action(DeleteFlowLogDeliveryRoleAction, iam, applied[5]),
+            self.mock_action(PutVpcLogGroupSubscriptionFilterAction, logs, applied[6]),
+            self.mock_action(CreateLogGroupKmsKeyAction, kms, applied[7]),
+            self.mock_action(DeleteLogGroupKmsKeyAliasAction, kms, applied[8]),
         ]
         self.assertEqual(applied, AwsVpcClient(ec2, iam, logs, kms).apply(actions))
 
@@ -185,18 +188,32 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         kms_acts = [kms_act_1]
         with patch.object(AwsVpcClient, "_vpc_enforcement_actions", side_effect=lambda v: acts if v == a_vpc else None):
             with patch.object(AwsVpcClient, "_delivery_role_enforcement_actions", return_value=role_acts):
-                with patch.object(AwsVpcClient, "_vpc_log_group_enforcement_actions", return_value=lg_acts):
+                with patch.object(
+                    AwsVpcClient, "_vpc_log_group_enforcement_actions", return_value=lg_acts
+                ) as vpc_log_group_enforcement_actions:
                     with patch.object(AwsVpcClient, "_kms_enforcement_actions", return_value=kms_acts):
                         self.assertEqual(
                             [kms_act_1, lg_act_1, role_act_1, vpc_act_1, vpc_act_2],
                             self.client().enforcement_actions([a_vpc]),
                         )
+        vpc_log_group_enforcement_actions.assert_called_once_with(kms_key_updated=True)
+
+    def test_flow_logs_are_notified_of_no_kms_changes(self) -> None:
+        with patch.object(AwsVpcClient, "_vpc_enforcement_actions"):
+            with patch.object(AwsVpcClient, "_delivery_role_enforcement_actions"):
+                with patch.object(
+                    AwsVpcClient, "_vpc_log_group_enforcement_actions"
+                ) as vpc_log_group_enforcement_actions:
+                    with patch.object(AwsVpcClient, "_kms_enforcement_actions", return_value=[]):
+                        self.client().enforcement_actions([(vpc())])
+
+        vpc_log_group_enforcement_actions.assert_called_once_with(kms_key_updated=False)
 
     def test_vpc_has_no_flow_logs(self) -> None:
         with patch.object(AwsVpcClient, "_get_flow_log_delivery_role_arn", return_value="an_arn"):
             actions = self.client()._vpc_enforcement_actions(vpc(id="a-vpc", flow_logs=[]))
         self.assertEqual([create_flow_log_action("a-vpc")], actions)
-        self.assertEqual("an_arn", next(iter(actions)).permission_resolver())
+        self.assertEqual("an_arn", actions[0].permission_resolver())
 
     def test_vpc_no_flow_log_action(self) -> None:
         self.assertEqual([], self.client()._vpc_enforcement_actions(vpc(flow_logs=[flow_log()])))
@@ -257,24 +274,49 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
                     self.client()._delivery_role_enforcement_actions(),
                 )
 
-    def test_create_central_vpc_log_group_with_subscription_filter_when_missing(self) -> None:
-        with patch.object(AwsVpcClient, "_find_log_group", return_value=None) as find_log_group:
-            self.assertEqual(
-                [create_vpc_log_group_action(), put_vpc_log_group_subscription_filter_action()],
-                self.client()._vpc_log_group_enforcement_actions(),
-            )
+    def test_create_central_vpc_log_group_with_subscription_filter_and_kms_key_when_missing(self) -> None:
+        with patch.object(AwsVpcClient, "_get_kms_key_arn", return_value=key().arn):
+            with patch.object(AwsVpcClient, "_find_log_group", return_value=None) as find_log_group:
+                actions = self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False)
+
+        self.assertEqual(
+            [
+                create_vpc_log_group_action(),
+                put_vpc_log_group_subscription_filter_action(),
+                update_log_group_kms_key_action(),
+            ],
+            actions,
+        )
         find_log_group.assert_called_once_with("/vpc/flow_log")
+        self.assertEqual(3, len(actions))
+        self.assertEqual(key().arn, actions[2].kms_key_arn_resolver())
 
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
-        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(subscription_filters=[])):
+        with patch.object(
+            AwsVpcClient, "_find_log_group", return_value=log_group(subscription_filters=[], default_kms_key=True)
+        ):
             self.assertEqual(
                 [put_vpc_log_group_subscription_filter_action()],
-                self.client()._vpc_log_group_enforcement_actions(),
+                self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False),
+            )
+
+    def test_update_kms_key_when_kms_is_updated(self) -> None:
+        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(default_kms_key=True)):
+            self.assertEqual(
+                [update_log_group_kms_key_action()],
+                self.client()._vpc_log_group_enforcement_actions(kms_key_updated=True),
+            )
+
+    def test_update_kms_key_when_kms_is_not_set(self) -> None:
+        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(default_kms_key=False)):
+            self.assertEqual(
+                [update_log_group_kms_key_action()],
+                self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False),
             )
 
     def test_no_central_vpc_log_group_action_when_log_group_is_compliant(self) -> None:
-        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group()):
-            self.assertEqual([], self.client()._vpc_log_group_enforcement_actions())
+        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(default_kms_key=True)):
+            self.assertEqual([], self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False))
 
 
 class TestLogGroupCompliance(AwsScannerTestCase):
@@ -310,3 +352,12 @@ class TestLogGroupCompliance(AwsScannerTestCase):
                 log_group(subscription_filters=[subscription_filter(destination_arn="somewhere")])
             )
         )
+
+    def test_get_kms_key_arn(self) -> None:
+        expected_key = key()
+
+        with patch.object(AwsKmsClient, "get_alias", return_value=alias()):
+            with patch.object(AwsKmsClient, "get_key", return_value=expected_key) as get_key:
+                self.assertEqual(key().arn, self.client()._get_kms_key_arn())
+
+        get_key.assert_called_once_with(key_id=expected_key.id)

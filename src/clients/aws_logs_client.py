@@ -44,12 +44,14 @@ class AwsLogsClient:
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to create log group with name '{name}': {err}") from None
 
-    def associate_kms_key(self, log_group_name: str, kms_key_id: str) -> None:
+    def associate_kms_key(self, log_group_name: str, kms_key_arn: str) -> None:
         try:
-            self._logs.associate_kms_key(logGroupName=log_group_name, kmsKeyId=kms_key_id)
+            # note the parameter 'kmsKeyId' infact requires arn
+            # https://docs.aws.amazon.com/cli/latest/reference/logs/associate-kms-key.html#options
+            self._logs.associate_kms_key(logGroupName=log_group_name, kmsKeyId=kms_key_arn)
         except (BotoCoreError, ClientError) as err:
             raise LogsException(
-                f"unable to associate kms key '{kms_key_id}' with log group '{log_group_name}': {err}"
+                f"unable to associate kms key '{kms_key_arn}' with log group '{log_group_name}': {err}"
             ) from None
 
     def put_subscription_filter(

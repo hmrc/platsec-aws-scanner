@@ -93,6 +93,19 @@ class TestAwsKmsClient(AwsScannerTestCase):
             client.find_alias("alias-2"),
         )
 
+    def test_get_alias(self) -> None:
+        kms = Mock(get_paginator=Mock(side_effect=lambda op: self.list_aliases() if op == "list_aliases" else None))
+        client = AwsKmsClient(kms)
+        self.assertEqual(
+            alias(name="alias/alias-2", arn="arn:aws:kms:us-east-1:111222333444:alias/alias-2", target_key_id=None),
+            client.get_alias("alias-2"),
+        )
+
+    def test_get_alias_not_found(self) -> None:
+        kms = Mock(get_paginator=Mock(side_effect=lambda op: self.list_aliases() if op == "list_aliases" else None))
+        with self.assertRaisesRegex(KmsException, "not-an-alias"):
+            AwsKmsClient(kms).get_alias("not-an-alias")
+
     def test_list_aliases_failure(self) -> None:
         kms = Mock(get_paginator=Mock(side_effect=client_error("ListAliases", "AccessDeniedException", "nope!")))
         with self.assertRaisesRegex(KmsException, "unable to list kms key aliases: An error occurred"):

@@ -13,6 +13,7 @@ from src.data.aws_compliance_actions import (
     DeleteLogGroupKmsKeyAliasAction,
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupSubscriptionFilterAction,
+    UpdateLogGroupKmsKeyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Policy, Role
@@ -310,6 +311,10 @@ def put_vpc_log_group_subscription_filter_action() -> PutVpcLogGroupSubscription
     return PutVpcLogGroupSubscriptionFilterAction()
 
 
+def update_log_group_kms_key_action() -> UpdateLogGroupKmsKeyAction:
+    return UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=lambda: key().arn)
+
+
 def create_log_group_kms_key_action() -> CreateLogGroupKmsKeyAction:
     return CreateLogGroupKmsKeyAction()
 
@@ -327,7 +332,11 @@ def log_group(
     kms_key_id: Optional[str] = None,
     kms_key: Optional[Key] = None,
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
+    default_kms_key: bool = False,
 ) -> LogGroup:
+    if default_kms_key:
+        kms_key_id = key().id
+        kms_key = key()
     return LogGroup(
         name=name,
         kms_key_id=kms_key_id,

@@ -19,9 +19,17 @@ class AwsKmsClient:
     def get_key(self, key_id: str) -> Key:
         return self._enrich_key(self._describe_key(key_id))
 
+    def get_alias(self, alias_name: str) -> Alias:
+        try:
+            return next(filter(lambda a: a.name == f"alias/{alias_name}", self._list_aliases()))
+        except StopIteration:
+            raise KmsException(f"unable to get alias with name '{alias_name}'") from None
+
     def find_alias(self, alias_name: str) -> Optional[Alias]:
-        aliases = filter(lambda a: a.name == f"alias/{alias_name}", self._list_aliases())
-        return next(aliases, None)
+        try:
+            return self.get_alias(alias_name)
+        except KmsException:
+            return None
 
     def _enrich_key(self, key: Key) -> Key:
         key.policy = self._get_key_policy(key.id)

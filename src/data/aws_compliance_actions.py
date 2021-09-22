@@ -124,16 +124,18 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
 
 
 @dataclass
-class UpdateLogGroupKmsKey(ComplianceAction):
+class UpdateLogGroupKmsKeyAction(ComplianceAction):
     permission_resolver: Callable[[], str] = field(compare=False, hash=False, repr=False)
 
-    def __init__(self, kms_key_id_resolver: Callable[[], str]) -> None:
+    def __init__(self, kms_key_arn_resolver: Callable[[], str]) -> None:
         super().__init__("Update log group kms key")
-        self.kms_key_id_resolver = kms_key_id_resolver
+        self.kms_key_arn_resolver = kms_key_arn_resolver
 
     def _apply(self, client: AwsLogsClient) -> None:
         config = Config()
-        client.associate_kms_key(log_group_name=config.logs_vpc_log_group_name(), kms_key_id=self.kms_key_id_resolver())
+        client.associate_kms_key(
+            log_group_name=config.logs_vpc_log_group_name(), kms_key_arn=self.kms_key_arn_resolver()
+        )
 
 
 @dataclass
