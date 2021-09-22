@@ -15,7 +15,6 @@ class AwsCostUsageClient:
         self._cost_usage = boto_cost_usage
 
     def get_aws_cost_usage(self, service: str, dates: dict) -> Dict:
-        print(service)
 
         try:
             search_filter = (
