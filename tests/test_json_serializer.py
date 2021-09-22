@@ -12,6 +12,7 @@ class TestJsonSerializer(AwsScannerTestCase):
 
     @dataclass
     class TestObject:
+        _secret: str = "I'm private, don't serialise me"
         greetings: str = "Bonjour!"
         empty: Optional[str] = None
         func: Callable[[], str] = lambda: "hello"
