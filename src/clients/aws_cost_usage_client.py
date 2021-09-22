@@ -10,12 +10,13 @@ class CostUsageException(Exception):
 
 
 class AwsCostUsageClient:
-
     def __init__(self, boto_cost_usage: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
         self._cost_usage = boto_cost_usage
 
     def get_aws_cost_usage(self, service: str, dates: dict) -> Dict:
+        print(service)
+
         try:
             search_filter = (
                 {
@@ -28,13 +29,12 @@ class AwsCostUsageClient:
                     }
                 },
             )
-            time_period = {"Start": dates["from"], "End": dates["to"]}
+            time_period = {"Start": dates["date_from"], "End": dates["date_to"]}
+            metrics = ["AmortizedCost", "UsageQuantity"]
 
             return self._cost_usage.get_cost_and_usage(
-                    TimePeriod=time_period,
-                    Filter=search_filter,
-                    Granularity="Monthly"
-                )
+                TimePeriod=time_period, Filter=search_filter, Granularity="Monthly", Metrics=metrics
+            )
 
         except (BotoCoreError, ClientError) as err:
             raise CostUsageException(f"unable to get cost usage data for {service}: {err}")

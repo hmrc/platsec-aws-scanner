@@ -12,4 +12,6 @@ class TestAwsCostUsageClient(AwsScannerTestCase):
     def test_get_aws_cost_usage(self) -> None:
         client = AwsCostUsageClient(Mock())
 
-        self.assertEqual(client.get_aws_cost_usage("s3"), {})
+        self.assertEqual(
+            client.get_aws_cost_usage("ec2", {"date_from": "2021-07-01", "date_to": "2021-08-01"}), {}
+        )
