@@ -13,15 +13,24 @@ class AwsCostUsageClient:
         self._cost_usage = boto_cost_usage
 
     def get_aws_cost_usage(self, service: str, dates: dict) -> Dict:
-        search_filter = ({"Dimension": {"Key": "SERVICE", "Values": service, "MatchOptions": ["EQUALS"]}},)
+        search_filter = (
+            {
+                "Dimensions": {
+                    "Key": "SERVICE",
+                    "Values": [
+                        service,
+                    ],
+                    "MatchOptions": ["EQUALS"],
+                }
+            },
+        )
         time_period = {"Start": dates["from"], "End": dates["to"]}
-        group_by = ([{"Type": "DIMENSION", "Key": "SERVICE"}],)
+
         return boto_try(
             lambda: self._cost_usage.get_cost_and_usage(
                 TimePeriod=time_period,
                 Filter=search_filter,
-                Granularity="Monthly",
-                GroupBy=group_by,
+                Granularity="Monthly"
             ),
             None,
             f"unable to fetch cost usage for '{service}'",
