@@ -4,7 +4,6 @@ from typing import List, Dict
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
-from src.clients import boto_try
 
 class CostUsageException(Exception):
     pass
