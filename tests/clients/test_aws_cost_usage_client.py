@@ -5,7 +5,6 @@ from src.clients.aws_cost_usage_client import AwsCostUsageClient
 
 
 class TestAwsCostUsageClient(AwsScannerTestCase):
-
     @staticmethod
     def cost_usage_client(self) -> AwsCostUsageClient:
         return AwsCostUsageClient(Mock())

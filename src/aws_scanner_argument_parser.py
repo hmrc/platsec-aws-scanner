@@ -106,8 +106,14 @@ class AwsScannerArgumentParser:
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
-        audit_parser.add_argument("-s", "--service", type=str, required=True, help="which service to scan cost \
-         usage for")
+        audit_parser.add_argument(
+            "-s",
+            "--service",
+            type=str,
+            required=True,
+            help="which service to scan cost \
+         usage for",
+        )
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC flow logs compliance"
