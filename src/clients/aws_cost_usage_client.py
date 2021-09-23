@@ -30,17 +30,12 @@ class AwsCostUsageClient:
 
             today = date.today()
 
-            time_period = {"Start": f"{year}-{'%02d' % month}-01", "End": f"{today.year}-{'%02d' % today.month}-01"}
+            time_period = {"Start": f"{year}-{'%02d' % month}-01", "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}"}
             metrics = ["AmortizedCost", "UsageQuantity"]
-            group_by = [
-                {
-                    'Type': 'DIMENSION',
-                    'Key': 'SERVICE'
-                },
-            ]
+
 
             return self._cost_usage.get_cost_and_usage(
-                TimePeriod=time_period, Filter=search_filter, Granularity="MONTHLY", Metrics=metrics, GroupBy=group_by
+                TimePeriod=time_period, Filter=search_filter, Granularity="MONTHLY", Metrics=metrics
             )
 
         except Exception as err:
