@@ -63,6 +63,11 @@ class AwsScannerArgumentParser:
         AwsScannerArgumentParser._add_accounts_args(parser)
 
     @staticmethod
+    def _add_cost_usage_task_args(parser: ArgumentParser) -> None:
+        parser.add_argument("-y", "--year", type=str, required=True, help="year for cost usage")
+        parser.add_argument("-m", "--month", type=str, required=True, help="month for cost usage")
+
+    @staticmethod
     def _add_verbosity_arg(parser: ArgumentParser) -> None:
         parser.add_argument(
             "-v",
@@ -105,6 +110,7 @@ class AwsScannerArgumentParser:
         audit_parser = subparsers.add_parser(AwsScannerCommands.cost_usage, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
+        self._add_cost_usage_task_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
         audit_parser.add_argument(
             "-s",
@@ -114,8 +120,6 @@ class AwsScannerArgumentParser:
             help="which service to scan cost \
          usage for",
         )
-        audit_parser.add_argument("-y", "--year", type=int, required=True, help="year for cost usage search")
-        audit_parser.add_argument("-m", "--month", type=int, required=True, help="month for cost usage search")
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC flow logs compliance"

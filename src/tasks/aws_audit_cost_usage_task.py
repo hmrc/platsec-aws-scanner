@@ -8,12 +8,15 @@ from src.clients.aws_cost_usage_client import AwsCostUsageClient
 
 @dataclass
 class AwsAuditCostUsageTask(AwsCostUsageTask):
-    def __init__(self, account: Account) -> None:
+    def __init__(self, account: Account,  service: str, year: str, month: str) -> None:
         super().__init__("audit cost & usage of services", account)
+        self._service = service
+        self._year = year
+        self._month = month
 
     def _run_task(self, client: AwsCostUsageClient) -> Dict[Any, Any]:
-        result = client.get_aws_cost_usage()
-        return {}
+        return client.get_aws_cost_usage(self._service, self._year, self._month)
+    
 
     # @staticmethod
     # def _enrich_bucket(client: AwsS3Client, bucket: Bucket) -> Bucket:
