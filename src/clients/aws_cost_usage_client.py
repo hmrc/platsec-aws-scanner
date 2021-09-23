@@ -15,7 +15,7 @@ class AwsCostUsageClient:
         self._logger = getLogger(self.__class__.__name__)
         self._cost_usage = boto_cost_usage
 
-    def get_aws_cost_usage(self, service: str, year: str, month: str) -> Dict:
+    def get_aws_cost_usage(self, service: str, year: int, month: int) -> Dict:
         self._logger.info(f"service {service}")
         try:
             search_filter = {
@@ -30,7 +30,7 @@ class AwsCostUsageClient:
 
             today = date.today()
 
-            time_period = {"Start": f"{year}-{month}-01", "End": f"{today.year}-{today.month}-01"}
+            time_period = {"Start": f"{year}-{'%02d' % month}-01", "End": f"{today.year}-{'%02d' % today.month}-01"}
             metrics = ["AmortizedCost", "UsageQuantity"]
             group_by = [
                 {
