@@ -35,5 +35,5 @@ class AwsCostUsageClient:
                 TimePeriod=time_period, Filter=search_filter, Granularity="Monthly", Metrics=metrics
             )
 
-        except (BotoCoreError, ClientError) as err:
+        except Exception as err:
             raise CostUsageException(f"unable to get cost usage data for {service}: {err}")
