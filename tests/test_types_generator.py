@@ -38,6 +38,7 @@ from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
+from src.tasks.aws_cost_usage_task import AwsCostUsageTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -65,6 +66,10 @@ def aws_task(account: Account = account(), description: str = "task") -> AwsTask
 
 def athena_task(account: Account = account(), description: str = "athena_task") -> AwsAthenaTask:
     return AwsAthenaTask(description=description, account=account)
+
+
+def cost_usage_task(account: Account = account(), description: str = "cost_usage_task") -> AwsCostUsageTask:
+    return AwsCostUsageTask(description=description, account=account)
 
 
 def vpc_task(account: Account = account(), description: str = "vpc_task", enforce: bool = True) -> AwsVpcTask:

@@ -114,6 +114,8 @@ class AwsScannerArgumentParser:
             help="which service to scan cost \
          usage for",
         )
+        audit_parser.add_argument("-y", "--year", type=int, required=True, help="year for cost usage search")
+        audit_parser.add_argument("-m", "--month", type=int, required=True, help="month for cost usage search")
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC flow logs compliance"

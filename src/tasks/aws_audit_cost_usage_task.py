@@ -12,7 +12,7 @@ class AwsAuditCostUsageTask(AwsCostUsageTask):
         super().__init__("audit cost & usage of services", account)
 
     def _run_task(self, client: AwsCostUsageClient) -> Dict[Any, Any]:
-        # return {"buckets": list(map(lambda bucket: self._enrich_bucket(client, bucket), client.list_buckets()))}
+        result = client.get_aws_cost_usage()
         return {}
 
     # @staticmethod
