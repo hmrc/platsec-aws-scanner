@@ -1,6 +1,7 @@
 from logging import getLogger
 from typing import List, Dict
 from datetime import date
+import math
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
@@ -37,7 +38,12 @@ class AwsCostUsageClient:
                 TimePeriod=time_period, Filter=search_filter, Granularity="MONTHLY", Metrics=metrics
             )
 
-            return result
+            total_usage = 0
+            for item in result["ResultsByTime"]:
+                total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
+            print(math.ceil(total_usage))
+
+            return {"Service": service, "DateRange": time_period ,"TotalUsage": math.ceil(total_usage)}
 
         except Exception as err:
             raise CostUsageException(f"unable to get cost usage data for {service}: {err}")
