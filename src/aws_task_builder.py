@@ -39,7 +39,9 @@ class AwsTaskBuilder:
             Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, args.accounts),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
-            Cmd.cost_usage: lambda: self._tasks(AwsAuditCostUsageTask, args.accounts, service=args.service, year=args.year, month=args.month),
+            Cmd.cost_usage: lambda: self._tasks(
+                AwsAuditCostUsageTask, args.accounts, service=args.service, year=args.year, month=args.month
+            ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, args.accounts, enforce=args.enforce),
         }
         return task_mapping[args.task]()

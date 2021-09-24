@@ -7,7 +7,6 @@ from tests.clients.test_aws_cost_usage_responses import GET_USAGE_COST_SUCCESS
 
 
 class TestAwsCostUsageClient(AwsScannerTestCase):
-
     def test_get_aws_cost_usage_success(self) -> None:
         client = AwsCostUsageClient(Mock())
 
