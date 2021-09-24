@@ -11,13 +11,13 @@ class TestAwsCostUsageClient(AwsScannerTestCase):
         client = AwsCostUsageClient(Mock())
 
         with patch.object(AwsCostUsageClient, "get_aws_cost_usage") as get_cost_usage:
-            client.get_aws_cost_usage("lambda", {"date_from": "2021-07-01", "date_to": "2021-08-01"})
+            client.get_aws_cost_usage("lambda", 2021, 8)
         self.assertEqual(
-            [call("lambda", {"date_from": "2021-07-01", "date_to": "2021-08-01"})], get_cost_usage.mock_calls
+            [call("lambda", 2021, 8)], get_cost_usage.mock_calls
         )
 
     def test_get_aws_cost_usage_failure(self) -> None:
         client = AwsCostUsageClient(Mock())
         service = "lambda"
         with self.assertRaisesRegex(CostUsageException, f"unable to get cost usage data for {service}:"):
-            client.get_aws_cost_usage(service, {})
+            client.get_aws_cost_usage(service, 2022, 20)
