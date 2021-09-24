@@ -3,6 +3,7 @@ from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock
 
 from src.clients.aws_cost_usage_client import AwsCostUsageClient, CostUsageException
+from botocore.exceptions import BotoCoreError
 from tests.clients.test_aws_cost_usage_responses import GET_USAGE_COST_SUCCESS
 
 
@@ -25,7 +26,9 @@ class TestAwsCostUsageClient(AwsScannerTestCase):
         self.assertEqual(client.get_aws_cost_usage("Lambda", 2021, 2), expected)
 
     def test_get_aws_cost_usage_failure(self) -> None:
-        client = AwsCostUsageClient(Mock())
+        boto_cost_usage = Mock(get_cost_and_usage=Mock(side_effect=BotoCoreError))
+        client = AwsCostUsageClient(boto_cost_usage)
+
         service = "lambda"
         with self.assertRaisesRegex(CostUsageException, f"unable to get cost usage data for {service}:"):
             client.get_aws_cost_usage(service, 2022, 20)
