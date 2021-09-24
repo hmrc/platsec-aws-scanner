@@ -1,14 +1,10 @@
 from logging import getLogger
-from typing import List, Dict
+from typing import Dict, Any
 from datetime import date
 import math
 
 from botocore.client import BaseClient
-from botocore.exceptions import BotoCoreError, ClientError
-
-
-class CostUsageException(Exception):
-    pass
+from src.data.aws_scanner_exceptions import CostUsageException
 
 
 class AwsCostUsageClient:
@@ -16,42 +12,43 @@ class AwsCostUsageClient:
         self._logger = getLogger(self.__class__.__name__)
         self._cost_usage = boto_cost_usage
 
-    def get_aws_cost_usage(self, service: str, year: int, month: int) -> Dict:
+    def get_aws_cost_usage(self, service: str, year: int, month: int) -> Dict[str, Any]:
 
         try:
-            search_filter = {
-                "Dimensions": {
-                    "Key": "SERVICE",
-                    "Values": [
-                        service,
-                    ],
-                    "MatchOptions": ["EQUALS"],
-                }
-            }
-
             today = date.today()
 
             time_period = {
                 "Start": f"{year}-{'%02d' % month}-01",
                 "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
             }
-            metrics = ["UsageQuantity", "AmortizedCost"]
 
             result = self._cost_usage.get_cost_and_usage(
-                TimePeriod=time_period, Filter=search_filter, Granularity="MONTHLY", Metrics=metrics
+                TimePeriod=time_period,
+                Filter={
+                    "Dimensions": {
+                        "Key": "SERVICE",
+                        "Values": [
+                            service,
+                        ],
+                        "MatchOptions": ["EQUALS"],
+                    }
+                },
+                Granularity="MONTHLY",
+                Metrics=["UsageQuantity", "AmortizedCost"],
             )
 
-            total_usage = 0
-            total_cost = 0
+            total_usage = total_cost = 0.00
+
             for item in result["ResultsByTime"]:
                 total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
                 total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
-            total_cost = result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"] + " " + str(math.ceil(total_cost))
+
+            total_str = f'{result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"]} {"%d" % math.ceil(total_cost)}'
 
             return {
                 "Service": service,
                 "DateRange": time_period,
-                "TotalCost:": total_cost,
+                "TotalCost:": total_str,
                 "TotalUsage": str(math.ceil(total_usage)),
             }
 

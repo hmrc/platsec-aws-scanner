@@ -1,20 +1,23 @@
 # Cost Usage
 
-The `cost_usage` task outputs data showing the usage & cost of a specified service in a given account / list of accounts.
+The `cost_usage` task outputs data showing the usage & cost of a specified service in a given account / list of accounts
+.
 
 The service being queried needs to be specified using its full name, example:
 
- - Amazon Api Gateway
- - Amazon Cloudfront
- - Amazon DynamoDB
- - Amazon Simple Storage Service
- - Amazon Virtual Private Cloud
- - AWS CodePipeline
- - AWS CodeBuild
- - AWS CodeArtifact
- - AWS Lambda
- - AWS X-Ray
+- Amazon Api Gateway
+- Amazon Cloudfront
+- Amazon DynamoDB
+- Amazon Simple Storage Service
+- Amazon Virtual Private Cloud
+- AWS CodePipeline
+- AWS CodeBuild
+- AWS CodeArtifact
+- AWS Lambda
+- AWS X-Ray
 
+You can see a list of full names of services by clicking on the service [here](https://docs.aws.amazon.com/index.html),
+then you'll see the full name on the next page, i.e "**Amazon Simple Storage Service** Documentation".
 
 ## Usage
 

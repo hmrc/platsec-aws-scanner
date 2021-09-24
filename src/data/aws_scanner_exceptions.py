@@ -41,6 +41,10 @@ class IamException(AwsScannerException):
     pass
 
 
+class CostUsageException(AwsScannerException):
+    pass
+
+
 class InvalidDataPartitionException(AwsScannerException):
     def __init__(self, year: int, month: int, partitions: Iterable[Tuple[int, int]], retention: int):
         super().__init__(
