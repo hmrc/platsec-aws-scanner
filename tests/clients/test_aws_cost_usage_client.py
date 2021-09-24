@@ -12,9 +12,7 @@ class TestAwsCostUsageClient(AwsScannerTestCase):
 
         with patch.object(AwsCostUsageClient, "get_aws_cost_usage") as get_cost_usage:
             client.get_aws_cost_usage("lambda", 2021, 8)
-        self.assertEqual(
-            [call("lambda", 2021, 8)], get_cost_usage.mock_calls
-        )
+        self.assertEqual([call("lambda", 2021, 8)], get_cost_usage.mock_calls)
 
     def test_get_aws_cost_usage_failure(self) -> None:
         client = AwsCostUsageClient(Mock())
