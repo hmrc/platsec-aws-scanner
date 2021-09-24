@@ -35,17 +35,25 @@ class AwsCostUsageClient:
                 "Start": f"{year}-{'%02d' % month}-01",
                 "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
             }
-            metrics = ["UsageQuantity"]
+            metrics = ["UsageQuantity", "AmortizedCost"]
 
             result = self._cost_usage.get_cost_and_usage(
                 TimePeriod=time_period, Filter=search_filter, Granularity="MONTHLY", Metrics=metrics
             )
 
             total_usage = 0
+            total_cost = 0
             for item in result["ResultsByTime"]:
                 total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
+                total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
+            total_cost = result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"] + " " + str(math.ceil(total_cost))
 
-            return {"Service": service, "DateRange": time_period, "TotalUsage": math.ceil(total_usage)}
+            return {
+                "Service": service,
+                "DateRange": time_period,
+                "TotalCost:": total_cost,
+                "TotalUsage": str(math.ceil(total_usage)),
+            }
 
         except Exception as err:
             raise CostUsageException(f"unable to get cost usage data for {service}: {err}")
