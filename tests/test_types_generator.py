@@ -271,6 +271,7 @@ def flow_log(
     log_format: str = "${srcaddr} ${dstaddr}",
     deliver_log_role_arn: Optional[str] = ":role/vpc_flow_log_role",
     deliver_log_role: Optional[Role] = role(name="vpc_flow_log_role"),
+    log_group: Optional[LogGroup] = None,
 ) -> FlowLog:
     return FlowLog(
         id=id,
@@ -280,6 +281,7 @@ def flow_log(
         log_format=log_format,
         deliver_log_role_arn=deliver_log_role_arn,
         deliver_log_role=deliver_log_role,
+        log_group=log_group,
     )
 
 
