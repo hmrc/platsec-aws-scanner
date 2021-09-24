@@ -4,7 +4,7 @@ from typing import Sequence, Optional
 
 from src.data.aws_iam_types import Role, Policy
 from src.data.aws_kms_types import Key
-from src.data.aws_scanner_exceptions import IamException, KmsException
+from src.data.aws_scanner_exceptions import IamException
 from tests import _raise
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest import TestCase
