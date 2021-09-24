@@ -33,10 +33,11 @@ class AwsCostUsageClient:
             time_period = {"Start": f"{year}-{'%02d' % month}-01", "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}"}
             metrics = ["AmortizedCost", "UsageQuantity"]
 
-
-            return self._cost_usage.get_cost_and_usage(
+            result = self._cost_usage.get_cost_and_usage(
                 TimePeriod=time_period, Filter=search_filter, Granularity="MONTHLY", Metrics=metrics
             )
+
+            return result
 
         except Exception as err:
             raise CostUsageException(f"unable to get cost usage data for {service}: {err}")

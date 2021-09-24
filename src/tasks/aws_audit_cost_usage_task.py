@@ -9,7 +9,7 @@ from src.clients.aws_cost_usage_client import AwsCostUsageClient
 @dataclass
 class AwsAuditCostUsageTask(AwsCostUsageTask):
     def __init__(self, account: Account,  service: str, year: str, month: str) -> None:
-        super().__init__("audit cost & usage of services", account)
+        super().__init__(f"cost & usage of {service}", account)
         self._service = service
         self._year = year
         self._month = month
