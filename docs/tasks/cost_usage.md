@@ -26,7 +26,7 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 			"Start": "2021-07-01",
 			"End": "2021-09-24"
 		},
-		"TotalCost:": "513",
+		"TotalCost:": "USD 513",
 		"TotalUsage": "41485454"
 	}
 }]
