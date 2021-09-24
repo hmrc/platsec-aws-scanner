@@ -59,7 +59,7 @@ class AwsVpcClient:
 
     def _get_kms_key_arn(self) -> str:
         key_id = self.kms.get_alias(self.config.kms_key_alias()).target_key_id
-        return self.kms.get_key(key_id=key_id).arn  # type: ignore # this key will exist if the kms action has run
+        return self.kms.get_key(key_id).arn  # type: ignore # this key will exist if the kms action has run
 
     def _is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(

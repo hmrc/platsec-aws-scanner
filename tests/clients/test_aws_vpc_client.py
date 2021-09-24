@@ -1,4 +1,6 @@
+from __future__ import annotations
 from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.clients.aws_ec2_client import AwsEC2Client
@@ -175,7 +177,7 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
 
     @staticmethod
     def client() -> AwsVpcClient:
-        return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()), AwsKmsClient(Mock()))
+        return AwsVpcClientBuilder().build()
 
     def test_enforcement_actions(self) -> None:
         a_vpc, vpc_act_1, vpc_act_2 = vpc(), delete_flow_log_action("42"), create_flow_log_action("99")
@@ -315,18 +317,16 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             )
 
     def test_no_central_vpc_log_group_action_when_log_group_is_compliant(self) -> None:
-        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(default_kms_key=True)):
-            self.assertEqual([], self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False))
+        client = AwsVpcClientBuilder().with_default_log_group().build()
+        self.assertEqual([], client._vpc_log_group_enforcement_actions(kms_key_updated=False))
 
 
 class TestLogGroupCompliance(AwsScannerTestCase):
-    @staticmethod
-    def client() -> AwsVpcClient:
-        return AwsVpcClient(AwsEC2Client(Mock()), AwsIamClient(Mock()), AwsLogsClient(Mock()), AwsKmsClient(Mock()))
-
     def test_central_vpc_log_group(self) -> None:
         self.assertTrue(
-            self.client()._is_central_vpc_log_group(
+            AwsVpcClientBuilder()
+            .build()
+            ._is_central_vpc_log_group(
                 log_group(
                     name="/vpc/flow_log",
                     subscription_filters=[
@@ -340,24 +340,48 @@ class TestLogGroupCompliance(AwsScannerTestCase):
         )
 
     def test_log_group_is_not_vpc_central(self) -> None:
-        self.assertFalse(self.client()._is_central_vpc_log_group(log_group(name="/vpc/something_else")))
-        self.assertFalse(self.client()._is_central_vpc_log_group(log_group(subscription_filters=[])))
+        client = AwsVpcClientBuilder().build()
+        self.assertFalse(client._is_central_vpc_log_group(log_group(name="/vpc/something_else")))
+        self.assertFalse(client._is_central_vpc_log_group(log_group(subscription_filters=[])))
         self.assertFalse(
-            self.client()._is_central_vpc_log_group(
+            client._is_central_vpc_log_group(
                 log_group(subscription_filters=[subscription_filter(filter_pattern="something")])
             )
         )
         self.assertFalse(
-            self.client()._is_central_vpc_log_group(
+            client._is_central_vpc_log_group(
                 log_group(subscription_filters=[subscription_filter(destination_arn="somewhere")])
             )
         )
 
     def test_get_kms_key_arn(self) -> None:
-        expected_key = key()
+        client = AwsVpcClientBuilder().with_default_alias().with_default_key().build()
+        self.assertEqual(key().arn, client._get_kms_key_arn())
 
-        with patch.object(AwsKmsClient, "get_alias", return_value=alias()):
-            with patch.object(AwsKmsClient, "get_key", return_value=expected_key) as get_key:
-                self.assertEqual(key().arn, self.client()._get_kms_key_arn())
 
-        get_key.assert_called_once_with(key_id=expected_key.id)
+class AwsVpcClientBuilder(TestCase):
+    def __init__(self) -> None:
+        super().__init__()
+        self.ec2 = Mock(spec=AwsEC2Client)
+        self.iam = Mock(spec=AwsIamClient)
+        self.logs = Mock(spec=AwsLogsClient)
+        self.kms = Mock(spec=AwsKmsClient)
+
+    def with_default_alias(self) -> AwsVpcClientBuilder:
+        self.kms.get_alias.return_value = alias()
+        return self
+
+    def with_default_key(self) -> AwsVpcClientBuilder:
+        a_key = key()
+        self.kms.get_key.side_effect = lambda k: a_key if k == a_key.id else self.fail(f"expected {a_key.id}, got {k}")
+        return self
+
+    def with_default_log_group(self) -> AwsVpcClientBuilder:
+        lg = log_group(kms_key_id=key().id)
+        self.logs.describe_log_groups.side_effect = (
+            lambda n: [lg] if n == lg.name else self.fail(f"expected {lg.name}, got {n}")
+        )
+        return self
+
+    def build(self) -> AwsVpcClient:
+        return AwsVpcClient(self.ec2, self.iam, self.logs, self.kms)
