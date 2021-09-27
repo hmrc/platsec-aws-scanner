@@ -4,10 +4,10 @@ from datetime import date
 import math
 
 from botocore.client import BaseClient
-from src.data.aws_scanner_exceptions import CostUsageException
+from src.data.aws_scanner_exceptions import CostExplorerException
 
 
-class AwsCostUsageClient:
+class AwsCostExplorerClient:
     def __init__(self, boto_cost_usage: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
         self._cost_usage = boto_cost_usage
@@ -53,4 +53,4 @@ class AwsCostUsageClient:
             }
 
         except Exception as err:
-            raise CostUsageException(f"unable to get cost usage data for {service}: {err}")
+            raise CostExplorerException(f"unable to get cost usage data for {service}: {err}")

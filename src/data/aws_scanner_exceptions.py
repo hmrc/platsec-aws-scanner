@@ -41,7 +41,7 @@ class IamException(AwsScannerException):
     pass
 
 
-class CostUsageException(AwsScannerException):
+class CostExplorerException(AwsScannerException):
     pass
 
 
