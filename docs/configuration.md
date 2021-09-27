@@ -42,6 +42,15 @@ region = us-east-1
 -   `region`: AWS region for partitioning the CloudTrail data in Athena; can be superseded with `-re | --region`
     argument
 
+## CostExplorer
+
+```ini
+[cost_explorer]
+role = RoleSecurityReadOnly
+```
+
+`role`: name of the role that is assumed to perform costExplorer-related operations on accounts
+
 ## Organization
 
 ```ini
