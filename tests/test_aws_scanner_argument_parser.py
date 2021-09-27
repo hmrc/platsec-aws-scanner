@@ -10,12 +10,13 @@ from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
 
 class TestAwsScannerArgumentParser(AwsScannerTestCase):
     def test_parse_cli_args_for_cost_usage_task(self) -> None:
-        with patch("sys.argv", ". cost_explorer -u bob -t 666666 -y 2021 -m 08 -s lambda".split()):
+        with patch("sys.argv", ". cost_explorer -u bob -a 3,2,1 -t 666666 -y 2021 -m 8 -s lambda".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
         with patch(
             "sys.argv",
-            ". cost_explorer --username bob --token 666666 --year 2021 --month 8 --service lambda".split(),
+            ". cost_explorer --username bob --account 3,2,1 --token 666666 --year 2021 --month 8 \
+            --service lambda".split(),
         ):
             long_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -25,7 +26,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.mfa_token, "666666")
             self.assertEqual(args.year, 2021)
             self.assertEqual(args.month, 8)
-            self.assertEqual(args.accounts, None)
+            self.assertEqual(args.accounts, ["3", "2", "1"])
             self.assertEqual(args.service, "lambda")
 
     def test_parse_cli_args_for_service_usage_task(self) -> None:
