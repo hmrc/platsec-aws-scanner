@@ -49,7 +49,7 @@ class DeleteFlowLogAction(ComplianceAction):
         self.flow_log_id = flow_log_id
 
     def _apply(self, client: AwsEC2Client) -> None:
-        client.delete_flow_logs(self.flow_log_id)
+        client.assert_delete_flow_logs(self.flow_log_id)
 
 
 @dataclass(unsafe_hash=True)
@@ -65,7 +65,7 @@ class CreateFlowLogAction(ComplianceAction):
         self.permission_resolver = permission_resolver
 
     def _apply(self, client: AwsEC2Client) -> None:
-        client.create_flow_logs(self.vpc_id, self.log_group_name, self.permission_resolver())
+        client.assert_create_flow_logs(self.vpc_id, self.log_group_name, self.permission_resolver())
 
 
 @dataclass(unsafe_hash=True)

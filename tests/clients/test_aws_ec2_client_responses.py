@@ -1,7 +1,10 @@
+from typing import Dict, Any, Sequence
+
+from src.data.aws_ec2_types import FlowLog
 from tests.test_types_generator import flow_log
 
-EMPTY_FLOW_LOGS = {"FlowLogs": []}
-FLOW_LOGS = {
+EMPTY_FLOW_LOGS: Dict[str, Any] = {"FlowLogs": []}
+FLOW_LOGS: Dict[str, Any] = {
     "FlowLogs": [
         {
             "FlowLogId": "fl-465fe654de123f54a",
@@ -21,7 +24,7 @@ FLOW_LOGS = {
         },
     ]
 }
-EXPECTED_FLOW_LOGS = [
+EXPECTED_FLOW_LOGS: Sequence[FlowLog] = [
     flow_log(
         id="fl-465fe654de123f54a",
         status="ACTIVE",
@@ -42,9 +45,9 @@ EXPECTED_FLOW_LOGS = [
     ),
 ]
 
-DELETE_FLOW_LOGS_SUCCESS = {"Unsuccessful": []}
+DELETE_FLOW_LOGS_SUCCESS: Dict[str, Any] = {"Unsuccessful": []}
 
-DELETE_FLOW_LOGS_FAILURE = {
+DELETE_FLOW_LOGS_FAILURE: Dict[str, Any] = {
     "Unsuccessful": [
         {
             "Error": {
@@ -56,9 +59,9 @@ DELETE_FLOW_LOGS_FAILURE = {
     ]
 }
 
-CREATE_FLOW_LOGS_SUCCESS = {"Unsuccessful": []}
+CREATE_FLOW_LOGS_SUCCESS: Dict[str, Any] = {"Unsuccessful": []}
 
-CREATE_FLOW_LOGS_FAILURE = {
+CREATE_FLOW_LOGS_FAILURE: Dict[str, Any] = {
     "Unsuccessful": [
         {
             "Error": {

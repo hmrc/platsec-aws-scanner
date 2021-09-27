@@ -1,5 +1,5 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import NoCredentialsError
@@ -196,7 +196,7 @@ class TestGetClients(AwsScannerTestCase):
 @patch.object(AwsClientFactory, "_get_session_token")
 class TestGetCompositeClients(AwsScannerTestCase):
     @staticmethod
-    def mock_client(client, expected_account):
+    def mock_client(client: Mock, expected_account: Account) -> Callable[[Account], Optional[Mock]]:
         return lambda acc: client if acc == expected_account else None
 
     def test_get_vpc_client(self, _: Mock) -> None:

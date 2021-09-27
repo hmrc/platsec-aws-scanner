@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Type
 
 from src.data.aws_iam_types import Role, Policy
 from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
-from tests import _raise
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest import TestCase
 from unittest.mock import Mock
@@ -26,6 +25,7 @@ from src.data.aws_compliance_actions import (
     CreateLogGroupKmsKeyAction,
     DeleteLogGroupKmsKeyAliasAction,
     UpdateLogGroupKmsKeyAction,
+    ComplianceAction,
 )
 
 from tests.test_types_generator import (
@@ -53,7 +53,7 @@ from tests.test_types_generator import (
 class TestAwsVpcClient(AwsScannerTestCase):
     def test_list_vpcs(self) -> None:
         a_key = key()
-        log_role = role(arn=flow_log().deliver_log_role_arn)
+        log_role = role(arn=str(flow_log().deliver_log_role_arn))
         group = log_group(kms_key_id=a_key.id, kms_key=a_key)
         expected_enriched_vpcs = [
             vpc(
@@ -67,7 +67,7 @@ class TestAwsVpcClient(AwsScannerTestCase):
         client.with_default_vpc()
         client.with_default_log_group()
         client.with_default_key()
-        client.with_roles([role(), role(arn=flow_log().deliver_log_role_arn)])
+        client.with_roles([role(), role(arn=str(flow_log().deliver_log_role_arn))])
 
         enriched = client.build().list_vpcs()
         self.assertEqual(len(enriched), 2)
@@ -168,7 +168,7 @@ class TestAwsFlowLogCompliance(AwsScannerTestCase):
 
 class TestAwsEnforcementActions(AwsScannerTestCase):
     @staticmethod
-    def mock_action(action, expected_client, applied_action) -> Mock:
+    def mock_action(action: Type[ComplianceAction], expected_client: Mock, applied_action: Mock) -> Mock:
         return Mock(spec=action, apply=Mock(side_effect=lambda c: applied_action if c == expected_client else None))
 
     def test_apply_actions(self) -> None:
@@ -355,7 +355,7 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             actions,
         )
         self.assertEqual(3, len(actions))
-        self.assertEqual(key().arn, actions[2].kms_key_arn_resolver())
+        self.assertEqual(key().arn, actions[2].kms_key_arn_resolver())  # type: ignore
 
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
         client = AwsVpcClientBuilder()
@@ -441,7 +441,7 @@ class AwsVpcClientBuilder(TestCase):
         self.logs = Mock(spec=AwsLogsClient, wraps=AwsLogsClient(Mock()))
         self.kms = Mock(spec=AwsKmsClient, wraps=AwsKmsClient(Mock()))
 
-    def with_default_vpc(self):
+    def with_default_vpc(self) -> AwsVpcClientBuilder:
         vpcs = [
             vpc(id="default-log-group-1", flow_logs=[flow_log(deliver_log_role_arn=None)]),
             vpc(id="default-log-group-2", flow_logs=[flow_log(log_group_name=None)]),
@@ -479,15 +479,19 @@ class AwsVpcClientBuilder(TestCase):
 
     def with_roles(self, roles: Sequence[Role]) -> AwsVpcClientBuilder:
         def get_role(name: str) -> Optional[Role]:
-            return next(filter(lambda role: role.name == name, roles), None) or _raise(
-                IamException(f"cannot find {name} in {roles}")
-            )
+            result = next(filter(lambda a_role: a_role.name == name, roles), None)
+            if result is None:
+                raise IamException(f"cannot find {name} in {roles}")
+
+            return result
 
         def find_role_by_name(name: str) -> Optional[Role]:
-            return next(filter(lambda role: role.name == name, roles), None)
+            result = filter(lambda role: role.name == name, roles)
+            return next(result, None)
 
         def find_role_by_arn(arn: str) -> Optional[Role]:
-            return next(filter(lambda role: role.arn == arn, roles), None)
+            result = filter(lambda role: role.arn == arn, roles)
+            return next(result, None)
 
         self.iam.get_role.side_effect = get_role
         self.iam.find_role.side_effect = find_role_by_name
@@ -495,11 +499,13 @@ class AwsVpcClientBuilder(TestCase):
 
         return self
 
-    def with_policies(self, policies: Sequence[Policy]):
+    def with_policies(self, policies: Sequence[Policy]) -> AwsVpcClientBuilder:
         def find_policy_arn(name: str) -> Optional[Policy]:
-            return next(filter(lambda role: role.name == name, policies), None)
+            result = filter(lambda role: role.name == name, policies)
+            return next(result, None)
 
         self.iam.find_policy_arn.side_effect = find_policy_arn
+        return self
 
     def build(self) -> AwsVpcClient:
         return AwsVpcClient(self.ec2, self.iam, self.logs, self.kms)

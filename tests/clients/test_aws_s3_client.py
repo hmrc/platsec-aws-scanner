@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from contextlib import redirect_stderr
 from io import StringIO
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Sequence
 
 from src.clients.aws_s3_client import AwsS3Client
 
@@ -35,14 +35,19 @@ class TestAwsS3ClientListBuckets(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketAccessControlList(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_acl(**kwargs) -> Dict[Any, Any]:
-        return {
-            "no-grant": lambda: responses.GET_BUCKET_ACL_NO_GRANT,
-            "owner-grant": lambda: responses.GET_BUCKET_ACL_OWNER_GRANT,
-            "all-users-grant": lambda: responses.GET_BUCKET_ACL_ALL_USERS_GRANT,
-            "authenticated-users-grant": lambda: responses.GET_BUCKET_ACL_AUTHENTICATED_USERS_GRANT,
-            "access-denied": lambda: _raise(client_error("GetBucketAcl", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_acl(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+
+        if bucket == "access-denied":
+            raise client_error("GetBucketAcl", "AccessDenied", "Access Denied")
+
+        acl: Dict[str, Any] = {
+            "no-grant": responses.GET_BUCKET_ACL_NO_GRANT,
+            "owner-grant": responses.GET_BUCKET_ACL_OWNER_GRANT,
+            "all-users-grant": responses.GET_BUCKET_ACL_ALL_USERS_GRANT,
+            "authenticated-users-grant": responses.GET_BUCKET_ACL_AUTHENTICATED_USERS_GRANT,
+        }
+        return acl[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_acl=Mock(side_effect=self.get_bucket_acl)))
@@ -72,18 +77,22 @@ class TestAwsS3ClientGetBucketAccessControlList(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
-        return {
-            "deny-single": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT,
-            "deny-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SEPARATE_STATEMENTS,
-            "deny-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_MIXED_STATEMENTS,
-            "deny-incomplete": lambda: responses.GET_BUCKET_POLICY_DENY_GET_PUT_SINGLE_STATEMENT,
-            "deny-incomplete-separate": lambda: responses.GET_BUCKET_POLICY_DENY_GET_DELETE_SEPARATE_STATEMENTS,
-            "deny-incomplete-mixed": lambda: responses.GET_BUCKET_POLICY_DENY_PUT_DELETE_MIXED_STATEMENTS,
-            "allow-mixed": lambda: responses.GET_BUCKET_POLICY_ALLOW_GET_PUT_DELETE_MIXED_STATEMENTS,
-            "deny-other": lambda: responses.GET_BUCKET_POLICY_DENY_OTHER,
-            "access-denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_policy(**kwargs: Dict[str, Any]) -> Any:
+        bucket_config = str(kwargs["Bucket"])
+        if bucket_config == "access-denied":
+            raise client_error("GetBucketPolicy", "AccessDenied", "Access Denied")
+
+        policy_mapping: Dict[str, Any] = {
+            "deny-single": responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT,
+            "deny-separate": responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SEPARATE_STATEMENTS,
+            "deny-mixed": responses.GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_MIXED_STATEMENTS,
+            "deny-incomplete": responses.GET_BUCKET_POLICY_DENY_GET_PUT_SINGLE_STATEMENT,
+            "deny-incomplete-separate": responses.GET_BUCKET_POLICY_DENY_GET_DELETE_SEPARATE_STATEMENTS,
+            "deny-incomplete-mixed": responses.GET_BUCKET_POLICY_DENY_PUT_DELETE_MIXED_STATEMENTS,
+            "allow-mixed": responses.GET_BUCKET_POLICY_ALLOW_GET_PUT_DELETE_MIXED_STATEMENTS,
+            "deny-other": responses.GET_BUCKET_POLICY_DENY_OTHER,
+        }
+        return policy_mapping[bucket_config]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
@@ -129,14 +138,15 @@ class TestAwsS3ClientGetBucketContentDeny(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketCORS(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_cors(**kwargs) -> Dict[Any, Any]:
-        return {
+    def get_bucket_cors(**kwargs: Dict[str, Any]) -> Any:
+        cors: Dict[Any, Any] = {
             "cors-enabled": lambda: responses.GET_BUCKET_CORS_ENABLED,
             "cors-disabled": lambda: _raise(
                 client_error("GetBucketCors", "NoSuchCORSConfiguration", "The CORS configuration does not exist")
             ),
             "access-denied": lambda: _raise(client_error("GetBucketCors", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+        }
+        return cors[kwargs["Bucket"]]()
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_cors=Mock(side_effect=self.get_bucket_cors)))
@@ -158,19 +168,23 @@ class TestAwsS3ClientGetBucketCORS(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketDataExpiryTagging(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
-        return {
-            "expiry-1-week": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_1_WEEK,
-            "expiry-1-month": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_1_MONTH,
-            "expiry-90-days": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_90_DAYS,
-            "expiry-6-months": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_6_MONTHS,
-            "expiry-1-year": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_1_YEAR,
-            "expiry-7-years": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_7_YEARS,
-            "expiry-10-years": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_10_YEARS,
-            "expiry-unknown": lambda: responses.GET_BUCKET_TAGGING_EXPIRY_UNKNOWN,
-            "no-expiry": lambda: responses.GET_BUCKET_TAGGING_NO_EXPIRY,
-            "no-tag": lambda: _raise(client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_tagging(**kwargs: Dict[str, str]) -> Any:
+        expiry_config = str(kwargs["Bucket"])
+        if expiry_config == "no-tag":
+            raise client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")
+
+        expiry: Dict[Any, Any] = {
+            "expiry-1-week": responses.GET_BUCKET_TAGGING_EXPIRY_1_WEEK,
+            "expiry-1-month": responses.GET_BUCKET_TAGGING_EXPIRY_1_MONTH,
+            "expiry-90-days": responses.GET_BUCKET_TAGGING_EXPIRY_90_DAYS,
+            "expiry-6-months": responses.GET_BUCKET_TAGGING_EXPIRY_6_MONTHS,
+            "expiry-1-year": responses.GET_BUCKET_TAGGING_EXPIRY_1_YEAR,
+            "expiry-7-years": responses.GET_BUCKET_TAGGING_EXPIRY_7_YEARS,
+            "expiry-10-years": responses.GET_BUCKET_TAGGING_EXPIRY_10_YEARS,
+            "expiry-unknown": responses.GET_BUCKET_TAGGING_EXPIRY_UNKNOWN,
+            "no-expiry": responses.GET_BUCKET_TAGGING_NO_EXPIRY,
+        }
+        return expiry[expiry_config]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
@@ -220,14 +234,18 @@ class TestAwsS3ClientGetBucketDataExpiryTagging(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_tagging(**kwargs) -> Dict[Any, Any]:
-        return {
-            "low-sensitivity": lambda: responses.GET_BUCKET_TAGGING_LOW_SENSITIVITY,
-            "high-sensitivity": lambda: responses.GET_BUCKET_TAGGING_HIGH_SENSITIVITY,
-            "unknown-sensitivity": lambda: responses.GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY,
-            "no-sensitivity": lambda: responses.GET_BUCKET_TAGGING_NO_SENSITIVITY,
-            "no-tag": lambda: _raise(client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_tagging(**kwargs: Dict[str, Any]) -> Any:
+        bucket_tag_config: str = str(kwargs["Bucket"])
+        if bucket_tag_config == "no-tag":
+            raise client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")
+
+        tags: Dict[str, Any] = {
+            "low-sensitivity": responses.GET_BUCKET_TAGGING_LOW_SENSITIVITY,
+            "high-sensitivity": responses.GET_BUCKET_TAGGING_HIGH_SENSITIVITY,
+            "unknown-sensitivity": responses.GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY,
+            "no-sensitivity": responses.GET_BUCKET_TAGGING_NO_SENSITIVITY,
+        }
+        return tags[bucket_tag_config]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=self.get_bucket_tagging)))
@@ -257,20 +275,23 @@ class TestAwsS3ClientGetBucketDataSensitivityTagging(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketEncryption(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_encryption(**kwargs) -> Dict[Any, Any]:
-        return {
-            "cmk-bucket": lambda: responses.GET_BUCKET_ENCRYPTION_CMK,
-            "managed-bucket": lambda: responses.GET_BUCKET_ENCRYPTION_AWS_MANAGED,
-            "aes-bucket": lambda: responses.GET_BUCKET_ENCRYPTION_AES,
-            "keyless-bucket": lambda: responses.GET_BUCKET_ENCRYPTION_KEYLESS,
-            "bad-bucket": lambda: _raise(
-                client_error(
-                    "GetBucketEncryption",
-                    "ServerSideEncryptionConfigurationNotFoundError",
-                    "The server side encryption configuration was not found",
-                )
-            ),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_encryption(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+
+        if bucket == "bad-bucket":
+            raise client_error(
+                "GetBucketEncryption",
+                "ServerSideEncryptionConfigurationNotFoundError",
+                "The server side encryption configuration was not found",
+            )
+
+        encryption_mapping: Dict[str, Any] = {
+            "cmk-bucket": responses.GET_BUCKET_ENCRYPTION_CMK,
+            "managed-bucket": responses.GET_BUCKET_ENCRYPTION_AWS_MANAGED,
+            "aes-bucket": responses.GET_BUCKET_ENCRYPTION_AES,
+            "keyless-bucket": responses.GET_BUCKET_ENCRYPTION_KEYLESS,
+        }
+        return encryption_mapping[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_encryption=Mock(side_effect=self.get_bucket_encryption)))
@@ -299,12 +320,18 @@ class TestAwsS3ClientGetBucketEncryption(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketLogging(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_logging(**kwargs) -> Dict[Any, Any]:
-        return {
-            "logging-enabled-bucket": lambda: responses.GET_BUCKET_LOGGING_ENABLED,
-            "logging-disabled-bucket": lambda: responses.GET_BUCKET_LOGGING_DISABLED,
-            "denied-bucket": lambda: _raise(client_error("GetBucketLogging", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_logging(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+
+        if bucket == "denied-bucket":
+            raise client_error("GetBucketLogging", "AccessDenied", "Access Denied")
+
+        logging_mapping = {
+            "logging-enabled-bucket": responses.GET_BUCKET_LOGGING_ENABLED,
+            "logging-disabled-bucket": responses.GET_BUCKET_LOGGING_DISABLED,
+        }
+
+        return logging_mapping[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_logging=Mock(side_effect=self.get_bucket_logging)))
@@ -325,20 +352,21 @@ class TestAwsS3ClientGetBucketLogging(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketLifecycle(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_lifecycle(**kwargs) -> Dict[Any, Any]:
-        return {
-            "single-rule": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_SINGLE_RULE,
-            "multiple-rules": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_MULTIPLE_RULES,
-            "disabled": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_DISABLED,
-            "no-expiry": lambda: responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_NO_EXPIRY,
-            "no-lifecycle": lambda: _raise(
-                client_error(
-                    "GetBucketLifecycleConfiguration",
-                    "NoSuchLifecycleConfiguration",
-                    "The lifecycle configuration does not exist",
-                )
-            ),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_lifecycle(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+        if bucket == "no-lifecycle":
+            raise client_error(
+                "GetBucketLifecycleConfiguration",
+                "NoSuchLifecycleConfiguration",
+                "The lifecycle configuration does not exist",
+            )
+        lifecycle_mapping: Dict[str, Any] = {
+            "single-rule": responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_SINGLE_RULE,
+            "multiple-rules": responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_MULTIPLE_RULES,
+            "disabled": responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_DISABLED,
+            "no-expiry": responses.GET_BUCKET_LIFECYCLE_CONFIGURATION_NO_EXPIRY,
+        }
+        return lifecycle_mapping[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_lifecycle_configuration=Mock(side_effect=self.get_bucket_lifecycle)))
@@ -368,13 +396,17 @@ class TestAwsS3ClientGetBucketLifecycle(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_versioning(**kwargs) -> Dict[Any, Any]:
-        return {
-            "mfa-delete-enabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_ENABLED,
-            "mfa-delete-disabled": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_DISABLED,
-            "mfa-delete-unset": lambda: responses.GET_BUCKET_VERSIONING_MFA_DELETE_UNSET,
-            "access-denied": lambda: _raise(client_error("GetBucketVersioning", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_versioning(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+        if bucket == "access-denied":
+            raise client_error("GetBucketVersioning", "AccessDenied", "Access Denied")
+
+        versioning_mapping: Dict[str, Any] = {
+            "mfa-delete-enabled": responses.GET_BUCKET_VERSIONING_MFA_DELETE_ENABLED,
+            "mfa-delete-disabled": responses.GET_BUCKET_VERSIONING_MFA_DELETE_DISABLED,
+            "mfa-delete-unset": responses.GET_BUCKET_VERSIONING_MFA_DELETE_UNSET,
+        }
+        return versioning_mapping[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_versioning=Mock(side_effect=self.get_bucket_versioning)))
@@ -400,7 +432,7 @@ class TestAwsS3ClientGetBucketMFADelete(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketPublicAccessBlock(AwsScannerTestCase):
     @staticmethod
-    def s3_client(public_access_block_response: Optional[Dict[Any, Any]] = None) -> AwsS3Client:
+    def s3_client(public_access_block_response: Dict[str, Any]) -> AwsS3Client:
         return AwsS3Client(
             Mock(
                 get_public_access_block=Mock(
@@ -415,7 +447,7 @@ class TestAwsS3ClientGetBucketPublicAccessBlock(AwsScannerTestCase):
         blocked = bucket_public_access_block(enabled=True)
         not_blocked = bucket_public_access_block(enabled=False)
 
-        scenarios = [
+        scenarios: Sequence[Dict[str, Any]] = [
             {"response": responses.public_access_block(False, False, False, False), "state": not_blocked},
             {"response": responses.public_access_block(False, False, False, True), "state": not_blocked},
             {"response": responses.public_access_block(False, False, True, False), "state": not_blocked},
@@ -442,18 +474,22 @@ class TestAwsS3ClientGetBucketPublicAccessBlock(AwsScannerTestCase):
     def test_get_bucket_public_access_block_failure(self) -> None:
         not_blocked = bucket_public_access_block(enabled=False)
         with redirect_stderr(StringIO()) as err:
-            self.assertEqual(not_blocked, self.s3_client().get_bucket_public_access_block("denied"))
+            self.assertEqual(not_blocked, self.s3_client({}).get_bucket_public_access_block("denied"))
         self.assertIn("AccessDenied", err.getvalue())
 
 
 class TestAwsS3ClientGetBucketSecureTransport(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_policy(**kwargs) -> Dict[Any, Any]:
-        return {
-            "bucket": lambda: responses.GET_BUCKET_POLICY,
-            "secure-bucket": lambda: responses.GET_BUCKET_POLICY_SECURE_TRANSPORT,
-            "denied": lambda: _raise(client_error("GetBucketPolicy", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_policy(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+        if bucket == "denied":
+            raise client_error("GetBucketPolicy", "AccessDenied", "Access Denied")
+
+        policy_mapping: Dict[str, Any] = {
+            "bucket": responses.GET_BUCKET_POLICY,
+            "secure-bucket": responses.GET_BUCKET_POLICY_SECURE_TRANSPORT,
+        }
+        return policy_mapping[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_policy=Mock(side_effect=self.get_bucket_policy)))
@@ -475,13 +511,17 @@ class TestAwsS3ClientGetBucketSecureTransport(AwsScannerTestCase):
 
 class TestAwsS3ClientGetBucketVersioning(AwsScannerTestCase):
     @staticmethod
-    def get_bucket_versioning(**kwargs) -> Dict[Any, Any]:
-        return {
-            "versioning-enabled": lambda: responses.GET_BUCKET_VERSIONING_ENABLED,
-            "versioning-suspended": lambda: responses.GET_BUCKET_VERSIONING_SUSPENDED,
-            "versioning-unset": lambda: responses.GET_BUCKET_VERSIONING_UNSET,
-            "access-denied": lambda: _raise(client_error("GetBucketVersioning", "AccessDenied", "Access Denied")),
-        }.get(kwargs.get("Bucket"))()
+    def get_bucket_versioning(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+        if bucket == "access-denied":
+            raise client_error("GetBucketVersioning", "AccessDenied", "Access Denied")
+
+        versioning_mapping: Dict[str, Any] = {
+            "versioning-enabled": responses.GET_BUCKET_VERSIONING_ENABLED,
+            "versioning-suspended": responses.GET_BUCKET_VERSIONING_SUSPENDED,
+            "versioning-unset": responses.GET_BUCKET_VERSIONING_UNSET,
+        }
+        return versioning_mapping[bucket]
 
     def s3_client(self) -> AwsS3Client:
         return AwsS3Client(Mock(get_bucket_versioning=Mock(side_effect=self.get_bucket_versioning)))
@@ -507,10 +547,13 @@ class TestAwsS3ClientGetBucketVersioning(AwsScannerTestCase):
 
 class TestAwsS3ClientPutObject(AwsScannerTestCase):
     @staticmethod
-    def put_object(**kwargs) -> Dict[Any, Any]:
+    def put_object(**kwargs: Dict[str, Any]) -> Any:
+        bucket = str(kwargs["Bucket"])
+        key = str(kwargs["Key"])
+        body = str(kwargs["Body"])
         return (
             responses.PUT_OBJECT
-            if kwargs.get("Bucket") == "buck" and kwargs.get("Key") == "obj" and kwargs.get("Body") == "bla"
+            if bucket == "buck" and key == "obj" and body == "bla"
             else _raise(client_error("PutObject", "AccessDenied", "Access Denied"))
         )
 

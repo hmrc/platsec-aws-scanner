@@ -1,7 +1,7 @@
 from json import dumps
-from typing import Dict
+from typing import Dict, Any
 
-LIST_BUCKETS = {
+LIST_BUCKETS: Dict[str, Any] = {
     "Buckets": [
         {"Name": "a-bucket", "CreationDate": "2015, 1, 1"},
         {"Name": "another-bucket", "CreationDate": "2015, 1, 1"},
@@ -9,7 +9,7 @@ LIST_BUCKETS = {
     "Owner": {"DisplayName": "string", "ID": "string"},
 }
 
-GET_BUCKET_ENCRYPTION_CMK = {
+GET_BUCKET_ENCRYPTION_CMK: Dict[str, Any] = {
     "ServerSideEncryptionConfiguration": {
         "Rules": [
             {
@@ -21,7 +21,7 @@ GET_BUCKET_ENCRYPTION_CMK = {
         ]
     }
 }
-GET_BUCKET_ENCRYPTION_AWS_MANAGED = {
+GET_BUCKET_ENCRYPTION_AWS_MANAGED: Dict[str, Any] = {
     "ServerSideEncryptionConfiguration": {
         "Rules": [
             {
@@ -33,7 +33,7 @@ GET_BUCKET_ENCRYPTION_AWS_MANAGED = {
         ]
     }
 }
-GET_BUCKET_ENCRYPTION_AES = {
+GET_BUCKET_ENCRYPTION_AES: Dict[str, Any] = {
     "ServerSideEncryptionConfiguration": {
         "Rules": [
             {
@@ -44,21 +44,21 @@ GET_BUCKET_ENCRYPTION_AES = {
         ]
     }
 }
-GET_BUCKET_ENCRYPTION_KEYLESS = {
+GET_BUCKET_ENCRYPTION_KEYLESS: Dict[str, Any] = {
     "ServerSideEncryptionConfiguration": {
         "Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms"}}]
     }
 }
 
-GET_BUCKET_LOGGING_ENABLED = {
+GET_BUCKET_LOGGING_ENABLED: Dict[str, Any] = {
     "LoggingEnabled": {"TargetBucket": "some-target-bucket", "TargetPrefix": "some-target-prefix"}
 }
-GET_BUCKET_LOGGING_DISABLED = {}
+GET_BUCKET_LOGGING_DISABLED: Dict[str, Any] = {}
 
-GET_BUCKET_POLICY = {
+GET_BUCKET_POLICY: Dict[str, Any] = {
     "Policy": '{"Statement": [{"Effect": "Allow", "Principal": "*", "Action": "s3:getObject", "Resource": "*"}]}'
 }
-GET_BUCKET_POLICY_SECURE_TRANSPORT = {
+GET_BUCKET_POLICY_SECURE_TRANSPORT: Dict[str, Any] = {
     "Policy": """{
         "Statement": [
             {
@@ -86,7 +86,7 @@ GET_BUCKET_POLICY_SECURE_TRANSPORT = {
 
 def public_access_block(
     block_public_acls: bool, ignore_public_acls: bool, block_public_policy: bool, restrict_public_buckets: bool
-) -> Dict[str, Dict[str, bool]]:
+) -> Dict[str, Any]:
     return {
         "PublicAccessBlockConfiguration": {
             "BlockPublicAcls": block_public_acls,

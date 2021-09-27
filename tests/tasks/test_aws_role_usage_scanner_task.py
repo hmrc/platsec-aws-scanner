@@ -6,7 +6,7 @@ from tests.tasks import test_aws_cloudtrail_scanner_queries as queries
 
 
 class TestAwsRoleUsageScannerTask(GenericCloudTrailTestCase):
-    def test_principal_by_id_finder_task(self):
+    def test_principal_by_id_finder_task(self) -> None:
         self._assert_task_run(
             task_type=AwsRoleUsageScannerTask,
             task_args={"role": "RoleSomething"},
