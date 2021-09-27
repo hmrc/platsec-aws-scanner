@@ -19,7 +19,7 @@ class AwsEC2Client:
     def list_vpcs(self) -> List[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
 
-    def assert_create_flow_logs(self, vpc_id: str, log_group_name: str, permission: str) -> None:
+    def create_flow_logs(self, vpc_id: str, log_group_name: str, permission: str) -> None:
         self._logger.debug(f"creating flow logs for VPC {vpc_id}")
         try:
             self._is_success(
@@ -37,7 +37,7 @@ class AwsEC2Client:
         except (BotoCoreError, ClientError) as err:
             raise EC2Exception(f"unable to create flow logs for VPC {vpc_id}: {err}")
 
-    def assert_delete_flow_logs(self, flow_log_id: str) -> None:
+    def delete_flow_logs(self, flow_log_id: str) -> None:
         self._logger.debug(f"deleting flow logs with id {flow_log_id}")
         try:
             self._is_success("delete_flow_logs", self._ec2.delete_flow_logs(FlowLogIds=[flow_log_id]))

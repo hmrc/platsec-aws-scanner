@@ -85,37 +85,37 @@ class TestAwsEC2ClientCreateFlowLogs(AwsScannerTestCase):
         return AwsEC2Client(Mock(create_flow_logs=Mock(side_effect=self.create_flow_logs)))
 
     def test_create_flow_logs(self) -> None:
-        self.ec2_client().assert_create_flow_logs("good-vpc", "lg-1", "perm-1")
+        self.ec2_client().create_flow_logs("good-vpc", "lg-1", "perm-1")
 
     def test_create_flow_logs_failure(self) -> None:
         with self.assertRaisesRegex(EC2Exception, "bad-vpc"):
-            self.ec2_client().assert_create_flow_logs("bad-vpc", "lg-2", "perm-2")
+            self.ec2_client().create_flow_logs("bad-vpc", "lg-2", "perm-2")
 
     def test_create_flow_logs_client_error(self) -> None:
         with self.assertRaisesRegex(EC2Exception, "except-vpc"):
-            self.ec2_client().assert_create_flow_logs("except-vpc", "lg-3", "perm-3")
+            self.ec2_client().create_flow_logs("except-vpc", "lg-3", "perm-3")
 
 
 class TestAwsEC2ClientDeleteFlowLogs(AwsScannerTestCase):
     @staticmethod
-    def delete_flow_logs(**kwargs: Dict[str, Any]) -> Any:
+    def delete_flow_logs(**kwargs: Any) -> Any:
         flow_log: Dict[str, Any] = {
             "good-fl": lambda: responses.DELETE_FLOW_LOGS_SUCCESS,
             "fl-not-found": lambda: responses.DELETE_FLOW_LOGS_FAILURE,
             "bad-fl": lambda: _raise(client_error("DeleteFlowLogs", "AccessDenied", "Access Denied")),
         }
-        return flow_log[str(kwargs.get("FlowLogIds"))[0]]()
+        return flow_log[kwargs["FlowLogIds"][0]]()
 
     def ec2_client(self) -> AwsEC2Client:
         return AwsEC2Client(Mock(delete_flow_logs=Mock(side_effect=self.delete_flow_logs)))
 
     def test_delete_flow_logs(self) -> None:
-        self.ec2_client().assert_delete_flow_logs(flow_log_id="good-fl")
+        self.ec2_client().delete_flow_logs(flow_log_id="good-fl")
 
     def test_delete_flow_logs_not_found(self) -> None:
         with self.assertRaisesRegex(EC2Exception, "bad-fl"):
-            self.ec2_client().assert_delete_flow_logs(flow_log_id="fl-not-found")
+            self.ec2_client().delete_flow_logs(flow_log_id="fl-not-found")
 
     def test_delete_flow_logs_failure(self) -> None:
         with self.assertRaisesRegex(EC2Exception, "bad-fl"):
-            self.ec2_client().assert_delete_flow_logs(flow_log_id="bad-fl")
+            self.ec2_client().delete_flow_logs(flow_log_id="bad-fl")
