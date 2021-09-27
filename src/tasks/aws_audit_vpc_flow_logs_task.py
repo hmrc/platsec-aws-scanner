@@ -14,4 +14,9 @@ class AwsAuditVPCFlowLogsTask(AwsVpcTask):
     def _run_task(self, client: AwsVpcClient) -> Dict[Any, Any]:
         vpcs = client.list_vpcs()
         actions = client.enforcement_actions(vpcs)
-        return {"vpcs": vpcs, "enforcement_actions": client.apply(actions) if self.enforce else actions}
+        if self.enforce:
+            apply = [a.apply() for a in actions]
+            return {"vpcs": vpcs, "enforcement_actions": apply}
+        else:
+            plans = [a.plan() for a in actions]
+            return {"vpcs": vpcs, "enforcement_actions": plans}
