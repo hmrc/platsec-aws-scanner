@@ -33,7 +33,7 @@ fmt-check: pipenv
 
 static-check: pipenv
 	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10
-	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict ./**/*.py
+	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict ./**/*/*.py
 
 all-checks: python-test python-coverage fmt-check static-check md-check clean-up
 

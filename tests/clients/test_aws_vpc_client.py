@@ -4,11 +4,12 @@ from typing import Sequence, Optional
 
 from src.data.aws_iam_types import Role, Policy
 from src.data.aws_kms_types import Key
+from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
 from tests import _raise
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
@@ -112,13 +113,13 @@ class TestAwsLogDeliveryRoleCompliance(AwsScannerTestCase):
     def test_delivery_role_policy_exists(self) -> None:
         client = AwsVpcClientBuilder()
         expected_policy = policy(name="vpc_flow_log_role_policy")
-        client.with_policy([expected_policy])
+        client.with_policies([expected_policy])
 
         self.assertTrue(client.build()._delivery_role_policy_exists())
 
     def test_delivery_role_policy_not_found(self) -> None:
         client = AwsVpcClientBuilder()
-        client.with_policy([])
+        client.with_policies([])
 
         self.assertFalse(client.build()._delivery_role_policy_exists())
 
@@ -185,10 +186,6 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             self.mock_action(DeleteLogGroupKmsKeyAliasAction, kms, applied[8]),
         ]
         self.assertEqual(applied, AwsVpcClient(ec2, iam, logs, kms).apply(actions))
-
-    @staticmethod
-    def client() -> AwsVpcClient:
-        return AwsVpcClientBuilder().build()
 
     def test_do_nothing_when_all_correct(self) -> None:
         expected_key = key(policy=compliant_key_policy())
@@ -302,33 +299,52 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         )
 
     def test_create_delivery_role_action_when_role_is_missing(self) -> None:
-        with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=None):
-            with patch.object(AwsVpcClient, "_delivery_role_policy_exists", return_value=False):
-                self.assertEqual(
-                    [create_flow_log_delivery_role_action()], self.client()._delivery_role_enforcement_actions()
-                )
+        expected_key = key(policy=compliant_key_policy())
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(expected_key)
+        client.with_default_log_group()
+
+        client.with_roles([])
+        client.with_policies([])
+
+        self.assertEqual([create_flow_log_delivery_role_action()], client.build()._delivery_role_enforcement_actions())
 
     def test_delete_and_create_delivery_role_action_when_role_is_missing_and_policy_exists(self) -> None:
-        with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=None):
-            with patch.object(AwsVpcClient, "_delivery_role_policy_exists", return_value=True):
-                self.assertEqual(
-                    [delete_flow_log_delivery_role_action(), create_flow_log_delivery_role_action()],
-                    self.client()._delivery_role_enforcement_actions(),
-                )
+        expected_key = key(policy=compliant_key_policy())
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(expected_key)
+        client.with_default_log_group()
+
+        client.with_roles([])
+        client.with_policies([policy(name="vpc_flow_log_role_policy")])
+
+        self.assertEqual(
+            [delete_flow_log_delivery_role_action(), create_flow_log_delivery_role_action()],
+            client.build()._delivery_role_enforcement_actions(),
+        )
 
     def test_delete_and_create_delivery_role_action_when_role_is_not_compliant(self) -> None:
-        non_compliant_role = role(name="non_compliant")
-        with patch.object(AwsVpcClient, "_is_flow_log_role_compliant", side_effect=lambda r: r != non_compliant_role):
-            with patch.object(AwsVpcClient, "_find_flow_log_delivery_role", return_value=non_compliant_role):
-                self.assertEqual(
-                    [delete_flow_log_delivery_role_action(), create_flow_log_delivery_role_action()],
-                    self.client()._delivery_role_enforcement_actions(),
-                )
+        expected_key = key(policy=compliant_key_policy())
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(expected_key)
+        client.with_default_log_group()
+        client.with_roles([role(name="vpc_flow_log_role", policies=[])])
 
-    def test_create_central_vpc_log_group_with_subscription_filter_and_kms_key_when_missing(self) -> None:
-        with patch.object(AwsVpcClient, "_get_kms_key_arn", return_value=key().arn):
-            with patch.object(AwsVpcClient, "_find_log_group", return_value=None) as find_log_group:
-                actions = self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False)
+        self.assertEqual(
+            [delete_flow_log_delivery_role_action(), create_flow_log_delivery_role_action()],
+            client.build()._delivery_role_enforcement_actions(),
+        )
+
+    def test_create_central_vpc_log_group_when_missing_with_subscription_filter_and_kms_key(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([])
+        client.with_default_alias()
+        client.with_default_key()
+
+        actions = client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False)
 
         self.assertEqual(
             [
@@ -338,36 +354,45 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
             ],
             actions,
         )
-        find_log_group.assert_called_once_with("/vpc/flow_log")
         self.assertEqual(3, len(actions))
         self.assertEqual(key().arn, actions[2].kms_key_arn_resolver())
 
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
-        with patch.object(
-            AwsVpcClient, "_find_log_group", return_value=log_group(subscription_filters=[], default_kms_key=True)
-        ):
-            self.assertEqual(
-                [put_vpc_log_group_subscription_filter_action()],
-                self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False),
-            )
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([log_group(subscription_filters=[], default_kms_key=True)])
+        client.with_default_key()
+
+        self.assertEqual(
+            [put_vpc_log_group_subscription_filter_action()],
+            client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
+        )
 
     def test_update_kms_key_when_kms_is_updated(self) -> None:
-        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(default_kms_key=True)):
-            self.assertEqual(
-                [update_log_group_kms_key_action()],
-                self.client()._vpc_log_group_enforcement_actions(kms_key_updated=True),
-            )
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([log_group(default_kms_key=True)])
+        client.with_default_key()
+
+        self.assertEqual(
+            [update_log_group_kms_key_action()],
+            client.build()._vpc_log_group_enforcement_actions(kms_key_updated=True),
+        )
 
     def test_update_kms_key_when_kms_is_not_set(self) -> None:
-        with patch.object(AwsVpcClient, "_find_log_group", return_value=log_group(default_kms_key=False)):
-            self.assertEqual(
-                [update_log_group_kms_key_action()],
-                self.client()._vpc_log_group_enforcement_actions(kms_key_updated=False),
-            )
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([log_group(default_kms_key=False)])
+        client.with_default_key()
+
+        self.assertEqual(
+            [update_log_group_kms_key_action()],
+            client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
+        )
 
     def test_no_central_vpc_log_group_action_when_log_group_is_compliant(self) -> None:
-        client = AwsVpcClientBuilder().with_default_log_group().build()
-        self.assertEqual([], client._vpc_log_group_enforcement_actions(kms_key_updated=False))
+        client = AwsVpcClientBuilder()
+        client.with_default_log_group()
+        client.with_default_key()
+
+        self.assertEqual([], client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False))
 
 
 class TestLogGroupCompliance(AwsScannerTestCase):
@@ -411,10 +436,10 @@ class TestLogGroupCompliance(AwsScannerTestCase):
 class AwsVpcClientBuilder(TestCase):
     def __init__(self) -> None:
         super().__init__()
-        self.ec2 = Mock(spec=AwsEC2Client)
-        self.iam = Mock(spec=AwsIamClient)
-        self.logs = Mock(spec=AwsLogsClient)
-        self.kms = Mock(spec=AwsKmsClient)
+        self.ec2 = Mock(spec=AwsEC2Client, wraps=AwsEC2Client(Mock()))
+        self.iam = Mock(spec=AwsIamClient, wraps=AwsIamClient(Mock()))
+        self.logs = Mock(spec=AwsLogsClient, wraps=AwsLogsClient(Mock()))
+        self.kms = Mock(spec=AwsKmsClient, wraps=AwsKmsClient(Mock()))
 
     def with_default_vpc(self):
         vpcs = [
@@ -442,10 +467,14 @@ class AwsVpcClientBuilder(TestCase):
         return self
 
     def with_default_log_group(self) -> AwsVpcClientBuilder:
-        lg = log_group(kms_key_id=key().id)
-        self.logs.describe_log_groups.side_effect = (
-            lambda n: [lg] if n == lg.name else self.fail(f"expected {lg.name}, got {n}")
-        )
+        self.with_log_groups([log_group(kms_key_id=key().id)])
+        return self
+
+    def with_log_groups(self, log_groups: Sequence[LogGroup]) -> AwsVpcClientBuilder:
+        def describe_log_groups(name_prefix: str) -> Sequence[LogGroup]:
+            return list(filter(lambda log_group: log_group.name.startswith(name_prefix), log_groups))
+
+        self.logs.describe_log_groups.side_effect = describe_log_groups
         return self
 
     def with_roles(self, roles: Sequence[Role]) -> AwsVpcClientBuilder:
@@ -466,7 +495,7 @@ class AwsVpcClientBuilder(TestCase):
 
         return self
 
-    def with_policy(self, policies: Sequence[Policy]):
+    def with_policies(self, policies: Sequence[Policy]):
         def find_policy_arn(name: str) -> Optional[Policy]:
             return next(filter(lambda role: role.name == name, policies), None)
 
