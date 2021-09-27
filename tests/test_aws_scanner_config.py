@@ -12,7 +12,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         config = AwsScannerConfig()
         self.assertEqual(Account("555666777888", "athena"), config.athena_account())
         self.assertEqual("athena_role", config.athena_role())
-        self.assertEqual("cost_usage_role", config.cost_usage_role())
+        self.assertEqual("cost_explorer_role", config.cost_explorer_role())
         self.assertEqual("some_prefix", config.athena_database_prefix())
         self.assertEqual("query-results-bucket", config.athena_query_results_bucket())
         self.assertEqual("cloudtrail-logs-bucket", config.cloudtrail_logs_bucket())

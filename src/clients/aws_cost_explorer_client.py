@@ -8,11 +8,11 @@ from src.data.aws_scanner_exceptions import CostExplorerException
 
 
 class AwsCostExplorerClient:
-    def __init__(self, boto_cost_usage: BaseClient):
+    def __init__(self, boto_cost_explorer: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
-        self._cost_usage = boto_cost_usage
+        self._cost_explorer = boto_cost_explorer
 
-    def get_aws_cost_usage(self, service: str, year: int, month: int) -> Dict[str, Any]:
+    def get_aws_cost_explorer(self, service: str, year: int, month: int) -> Dict[str, Any]:
 
         try:
             today = date.today()
@@ -22,7 +22,7 @@ class AwsCostExplorerClient:
                 "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
             }
 
-            result = self._cost_usage.get_cost_and_usage(
+            result = self._cost_explorer.get_cost_and_usage(
                 TimePeriod=time_period,
                 Filter={
                     "Dimensions": {

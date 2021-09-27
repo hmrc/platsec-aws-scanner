@@ -10,8 +10,8 @@ role = athena_role
 database_prefix = some_prefix
 query_results_bucket = query-results-bucket
 
-[cost_usage]
-role = cost_usage_role
+[cost_explorer]
+role = cost_explorer_role
 
 [cloudtrail]
 logs_bucket = cloudtrail-logs-bucket

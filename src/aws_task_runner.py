@@ -5,7 +5,7 @@ from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.data.aws_task_report import AwsTaskReport
 from src.clients.aws_client_factory import AwsClientFactory
 from src.tasks.aws_athena_task import AwsAthenaTask
-from src.tasks.aws_cost_usage_task import AwsCostExplorerTask
+from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -28,7 +28,7 @@ class AwsTaskRunner:
         if isinstance(task, AwsAthenaTask):
             return task.run(self._client_factory.get_athena_client())
         elif isinstance(task, AwsCostExplorerTask):
-            return task.run(self._client_factory.get_cost_usage_client(task.account))
+            return task.run(self._client_factory.get_cost_explorer_client(task.account))
         elif isinstance(task, AwsOrganizationsTask):
             return task.run(self._client_factory.get_organizations_client())
         elif isinstance(task, AwsSSMTask):

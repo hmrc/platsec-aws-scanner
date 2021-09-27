@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from src.tasks.aws_task import AwsTask
-from src.clients.aws_cost_usage_client import AwsCostExplorerClient
+from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
 
 
 class AwsCostExplorerTask(AwsTask):

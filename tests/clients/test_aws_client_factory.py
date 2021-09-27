@@ -45,14 +45,14 @@ class TestGetBotoClients(AwsScannerTestCase):
             role="athena_role",
         )
 
-    def test_get_cost_usage_boto_client(self) -> None:
-        cost_usage_account = account(identifier="999888777666", name="some_account")
+    def test_get_cost_explorer_boto_client(self) -> None:
+        cost_explorer_account = account(identifier="999888777666", name="some_account")
         self.assert_get_client(
-            method_under_test="get_cost_usage_boto_client",
-            method_args={"account": cost_usage_account},
+            method_under_test="get_cost_explorer_boto_client",
+            method_args={"account": cost_explorer_account},
             service="ce",
-            target_account=cost_usage_account,
-            role="cost_usage_role",
+            target_account=cost_explorer_account,
+            role="cost_explorer_role",
         )
 
     def test_get_ec2_boto_client(self) -> None:
@@ -134,14 +134,14 @@ class TestGetClients(AwsScannerTestCase):
             athena_client = AwsClientFactory(self.mfa, self.username).get_athena_client()
             self.assertEqual(athena_client._athena_async._boto_athena, boto_client.return_value)
 
-    def test_get_cost_usage_client(self, _: Mock) -> None:
-        cost_usage_boto_client = Mock()
+    def test_get_cost_explorer_client(self, _: Mock) -> None:
+        cost_explorer_boto_client = Mock()
         with patch(
-            f"{self.factory_path}.get_cost_usage_boto_client",
-            side_effect=lambda acc: cost_usage_boto_client if acc == account() else None,
+            f"{self.factory_path}.get_cost_explorer_boto_client",
+            side_effect=lambda acc: cost_explorer_boto_client if acc == account() else None,
         ):
-            cost_usage_client = AwsClientFactory(self.mfa, self.username).get_cost_usage_client(account())
-            self.assertEqual(cost_usage_client._cost_usage, cost_usage_boto_client)
+            cost_explorer_client = AwsClientFactory(self.mfa, self.username).get_cost_explorer_client(account())
+            self.assertEqual(cost_explorer_client._cost_explorer, cost_explorer_boto_client)
 
     def test_get_ec2_client(self, _: Mock) -> None:
         ec2_boto_client = Mock()
