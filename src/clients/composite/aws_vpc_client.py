@@ -1,6 +1,6 @@
 from itertools import chain
 from logging import getLogger
-from typing import Optional, Sequence
+from typing import Optional, Sequence, List, Any
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
@@ -17,6 +17,7 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupSubscriptionFilterAction,
     CreateLogGroupKmsKeyAction,
     DeleteLogGroupKmsKeyAliasAction,
+    UpdateLogGroupKmsKeyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
@@ -56,6 +57,10 @@ class AwsVpcClient:
     def _get_flow_log_delivery_role_arn(self) -> str:
         return self.iam.get_role(self.config.logs_vpc_log_group_delivery_role()).arn
 
+    def _get_kms_key_arn(self) -> str:
+        key_id = self.kms.get_alias(self.config.kms_key_alias()).target_key_id
+        return self.kms.get_key(key_id).arn  # type: ignore # this key will exist if the kms action has run
+
     def _is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(
             role
@@ -77,7 +82,7 @@ class AwsVpcClient:
 
     def enforcement_actions(self, vpcs: Sequence[Vpc]) -> Sequence[ComplianceAction]:
         kms_actions = self._kms_enforcement_actions()
-        log_group_actions = self._vpc_log_group_enforcement_actions()
+        log_group_actions = self._vpc_log_group_enforcement_actions(kms_key_updated=bool(kms_actions))
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
         return list(chain(kms_actions, log_group_actions, delivery_role_actions, vpc_actions))
@@ -145,15 +150,24 @@ class AwsVpcClient:
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy_name()))
 
-    def _vpc_log_group_enforcement_actions(self) -> Sequence[ComplianceAction]:
-        lg = self._find_log_group(self.config.logs_vpc_log_group_name())
-        return (
-            [CreateVpcLogGroupAction(), PutVpcLogGroupSubscriptionFilterAction()]
-            if not lg
-            else [PutVpcLogGroupSubscriptionFilterAction()]
-            if not self._is_central_vpc_log_group(lg)
-            else []
-        )
+    def _vpc_log_group_enforcement_actions(self, kms_key_updated: bool) -> Sequence[ComplianceAction]:
+        log_group = self._find_log_group(self.config.logs_vpc_log_group_name())
+        actions: List[Any] = []
+        if log_group:
+            if not self._is_central_vpc_log_group(log_group):
+                actions.append(PutVpcLogGroupSubscriptionFilterAction())
+            if kms_key_updated or log_group.kms_key_id is None:
+                actions.append(UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=self._get_kms_key_arn))
+        else:
+            actions.extend(
+                [
+                    CreateVpcLogGroupAction(),
+                    PutVpcLogGroupSubscriptionFilterAction(),
+                    UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=self._get_kms_key_arn),
+                ]
+            )
+
+        return actions
 
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(
@@ -173,11 +187,14 @@ class AwsVpcClient:
 
     def apply(self, actions: Sequence[ComplianceAction]) -> Sequence[ComplianceAction]:
         client_map = {
+            CreateLogGroupKmsKeyAction: self.kms,
+            DeleteLogGroupKmsKeyAliasAction: self.kms,
             CreateVpcLogGroupAction: self.logs,
+            UpdateLogGroupKmsKeyAction: self.logs,
+            PutVpcLogGroupSubscriptionFilterAction: self.logs,
             CreateFlowLogAction: self.ec2,
             CreateFlowLogDeliveryRoleAction: self.iam,
             DeleteFlowLogAction: self.ec2,
             DeleteFlowLogDeliveryRoleAction: self.iam,
-            PutVpcLogGroupSubscriptionFilterAction: self.logs,
         }
         return [a.apply(client) for a in actions for typ, client in client_map.items() if isinstance(a, typ)]

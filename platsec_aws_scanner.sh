@@ -18,11 +18,17 @@ docker build \
   --build-arg PIP_PIPENV_VERSION="$PIP_PIPENV_VERSION" \
   --build-arg CONFIG_FILE="$CONFIG_FILE" \
   -f local.Dockerfile \
-  . > /dev/null
+  .
 
 rm -f "$CONFIG_FILE"
 
 docker run \
   --rm \
   -v "$HOME"/.aws/:/home/scanner/.aws/ \
+  --env AWS_DEFAULT_REGION \
+  --env AWS_REGION \
+  --env AWS_ACCESS_KEY_ID \
+  --env AWS_SECRET_ACCESS_KEY \
+  --env AWS_SESSION_TOKEN \
+  --env AWS_SECURITY_TOKEN \
   "$IMAGE_TAG" "$@"

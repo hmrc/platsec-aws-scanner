@@ -6,7 +6,7 @@ from tests.tasks import test_aws_cloudtrail_scanner_queries as queries
 
 
 class TestAwsPrincipalByIPFinderTask(GenericCloudTrailTestCase):
-    def test_principal_by_id_finder_task(self):
+    def test_principal_by_id_finder_task(self) -> None:
         self._assert_task_run(
             task_type=AwsPrincipalByIPFinderTask,
             task_args={"source_ip": "127.0.0.1"},

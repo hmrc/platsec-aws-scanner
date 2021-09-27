@@ -23,17 +23,17 @@ report = task_report(description="audit VPC flow logs compliance", partition=Non
 
 
 def enforcement_actions(v: Sequence[Vpc]) -> Sequence[ComplianceAction]:
-    return [delete_flow_log_action("fl-4"), create_flow_log_action("vpc-7")] if v == vpcs else None
+    return [delete_flow_log_action("fl-4"), create_flow_log_action("vpc-7")] if v == vpcs else []
 
 
 @patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
 @patch.object(AwsVpcClient, "list_vpcs", return_value=vpcs)
 @patch.object(AwsVpcClient, "apply", return_value=actions)
 class TestAwsAuditVPCFlowLogsTask(AwsScannerTestCase):
-    def test_run_audit_task(self, mock_apply, _, __) -> None:
+    def test_run_audit_task(self, mock_apply: Mock, _: Mock, __: Mock) -> None:
         self.assertEqual(report, aws_audit_vpc_flow_logs_task(enforce=False).run(vpc_client))
         mock_apply.assert_not_called()
 
-    def test_run_enforcement_task(self, mock_apply, _, __) -> None:
+    def test_run_enforcement_task(self, mock_apply: Mock, _: Mock, __: Mock) -> None:
         self.assertEqual(report, aws_audit_vpc_flow_logs_task(enforce=True).run(vpc_client))
         mock_apply.assert_called_once_with(actions)
