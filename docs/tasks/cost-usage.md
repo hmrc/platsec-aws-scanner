@@ -1,7 +1,7 @@
 # Cost Usage
 
-The `cost_explorer` task outputs data showing the usage & cost of a specified service in a given account / list of accounts
-.
+The `cost_explorer` task outputs data showing the usage & cost of a specified service in a given account / list of 
+accounts.
 
 The service being queried needs to be specified using its full name, example:
 
@@ -26,13 +26,13 @@ then you'll see the full name on the next page, i.e "**Amazon Simple Storage Ser
 ```
 
 ### Arguments
- - -m or --month represents the month to start the search from. Must be in *nn* format.
- - -y or --year represents the year to start the search from. Must be in *nnnn* format.
+
+- -m or --month represents the month to start the search from. Must be in *nn* format.
+- -y or --year represents the year to start the search from. Must be in *nnnn* format.
 
 The scanner will check for costs and usage from the 1st day of the month and year specified 
-in the command, ending on the current date. However, [AWS documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ce.html#CostExplorer.Client.get_cost_and_usage) states that the end date is exclusive, 
-meaning that AWS will check cost usage up to the date proceeding the requested end date.
-
+in the command, ending on the current date. However, [AWS documentation](https://bit.ly/3kKZPJw) states that the end 
+date is exclusive, meaning that AWS will check cost usage up to the date *proceeding* the requested end date.
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
 

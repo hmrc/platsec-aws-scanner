@@ -64,8 +64,20 @@ class AwsScannerArgumentParser:
 
     @staticmethod
     def _add_cost_explorer_task_args(parser: ArgumentParser) -> None:
-        parser.add_argument("-y", "--year", type=int, required=True, help="year for cost usage")
-        parser.add_argument("-m", "--month", type=int, required=True, help="month for cost usage")
+        parser.add_argument(
+            "-y",
+            "--year",
+            type=int,
+            required=True,
+            help="start date year for cost usage. End date will be today",
+        )
+        parser.add_argument(
+            "-m",
+            "--month",
+            type=int,
+            required=True,
+            help="start date month for cost usage. End date will be today",
+        )
 
     @staticmethod
     def _add_verbosity_arg(parser: ArgumentParser) -> None:
