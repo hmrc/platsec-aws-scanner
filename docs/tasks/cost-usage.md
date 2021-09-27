@@ -22,8 +22,17 @@ then you'll see the full name on the next page, i.e "**Amazon Simple Storage Ser
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh cost_explorer -m 07 -y 2021 -s "AWS Lambda" -u john.doo -t 123456 -a 999888777666
+./platsec_aws_scanner.sh cost_explorer -m 07 -y 2021 -s "AWS Lambda" -u freda.bloggs -t 123456 -a 999888777666
 ```
+
+### Arguments
+ - -m or --month represents the month to start the search from. Must be in *nn* format.
+ - -y or --year represents the year to start the search from. Must be in *nnnn* format.
+
+The scanner will check for costs and usage from the 1st day of the month and year specified 
+in the command, ending on the current date. However, [AWS documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ce.html#CostExplorer.Client.get_cost_and_usage) states that the end date is exclusive, 
+meaning that AWS will check cost usage up to the date proceeding the requested end date.
+
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
 
@@ -32,8 +41,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 ```json
 [{
 	"account": {
-		"identifier": "324599906584",
-		"name": "platsec-production"
+		"identifier": "123456789012",
+		"name": "Account Name"
 	},
 	"description": "cost & usage of AWS Lambda",
 	"results": {
