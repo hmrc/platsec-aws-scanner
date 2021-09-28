@@ -46,10 +46,10 @@ class AwsCostExplorerClient:
             total_str = f'{result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"]} {"%d" % math.ceil(total_cost)}'
 
             return {
-                "Service": service,
-                "DateRange": time_period,
-                "TotalCost:": total_str,
-                "TotalUsage": str(math.ceil(total_usage)),
+                "service": service,
+                "dateRange": {"start": time_period["Start"], "end": time_period["End"]},
+                "totalCost:": total_str,
+                "totalUsage": str(math.ceil(total_usage)),
             }
 
         except Exception as err:
