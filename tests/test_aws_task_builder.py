@@ -7,7 +7,8 @@ from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
 from src.aws_task_builder import AwsTaskBuilder
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
-from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
+
+# from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
