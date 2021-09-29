@@ -54,13 +54,6 @@ class AwsVpcClient:
     def _find_flow_log_delivery_role(self) -> Optional[Role]:
         return self.iam.find_role(self.config.logs_vpc_log_group_delivery_role())
 
-    def _get_flow_log_delivery_role_arn(self) -> str:
-        return self.iam.get_role(self.config.logs_vpc_log_group_delivery_role()).arn
-
-    def _get_kms_key_arn(self) -> str:
-        key_id = self.kms.get_alias(self.config.kms_key_alias()).target_key_id
-        return self.kms.get_key(key_id).arn  # type: ignore # this key will exist if the kms action has run
-
     def _is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(
             role
@@ -100,9 +93,9 @@ class AwsVpcClient:
         alias = self.kms.find_alias(self.config.kms_key_alias())
         key = self.kms.get_key(alias.target_key_id) if alias and alias.target_key_id else None
         return (
-            [CreateLogGroupKmsKeyAction()]
+            [CreateLogGroupKmsKeyAction(kms_client=self.kms)]
             if alias is None
-            else [DeleteLogGroupKmsKeyAliasAction(), CreateLogGroupKmsKeyAction()]
+            else [DeleteLogGroupKmsKeyAliasAction(kms=self.kms), CreateLogGroupKmsKeyAction(kms_client=self.kms)]
             if not self._is_key_compliant(key)
             else []
         )
@@ -116,17 +109,30 @@ class AwsVpcClient:
         )
 
     def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
-        return [DeleteFlowLogAction(flow_log.id) for flow_log in self._find_misconfigured_flow_logs(vpc.flow_logs)]
+        return [
+            DeleteFlowLogAction(ec2_client=self.ec2, flow_log_id=flow_log.id)
+            for flow_log in self._find_misconfigured_flow_logs(vpc.flow_logs)
+        ]
 
     def _find_misconfigured_flow_logs(self, flow_logs: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(filter(lambda fl: self._is_flow_log_misconfigured(fl), flow_logs))
 
     def _delete_redundant_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
-        return [DeleteFlowLogAction(flow_log.id) for flow_log in self._centralised(vpc.flow_logs)[1:]]
+        return [
+            DeleteFlowLogAction(ec2_client=self.ec2, flow_log_id=flow_log.id)
+            for flow_log in self._centralised(vpc.flow_logs)[1:]
+        ]
 
     def _create_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return (
-            [CreateFlowLogAction(vpc.id, self.config.logs_vpc_log_group_name(), self._get_flow_log_delivery_role_arn)]
+            [
+                CreateFlowLogAction(
+                    ec2_client=self.ec2,
+                    iam=self.iam,
+                    config=self.config,
+                    vpc_id=vpc.id,
+                )
+            ]
             if not self._centralised(vpc.flow_logs)
             else []
         )
@@ -137,7 +143,7 @@ class AwsVpcClient:
     def _delete_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
         return (
-            [DeleteFlowLogDeliveryRoleAction()]
+            [DeleteFlowLogDeliveryRoleAction(iam=self.iam)]
             if (delivery_role and not self._is_flow_log_role_compliant(delivery_role))
             or (not delivery_role and self._delivery_role_policy_exists())
             else []
@@ -145,7 +151,11 @@ class AwsVpcClient:
 
     def _create_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
-        return [CreateFlowLogDeliveryRoleAction()] if not self._is_flow_log_role_compliant(delivery_role) else []
+        return (
+            [CreateFlowLogDeliveryRoleAction(iam=self.iam)]
+            if not self._is_flow_log_role_compliant(delivery_role)
+            else []
+        )
 
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy_name()))
@@ -155,15 +165,15 @@ class AwsVpcClient:
         actions: List[Any] = []
         if log_group:
             if not self._is_central_vpc_log_group(log_group):
-                actions.append(PutVpcLogGroupSubscriptionFilterAction())
+                actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
             if kms_key_updated or log_group.kms_key_id is None:
-                actions.append(UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=self._get_kms_key_arn))
+                actions.append(UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config))
         else:
             actions.extend(
                 [
-                    CreateVpcLogGroupAction(),
-                    PutVpcLogGroupSubscriptionFilterAction(),
-                    UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=self._get_kms_key_arn),
+                    CreateVpcLogGroupAction(logs=self.logs),
+                    PutVpcLogGroupSubscriptionFilterAction(logs=self.logs),
+                    UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config),
                 ]
             )
 
@@ -184,17 +194,3 @@ class AwsVpcClient:
             sub_filter.filter_pattern == self.config.logs_vpc_log_group_pattern()
             and sub_filter.destination_arn == self.config.logs_vpc_log_group_destination()
         )
-
-    def apply(self, actions: Sequence[ComplianceAction]) -> Sequence[ComplianceAction]:
-        client_map = {
-            CreateLogGroupKmsKeyAction: self.kms,
-            DeleteLogGroupKmsKeyAliasAction: self.kms,
-            CreateVpcLogGroupAction: self.logs,
-            UpdateLogGroupKmsKeyAction: self.logs,
-            PutVpcLogGroupSubscriptionFilterAction: self.logs,
-            CreateFlowLogAction: self.ec2,
-            CreateFlowLogDeliveryRoleAction: self.iam,
-            DeleteFlowLogAction: self.ec2,
-            DeleteFlowLogDeliveryRoleAction: self.iam,
-        }
-        return [a.apply(client) for a in actions for typ, client in client_map.items() if isinstance(a, typ)]

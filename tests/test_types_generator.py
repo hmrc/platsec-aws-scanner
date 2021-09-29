@@ -1,8 +1,15 @@
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
+from unittest.mock import Mock
 
 from botocore.exceptions import ClientError
 
 from src.aws_scanner_argument_parser import AwsScannerArguments
+from src.aws_scanner_config import AwsScannerConfig
+from src.clients.aws_iam_client import AwsIamClient
+from src.clients.aws_kms_client import AwsKmsClient
+from src.clients.aws_ec2_client import AwsEC2Client
+from src.clients.aws_logs_client import AwsLogsClient
+
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_compliance_actions import (
     CreateLogGroupKmsKeyAction,
@@ -286,43 +293,53 @@ def flow_log(
 
 
 def create_flow_log_action(
+    ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client),
+    iam: AwsIamClient = Mock(spec=AwsIamClient),
     vpc_id: str = vpc().id,
-    log_group_name: str = "/vpc/flow_log",
-    permission_resolver: Callable[[], str] = lambda: "arn:aws:iam::112233445566:role/a_role",
 ) -> CreateFlowLogAction:
-    return CreateFlowLogAction(vpc_id=vpc_id, log_group_name=log_group_name, permission_resolver=permission_resolver)
+    return CreateFlowLogAction(ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), vpc_id=vpc_id)
 
 
-def delete_flow_log_action(flow_log_id: str = flow_log().id) -> DeleteFlowLogAction:
-    return DeleteFlowLogAction(flow_log_id=flow_log_id)
+def delete_flow_log_action(
+    ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client), flow_log_id: str = flow_log().id
+) -> DeleteFlowLogAction:
+    return DeleteFlowLogAction(ec2_client=ec2_client, flow_log_id=flow_log_id)
 
 
-def create_flow_log_delivery_role_action() -> CreateFlowLogDeliveryRoleAction:
-    return CreateFlowLogDeliveryRoleAction()
+def create_flow_log_delivery_role_action(
+    iam: AwsIamClient = Mock(spec=AwsIamClient),
+) -> CreateFlowLogDeliveryRoleAction:
+    return CreateFlowLogDeliveryRoleAction(iam=iam)
 
 
-def delete_flow_log_delivery_role_action() -> DeleteFlowLogDeliveryRoleAction:
-    return DeleteFlowLogDeliveryRoleAction()
+def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient)) -> DeleteFlowLogDeliveryRoleAction:
+    return DeleteFlowLogDeliveryRoleAction(iam=iam)
 
 
-def create_vpc_log_group_action() -> CreateVpcLogGroupAction:
-    return CreateVpcLogGroupAction()
+def create_vpc_log_group_action(logs: AwsLogsClient = Mock(spec=AwsLogsClient)) -> CreateVpcLogGroupAction:
+    return CreateVpcLogGroupAction(logs=logs)
 
 
-def put_vpc_log_group_subscription_filter_action() -> PutVpcLogGroupSubscriptionFilterAction:
-    return PutVpcLogGroupSubscriptionFilterAction()
+def put_vpc_log_group_subscription_filter_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+) -> PutVpcLogGroupSubscriptionFilterAction:
+    return PutVpcLogGroupSubscriptionFilterAction(logs=logs)
 
 
-def update_log_group_kms_key_action() -> UpdateLogGroupKmsKeyAction:
-    return UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=lambda: key().arn)
+def update_log_group_kms_key_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), kms: AwsKmsClient = Mock(spec=AwsKmsClient)
+) -> UpdateLogGroupKmsKeyAction:
+    return UpdateLogGroupKmsKeyAction(logs=logs, kms=kms, config=AwsScannerConfig())
 
 
-def create_log_group_kms_key_action() -> CreateLogGroupKmsKeyAction:
-    return CreateLogGroupKmsKeyAction()
+def create_log_group_kms_key_action(kms: AwsKmsClient) -> CreateLogGroupKmsKeyAction:
+    return CreateLogGroupKmsKeyAction(kms_client=kms)
 
 
-def delete_log_group_kms_key_alias_action() -> DeleteLogGroupKmsKeyAliasAction:
-    return DeleteLogGroupKmsKeyAliasAction()
+def delete_log_group_kms_key_alias_action(
+    kms: AwsKmsClient = Mock(spec=AwsKmsClient),
+) -> DeleteLogGroupKmsKeyAliasAction:
+    return DeleteLogGroupKmsKeyAliasAction(kms=kms)
 
 
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:

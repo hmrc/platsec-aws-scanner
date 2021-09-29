@@ -8,73 +8,122 @@ from io import StringIO
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
-from src.data.aws_compliance_actions import ComplianceAction, UpdateLogGroupKmsKeyAction
+from src.data.aws_compliance_actions import ComplianceAction, ComplianceActionReport
 from src.data.aws_scanner_exceptions import AwsScannerException
 
 from tests import _raise, test_types_generator
 from tests import test_types_generator as generator
+from tests.clients.test_aws_vpc_client import AwsVpcClientBuilder
+from tests.test_types_generator import update_log_group_kms_key_action
 
 
 class TestAwsComplianceActions(AwsScannerTestCase):
     def test_apply_success(self) -> None:
-        client = Mock()
-        action = type("TestAction", (ComplianceAction,), {"_apply": lambda s, c: self.assertEqual(c, client)})
-        self.assertEqual("applied", action("something").apply(client).status)
+        action = type(
+            "TestAction",
+            (ComplianceAction,),
+            {
+                "_apply": lambda s: None,
+                "plan": lambda s: ComplianceActionReport(),
+            },
+        )
+        self.assertEqual("applied", action("something").apply().status)
 
     def test_apply_failure(self) -> None:
-        client = Mock()
-        action = type("TestAction", (ComplianceAction,), {"_apply": lambda s, c: _raise(AwsScannerException("boom"))})
+        action = type(
+            "TestAction",
+            (ComplianceAction,),
+            {
+                "_apply": lambda s: _raise(AwsScannerException("boom")),
+                "plan": lambda s: ComplianceActionReport(),
+            },
+        )
         with redirect_stderr(StringIO()) as err:
-            self.assertEqual("failed: boom", action("an_action").apply(client).status)
-        self.assertIn("an_action failed: boom", err.getvalue())
+            self.assertEqual("failed: boom", action("an_action").apply().status)
+            self.assertIn("an_action failed: boom", err.getvalue())
 
-    def test_delete_flow_log_action(self) -> None:
-        with patch.object(AwsEC2Client, "delete_flow_logs") as delete_flow_logs:
-            generator.delete_flow_log_action(flow_log_id="42")._apply(AwsEC2Client(Mock()))
-        delete_flow_logs.assert_called_once_with("42")
+    def test_apply_delete_flow_log_action(self) -> None:
+        ec2 = Mock(spec=AwsEC2Client)
+        generator.delete_flow_log_action(ec2_client=ec2, flow_log_id="42")._apply()
+        ec2.delete_flow_logs.assert_called_once_with("42")
 
-    def test_create_flow_log_action(self) -> None:
-        with patch.object(AwsEC2Client, "create_flow_logs") as create_flow_logs:
-            generator.create_flow_log_action(vpc_id="8")._apply(AwsEC2Client(Mock()))
-        create_flow_logs.assert_called_once_with("8", "/vpc/flow_log", "arn:aws:iam::112233445566:role/a_role")
+    def test_plan_delete_flow_log_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Delete VPC flow log", details={"flow_log_id": "fl-1234"}),
+            generator.delete_flow_log_action().plan(),
+        )
 
-    def test_create_flow_log_delivery_role_action(self) -> None:
+    def test_apply_create_flow_log_action(self) -> None:
+        builder = AwsVpcClientBuilder()
+        builder.with_create_flow_logs()
+        builder.with_roles([generator.role()])
+        client = builder.build()
+        generator.create_flow_log_action(ec2_client=client.ec2, iam=client.iam, vpc_id="8")._apply()
+
+        builder.ec2.create_flow_logs.assert_called_once_with(
+            "8", "/vpc/flow_log", "arn:aws:iam::112233445566:role/a_role"
+        )
+
+    def test_plan_create_flow_log_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(
+                description="Create VPC flow log", details={"vpc_id": "vpc-1234", "log_group_name": "/vpc/flow_log"}
+            ),
+            generator.create_flow_log_action().plan(),
+        )
+
+    def test_apply_create_flow_log_delivery_role_action(self) -> None:
         a_role = generator.role(name="vpc_flow_log_role")
-        pol = a_role.policies[0]
-        with patch.object(
-            AwsIamClient,
-            "create_role",
-            side_effect=lambda n, p: a_role if n == a_role.name and p == a_role.assume_policy else None,
-        ):
-            with patch.object(
-                AwsIamClient,
-                "create_policy",
-                side_effect=lambda p, d: pol if p == pol.name and d == pol.document else None,
-            ):
-                with patch.object(AwsIamClient, "attach_role_policy") as attach_role_policy:
-                    generator.create_flow_log_delivery_role_action()._apply(AwsIamClient(Mock()))
-        attach_role_policy.assert_called_once_with(a_role, pol)
+        client = AwsVpcClientBuilder()
+        client.with_create_role(a_role)
+        client.with_create_policies(a_role.policies)
+        client.with_attach_role_policy(a_role)
 
-    def test_delete_flow_log_delivery_role_action(self) -> None:
+        generator.create_flow_log_delivery_role_action(iam=client.build().iam)._apply()
+        client.iam.attach_role_policy.assert_called_once_with(a_role, a_role.policies[0])
+
+    def test_plan_create_flow_log_delivery_role_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Create delivery role for VPC flow log"),
+            generator.create_flow_log_delivery_role_action().plan(),
+        )
+
+    def test_apply_delete_flow_log_delivery_role_action(self) -> None:
         client = Mock(spec=AwsIamClient)
-        generator.delete_flow_log_delivery_role_action()._apply(client)
+        generator.delete_flow_log_delivery_role_action(iam=client)._apply()
         self.assertEqual(
             [call.delete_policy("vpc_flow_log_role_policy"), call.delete_role("vpc_flow_log_role")], client.mock_calls
         )
 
-    def test_create_central_vpc_log_group_action(self) -> None:
-        with patch.object(AwsLogsClient, "create_log_group") as create_log_group:
-            generator.create_vpc_log_group_action()._apply(AwsLogsClient(Mock()))
-        create_log_group.assert_called_once_with("/vpc/flow_log")
+    def test_plan_delete_flow_log_delivery_role_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Delete delivery role for VPC flow log"),
+            generator.delete_flow_log_delivery_role_action().plan(),
+        )
 
-    def test_delete_log_group_kms_key_alias_action(self) -> None:
-        with patch.object(AwsKmsClient, "delete_alias") as delete_key:
-            action = generator.delete_log_group_kms_key_alias_action()
-            action._apply(client=AwsKmsClient(Mock()))
+    def test_apply_create_central_vpc_log_group_action(self) -> None:
+        logs = Mock(spec=AwsLogsClient)
+        generator.create_vpc_log_group_action(logs=logs)._apply()
+        logs.create_log_group.assert_called_once_with("/vpc/flow_log")
 
-        delete_key.assert_called_once_with(name="an_alias")
+    def test_plan_create_central_vpc_log_group_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Create central VPC log group"),
+            generator.create_vpc_log_group_action().plan(),
+        )
 
-    def test_create_log_group_kms_key_action(self) -> None:
+    def test_apply_delete_log_group_kms_key_alias_action(self) -> None:
+        kms = Mock(spec=AwsKmsClient)
+        generator.delete_log_group_kms_key_alias_action(kms=kms)._apply()
+        kms.delete_alias.assert_called_once_with(name="an_alias")
+
+    def test_plan_delete_log_group_kms_key_alias_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Delete log group kms key alias"),
+            generator.delete_log_group_kms_key_alias_action().plan(),
+        )
+
+    def test_apply_create_log_group_kms_key_action(self) -> None:
         key = test_types_generator.key()
         with patch.object(AwsKmsClient, "create_key", return_value=key) as create_key:
             with patch.object(AwsKmsClient, "put_key_policy_statements") as put_key_policy_statements:
@@ -82,8 +131,9 @@ class TestAwsComplianceActions(AwsScannerTestCase):
                     {"account": key.account_id},
                     {"account": key.account_id, "region": key.region, "log_group_name": "/vpc/flow_log"},
                 ]
-                action = generator.create_log_group_kms_key_action()
-                action._apply(client=AwsKmsClient(Mock()))
+                kms = AwsKmsClient(Mock())
+                action = generator.create_log_group_kms_key_action(kms=kms)
+                action._apply()
 
                 create_key.assert_called_once_with(
                     alias="an_alias",
@@ -91,19 +141,42 @@ class TestAwsComplianceActions(AwsScannerTestCase):
                 )
                 put_key_policy_statements.assert_called_once_with(key_id=key.id, statements=expected_policy)
 
-    def test_put_central_vpc_log_group_subscription_filter_action(self) -> None:
-        with patch.object(AwsLogsClient, "put_subscription_filter") as put_subscription_filter:
-            generator.put_vpc_log_group_subscription_filter_action()._apply(AwsLogsClient(Mock()))
-        put_subscription_filter.assert_called_once_with(
+    def test_plan_create_log_group_kms_key_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Create log group kms key"),
+            generator.create_log_group_kms_key_action(kms=Mock()).plan(),
+        )
+
+    def test_apply_put_central_vpc_log_group_subscription_filter_action(self) -> None:
+        logs = Mock(spec=AwsLogsClient)
+        generator.put_vpc_log_group_subscription_filter_action(logs=logs)._apply()
+        logs.put_subscription_filter.assert_called_once_with(
             log_group_name="/vpc/flow_log",
             filter_name="/vpc/flow_log_sub_filter",
             filter_pattern="[version, account_id, interface_id]",
             destination_arn="arn:aws:logs:::destination:central",
         )
 
-    def test_update_log_group_kms_key(self) -> None:
-        expected_key_arn = "aws:foo:23849234234:key/231424234234234234"
-        with patch.object(AwsLogsClient, "associate_kms_key") as associate_kms_key:
-            UpdateLogGroupKmsKeyAction(kms_key_arn_resolver=lambda: expected_key_arn)._apply(AwsLogsClient(Mock()))
+    def test_plan_put_central_vpc_log_group_subscription_filter_action(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Put central VPC log group subscription filter"),
+            generator.put_vpc_log_group_subscription_filter_action().plan(),
+        )
 
-        associate_kms_key.assert_called_once_with(log_group_name="/vpc/flow_log", kms_key_arn=expected_key_arn)
+    def test_apply_update_log_group_kms_key(self) -> None:
+        expected_key_arn = generator.key().arn
+        builder = AwsVpcClientBuilder()
+        builder.with_default_key()
+        builder.with_default_alias()
+        client = builder.build()
+        update_log_group_kms_key_action(logs=client.logs, kms=client.kms)._apply()
+
+        builder.logs.associate_kms_key.assert_called_once_with(
+            log_group_name="/vpc/flow_log", kms_key_arn=expected_key_arn
+        )
+
+    def test_plan_update_log_group_kms_key(self) -> None:
+        self.assertEqual(
+            ComplianceActionReport(description="Update log group kms key"),
+            update_log_group_kms_key_action().plan(),
+        )
