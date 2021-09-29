@@ -15,7 +15,7 @@ class TestAwsCostExplorerClient(AwsScannerTestCase):
         client = AwsCostExplorerClient(boto_cost_explorer)
 
         service = "lambda"
-        with self.assertRaisesRegex(CostExplorerException, f"unable to get cost usage data for {service}:"):
+        with self.assertRaisesRegex(CostExplorerException, f"unable to get cost usage data for {service}"):
             client.get_aws_cost_explorer(service, 2021, 8)
 
     def test_get_aws_cost_explorer_success(self) -> None:
