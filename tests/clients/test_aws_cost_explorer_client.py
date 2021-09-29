@@ -1,4 +1,3 @@
-from datetime import date
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock
 
