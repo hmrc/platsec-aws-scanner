@@ -8,7 +8,6 @@ from tests.clients.test_aws_cost_explorer_responses import GET_USAGE_COST_SUCCES
 
 
 class TestAwsCostExplorerClient(AwsScannerTestCase):
-    today = date.today()
 
     def test_get_aws_cost_explorer_empty_response(self) -> None:
         boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value={}))
@@ -25,14 +24,14 @@ class TestAwsCostExplorerClient(AwsScannerTestCase):
         expected = {
             "service": "Lambda",
             "dateRange": {
-                "start": "2021-02-01",
-                "end": f"{self.today.year}-{'%02d' % self.today.month}-{'%02d' % self.today.day}",
+                "start": "2020-02-01",
+                "end": f"2020-{'%02d' % 11}-{'%02d' % 2}",
             },
             "totalCost:": "USD 251",
             "totalUsage": "11800948",
         }
 
-        self.assertEqual(expected, client.get_aws_cost_explorer("Lambda", 2021, 2))
+        self.assertEqual(expected, client.get_aws_cost_explorer("Lambda", 2020, 2))
 
     def test_get_aws_cost_explorer_failure(self) -> None:
         boto_cost_explorer = Mock(get_cost_and_usage=Mock(side_effect=BotoCoreError))
