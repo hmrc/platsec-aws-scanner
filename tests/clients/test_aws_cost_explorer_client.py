@@ -8,7 +8,6 @@ from tests.clients.test_aws_cost_explorer_responses import GET_USAGE_COST_SUCCES
 
 
 class TestAwsCostExplorerClient(AwsScannerTestCase):
-
     def test_get_aws_cost_explorer_empty_response(self) -> None:
         boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value={}))
         client = AwsCostExplorerClient(boto_cost_explorer)
