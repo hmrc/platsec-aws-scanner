@@ -16,14 +16,14 @@ class AwsCostExplorerClient:
 
     def get_aws_cost_explorer(self, service: str, year: int, month: int) -> Dict[str, Any]:
 
+        today = date.today()
+
+        time_period = {
+            "Start": f"{year}-{'%02d' % month}-01",
+            "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
+        }
+
         try:
-            today = date.today()
-
-            time_period = {
-                "Start": f"{year}-{'%02d' % month}-01",
-                "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
-            }
-
             result = self._cost_explorer.get_cost_and_usage(
                 TimePeriod=time_period,
                 Filter={
@@ -39,23 +39,23 @@ class AwsCostExplorerClient:
                 Metrics=["UsageQuantity", "AmortizedCost"],
             )
 
-            total_usage = total_cost = 0.00
+        except (BotoCoreError, ClientError) as err:
+            raise CostExplorerException(f"unable to get cost usage data for {service}: {err}")
 
-            if "ResultsByTime" not in result:
-                raise CostExplorerException(f"unable to get cost usage data for {service}")
-            else:
-                for item in result["ResultsByTime"]:
-                    total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
-                    total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
+        total_usage = total_cost = 0.00
 
-            total_str = f'{result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"]} {"%d" % math.ceil(total_cost)}'
+        if "ResultsByTime" not in result:
+            raise CostExplorerException(f"unable to get cost usage data for {service}")
+        else:
+            for item in result["ResultsByTime"]:
+                total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
+                total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
 
-            return {
+        total_str = f'{result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"]} {"%d" % math.ceil(total_cost)}'
+
+        return {
                 "service": service,
                 "dateRange": {"start": time_period["Start"], "end": time_period["End"]},
                 "totalCost:": total_str,
                 "totalUsage": str(math.ceil(total_usage)),
             }
-
-        except (BotoCoreError, ClientError) as err:
-            raise CostExplorerException(f"unable to get cost usage data for {service}: {err}")
