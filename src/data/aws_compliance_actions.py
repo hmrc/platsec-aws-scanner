@@ -60,7 +60,7 @@ class ComplianceAction(ABC):
 
     @abstractmethod
     def plan(self) -> ComplianceActionReport:
-        pass
+        """"""
 
 
 @dataclass
