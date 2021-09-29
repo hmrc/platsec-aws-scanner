@@ -4,6 +4,8 @@ from datetime import date
 import math
 
 from botocore.client import BaseClient
+from botocore.exceptions import BotoCoreError, ClientError
+
 from src.data.aws_scanner_exceptions import CostExplorerException
 
 
@@ -55,5 +57,5 @@ class AwsCostExplorerClient:
                 "totalUsage": str(math.ceil(total_usage)),
             }
 
-        except Exception as err:
+        except (BotoCoreError, ClientError) as err:
             raise CostExplorerException(f"unable to get cost usage data for {service}: {err}")
