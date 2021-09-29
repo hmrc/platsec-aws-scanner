@@ -39,9 +39,12 @@ class AwsCostExplorerClient:
 
             total_usage = total_cost = 0.00
 
-            for item in result["ResultsByTime"]:
-                total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
-                total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
+            if "ResultsByTime" not in result:
+                raise CostExplorerException(f"unable to get cost usage data for {service}")
+            else:
+                for item in result["ResultsByTime"]:
+                    total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
+                    total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
 
             total_str = f'{result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"]} {"%d" % math.ceil(total_cost)}'
 

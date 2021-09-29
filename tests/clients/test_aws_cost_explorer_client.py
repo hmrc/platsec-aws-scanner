@@ -8,16 +8,25 @@ from tests.clients.test_aws_cost_explorer_responses import GET_USAGE_COST_SUCCES
 
 
 class TestAwsCostExplorerClient(AwsScannerTestCase):
+    today = date.today()
+
+    def test_get_aws_cost_explorer_empty_response(self) -> None:
+        boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value={}))
+        client = AwsCostExplorerClient(boto_cost_explorer)
+
+        service = "lambda"
+        with self.assertRaisesRegex(CostExplorerException, f"unable to get cost usage data for {service}:"):
+            client.get_aws_cost_explorer(service, 2021, 8)
+
     def test_get_aws_cost_explorer_success(self) -> None:
         boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value=GET_USAGE_COST_SUCCESS))
         client = AwsCostExplorerClient(boto_cost_explorer)
 
-        today = date.today()
         expected = {
             "service": "Lambda",
             "dateRange": {
                 "start": "2021-02-01",
-                "end": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
+                "end": f"{self.today.year}-{'%02d' % self.today.month}-{'%02d' % self.today.day}",
             },
             "totalCost:": "USD 251",
             "totalUsage": "11800948",
