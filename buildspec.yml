@@ -1,0 +1,10 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - make test
+      - make container-release
+      - docker save -o docker.tar container-release:local
+artifacts:
+  files:
+    - docker.tar
