@@ -3,7 +3,7 @@ phases:
   build:
     commands:
       - make test
-      - make container-release
+      - GROUP_ID=1001 make container-release
       - docker save -o docker.tar container-release:local
 artifacts:
   files:
