@@ -2,7 +2,7 @@ version: 0.2
 phases:
   build:
     commands:
-      - GROUP_ID=1001 make test
+      - GROUP_ID=1001 USER_ID=1001 make test
       - make container-release
       - docker save -o docker.tar container-release:local
 artifacts:

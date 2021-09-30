@@ -8,6 +8,7 @@ PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
 PYTHON_TEST_PATTERN ?= "test_*.py"
 GROUP_ID ?= $(shell id -g)
+USER_ID ?= $(shell id -u)
 PYTHON_VERSION = $(shell head -1 .python-version)
 PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
 SHELL := /bin/bash
@@ -20,7 +21,7 @@ pipenv:
 		--tag $@ \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
-		--build-arg "user_id=$(shell id -u)" \
+		--build-arg "user_id=${USER_ID}" \
 		--build-arg "group_id=${GROUP_ID}" \
 		--build-arg "home=${HOME}" \
 		--build-arg "workdir=${PWD}" \
