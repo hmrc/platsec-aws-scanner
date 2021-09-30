@@ -14,6 +14,7 @@ from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_task import AwsTask
 
 
@@ -38,6 +39,9 @@ class AwsTaskBuilder:
             Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, args.accounts),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
+            Cmd.cost_explorer: lambda: self._tasks(
+                AwsAuditCostExplorerTask, args.accounts, service=args.service, year=args.year, month=args.month
+            ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, args.accounts, enforce=args.enforce),
         }
         return task_mapping[args.task]()
