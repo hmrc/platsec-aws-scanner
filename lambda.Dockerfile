@@ -24,8 +24,6 @@ ARG FUNCTION_DIR
 WORKDIR ${FUNCTION_DIR}
 COPY . .
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync --dev
-ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
-CMD ["platsec_aws_scanner_lambda.handler"]
 
 FROM python:${PYTHON_VERSION}-slim as production
 ARG FUNCTION_DIR

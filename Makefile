@@ -1,16 +1,28 @@
-DOCKER = docker run \
-	--interactive \
-	--rm \
-	--env "PYTHONWARNINGS=ignore:ResourceWarning" \
-	--volume "$(PWD):${PWD}:z" \
-	--workdir "${PWD}"
+PYTHON_VERSION = $(shell head -1 .python-version)
+PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
+
+ifdef CI_MODE
+    DOCKER = docker build \
+		--target dev \
+		--file lambda.Dockerfile \
+		--tag test-run:local . \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
+		&& docker run test-run:local
+else
+	DOCKER = docker run \
+		--interactive \
+		--rm \
+		--env "PYTHONWARNINGS=ignore:ResourceWarning" \
+		--volume "$(PWD):${PWD}:z" \
+		--workdir "${PWD}"
+endif
+
 PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
 PYTHON_TEST_PATTERN ?= "test_*.py"
 GROUP_ID ?= $(shell id -g)
 USER_ID ?= $(shell id -u)
-PYTHON_VERSION = $(shell head -1 .python-version)
-PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
 SHELL := /bin/bash
 .PHONY: $(MAKECMDGOALS)
 
@@ -31,7 +43,7 @@ fmt: pipenv
 	@$(DOCKER) pipenv run black --line-length=120 .
 
 fmt-check: pipenv
-	@$(DOCKER) pipenv run black --line-length=120 --check .
+	@$(DOCKER) pipenv run black --line-length=120 --check . --extend-exclude "(simplejson|awslambdaric)"
 
 static-check: pipenv
 	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10
@@ -39,7 +51,7 @@ static-check: pipenv
 
 all-checks: python-test python-coverage fmt-check static-check md-check clean-up
 
-test: all-checks
+test: python-test-no-cov fmt-check static-check md-check clean-up
 
 python-test: pipenv
 	$(DOCKER) pipenv run coverage run \
@@ -51,6 +63,12 @@ python-test: pipenv
 			--verbose \
 			--start-directory "tests/" \
 			--pattern $(PYTHON_TEST_PATTERN)
+
+python-test-no-cov: pipenv
+	$(DOCKER) pipenv run python -m unittest discover \
+		--verbose \
+		--start-directory "tests/" \
+		--pattern $(PYTHON_TEST_PATTERN)
 
 python-coverage:
 	@$(DOCKER) pipenv run coverage xml --omit $(PYTHON_COVERAGE_OMIT)
