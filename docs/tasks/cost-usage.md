@@ -31,7 +31,8 @@ then you'll see the full name on the next page, i.e "**Amazon Simple Storage Ser
 - -y or --year represents the year to start the search from. Must be in *nnnn* format.
 
 The scanner will check for costs and usage from the 1st day of the month and year specified
-in the command, ending on the current date. However, [AWS documentation](https://bit.ly/3kKZPJw) states that the end
+in the command, ending on the current date. However, [AWS Cost Explorer documentation][aws-cost-explorer] states that
+the end
 date is exclusive, meaning that AWS will check cost usage up to the date *proceeding* the requested end date.
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
@@ -56,3 +57,5 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 	}
 }]
 ```
+
+[aws-cost-explorer]: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ce.html#CostExplorer
