@@ -18,7 +18,16 @@ RUN pip install --no-cache-dir --target ${FUNCTION_DIR} awslambdaric==1.2.0
 COPY Pipfile.lock ${FUNCTION_DIR}
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync
 
-FROM python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION}-slim as dev
+COPY --from=build-image . .
+ARG FUNCTION_DIR
+WORKDIR ${FUNCTION_DIR}
+COPY . .
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync --dev
+ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
+CMD ["platsec_aws_scanner_lambda.handler"]
+
+FROM python:${PYTHON_VERSION}-slim as production
 ARG FUNCTION_DIR
 WORKDIR ${FUNCTION_DIR}
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
