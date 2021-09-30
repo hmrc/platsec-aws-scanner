@@ -37,8 +37,10 @@ static-check: pipenv
 
 all-checks: python-test python-coverage fmt-check static-check md-check clean-up
 
+test: all-checks
+
 python-test: pipenv
-	@$(DOCKER) pipenv run coverage run \
+	$(DOCKER) pipenv run coverage run \
 		--append \
 		--branch \
 		--omit $(PYTHON_COVERAGE_OMIT) \
@@ -56,18 +58,12 @@ md-check:
 	@docker pull zemanlx/remark-lint:0.2.0
 	@docker run --rm -i -v $(PWD):/lint/input:ro zemanlx/remark-lint:0.2.0 --frail .
 
-build-lambda-image:
-	@docker build \
+container-release:
+	docker build \
 		--file lambda.Dockerfile \
-		--tag platsec_aws_scanner_lambda:lambda . \
+		--tag container-release:local . \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
-		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
-		>/dev/null
-
-push-lambda-image: build-lambda-image
-	@aws --profile $(ROLE) ecr get-login-password | docker login --username AWS --password-stdin $(ECR)
-	@docker tag  platsec_aws_scanner_lambda:lambda $(ECR)/platsec-aws-scanner:latest
-	@docker push $(ECR)/platsec-aws-scanner:latest
+		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION)
 
 clean-up:
 	@rm -f .coverage
