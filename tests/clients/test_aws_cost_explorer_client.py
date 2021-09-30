@@ -20,7 +20,7 @@ class TestAwsCostExplorerClient(AwsScannerTestCase):
         client = AwsCostExplorerClient(boto_cost_explorer)
 
         expected = {
-            "service": "Lambda",
+            "service": "a_service",
             "dateRange": {
                 "start": "2020-02-01",
                 "end": f"2020-{'%02d' % 11}-{'%02d' % 2}",
@@ -29,7 +29,14 @@ class TestAwsCostExplorerClient(AwsScannerTestCase):
             "totalUsage": "11800948",
         }
 
-        self.assertEqual(expected, client.get_aws_cost_explorer("Lambda", 2020, 2))
+        self.assertEqual(expected, client.get_aws_cost_explorer("a_service", 2020, 2))
+
+        boto_cost_explorer.get_cost_and_usage.assert_called_once_with(
+            TimePeriod={"Start": "2020-02-01", "End": "2020-11-02"},
+            Filter={"Dimensions": {"Key": "SERVICE", "Values": ["a_service"], "MatchOptions": ["EQUALS"]}},
+            Granularity="MONTHLY",
+            Metrics=["UsageQuantity", "AmortizedCost"],
+        )
 
     def test_get_aws_cost_explorer_failure(self) -> None:
         boto_cost_explorer = Mock(get_cost_and_usage=Mock(side_effect=BotoCoreError))

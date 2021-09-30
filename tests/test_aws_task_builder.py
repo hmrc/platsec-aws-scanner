@@ -8,7 +8,6 @@ from src.aws_task_builder import AwsTaskBuilder
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 
-# from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -16,6 +15,7 @@ from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_task import AwsTask
 
 from tests.test_types_generator import account, partition
@@ -46,14 +46,14 @@ class TestAwsTaskBuilder(AwsScannerTestCase):
             task_builder().build_tasks(args(task=Cmd.service_usage, service="s3")),
         )
 
-    # def test_cost_explorer_scanner_tasks(self) -> None:
-    #     self.assert_tasks_equal(
-    #         [
-    #             AwsCostExplorerTask(2021, 8),
-    #             AwsCostExplorerTask(2021, 7)
-    #         ],
-    #         task_builder().build_tasks(args(task=Cmd.cost_explorer, service="lambda", year="2021", month="08")),
-    #     )
+    def test_cost_explorer_scanner_tasks(self) -> None:
+        self.assert_tasks_equal(
+            [
+                AwsAuditCostExplorerTask(acct1, "a_service", 2021, 8),
+                AwsAuditCostExplorerTask(acct2, "a_service", 2021, 8),
+            ],
+            task_builder().build_tasks(args(task=Cmd.cost_explorer, service="a_service", year=2021, month=8)),
+        )
 
     def test_role_usage_scanner_tasks(self) -> None:
         self.assert_tasks_equal(
