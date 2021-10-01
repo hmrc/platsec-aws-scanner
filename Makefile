@@ -49,7 +49,7 @@ static-check: pipenv
 	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10 src tests
 	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict src tests
 
-all-checks: python-test fmt-check static-check md-check clean-up
+all-checks: python-test fmt-check static-check md-check
 
 test: all-checks
 
@@ -72,7 +72,3 @@ container-release:
 		--tag container-release:local . \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION)
-
-clean-up:
-	@rm -f .coverage
-	@rm -f coverage.xml
