@@ -1,7 +1,7 @@
 import logging
 import pytest
 
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from typing import Any, Dict
@@ -76,7 +76,7 @@ def test_describe_flow_logs_failure(caplog: Any) -> None:
     assert "vpc-error" in caplog.text
 
 
-class TestAwsEC2ClientCreateFlowLogs(AwsScannerTestCase):
+class TestAwsEC2ClientCreateFlowLogs(TestCase):
     def create_flow_logs(self, **kwargs: Any) -> Any:
         self.assertEqual("VPC", kwargs["ResourceType"])
         self.assertEqual("ALL", kwargs["TrafficType"])

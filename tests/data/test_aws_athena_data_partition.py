@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 
 from datetime import date
 
@@ -6,7 +6,7 @@ from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_scanner_exceptions import InvalidDataPartitionException, InvalidRegionException
 
 
-class TestAwsAthenaDataPartition(AwsScannerTestCase):
+class TestAwsAthenaDataPartition(TestCase):
     def test_data_partition_in_range(self) -> None:
         self.assertEqual(
             "AwsAthenaDataPartition(year='2020', month='09', region='eu')",

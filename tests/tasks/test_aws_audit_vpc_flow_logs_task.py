@@ -1,5 +1,5 @@
 from src.data.aws_task_report import AwsTaskReport
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from typing import Sequence
@@ -27,7 +27,7 @@ def enforcement_actions(v: Sequence[Vpc]) -> Sequence[ComplianceAction]:
 
 @patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
 @patch.object(AwsVpcClient, "list_vpcs", return_value=vpcs)
-class TestAwsAuditVPCFlowLogsTask(AwsScannerTestCase):
+class TestAwsAuditVPCFlowLogsTask(TestCase):
     def test_run_plan_task(self, _: Mock, __: Mock) -> None:
         action_reports = [
             ComplianceActionReport(status=None, description="Delete VPC flow log", details=dict(flow_log_id="fl-4")),

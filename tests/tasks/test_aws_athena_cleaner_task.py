@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, call
 
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
@@ -6,7 +6,7 @@ from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from tests.test_types_generator import account, task_report
 
 
-class TestAwsAthenaCleanerTask(AwsScannerTestCase):
+class TestAwsAthenaCleanerTask(TestCase):
     database_mappings = {
         "db_1": ["table_1", "table_2", "table_3"],
         "some_prefix_db_2": ["table_1", "table_2"],

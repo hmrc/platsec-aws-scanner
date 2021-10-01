@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
@@ -20,7 +20,7 @@ from tests.test_types_generator import (
 )
 
 
-class TestAwsAuditS3Task(AwsScannerTestCase):
+class TestAwsAuditS3Task(TestCase):
     def test_run_task(self) -> None:
         bucket_1, bucket_2, bucket_3 = "bucket-1", "bucket-2", "another_bucket"
         buckets = [bucket(bucket_1), bucket(bucket_2), bucket(bucket_3)]

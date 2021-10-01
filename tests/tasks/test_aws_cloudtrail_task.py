@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, call, patch
 
 from src.data.aws_scanner_exceptions import AwsScannerException
@@ -7,7 +7,7 @@ from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from tests.test_types_generator import account, cloudtrail_task, partition, task_report
 
 
-class TestAwsCloudTrailTask(AwsScannerTestCase):
+class TestAwsCloudTrailTask(TestCase):
     def test_randomise_name(self) -> None:
         task_1 = cloudtrail_task()
         task_2 = cloudtrail_task()

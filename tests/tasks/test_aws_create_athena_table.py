@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
@@ -7,7 +7,7 @@ from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from tests.test_types_generator import account, partition
 
 
-class TestAwsCreateAthenaTableTask(AwsScannerTestCase):
+class TestAwsCreateAthenaTableTask(TestCase):
     def test_aws_create_athena_table_task(self) -> None:
         task = AwsCreateAthenaTableTask(account(), partition())
         self.assertIsInstance(task, AwsCloudTrailTask)

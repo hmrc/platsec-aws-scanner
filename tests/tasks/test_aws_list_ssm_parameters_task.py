@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
@@ -6,7 +6,7 @@ from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from tests.test_types_generator import account, secure_string_parameter, string_list_parameter, string_parameter
 
 
-class TestAwsListSSMParametersTask(AwsScannerTestCase):
+class TestAwsListSSMParametersTask(TestCase):
     def test_run_task(self) -> None:
         parameters = [
             secure_string_parameter("secure_1"),

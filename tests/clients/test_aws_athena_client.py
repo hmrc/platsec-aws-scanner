@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, call, patch
 
 from typing import Any, Dict, Type
@@ -10,7 +10,7 @@ from tests.test_types_generator import account, partition
 
 
 @patch.object(AwsAthenaClient, "_get_default_delay", return_value=0)
-class TestWaitFor(AwsScannerTestCase):
+class TestWaitFor(TestCase):
     def test_wait_for_completion(self, _: Mock) -> None:
         query_id = "8759-2768-2364"
         mock_has_query_completed = Mock(side_effect=[False, False, True])
@@ -68,7 +68,7 @@ class TestWaitFor(AwsScannerTestCase):
 
 
 @patch("src.clients.aws_athena_client.AwsAthenaClient._wait_for_success")
-class TestQueries(AwsScannerTestCase):
+class TestQueries(TestCase):
     def test_create_database(self, mock_wait_for_success: Mock) -> None:
         self.assert_wait_for_success(
             mock_wait_for_success=mock_wait_for_success,
@@ -153,12 +153,12 @@ class TestQueries(AwsScannerTestCase):
             self.assertEqual(query_results, actual_results)
 
 
-class TestDefaultDelay(AwsScannerTestCase):
+class TestDefaultDelay(TestCase):
     def test_default_delay_is_one_second(self) -> None:
         self.assertEqual(1, AwsAthenaClient(Mock())._get_default_delay())
 
 
-class TestList(AwsScannerTestCase):
+class TestList(TestCase):
     def test_list_databases(self) -> None:
         dbs = ["db1", "db2", "db3"]
         mock_athena_async = Mock(list_databases=Mock(return_value=dbs))

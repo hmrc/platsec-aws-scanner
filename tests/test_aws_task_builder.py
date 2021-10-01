@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from typing import Any, Dict, Sequence
@@ -27,7 +27,7 @@ acct3 = account("3")
 acct4 = account("4")
 
 
-class TestAwsTaskBuilder(AwsScannerTestCase):
+class TestAwsTaskBuilder(TestCase):
     def test_principal_by_ip_finder_tasks(self) -> None:
         self.assert_tasks_equal(
             [

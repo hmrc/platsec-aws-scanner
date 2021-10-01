@@ -1,10 +1,10 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from tests.test_types_generator import account, aws_task, task_report
 
 
-class TestAwsTaskTask(AwsScannerTestCase):
+class TestAwsTaskTask(TestCase):
     def test_run(self) -> None:
         with patch("src.tasks.aws_task.AwsTask._run_task", return_value={"key": "val"}):
             self.assertEqual(task_report(partition=None), aws_task().run(Mock()))

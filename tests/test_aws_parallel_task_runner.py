@@ -1,5 +1,5 @@
 # type: ignore
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from src.aws_parallel_task_runner import AwsParallelTaskRunner
@@ -9,7 +9,7 @@ from tests import _raise
 from tests.test_types_generator import account, athena_task, task_report
 
 
-class TestAwsParallelTaskRunner(AwsScannerTestCase):
+class TestAwsParallelTaskRunner(TestCase):
     def test_run_tasks(self) -> None:
         succeeding_task_1 = athena_task(description="some task")
         succeeding_task_1._run_task = lambda _: {"outcome_1": "success_1"}

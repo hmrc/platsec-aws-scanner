@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Any
 from unittest.mock import Mock, patch, call
 
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from src.clients.aws_iam_client import AwsIamClient
 from src.data.aws_scanner_exceptions import IamException
 
@@ -9,7 +9,7 @@ from tests.clients import test_aws_iam_client_responses as resp
 from tests.test_types_generator import client_error, role, policy
 
 
-class TestAwsIamClient(AwsScannerTestCase):
+class TestAwsIamClient(TestCase):
     @staticmethod
     def get_role(**kwargs: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return resp.GET_ROLE if str(kwargs["RoleName"]) == "a_role" else None

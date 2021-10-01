@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.aws_scanner_main import AwsScannerMain
@@ -16,7 +16,7 @@ mock_task_runner = Mock(run=Mock(return_value=reports))
 mock_output = Mock()
 
 
-class TestMain(AwsScannerTestCase):
+class TestMain(TestCase):
     @patch("src.aws_scanner_main.AwsClientFactory", return_value=mock_factory)
     @patch("src.aws_scanner_main.AwsTaskBuilder", return_value=mock_task_builder)
     @patch("src.aws_scanner_main.AwsParallelTaskRunner", return_value=mock_task_runner)

@@ -1,5 +1,5 @@
 from src.data.aws_kms_types import to_key
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.clients.aws_kms_client import AwsKmsClient
@@ -14,7 +14,7 @@ from tests.clients.test_aws_kms_responses import (
 from tests.test_types_generator import alias, client_error, key
 
 
-class TestAwsKmsClient(AwsScannerTestCase):
+class TestAwsKmsClient(TestCase):
     def test_get_key(self) -> None:
         key_id = "1234"
         a_key, a_policy = key(id=key_id), {"something": "some value"}
