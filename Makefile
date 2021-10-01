@@ -43,36 +43,24 @@ fmt: pipenv
 	@$(DOCKER) pipenv run black --line-length=120 .
 
 fmt-check: pipenv
-	@$(DOCKER) pipenv run black --line-length=120 --check . --extend-exclude "(simplejson|awslambdaric)"
+	@$(DOCKER) pipenv run black --line-length=120 --check src tests
 
 static-check: pipenv
-	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10
-	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict ./**/*/*.py
+	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10 src tests
+	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict src tests
 
-all-checks: python-test python-coverage fmt-check static-check md-check clean-up
+all-checks: python-test fmt-check static-check md-check clean-up
 
-test: python-test-no-cov fmt-check static-check md-check clean-up
+test: all-checks
 
 python-test: pipenv
-	$(DOCKER) pipenv run coverage run \
-		--append \
-		--branch \
-		--omit $(PYTHON_COVERAGE_OMIT) \
-		--module unittest \
-			discover \
-			--verbose \
-			--start-directory "tests/" \
-			--pattern $(PYTHON_TEST_PATTERN)
-
-python-test-no-cov: pipenv
-	$(DOCKER) pipenv run python -m unittest discover \
-		--verbose \
-		--start-directory "tests/" \
-		--pattern $(PYTHON_TEST_PATTERN)
-
-python-coverage:
-	@$(DOCKER) pipenv run coverage xml --omit $(PYTHON_COVERAGE_OMIT)
-	@$(DOCKER) pipenv run coverage report -m --omit $(PYTHON_COVERAGE_OMIT) --fail-under $(PYTHON_COVERAGE_FAIL_UNDER_PERCENT)
+	$(DOCKER) pipenv run pytest \
+		--cov=src \
+		--cov-fail-under=100 \
+		--no-cov-on-fail \
+		--cov-report "term-missing:skip-covered" \
+		--no-header \
+		tests
 
 md-check:
 	@docker pull zemanlx/remark-lint:0.2.0

@@ -1,49 +1,43 @@
+from typing import Dict, Optional, Any
+from unittest.mock import Mock, patch, call
+
 from tests.aws_scanner_test_case import AwsScannerTestCase
-from unittest.mock import Mock, call, patch
-
-from typing import Any, Dict, Optional
-
 from src.clients.aws_iam_client import AwsIamClient
 from src.data.aws_scanner_exceptions import IamException
 
-from tests.clients.test_aws_iam_client_responses import (
-    EXPECTED_ROLE,
-    GET_POLICY,
-    GET_POLICY_VERSION,
-    GET_ROLE,
-    LIST_ATTACHED_ROLE_POLICIES_PAGES,
-    LIST_ENTITIES_FOR_POLICY,
-    LIST_POLICIES_PAGES,
-    LIST_POLICY_VERSIONS,
-)
-from tests.test_types_generator import client_error, policy, role
+from tests.clients import test_aws_iam_client_responses as resp
+from tests.test_types_generator import client_error, role, policy
 
 
 class TestAwsIamClient(AwsScannerTestCase):
     @staticmethod
     def get_role(**kwargs: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        return GET_ROLE if str(kwargs["RoleName"]) == "a_role" else None
+        return resp.GET_ROLE if str(kwargs["RoleName"]) == "a_role" else None
 
     @staticmethod
     def list_attached_role_policies_paginator() -> Mock:
         return Mock(
             paginate=Mock(
-                side_effect=lambda **k: iter(LIST_ATTACHED_ROLE_POLICIES_PAGES) if k["RoleName"] == "a_role" else None
+                side_effect=lambda **k: iter(resp.LIST_ATTACHED_ROLE_POLICIES_PAGES)
+                if k["RoleName"] == "a_role"
+                else None
             )
         )
 
     @staticmethod
     def list_policies() -> Mock:
-        return Mock(paginate=Mock(side_effect=lambda **k: iter(LIST_POLICIES_PAGES) if k["Scope"] == "Local" else None))
+        return Mock(
+            paginate=Mock(side_effect=lambda **k: iter(resp.LIST_POLICIES_PAGES) if k["Scope"] == "Local" else None)
+        )
 
     @staticmethod
     def get_policy(**kwargs: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        return GET_POLICY if str(kwargs["PolicyArn"]) == "arn:aws:iam::112233445566:policy/a_policy" else None
+        return resp.GET_POLICY if str(kwargs["PolicyArn"]) == "arn:aws:iam::112233445566:policy/a_policy" else None
 
     @staticmethod
     def get_policy_version(**kwargs: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         return (
-            GET_POLICY_VERSION
+            resp.GET_POLICY_VERSION
             if str(kwargs["PolicyArn"]) == "arn:aws:iam::112233445566:policy/a_policy"
             and str(kwargs["VersionId"]) == "v3"
             else None
@@ -60,7 +54,7 @@ class TestAwsIamClient(AwsScannerTestCase):
                 else None
             ),
         )
-        self.assertEqual(EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
+        self.assertEqual(resp.EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
 
     def test_find_role_by_arn(self) -> None:
         client = AwsIamClient(Mock())
@@ -190,8 +184,8 @@ class TestAwsIamClient(AwsScannerTestCase):
     def test_delete_policy(self) -> None:
         mock_iam = Mock(
             get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None),
-            list_entities_for_policy=Mock(return_value=LIST_ENTITIES_FOR_POLICY),
-            list_policy_versions=Mock(return_value=LIST_POLICY_VERSIONS),
+            list_entities_for_policy=Mock(return_value=resp.LIST_ENTITIES_FOR_POLICY),
+            list_policy_versions=Mock(return_value=resp.LIST_POLICY_VERSIONS),
         )
         AwsIamClient(mock_iam).delete_policy("pol_5")
         self.assertEqual(
