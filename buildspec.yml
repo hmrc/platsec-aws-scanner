@@ -2,7 +2,8 @@ version: 0.2
 phases:
   build:
     commands:
-      - CI_MODE=true make test
+      - export CI_MODE=true
+      - make test
       - make container-release
       - docker save -o docker.tar container-release:local
 artifacts:
