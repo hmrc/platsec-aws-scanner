@@ -2,22 +2,30 @@ PYTHON_VERSION = $(shell head -1 .python-version)
 PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
 
 ifdef CI_MODE
-	echo "ci mode enabled"
 	DOCKER = docker build \
 		--target dev \
 		--file lambda.Dockerfile \
-		--tag test-run:local . \
+		--tag test-run:ci . \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
-		&& docker run test-run:local
+		&& docker run test-run:ci
 else
-	echo "running in local mode"
-	DOCKER = docker run \
+	DOCKER = docker build \
+		--file Dockerfile \
+                --build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+                --build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
+                --build-arg "user_id=${USER_ID}" \
+                --build-arg "group_id=${GROUP_ID}" \
+                --build-arg "home=${HOME}" \
+                --build-arg "workdir=${PWD}" \
+		--tag test-run:local . \
+		&& docker run \
 		--interactive \
 		--rm \
 		--env "PYTHONWARNINGS=ignore:ResourceWarning" \
 		--volume "$(PWD):${PWD}:z" \
-		--workdir "${PWD}"
+		--workdir "${PWD}" \
+		test-run:local	
 endif
 
 PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
@@ -28,26 +36,13 @@ USER_ID ?= $(shell id -u)
 SHELL := /bin/bash
 .PHONY: $(MAKECMDGOALS)
 
-build: pipenv
-
-pipenv:
-	@docker build \
-		--tag $@ \
-		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
-		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
-		--build-arg "user_id=${USER_ID}" \
-		--build-arg "group_id=${GROUP_ID}" \
-		--build-arg "home=${HOME}" \
-		--build-arg "workdir=${PWD}" \
-		--target $@ . \
-
-fmt: pipenv
+fmt:
 	@$(DOCKER) pipenv run black --line-length=120 .
 
-fmt-check: pipenv
+fmt-check:
 	@$(DOCKER) pipenv run black --line-length=120 --check src tests
 
-static-check: pipenv
+static-check:
 	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10 src tests
 	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict src tests
 
@@ -55,7 +50,7 @@ all-checks: python-test fmt-check static-check md-check
 
 test: all-checks
 
-python-test: pipenv
+python-test:
 	$(DOCKER) pipenv run pytest \
 		--cov=src \
 		--cov-fail-under=100 \
