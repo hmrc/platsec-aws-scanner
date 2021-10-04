@@ -2,7 +2,8 @@ PYTHON_VERSION = $(shell head -1 .python-version)
 PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
 
 ifdef CI_MODE
-    DOCKER = docker build \
+	echo "ci mode enabled"
+	DOCKER = docker build \
 		--target dev \
 		--file lambda.Dockerfile \
 		--tag test-run:local . \
@@ -10,6 +11,7 @@ ifdef CI_MODE
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
 		&& docker run test-run:local
 else
+	echo "running in local mode"
 	DOCKER = docker run \
 		--interactive \
 		--rm \
