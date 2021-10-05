@@ -17,7 +17,7 @@ class AwsScannerArguments:
     month: int
     region: str
     accounts: Optional[List[str]]
-    service: List[str]
+    services: List[str]
     role: str
     source_ip: str
     log_level: str
@@ -89,6 +89,10 @@ class AwsScannerArgumentParser:
             help="log level configuration",
         )
 
+    @staticmethod
+    def _add_services_arg(parser: ArgumentParser, help_msg: str) -> None:
+        parser.add_argument("-s", "--services", type=str, required=True, help=help_msg)
+
     def _build_parser(self) -> ArgumentParser:
         parser = ArgumentParser()
         subparsers = parser.add_subparsers(dest="task", required=True)
@@ -122,16 +126,9 @@ class AwsScannerArgumentParser:
         audit_parser = subparsers.add_parser(AwsScannerCommands.cost_explorer, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
+        self._add_services_arg(audit_parser, "comma-separated list of service(s) to scan cost usage for")
         self._add_cost_explorer_task_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
-        audit_parser.add_argument(
-            "-s",
-            "--service",
-            type=str,
-            required=True,
-            help="which service to scan cost \
-         usage for",
-        )
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC flow logs compliance"
@@ -182,7 +179,7 @@ class AwsScannerArgumentParser:
         service_parser = subparsers.add_parser(AwsScannerCommands.service_usage, help=desc, description=desc)
         self._add_auth_args(service_parser)
         self._add_athena_task_args(service_parser)
-        service_parser.add_argument("-s", "--service", type=str, required=True, help="which service to scan usage for")
+        self._add_services_arg(service_parser, "comma-separated list of service(s) to scan usage for")
         self._add_verbosity_arg(service_parser)
 
     def parse_cli_args(self) -> AwsScannerArguments:
@@ -206,7 +203,7 @@ class AwsScannerArgumentParser:
             month=int(args.get("month", -1)),
             region=args.get("region") or Config().cloudtrail_region(),
             accounts=args.get("accounts", "").split(",") if args.get("accounts") else None,
-            service=args.get("service", "").split(",") if args.get("service") else [],
+            services=args.get("services", "").split(",") if args.get("services") else [],
             role=str(args.get("role")),
             source_ip=str(args.get("ip")),
             log_level=str(args.get("verbosity")).upper(),

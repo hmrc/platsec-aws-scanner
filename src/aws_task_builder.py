@@ -28,7 +28,7 @@ class AwsTaskBuilder:
             Cmd.service_usage: lambda: self._services_tasks(
                 AwsServiceUsageScannerTask,
                 args.accounts,
-                services=args.service,
+                services=args.services,
                 partition=args.partition,
             ),
             Cmd.role_usage: lambda: self._tasks(
@@ -43,7 +43,7 @@ class AwsTaskBuilder:
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
             Cmd.cost_explorer: lambda: self._services_tasks(
-                AwsAuditCostExplorerTask, args.accounts, services=args.service, year=args.year, month=args.month
+                AwsAuditCostExplorerTask, args.accounts, services=args.services, year=args.year, month=args.month
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, args.accounts, enforce=args.enforce),
         }
