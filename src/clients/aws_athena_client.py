@@ -3,6 +3,7 @@ from typing import Any, List, Type
 
 from botocore.client import BaseClient
 
+from src.aws_scanner_config import AwsScannerConfig as Config
 from src.data import aws_scanner_exceptions as exceptions
 from src.clients.aws_athena_async_client import AwsAthenaAsyncClient
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
@@ -11,6 +12,7 @@ from src.data.aws_organizations_types import Account
 
 class AwsAthenaClient:
     def __init__(self, boto_athena: BaseClient):
+        self._config = Config()
         self._athena_async = AwsAthenaAsyncClient(boto_athena)
 
     def create_database(self, database_name: str) -> None:
@@ -57,7 +59,7 @@ class AwsAthenaClient:
     def run_query(self, database: str, query: str) -> List[Any]:
         return self._wait_for_success(
             query_id=self._athena_async.run_query(query=query, database=database),
-            timeout_seconds=300,
+            timeout_seconds=self._config.athena_run_query_timeout(),
             raise_on_failure=exceptions.RunQueryException,
         )
 

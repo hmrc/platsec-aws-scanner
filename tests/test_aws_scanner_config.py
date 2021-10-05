@@ -15,6 +15,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("cost_explorer_role", config.cost_explorer_role())
         self.assertEqual("some_prefix", config.athena_database_prefix())
         self.assertEqual("query-results-bucket", config.athena_query_results_bucket())
+        self.assertEqual(1200, config.athena_run_query_timeout())
         self.assertEqual("cloudtrail-logs-bucket", config.cloudtrail_logs_bucket())
         self.assertEqual(90, config.cloudtrail_logs_retention_days())
         self.assertEqual("ec2_role", config.ec2_role())
@@ -63,6 +64,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
             "AWS_SCANNER_ATHENA_ROLE": "the_athena_role",
             "AWS_SCANNER_ATHENA_DATABASE_PREFIX": "a_db_prefix",
             "AWS_SCANNER_ATHENA_QUERY_RESULTS_BUCKET": "a-query-results-bucket",
+            "AWS_SCANNER_ATHENA_RUN_QUERY_TIMEOUT": "900",
             "AWS_SCANNER_CLOUDTRAIL_LOGS_BUCKET": "a-cloudtrail-logs-bucket",
             "AWS_SCANNER_CLOUDTRAIL_LOGS_RETENTION_DAYS": "30",
             "AWS_SCANNER_EC2_ROLE": "the_ec2_role",
@@ -104,6 +106,7 @@ class TestAwsScannerConfig(AwsScannerTestCase):
         self.assertEqual("the_athena_role", config.athena_role())
         self.assertEqual("a_db_prefix", config.athena_database_prefix())
         self.assertEqual("a-query-results-bucket", config.athena_query_results_bucket())
+        self.assertEqual(900, config.athena_run_query_timeout())
         self.assertEqual("a-cloudtrail-logs-bucket", config.cloudtrail_logs_bucket())
         self.assertEqual(30, config.cloudtrail_logs_retention_days())
         self.assertEqual("the_ec2_role", config.ec2_role())

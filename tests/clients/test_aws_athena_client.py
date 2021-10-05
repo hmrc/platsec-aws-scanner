@@ -123,7 +123,7 @@ class TestQueries(AwsScannerTestCase):
             mock_wait_for_success=mock_wait_for_success,
             method_under_test="run_query",
             method_args={"database": "some_db", "query": "SELECT something FROM somewhere"},
-            timeout_seconds=300,
+            timeout_seconds=1200,
             raise_on_failure=exceptions.RunQueryException,
             return_results=True,
         )

@@ -9,6 +9,7 @@ account = 555666777888
 role = athena_role
 database_prefix = some_prefix
 query_results_bucket = query-results-bucket
+run_query_timeout = 1200
 
 [cost_explorer]
 role = cost_explorer_role
