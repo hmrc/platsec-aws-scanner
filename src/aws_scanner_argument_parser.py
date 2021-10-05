@@ -17,7 +17,7 @@ class AwsScannerArguments:
     month: int
     region: str
     accounts: Optional[List[str]]
-    service: str
+    service: List[str]
     role: str
     source_ip: str
     log_level: str
@@ -206,7 +206,7 @@ class AwsScannerArgumentParser:
             month=int(args.get("month", -1)),
             region=args.get("region") or Config().cloudtrail_region(),
             accounts=args.get("accounts", "").split(",") if args.get("accounts") else None,
-            service=str(args.get("service")),
+            service=args.get("service", "").split(",") if args.get("service") else [],
             role=str(args.get("role")),
             source_ip=str(args.get("ip")),
             log_level=str(args.get("verbosity")).upper(),

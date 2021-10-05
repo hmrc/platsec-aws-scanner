@@ -27,15 +27,15 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.year, 2021)
             self.assertEqual(args.month, 8)
             self.assertEqual(args.accounts, ["3", "2", "1"])
-            self.assertEqual(args.service, "lambda")
+            self.assertEqual(args.service, ["lambda"])
 
     def test_parse_cli_args_for_service_usage_task(self) -> None:
-        with patch("sys.argv", ". service_usage -u bob -t 666666 -y 2020 -m 9 -re eu -s ssm -v info".split()):
+        with patch("sys.argv", ". service_usage -u bob -t 666666 -y 2020 -m 9 -re eu -s ssm,s3 -v info".split()):
             short_args = AwsScannerArgumentParser().parse_cli_args()
 
         with patch(
             "sys.argv",
-            ". service_usage --username bob --token 666666 --year 2020 --month 09 --region eu --service ssm".split(),
+            ". service_usage --username bob --token 666666 --year 2020 --month 09 --region eu --service ssm,s3".split(),
         ):
             long_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -47,7 +47,7 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
             self.assertEqual(args.partition.month, "09")
             self.assertEqual(args.partition.region, "eu")
             self.assertEqual(args.accounts, None)
-            self.assertEqual(args.service, "ssm")
+            self.assertEqual(args.service, ["ssm", "s3"])
 
     def test_parse_cli_args_for_role_usage_task(self) -> None:
         with patch("sys.argv", ". role_usage -u tom -t 654321 -y 2020 -m 10 -r TheRole -re us -v info".split()):
@@ -200,4 +200,4 @@ class TestAwsScannerArgumentParser(AwsScannerTestCase):
         self.assertEqual(lambda_args.partition.month, "08")
         self.assertEqual(lambda_args.partition.region, "eu")
         self.assertEqual(lambda_args.accounts, None)
-        self.assertEqual(lambda_args.service, "ssm")
+        self.assertEqual(lambda_args.service, ["ssm"])

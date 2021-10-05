@@ -1,7 +1,8 @@
 from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest.mock import Mock
 
-from src.clients.aws_cost_explorer_client import AwsCostExplorerClient, CostExplorerException
+from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
+from src.data.aws_scanner_exceptions import CostExplorerException
 from botocore.exceptions import BotoCoreError
 from tests.clients.test_aws_cost_explorer_responses import GET_USAGE_COST_SUCCESS
 

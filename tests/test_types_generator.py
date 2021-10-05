@@ -213,7 +213,7 @@ def aws_scanner_arguments(
     month: int = 11,
     region: str = "eu",
     accounts: Optional[List[str]] = None,
-    service: str = "a_service",
+    service: List[str] = ["a_service"],
     role: str = "a_role",
     source_ip: str = "127.0.0.1",
     log_level: str = "ERROR",
