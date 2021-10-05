@@ -14,6 +14,7 @@ account = 555666777888
 role = athena_role
 database_prefix = some_prefix
 query_results_bucket = query-results-bucket
+run_query_timeout = 666
 ```
 
 -   `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
@@ -24,6 +25,8 @@ query_results_bucket = query-results-bucket
     their names prefixed with this value, to avoid confusion with other databases that might already exist
 
 -   `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
+
+-   `run_query_timeout`: set the max duration the Athena query runs for
 
 ## CloudTrail
 
