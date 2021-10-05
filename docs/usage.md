@@ -111,7 +111,7 @@ usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list
 
 positional arguments:
   {service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3}
-    service_usage       scan AWS service usage
+    service_usage       scan AWS service usage 
     role_usage          scan AWS role usage
     find_principal      find principal by source IP
     list_accounts       list organization accounts
@@ -129,7 +129,7 @@ It's also possible to print a helper message on a specific task with the `-h / -
 
 ```sh
 ./platsec_aws_scanner.sh service_usage -h
-usage: platsec_aws_scanner.py service_usage [-h] [-u USERNAME] -t TOKEN -y YEAR -m MONTH [-re REGION] [-a ACCOUNTS] -s SERVICE [-v {error,warning,info,debug}]
+usage: platsec_aws_scanner.py service_usage [-h] [-u USERNAME] -t TOKEN -y YEAR -m MONTH [-re REGION] [-a ACCOUNTS] -s SERVICES [-v {error,warning,info,debug}]
 
 scan AWS service usage
 
@@ -146,8 +146,8 @@ optional arguments:
                         region for AWS Athena data partition
   -a ACCOUNTS, --accounts ACCOUNTS
                         comma-separated list of target accounts
-  -s SERVICE, --service SERVICE
-                        which service to scan usage for
+  -s SERVICES, --services SERVICES
+                        comma-separated list of service(s) to scan usage for
   -v {error,warning,info,debug}, --verbosity {error,warning,info,debug}
                         log level configuration
 ```

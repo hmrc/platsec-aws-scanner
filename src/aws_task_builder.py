@@ -25,8 +25,11 @@ class AwsTaskBuilder:
 
     def build_tasks(self, args: AwsScannerArguments) -> Sequence[AwsTask]:
         task_mapping: Dict[str, Callable[[], Sequence[AwsTask]]] = {
-            Cmd.service_usage: lambda: self._tasks(
-                AwsServiceUsageScannerTask, args.accounts, partition=args.partition, service=args.service
+            Cmd.service_usage: lambda: self._services_tasks(
+                AwsServiceUsageScannerTask,
+                args.accounts,
+                services=args.services,
+                partition=args.partition,
             ),
             Cmd.role_usage: lambda: self._tasks(
                 AwsRoleUsageScannerTask, args.accounts, partition=args.partition, role=args.role
@@ -39,8 +42,8 @@ class AwsTaskBuilder:
             Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, args.accounts),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
-            Cmd.cost_explorer: lambda: self._tasks(
-                AwsAuditCostExplorerTask, args.accounts, service=args.service, year=args.year, month=args.month
+            Cmd.cost_explorer: lambda: self._services_tasks(
+                AwsAuditCostExplorerTask, args.accounts, services=args.services, year=args.year, month=args.month
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, args.accounts, enforce=args.enforce),
         }
@@ -49,6 +52,16 @@ class AwsTaskBuilder:
     def _tasks(self, task: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
         return [task(account=account, **kwargs) for account in self._get_target_accounts(accounts)]
+
+    def _services_tasks(
+        self, task: Type[AwsTask], accounts: Optional[List[str]], services: List[str], **kwargs: Any
+    ) -> Sequence[AwsTask]:
+        self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
+        return [
+            task(account=account, service=service, **kwargs)
+            for account in self._get_target_accounts(accounts)
+            for service in services
+        ]
 
     def _standalone_task(self, task: Type[AwsTask], **kwargs: Any) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task.__name__}")

@@ -27,8 +27,9 @@ then you'll see the full name on the next page, i.e "**Amazon Simple Storage Ser
 
 ### Arguments
 
-- -m or --month represents the month to start the search from. Must be in *n* or *nn* format, without the leading zero.
-- -y or --year represents the year to start the search from. Must be in *nnnn* format.
+- `-m / --month`: represents the month to start the search from. Must be in *n* or *nn* format without the leading zero
+- `-y / --year`: represents the year to start the search from. Must be in *nnnn* format
+- `-s / --services`: comma-separated list of service(s) to scan usage for
 
 The scanner will check for costs and usage from the 1st day of the month and year specified
 in the command, ending on the current date. However, [AWS Cost Explorer documentation][aws-cost-explorer] states that

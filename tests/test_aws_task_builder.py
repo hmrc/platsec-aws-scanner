@@ -41,9 +41,11 @@ class TestAwsTaskBuilder(AwsScannerTestCase):
         self.assert_tasks_equal(
             [
                 AwsServiceUsageScannerTask(acct1, partition(), "s3"),
+                AwsServiceUsageScannerTask(acct1, partition(), "ssm"),
                 AwsServiceUsageScannerTask(acct2, partition(), "s3"),
+                AwsServiceUsageScannerTask(acct2, partition(), "ssm"),
             ],
-            task_builder().build_tasks(args(task=Cmd.service_usage, service="s3")),
+            task_builder().build_tasks(args(task=Cmd.service_usage, services=["s3", "ssm"])),
         )
 
     def test_cost_explorer_scanner_tasks(self) -> None:
@@ -52,7 +54,7 @@ class TestAwsTaskBuilder(AwsScannerTestCase):
                 AwsAuditCostExplorerTask(acct1, "a_service", 2021, 8),
                 AwsAuditCostExplorerTask(acct2, "a_service", 2021, 8),
             ],
-            task_builder().build_tasks(args(task=Cmd.cost_explorer, service="a_service", year=2021, month=8)),
+            task_builder().build_tasks(args(task=Cmd.cost_explorer, services=["a_service"], year=2021, month=8)),
         )
 
     def test_role_usage_scanner_tasks(self) -> None:
