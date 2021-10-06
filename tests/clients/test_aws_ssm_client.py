@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from typing import Any, Dict
@@ -10,7 +10,7 @@ from tests.clients import test_aws_ssm_client_responses as responses
 from tests.test_types_generator import client_error
 
 
-class TestAwsSSMClient(AwsScannerTestCase):
+class TestAwsSSMClient(TestCase):
     def test_list_parameters(self) -> None:
         self.assertEqual(responses.EXPECTED_LIST_PARAMETERS, self.get_ssm_client().list_parameters())
 
@@ -27,7 +27,7 @@ class TestAwsSSMClient(AwsScannerTestCase):
             return responses.DESCRIBE_PARAMETERS_PAGE_1
 
 
-class TestAwsSSMClientFailure(AwsScannerTestCase):
+class TestAwsSSMClientFailure(TestCase):
     def test_list_parameters_failure(self) -> None:
         with self.assertRaisesRegex(ListSSMParametersException, "SomeErrorCode"):
             self.get_ssm_client().list_parameters()

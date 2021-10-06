@@ -174,7 +174,8 @@ class AwsScannerConfig:
 
     def _load_config(self) -> ConfigParser:
         config = ConfigParser()
-        if not config.read("aws_scanner_config.ini"):
+        file_name = os.environ.get("AWS_SCANNER_CONFIG_FILE_NAME", "aws_scanner_config.ini")
+        if not config.read(file_name):
             self._logger.debug("Config file 'aws_scanner_config.ini' not found, using environment variables instead")
         return config
 

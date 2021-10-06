@@ -40,4 +40,4 @@ ARG workdir
 WORKDIR ${workdir}
 COPY --chown=builder:union Pipfile Pipfile.lock ./
 RUN pipenv install --ignore-pipfile --dev
-ENTRYPOINT [ "/usr/local/bin/pipenv" ]
+

@@ -1,5 +1,5 @@
 # type: ignore
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from typing import Any, Dict
@@ -12,7 +12,7 @@ from tests.clients import test_aws_organizations_client_responses as responses
 from tests.test_types_generator import account
 
 
-class TestAwsOrganizationsClient(AwsScannerTestCase):
+class TestAwsOrganizationsClient(TestCase):
     def test_find_account_by_id(self) -> None:
         account_id = "123456789012"
         mock_boto_orgs = Mock(

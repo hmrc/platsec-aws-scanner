@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from botocore.exceptions import ClientError, ParamValidationError
@@ -17,7 +17,7 @@ from tests.test_types_generator import account, partition
 
 
 def assert_query_run(
-    test: AwsScannerTestCase,
+    test: TestCase,
     method_under_test: str,
     method_args: Dict[str, Any],
     query: str,
@@ -28,7 +28,7 @@ def assert_query_run(
 
 
 def assert_success_query_run(
-    test: AwsScannerTestCase,
+    test: TestCase,
     method_under_test: str,
     method_args: Dict[str, str],
     query: str,
@@ -49,14 +49,14 @@ def assert_success_query_run(
 
 
 def assert_failure_query_run(
-    test: AwsScannerTestCase, method_under_test: str, method_args: Dict[str, str], raise_on_failure: Type[Exception]
+    test: TestCase, method_under_test: str, method_args: Dict[str, str], raise_on_failure: Type[Exception]
 ) -> None:
     mock_athena = Mock(start_query_execution=Mock(side_effect=ParamValidationError(report="boom")))
     with test.assertRaises(raise_on_failure):
         getattr(AwsAthenaAsyncClient(mock_athena), method_under_test)(**method_args)
 
 
-class TestQueries(AwsScannerTestCase):
+class TestQueries(TestCase):
     def test_create_database(self) -> None:
         assert_query_run(
             test=self,
@@ -107,7 +107,7 @@ class TestQueries(AwsScannerTestCase):
         )
 
 
-class TestRunQuery(AwsScannerTestCase):
+class TestRunQuery(TestCase):
     def test_run_query_success(self) -> None:
         query = "CREATE DATABASE something"
         mock_athena = Mock(start_query_execution=Mock(return_value={"QueryExecutionId": "1234"}))
@@ -163,7 +163,7 @@ class TestRunQuery(AwsScannerTestCase):
         self.assertIn(error_message, ex.exception.args[0])
 
 
-class TestIsQueryStateIn(AwsScannerTestCase):
+class TestIsQueryStateIn(TestCase):
     def test_query_state_is_in_completed_states(self) -> None:
         query_id = "48068afb-edde-4e9c-bcef-6bfa29987b1a"
         for state in [states.QUERY_SUCCEEDED, states.QUERY_FAILED, states.QUERY_CANCELLED]:
@@ -221,7 +221,7 @@ class TestIsQueryStateIn(AwsScannerTestCase):
         mock_is_query_state_in.assert_called_once_with(query_id, states.SUCCESS_STATES)
 
 
-class TestGetQueryResults(AwsScannerTestCase):
+class TestGetQueryResults(TestCase):
     def test_get_query_results_has_results(self) -> None:
         query_id = "48068afb-edde-4e9c-bcef-6bfa29987b1a"
         mock_athena = Mock(get_query_results=Mock(return_value=queries_results.GET_EVENT_USAGE_COUNT_RESULTS))
@@ -263,7 +263,7 @@ class TestGetQueryResults(AwsScannerTestCase):
         self.assertIn(error_message, ex.exception.args[0])
 
 
-class TestGetQueryError(AwsScannerTestCase):
+class TestGetQueryError(TestCase):
     def test_get_query_error(self) -> None:
         query_id = "5789-3472-6589"
         error = "FAILED: SemanticException [Error 10072]: Database does not exist: 1234"
@@ -272,7 +272,7 @@ class TestGetQueryError(AwsScannerTestCase):
         mock_athena.get_query_execution.assert_called_once_with(QueryExecutionId=query_id)
 
 
-class TestListTables(AwsScannerTestCase):
+class TestListTables(TestCase):
     def list_table_metadata(self, CatalogName: str, DatabaseName: str) -> Dict[Any, Any]:
         response_mappings = {
             ("AwsDataCatalog", "some_database"): lambda: {
@@ -302,7 +302,7 @@ class TestListTables(AwsScannerTestCase):
             self.get_client().list_tables("unknown_database")
 
 
-class TestListDatabases(AwsScannerTestCase):
+class TestListDatabases(TestCase):
     def list_databases(self, CatalogName: str) -> Dict[Any, Any]:
         response_mappings = {
             "CatalogWithDBs": lambda: {"DatabaseList": [{"Name": "some_db"}, {"Name": "some_other_db"}]},

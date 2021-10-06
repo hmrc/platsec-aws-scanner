@@ -1,4 +1,4 @@
-from tests.test_types_generator import policy, role
+from tests.test_types_generator import role, policy
 
 GET_ROLE = {
     "Role": {

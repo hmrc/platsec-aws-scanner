@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 
 from dataclasses import dataclass
 from typing import Callable, Optional
@@ -6,7 +6,7 @@ from typing import Callable, Optional
 from src.json_serializer import to_json
 
 
-class TestJsonSerializer(AwsScannerTestCase):
+class TestJsonSerializer(TestCase):
     def test_serialize_exclude_callable_and_none_properties(self) -> None:
         self.assertEqual('{"greetings": "Bonjour!"}', to_json(TestJsonSerializer.TestObject()))
 

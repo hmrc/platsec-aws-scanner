@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
 
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
@@ -54,7 +54,11 @@ class AwsTaskBuilder:
         return [task(account=account, **kwargs) for account in self._get_target_accounts(accounts)]
 
     def _services_tasks(
-        self, task: Type[AwsTask], accounts: Optional[List[str]], services: List[str], **kwargs: Any
+        self,
+        task: Type[Union[AwsAuditCostExplorerTask, AwsServiceUsageScannerTask]],
+        accounts: Optional[List[str]],
+        services: List[str],
+        **kwargs: Any,
     ) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
         return [

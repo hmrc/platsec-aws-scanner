@@ -3,6 +3,7 @@ plugins:
   preset-lint-markdown-style-guide:
   preset-lint-recommended:
   validate-links:
+    repository: false
   # Customized settings
   lint-list-item-indent: mixed
   lint-maximum-line-length: 120

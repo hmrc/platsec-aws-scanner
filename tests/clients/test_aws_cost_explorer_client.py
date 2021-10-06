@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
@@ -7,7 +7,7 @@ from botocore.exceptions import BotoCoreError
 from tests.clients.test_aws_cost_explorer_responses import GET_USAGE_COST_SUCCESS
 
 
-class TestAwsCostExplorerClient(AwsScannerTestCase):
+class TestAwsCostExplorerClient(TestCase):
     def test_get_aws_cost_explorer_empty_response(self) -> None:
         boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value={}))
         client = AwsCostExplorerClient(boto_cost_explorer)

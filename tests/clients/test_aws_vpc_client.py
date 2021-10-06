@@ -6,7 +6,6 @@ from src.data.aws_iam_types import Role, Policy
 from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
-from tests.aws_scanner_test_case import AwsScannerTestCase
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -41,7 +40,7 @@ from tests.test_types_generator import (
 )
 
 
-class TestAwsVpcClient(AwsScannerTestCase):
+class TestAwsVpcClient(TestCase):
     def test_list_vpcs(self) -> None:
         a_key = key()
         log_role = role(arn=str(flow_log().deliver_log_role_arn))
@@ -65,7 +64,7 @@ class TestAwsVpcClient(AwsScannerTestCase):
         self.assertEqual(expected_enriched_vpcs, enriched)
 
 
-class TestAwsLogDeliveryRoleCompliance(AwsScannerTestCase):
+class TestAwsLogDeliveryRoleCompliance(TestCase):
     def test_find_flow_log_delivery_role(self) -> None:
         delivery_role = role(name="vpc_flow_log_role")
         client = AwsVpcClientBuilder().with_roles([delivery_role])
@@ -109,7 +108,7 @@ class TestAwsLogDeliveryRoleCompliance(AwsScannerTestCase):
         self.assertFalse(client.build()._delivery_role_policy_exists())
 
 
-class TestAwsKmsKeyCompliance(AwsScannerTestCase):
+class TestAwsKmsKeyCompliance(TestCase):
     def test_create_kms_if_not_exists(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_no_alias()
@@ -127,7 +126,7 @@ class TestAwsKmsKeyCompliance(AwsScannerTestCase):
         )
 
 
-class TestAwsFlowLogCompliance(AwsScannerTestCase):
+class TestAwsFlowLogCompliance(TestCase):
     @staticmethod
     def client() -> AwsVpcClient:
         return AwsVpcClientBuilder().build()
@@ -151,7 +150,7 @@ class TestAwsFlowLogCompliance(AwsScannerTestCase):
         self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role_arn="bla")))
 
 
-class TestAwsEnforcementActions(AwsScannerTestCase):
+class TestAwsEnforcementActions(TestCase):
     @staticmethod
     def mock_action(action: Type[ComplianceAction], expected_client: Mock, applied_action: Mock) -> Mock:
         return Mock(spec=action, apply=Mock(side_effect=lambda c: applied_action if c == expected_client else None))
@@ -357,7 +356,7 @@ class TestAwsEnforcementActions(AwsScannerTestCase):
         self.assertEqual([], client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False))
 
 
-class TestLogGroupCompliance(AwsScannerTestCase):
+class TestLogGroupCompliance(TestCase):
     def test_central_vpc_log_group(self) -> None:
         self.assertTrue(
             AwsVpcClientBuilder()

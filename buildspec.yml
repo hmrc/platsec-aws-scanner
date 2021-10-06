@@ -1,0 +1,11 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - export CI_MODE=true
+      - make test
+      - make container-release
+      - docker save -o docker.tar container-release:local
+artifacts:
+  files:
+    - docker.tar

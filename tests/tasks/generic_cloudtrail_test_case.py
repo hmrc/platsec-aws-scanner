@@ -1,10 +1,10 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock
 
 from tests.test_types_generator import account, partition, task_report
 
 
-class GenericCloudTrailTestCase(AwsScannerTestCase):
+class GenericCloudTrailTestCase(TestCase):
     @staticmethod
     def __build_task_under_test(task_type, task_args):  # type: ignore
         task = task_type(account=account(), partition=partition(), **task_args)

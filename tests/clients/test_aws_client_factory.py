@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from typing import Any, Dict, Optional, Callable
 from unittest.mock import Mock, patch
 
@@ -12,7 +12,7 @@ from src.data.aws_scanner_exceptions import ClientFactoryException
 from tests.test_types_generator import account
 
 
-class TestGetBotoClients(AwsScannerTestCase):
+class TestGetBotoClients(TestCase):
     mfa, username = "123456", "joe.bloggs"
 
     def assert_get_client(
@@ -125,7 +125,7 @@ class TestGetBotoClients(AwsScannerTestCase):
 
 
 @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
-class TestGetClients(AwsScannerTestCase):
+class TestGetClients(TestCase):
     factory_path = "src.clients.aws_client_factory.AwsClientFactory"
     mfa, username = "123456", "joe.bloggs"
 
@@ -213,7 +213,7 @@ class TestGetClients(AwsScannerTestCase):
 
 
 @patch.object(AwsClientFactory, "_get_session_token")
-class TestGetCompositeClients(AwsScannerTestCase):
+class TestGetCompositeClients(TestCase):
     @staticmethod
     def mock_client(client: Mock, expected_account: Account) -> Callable[[Account], Optional[Mock]]:
         return lambda acc: client if acc == expected_account else None
@@ -229,7 +229,7 @@ class TestGetCompositeClients(AwsScannerTestCase):
         self.assertEqual([ec2, iam, logs, kms], [vpc_client.ec2, vpc_client.iam, vpc_client.logs, vpc_client.kms])
 
 
-class TestAwsClientFactory(AwsScannerTestCase):
+class TestAwsClientFactory(TestCase):
     mfa, username = "123456", "joe.bloggs"
     service_name, role = "some_service", "some_role"
 

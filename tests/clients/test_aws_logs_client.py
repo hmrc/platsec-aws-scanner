@@ -1,4 +1,4 @@
-from tests.aws_scanner_test_case import AwsScannerTestCase
+from unittest import TestCase
 from unittest.mock import Mock, call
 
 from src.clients.aws_logs_client import AwsLogsClient
@@ -8,7 +8,7 @@ from tests.clients import test_aws_logs_client_responses as responses
 from tests.test_types_generator import client_error
 
 
-class TestAwsLogsClient(AwsScannerTestCase):
+class TestAwsLogsClient(TestCase):
     def test_describe_log_groups(self) -> None:
         boto = Mock(
             describe_log_groups=Mock(return_value=responses.DESCRIBE_LOG_GROUPS),
