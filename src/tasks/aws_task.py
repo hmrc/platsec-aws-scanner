@@ -1,4 +1,3 @@
-from abc import ABCMeta
 from typing import Any, Dict
 from logging import getLogger
 
@@ -6,7 +5,7 @@ from src.data.aws_task_report import AwsTaskReport
 from src.data.aws_organizations_types import Account
 
 
-class AwsTask(metaclass=ABCMeta):
+class AwsTask:
     def __init__(self, description: str, account: Account):
         self._logger = getLogger(self.__class__.__name__)
         self._description = description
