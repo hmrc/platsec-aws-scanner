@@ -1,12 +1,12 @@
 from typing import Any, Dict
 from dataclasses import dataclass
 from src.data.aws_organizations_types import Account
-from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
 from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
+from src.tasks.aws_task import AwsTask
 
 
 @dataclass
-class AwsAuditCostExplorerTask(AwsCostExplorerTask):
+class AwsAuditCostExplorerTask(AwsTask):
     def __init__(self, account: Account, service: str, year: int, month: int) -> None:
         super().__init__(f"cost & usage of {service}", account)
         self._service = service

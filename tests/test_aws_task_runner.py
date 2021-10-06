@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from src.aws_task_runner import AwsTaskRunner
 from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_task import AwsAthenaTask
-from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 
 from tests.test_types_generator import account, athena_task, s3_task, ssm_task, task_report, vpc_task
@@ -38,7 +38,7 @@ class TestAwsTaskRunner(TestCase):
         mock_client = Mock()
         mock_client_factory = Mock(get_cost_explorer_client=Mock(return_value=mock_client))
         mock_task = Mock(
-            spec=AwsCostExplorerTask,
+            spec=AwsAuditCostExplorerTask,
             run=Mock(side_effect=lambda client: task_report() if client == mock_client else None),
         )
         self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(mock_task))

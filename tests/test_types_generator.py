@@ -44,9 +44,9 @@ from src.data.aws_s3_types import (
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
-from src.tasks.aws_cost_explorer_task import AwsCostExplorerTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -76,8 +76,10 @@ def athena_task(account: Account = account(), description: str = "athena_task") 
     return AwsAthenaTask(description=description, account=account)
 
 
-def cost_explorer_task(account: Account = account(), description: str = "cost_explorer_task") -> AwsCostExplorerTask:
-    return AwsCostExplorerTask(description=description, account=account)
+def cost_explorer_task(
+    account: Account = account(), service: str = "s3", year: int = 2021, month: int = 2
+) -> AwsAuditCostExplorerTask:
+    return AwsAuditCostExplorerTask(account=account, service=service, year=year, month=month)
 
 
 def vpc_task(account: Account = account(), description: str = "vpc_task", enforce: bool = True) -> AwsVpcTask:
