@@ -1,15 +1,18 @@
-from src.data.aws_kms_types import to_key
+from src.data.aws_kms_types import to_key, Tag
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_scanner_exceptions import KmsException
 
+from tests import test_types_generator as generator
+
 from tests.clients.test_aws_kms_responses import (
     CREATE_KEY,
     DESCRIBE_KEY,
     GET_KEY_POLICY,
     LIST_ALIASES_PAGES,
+    LIST_RESOURCE_TAGS,
 )
 from tests.test_types_generator import alias, client_error, key
 
@@ -134,3 +137,13 @@ class TestAwsKmsClient(TestCase):
             AwsKmsClient(boto_kms).delete_alias(name="testName")
 
         boto_kms.delete_alias.assert_called_with(AliasName="alias/testName")
+
+    def test_list_resource_tags(self) -> None:
+        key = generator.key()
+        expected_response = [Tag(key="tag1", value="value1"), Tag(key="tag2", value="value2")]
+        boto_kms = Mock(list_resource_tags=Mock(return_value=LIST_RESOURCE_TAGS))
+
+        response = AwsKmsClient(boto_kms)._list_resource_tags(key_id=key.id)
+
+        boto_kms.list_resource_tags.assert_called_with(KeyId=key.id)
+        self.assertEqual(expected_response, response)

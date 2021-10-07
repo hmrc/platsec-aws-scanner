@@ -35,3 +35,13 @@ class Alias:
 
 def to_alias(alias: Dict[str, Any]) -> Alias:
     return Alias(name=alias["AliasName"], arn=alias["AliasArn"], target_key_id=alias.get("TargetKeyId"))
+
+
+@dataclass
+class Tag:
+    key: str
+    value: str
+
+
+def to_tag(tag: Dict[str, Any]) -> Tag:
+    return Tag(key=tag["TagKey"], value=tag["TagValue"])

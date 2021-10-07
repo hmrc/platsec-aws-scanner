@@ -6,7 +6,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from typing import Any, Dict, Optional, Sequence
 
 from src.data.aws_scanner_exceptions import KmsException
-from src.data.aws_kms_types import Alias, Key, to_alias, to_key
+from src.data.aws_kms_types import Alias, Key, to_alias, to_key, Tag, to_tag
 
 
 class AwsKmsClient:
@@ -90,3 +90,6 @@ class AwsKmsClient:
             self._kms.delete_alias(AliasName=target_name)
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to delete kms key alias named '{target_name}': {err}") from None
+
+    def _list_resource_tags(self, key_id: str) -> Sequence[Tag]:
+        return list(map(lambda tag: to_tag(tag), self._kms.list_resource_tags(KeyId=key_id)["Tags"]))

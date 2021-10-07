@@ -8,6 +8,16 @@ DESCRIBE_KEY = {
     }
 }
 
+LIST_RESOURCE_TAGS = {
+    "Tags": [
+        {"TagKey": "tag1", "TagValue": "value1"},
+        {"TagKey": "tag2", "TagValue": "value2"},
+    ],
+    "NextMarker": "string",
+    "Truncated": False,
+}
+
+
 GET_KEY_POLICY = {"Policy": '{\n  "Statement" : [ {\n    "Effect" : "Allow"}\n    \n  ]\n}'}
 
 CREATE_KEY = {
