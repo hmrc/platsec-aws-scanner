@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient
+from src.clients.aws_kms_client import AwsKmsClient, EXPECTED_TAGS
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
 
@@ -389,7 +389,7 @@ def key(
     with_default_tags: bool = False,
     tags: Optional[Sequence[Tag]] = None,
 ) -> Key:
-    tags = [Tag(key="tag1", value="value1"), Tag(key="tag2", value="value2")] if with_default_tags else tags
+    tags = EXPECTED_TAGS if with_default_tags else tags
     return Key(
         account_id=account_id,
         region=region,

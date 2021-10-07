@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence, Optional, Type, Dict, Any
 
 from src.data.aws_iam_types import Role, Policy
-from src.data.aws_kms_types import Key
+from src.data.aws_kms_types import Key, Tag
 from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
 from unittest import TestCase
@@ -118,10 +118,45 @@ class TestAwsKmsKeyCompliance(TestCase):
     def test_recreate_alias_and_key_when_incorrect_policy(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_alias()
-        client.with_default_key()
+        client.with_key(key=key(with_default_tags=True))
 
         self.assertEqual(
             [delete_log_group_kms_key_alias_action(kms=client.kms), create_log_group_kms_key_action(kms=client.kms)],
+            client.build()._kms_enforcement_actions(),
+        )
+
+    def test_recreate_alias_and_key_when_no_tags(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(key(policy=compliant_key_policy()))
+
+        self.assertEqual(
+            [delete_log_group_kms_key_alias_action(kms=client.kms), create_log_group_kms_key_action(kms=client.kms)],
+            client.build()._kms_enforcement_actions(),
+        )
+
+    def test_recreate_alias_and_key_when_missing_tags(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(key(policy=compliant_key_policy(), tags=[Tag(key="extraTag", value="value")]))
+
+        self.assertEqual(
+            [delete_log_group_kms_key_alias_action(kms=client.kms), create_log_group_kms_key_action(kms=client.kms)],
+            client.build()._kms_enforcement_actions(),
+        )
+
+    def test_do_nothing_if_extra_tags(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
+        tags = list(expected_key.tags)  # type: ignore
+        tags.append(Tag(key="extraTag", value="value"))
+        expected_key.tags = tags
+        self.assertEqual(3, len(expected_key.tags))
+        client.with_key(expected_key)
+
+        self.assertEqual(
+            [],
             client.build()._kms_enforcement_actions(),
         )
 
@@ -156,7 +191,7 @@ class TestAwsEnforcementActions(TestCase):
         return Mock(spec=action, apply=Mock(side_effect=lambda c: applied_action if c == expected_client else None))
 
     def test_do_nothing_when_all_correct(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
         client.with_default_alias()
         client.with_key(expected_key)
@@ -183,7 +218,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_create_vpc_flow_logs(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
         client.with_default_alias()
         client.with_key(expected_key)
@@ -196,7 +231,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_delete_redundant_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
         client.with_default_alias()
         client.with_key(expected_key)
@@ -220,7 +255,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_delete_misconfigured_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
         client.with_default_alias()
         client.with_key(expected_key)
@@ -235,7 +270,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_create_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
         client.with_default_alias()
         client.with_key(expected_key)
@@ -248,7 +283,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_delete_misconfigured_and_create_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
+        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
         client.with_default_alias()
         client.with_key(expected_key)

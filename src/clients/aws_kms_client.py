@@ -8,6 +8,11 @@ from typing import Any, Dict, Optional, Sequence
 from src.data.aws_scanner_exceptions import KmsException
 from src.data.aws_kms_types import Alias, Key, to_alias, to_key, Tag, to_tag
 
+EXPECTED_TAGS: Sequence[Tag] = [
+    Tag(key="allow-key-management-by-platsec-scanner", value="true"),
+    Tag(key="src-repo", value="https://github.com/hmrc/platsec-aws-scanner"),
+]
+
 
 class AwsKmsClient:
     _kms: BaseClient
@@ -49,14 +54,12 @@ class AwsKmsClient:
             raise KmsException(f"unable to get policy for kms key with id '{key_id}': {err}") from None
 
     def create_key(self, alias: str, description: str) -> Key:
+        tags = list(map(lambda tag: {"TagKey": tag.key, "TagValue": tag.value}, EXPECTED_TAGS))
         try:
             key = to_key(
                 self._kms.create_key(
                     Description=description,
-                    Tags=[
-                        {"TagKey": "allow-key-management-by-platsec-scanner", "TagValue": "true"},
-                        {"TagKey": "src-repo", "TagValue": "https://github.com/hmrc/platsec-aws-scanner"},
-                    ],
+                    Tags=tags,
                 )["KeyMetadata"]
             )
         except (BotoCoreError, ClientError) as err:

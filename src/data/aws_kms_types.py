@@ -38,7 +38,7 @@ def to_alias(alias: Dict[str, Any]) -> Alias:
     return Alias(name=alias["AliasName"], arn=alias["AliasArn"], target_key_id=alias.get("TargetKeyId"))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Tag:
     key: str
     value: str
