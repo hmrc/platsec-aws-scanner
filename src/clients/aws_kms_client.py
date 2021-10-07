@@ -49,7 +49,15 @@ class AwsKmsClient:
 
     def create_key(self, alias: str, description: str) -> Key:
         try:
-            key = to_key(self._kms.create_key(Description=description)["KeyMetadata"])
+            key = to_key(
+                self._kms.create_key(
+                    Description=description,
+                    Tags=[
+                        {"TagKey": "allow-key-management-by-platsec-scanner", "TagValue": "true"},
+                        {"TagKey": "src-repo", "TagValue": "https://github.com/hmrc/platsec-aws-scanner"},
+                    ],
+                )["KeyMetadata"]
+            )
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to create kms key with description '{description}': {err}") from None
 

@@ -48,7 +48,13 @@ class TestAwsKmsClient(TestCase):
         expected_key = to_key(CREATE_KEY["KeyMetadata"])
         self.assertEqual(expected_key, actual_key)
 
-        boto_kms.create_key.assert_called_with(Description="brand new key")
+        boto_kms.create_key.assert_called_with(
+            Description="brand new key",
+            Tags=[
+                {"TagKey": "allow-key-management-by-platsec-scanner", "TagValue": "true"},
+                {"TagKey": "src-repo", "TagValue": "https://github.com/hmrc/platsec-aws-scanner"},
+            ],
+        )
         boto_kms.create_alias.assert_called_with(TargetKeyId="5678ffff", AliasName="alias/brand-new-alias")
 
     def test_create_key_failure(self) -> None:
