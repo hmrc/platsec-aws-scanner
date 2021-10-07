@@ -154,3 +154,17 @@ class TestAwsKmsClient(TestCase):
 
         boto_kms.list_resource_tags.assert_called_with(KeyId=key.id)
         self.assertEqual(expected_response, response)
+
+    def test_list_resource_tags_failure(self) -> None:
+        key = generator.key()
+        boto_kms = Mock(
+            list_resource_tags=Mock(side_effect=client_error("ListResourceTags", "AccessDeniedException", "nope!"))
+        )
+
+        with self.assertRaisesRegex(
+            expected_exception=KmsException,
+            expected_regex=f"unable to list tags for kms key '{key.id}': An error occurred",
+        ):
+            AwsKmsClient(boto_kms)._list_resource_tags(key_id=key.id)
+
+        boto_kms.list_resource_tags.assert_called_with(KeyId=key.id)

@@ -96,4 +96,7 @@ class AwsKmsClient:
             raise KmsException(f"unable to delete kms key alias named '{target_name}': {err}") from None
 
     def _list_resource_tags(self, key_id: str) -> Sequence[Tag]:
-        return list(map(lambda tag: to_tag(tag), self._kms.list_resource_tags(KeyId=key_id)["Tags"]))
+        try:
+            return list(map(lambda tag: to_tag(tag), self._kms.list_resource_tags(KeyId=key_id)["Tags"]))
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to list tags for kms key '{key_id}': {err}") from None
