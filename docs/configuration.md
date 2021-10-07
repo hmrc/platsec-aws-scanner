@@ -14,7 +14,9 @@ account = 555666777888
 role = athena_role
 database_prefix = some_prefix
 query_results_bucket = query-results-bucket
-run_query_timeout = 666
+query_results_polling_delay_seconds = 1
+query_timeout_seconds = 600
+query_throttling_seconds = 2
 ```
 
 -   `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
@@ -26,7 +28,11 @@ run_query_timeout = 666
 
 -   `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
 
--   `run_query_timeout`: set the max duration the Athena query runs for
+-   `query_results_polling_delay_seconds`: interval between two query results polls
+
+-   `query_timeout_seconds`: maximum duration a query can run for
+
+-   `query_throttling_seconds`: delay before starting a new query execution
 
 ## CloudTrail
 

@@ -18,35 +18,35 @@ class AwsAthenaClient:
     def create_database(self, database_name: str) -> None:
         self._wait_for_success(
             query_id=self._athena_async.create_database(database_name=database_name),
-            timeout_seconds=60,
+            timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.CreateDatabaseException,
         )
 
     def drop_database(self, database_name: str) -> None:
         self._wait_for_success(
             query_id=self._athena_async.drop_database(database_name=database_name),
-            timeout_seconds=60,
+            timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
     def create_table(self, database: str, account: Account) -> None:
         self._wait_for_success(
             query_id=self._athena_async.create_table(database=database, account=account),
-            timeout_seconds=60,
+            timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.CreateTableException,
         )
 
     def drop_table(self, database: str, table: str) -> None:
         self._wait_for_success(
             query_id=self._athena_async.drop_table(database=database, table=table),
-            timeout_seconds=60,
+            timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.DropTableException,
         )
 
     def add_partition(self, database: str, account: Account, partition: AwsAthenaDataPartition) -> None:
         self._wait_for_success(
             query_id=self._athena_async.add_partition(database=database, account=account, partition=partition),
-            timeout_seconds=120,
+            timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.AddPartitionException,
         )
 
@@ -59,7 +59,7 @@ class AwsAthenaClient:
     def run_query(self, database: str, query: str) -> List[Any]:
         return self._wait_for_success(
             query_id=self._athena_async.run_query(query=query, database=database),
-            timeout_seconds=self._config.athena_run_query_timeout(),
+            timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.RunQueryException,
         )
 
@@ -67,7 +67,7 @@ class AwsAthenaClient:
         for _ in range(timeout_seconds):
             if self._athena_async.has_query_completed(query_id):
                 return
-            sleep(self._get_default_delay())
+            sleep(self._config.athena_query_results_polling_delay_seconds())
         raise exceptions.TimeoutException(f"query execution id: {query_id}")
 
     def _wait_for_success(self, query_id: str, timeout_seconds: int, raise_on_failure: Type[Exception]) -> List[Any]:
@@ -75,7 +75,3 @@ class AwsAthenaClient:
         if self._athena_async.has_query_succeeded(query_id):
             return self._athena_async.get_query_results(query_id)
         raise raise_on_failure(self._athena_async.get_query_error(query_id))
-
-    @staticmethod
-    def _get_default_delay() -> int:
-        return 1
