@@ -23,7 +23,14 @@ class TestAwsKmsClient(TestCase):
         a_key, a_policy = key(id=key_id), {"something": "some value"}
         with patch.object(AwsKmsClient, "_describe_key", side_effect=lambda k: a_key if k == key_id else None):
             with patch.object(AwsKmsClient, "_get_key_policy", side_effect=lambda k: a_policy if k == key_id else None):
-                self.assertEqual(key(id=key_id, policy=a_policy), AwsKmsClient(Mock()).get_key(key_id))
+                with patch.object(
+                    AwsKmsClient, "_list_resource_tags", side_effect=lambda k: a_key.tags if k == key_id else None
+                ) as list_resource_tags:
+                    self.assertEqual(
+                        key(id=key_id, policy=a_policy, tags=key().tags), AwsKmsClient(Mock()).get_key(key_id)
+                    )
+
+        list_resource_tags.assert_called_once_with(key_id)
 
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))

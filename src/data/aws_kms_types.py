@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 
 @dataclass
@@ -13,6 +13,7 @@ class Key:
     description: str
     state: str
     policy: Optional[Dict[str, Any]] = None
+    tags: Optional[Sequence[Tag]] = None
 
 
 def to_key(key: Dict[Any, Any]) -> Key:

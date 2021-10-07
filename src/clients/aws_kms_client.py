@@ -33,6 +33,7 @@ class AwsKmsClient:
 
     def _enrich_key(self, key: Key) -> Key:
         key.policy = self._get_key_policy(key.id)
+        key.tags = self._list_resource_tags(key.id)
         return key
 
     def _describe_key(self, key_id: str) -> Key:
