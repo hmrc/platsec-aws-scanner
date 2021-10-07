@@ -17,7 +17,9 @@ def test_init_config_from_file() -> None:
     assert "some_prefix" == config.athena_database_prefix()
     assert "query-results-bucket" == config.athena_query_results_bucket()
     assert "cloudtrail-logs-bucket" == config.cloudtrail_logs_bucket()
-    assert 1200 == config.athena_run_query_timeout()
+    assert 0 == config.athena_query_results_polling_delay_seconds()
+    assert 1200 == config.athena_query_timeout_seconds()
+    assert 0 == config.athena_query_throttling_seconds()
     assert 90 == config.cloudtrail_logs_retention_days()
     assert "ec2_role" == config.ec2_role()
     assert "ACTIVE" == config.ec2_flow_log_status()
@@ -64,7 +66,9 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_ATHENA_ROLE": "the_athena_role",
         "AWS_SCANNER_ATHENA_DATABASE_PREFIX": "a_db_prefix",
         "AWS_SCANNER_ATHENA_QUERY_RESULTS_BUCKET": "a-query-results-bucket",
-        "AWS_SCANNER_ATHENA_RUN_QUERY_TIMEOUT": "900",
+        "AWS_SCANNER_ATHENA_QUERY_RESULTS_POLLING_DELAY_SECONDS": "2",
+        "AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "900",
+        "AWS_SCANNER_ATHENA_QUERY_THROTTLING_SECONDS": "3",
         "AWS_SCANNER_CLOUDTRAIL_LOGS_BUCKET": "a-cloudtrail-logs-bucket",
         "AWS_SCANNER_CLOUDTRAIL_LOGS_RETENTION_DAYS": "30",
         "AWS_SCANNER_EC2_ROLE": "the_ec2_role",
@@ -106,7 +110,9 @@ def test_init_config_from_env_vars() -> None:
     assert "the_athena_role" == config.athena_role()
     assert "a_db_prefix" == config.athena_database_prefix()
     assert "a-query-results-bucket" == config.athena_query_results_bucket()
-    assert 900 == config.athena_run_query_timeout()
+    assert 2 == config.athena_query_results_polling_delay_seconds()
+    assert 900 == config.athena_query_timeout_seconds()
+    assert 3 == config.athena_query_throttling_seconds()
     assert "a-cloudtrail-logs-bucket" == config.cloudtrail_logs_bucket()
     assert 30 == config.cloudtrail_logs_retention_days()
     assert "the_ec2_role" == config.ec2_role()

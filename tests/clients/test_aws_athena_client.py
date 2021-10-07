@@ -9,9 +9,8 @@ from src.clients.aws_athena_client import AwsAthenaClient
 from tests.test_types_generator import account, partition
 
 
-@patch.object(AwsAthenaClient, "_get_default_delay", return_value=0)
 class TestWaitFor(TestCase):
-    def test_wait_for_completion(self, _: Mock) -> None:
+    def test_wait_for_completion(self) -> None:
         query_id = "8759-2768-2364"
         mock_has_query_completed = Mock(side_effect=[False, False, True])
         with patch(
@@ -20,7 +19,7 @@ class TestWaitFor(TestCase):
             AwsAthenaClient(Mock())._wait_for_completion(query_id, 60)
         mock_has_query_completed.assert_has_calls([call(query_id) for _ in range(3)])
 
-    def test_wait_for_completion_timeout(self, _: Mock) -> None:
+    def test_wait_for_completion_timeout(self) -> None:
         query_id = "9837-4857-3576"
         mock_has_query_completed = Mock(return_value=False)
         with patch(
@@ -31,7 +30,7 @@ class TestWaitFor(TestCase):
         mock_has_query_completed.assert_has_calls([call(query_id) for _ in range(30)])
         self.assertIn(query_id, ex.exception.args[0])
 
-    def test_wait_for_success(self, _: Mock) -> None:
+    def test_wait_for_success(self) -> None:
         query_id = "9847-2919-2284"
         timeout = 74
         query_results = ["some results"]
@@ -50,7 +49,7 @@ class TestWaitFor(TestCase):
         mock_wait_for_completion.assert_called_once_with(query_id, timeout)
         mock_query_succeeded.assert_called_once_with(query_id)
 
-    def test_wait_for_success_query_does_not_succeed(self, _: Mock) -> None:
+    def test_wait_for_success_query_does_not_succeed(self) -> None:
         mock_wait_for_completion = Mock(return_value=None)
         mock_query_succeeded = Mock(return_value=False)
         query_error = "the query failed for some reasons"
@@ -74,7 +73,7 @@ class TestQueries(TestCase):
             mock_wait_for_success=mock_wait_for_success,
             method_under_test="create_database",
             method_args={"database_name": "some_db_name"},
-            timeout_seconds=60,
+            timeout_seconds=1200,
             raise_on_failure=exceptions.CreateDatabaseException,
         )
 
@@ -83,7 +82,7 @@ class TestQueries(TestCase):
             mock_wait_for_success=mock_wait_for_success,
             method_under_test="drop_database",
             method_args={"database_name": "some_db_name"},
-            timeout_seconds=60,
+            timeout_seconds=1200,
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
@@ -92,7 +91,7 @@ class TestQueries(TestCase):
             mock_wait_for_success=mock_wait_for_success,
             method_under_test="create_table",
             method_args={"database": "some_db", "account": account()},
-            timeout_seconds=60,
+            timeout_seconds=1200,
             raise_on_failure=exceptions.CreateTableException,
         )
 
@@ -101,7 +100,7 @@ class TestQueries(TestCase):
             mock_wait_for_success=mock_wait_for_success,
             method_under_test="drop_table",
             method_args={"database": "some_db", "table": "some_account_id"},
-            timeout_seconds=60,
+            timeout_seconds=1200,
             raise_on_failure=exceptions.DropTableException,
         )
 
@@ -114,7 +113,7 @@ class TestQueries(TestCase):
                 "account": account(),
                 "partition": partition(2020, 8),
             },
-            timeout_seconds=120,
+            timeout_seconds=1200,
             raise_on_failure=exceptions.AddPartitionException,
         )
 
@@ -151,11 +150,6 @@ class TestQueries(TestCase):
         )
         if return_results:
             self.assertEqual(query_results, actual_results)
-
-
-class TestDefaultDelay(TestCase):
-    def test_default_delay_is_one_second(self) -> None:
-        self.assertEqual(1, AwsAthenaClient(Mock())._get_default_delay())
 
 
 class TestList(TestCase):

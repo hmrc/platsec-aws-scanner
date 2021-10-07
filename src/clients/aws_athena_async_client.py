@@ -1,5 +1,6 @@
 from logging import getLogger
 from string import Template
+from time import sleep
 from typing import Any, Dict, List, Type
 
 from botocore.client import BaseClient
@@ -18,6 +19,7 @@ class AwsAthenaAsyncClient:
         self._logger = getLogger(self.__class__.__name__)
         self._boto_athena = boto_athena
         self._catalog = "AwsDataCatalog"
+        self._config = Config()
 
     def create_database(self, database_name: str) -> str:
         self._logger.info(f"creating database {database_name}")
@@ -37,7 +39,7 @@ class AwsAthenaAsyncClient:
         self._logger.info(f"creating table {account.identifier} in database {database}")
         return self.run_query(
             query=Template(queries.CREATE_TABLE).substitute(
-                account=account.identifier, cloudtrail_logs_bucket=Config().cloudtrail_logs_bucket()
+                account=account.identifier, cloudtrail_logs_bucket=self._config.cloudtrail_logs_bucket()
             ),
             database=database,
             raise_on_failure=exceptions.CreateTableException,
@@ -56,7 +58,7 @@ class AwsAthenaAsyncClient:
         return self.run_query(
             query=Template(queries.ADD_PARTITION_YEAR_MONTH).substitute(
                 account=account.identifier,
-                cloudtrail_logs_bucket=Config().cloudtrail_logs_bucket(),
+                cloudtrail_logs_bucket=self._config.cloudtrail_logs_bucket(),
                 region=partition.region,
                 year=partition.year,
                 month=partition.month,
@@ -88,12 +90,13 @@ class AwsAthenaAsyncClient:
         database: str = "",
         raise_on_failure: Type[Exception] = exceptions.RunQueryException,
     ) -> str:
+        sleep(self._config.athena_query_throttling_seconds())
         self._logger.debug(f"running query {query}")
         try:
             query_execution_response = self._boto_athena.start_query_execution(
                 QueryString=query,
                 QueryExecutionContext=self._build_exec_context(database),
-                ResultConfiguration={"OutputLocation": f"s3://{Config().athena_query_results_bucket()}"},
+                ResultConfiguration={"OutputLocation": f"s3://{self._config.athena_query_results_bucket()}"},
             )
             return str(query_execution_response["QueryExecutionId"])
         except (BotoCoreError, ClientError) as error:
