@@ -6,7 +6,12 @@ from botocore.exceptions import BotoCoreError, ClientError
 from typing import Any, Dict, Optional, Sequence
 
 from src.data.aws_scanner_exceptions import KmsException
-from src.data.aws_kms_types import Alias, Key, to_alias, to_key
+from src.data.aws_kms_types import Alias, Key, to_alias, to_key, Tag, to_tag
+
+EXPECTED_TAGS: Sequence[Tag] = [
+    Tag(key="allow-key-management-by-platsec-scanner", value="true"),
+    Tag(key="src-repo", value="https://github.com/hmrc/platsec-aws-scanner"),
+]
 
 
 class AwsKmsClient:
@@ -33,6 +38,7 @@ class AwsKmsClient:
 
     def _enrich_key(self, key: Key) -> Key:
         key.policy = self._get_key_policy(key.id)
+        key.tags = self._list_resource_tags(key.id)
         return key
 
     def _describe_key(self, key_id: str) -> Key:
@@ -48,8 +54,14 @@ class AwsKmsClient:
             raise KmsException(f"unable to get policy for kms key with id '{key_id}': {err}") from None
 
     def create_key(self, alias: str, description: str) -> Key:
+        tags = list(map(lambda tag: {"TagKey": tag.key, "TagValue": tag.value}, EXPECTED_TAGS))
         try:
-            key = to_key(self._kms.create_key(Description=description)["KeyMetadata"])
+            key = to_key(
+                self._kms.create_key(
+                    Description=description,
+                    Tags=tags,
+                )["KeyMetadata"]
+            )
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to create kms key with description '{description}': {err}") from None
 
@@ -82,3 +94,9 @@ class AwsKmsClient:
             self._kms.delete_alias(AliasName=target_name)
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to delete kms key alias named '{target_name}': {err}") from None
+
+    def _list_resource_tags(self, key_id: str) -> Sequence[Tag]:
+        try:
+            return list(map(lambda tag: to_tag(tag), self._kms.list_resource_tags(KeyId=key_id)["Tags"]))
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to list tags for kms key '{key_id}': {err}") from None

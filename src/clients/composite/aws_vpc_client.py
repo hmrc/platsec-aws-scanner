@@ -5,7 +5,7 @@ from typing import Optional, Sequence, List, Any
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient
+from src.clients.aws_kms_client import AwsKmsClient, EXPECTED_TAGS
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
@@ -92,21 +92,23 @@ class AwsVpcClient:
     def _kms_enforcement_actions(self) -> Sequence[ComplianceAction]:
         alias = self.kms.find_alias(self.config.kms_key_alias())
         key = self.kms.get_key(alias.target_key_id) if alias and alias.target_key_id else None
-        return (
-            [CreateLogGroupKmsKeyAction(kms_client=self.kms)]
-            if alias is None
-            else [DeleteLogGroupKmsKeyAliasAction(kms=self.kms), CreateLogGroupKmsKeyAction(kms_client=self.kms)]
-            if not self._is_key_compliant(key)
-            else []
-        )
+        if alias is None:
+            return [CreateLogGroupKmsKeyAction(kms_client=self.kms)]
+        elif self._is_key_compliant(key):
+            return []
+        else:
+            return [DeleteLogGroupKmsKeyAliasAction(kms=self.kms), CreateLogGroupKmsKeyAction(kms_client=self.kms)]
 
     def _is_key_compliant(self, key: Optional[Key]) -> bool:
-        return key is not None and self._is_key_policy_compliant(key)
+        return key is not None and self._is_key_policy_compliant(key) and self._is_key_tags_compliant(key)
 
     def _is_key_policy_compliant(self, key: Key) -> bool:
         return key.policy is not None and key.policy["Statement"] == self.config.kms_key_policy_statements(
             key.account_id, key.region
         )
+
+    def _is_key_tags_compliant(self, key: Key) -> bool:
+        return key.tags is not None and set(EXPECTED_TAGS).issubset(set(key.tags))
 
     def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return [

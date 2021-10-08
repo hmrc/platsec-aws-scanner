@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient
+from src.clients.aws_kms_client import AwsKmsClient, EXPECTED_TAGS
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
 
@@ -24,7 +24,7 @@ from src.data.aws_compliance_actions import (
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Policy, Role
-from src.data.aws_kms_types import Alias, Key
+from src.data.aws_kms_types import Alias, Key, Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -386,9 +386,19 @@ def key(
     description: str = "some key desc",
     state: str = "Enabled",
     policy: Optional[Dict[str, Any]] = None,
+    with_default_tags: bool = False,
+    tags: Optional[Sequence[Tag]] = None,
 ) -> Key:
+    tags = EXPECTED_TAGS if with_default_tags else tags
     return Key(
-        account_id=account_id, region=region, id=id, arn=arn, description=description, state=state, policy=policy
+        account_id=account_id,
+        region=region,
+        id=id,
+        arn=arn,
+        description=description,
+        state=state,
+        policy=policy,
+        tags=tags,
     )
 
 

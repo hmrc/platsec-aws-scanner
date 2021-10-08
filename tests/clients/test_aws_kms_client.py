@@ -1,15 +1,18 @@
-from src.data.aws_kms_types import to_key
+from src.data.aws_kms_types import to_key, Tag
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_scanner_exceptions import KmsException
 
+from tests import test_types_generator as generator
+
 from tests.clients.test_aws_kms_responses import (
     CREATE_KEY,
     DESCRIBE_KEY,
     GET_KEY_POLICY,
     LIST_ALIASES_PAGES,
+    LIST_RESOURCE_TAGS,
 )
 from tests.test_types_generator import alias, client_error, key
 
@@ -20,7 +23,14 @@ class TestAwsKmsClient(TestCase):
         a_key, a_policy = key(id=key_id), {"something": "some value"}
         with patch.object(AwsKmsClient, "_describe_key", side_effect=lambda k: a_key if k == key_id else None):
             with patch.object(AwsKmsClient, "_get_key_policy", side_effect=lambda k: a_policy if k == key_id else None):
-                self.assertEqual(key(id=key_id, policy=a_policy), AwsKmsClient(Mock()).get_key(key_id))
+                with patch.object(
+                    AwsKmsClient, "_list_resource_tags", side_effect=lambda k: a_key.tags if k == key_id else None
+                ) as list_resource_tags:
+                    self.assertEqual(
+                        key(id=key_id, policy=a_policy, tags=key().tags), AwsKmsClient(Mock()).get_key(key_id)
+                    )
+
+        list_resource_tags.assert_called_once_with(key_id)
 
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))
@@ -48,7 +58,13 @@ class TestAwsKmsClient(TestCase):
         expected_key = to_key(CREATE_KEY["KeyMetadata"])
         self.assertEqual(expected_key, actual_key)
 
-        boto_kms.create_key.assert_called_with(Description="brand new key")
+        boto_kms.create_key.assert_called_with(
+            Description="brand new key",
+            Tags=[
+                {"TagKey": "allow-key-management-by-platsec-scanner", "TagValue": "true"},
+                {"TagKey": "src-repo", "TagValue": "https://github.com/hmrc/platsec-aws-scanner"},
+            ],
+        )
         boto_kms.create_alias.assert_called_with(TargetKeyId="5678ffff", AliasName="alias/brand-new-alias")
 
     def test_create_key_failure(self) -> None:
@@ -128,3 +144,27 @@ class TestAwsKmsClient(TestCase):
             AwsKmsClient(boto_kms).delete_alias(name="testName")
 
         boto_kms.delete_alias.assert_called_with(AliasName="alias/testName")
+
+    def test_list_resource_tags(self) -> None:
+        key = generator.key()
+        expected_response = [Tag(key="tag1", value="value1"), Tag(key="tag2", value="value2")]
+        boto_kms = Mock(list_resource_tags=Mock(return_value=LIST_RESOURCE_TAGS))
+
+        response = AwsKmsClient(boto_kms)._list_resource_tags(key_id=key.id)
+
+        boto_kms.list_resource_tags.assert_called_with(KeyId=key.id)
+        self.assertEqual(expected_response, response)
+
+    def test_list_resource_tags_failure(self) -> None:
+        key = generator.key()
+        boto_kms = Mock(
+            list_resource_tags=Mock(side_effect=client_error("ListResourceTags", "AccessDeniedException", "nope!"))
+        )
+
+        with self.assertRaisesRegex(
+            expected_exception=KmsException,
+            expected_regex=f"unable to list tags for kms key '{key.id}': An error occurred",
+        ):
+            AwsKmsClient(boto_kms)._list_resource_tags(key_id=key.id)
+
+        boto_kms.list_resource_tags.assert_called_with(KeyId=key.id)
