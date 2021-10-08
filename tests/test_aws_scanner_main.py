@@ -7,8 +7,7 @@ from src.data.aws_scanner_exceptions import ClientFactoryException
 from tests.test_types_generator import aws_scanner_arguments, aws_task, task_report
 
 
-client = Mock()
-mock_factory = Mock(get_organizations_client=Mock(return_value=client))
+mock_factory = Mock()
 tasks = [aws_task(description="task_1"), aws_task(description="task_2")]
 mock_task_builder = Mock(build_tasks=Mock(return_value=tasks))
 reports = [task_report(description="report_1"), task_report(description="report_2")]
@@ -25,8 +24,8 @@ class TestMain(TestCase):
         args = aws_scanner_arguments(task="service_usage", services=["ssm"], year=2020, month=10, region="us")
         AwsScannerMain(args)
         factory.assert_called_once_with(mfa="123456", username="bob")
-        task_builder.assert_called_once_with(client)
-        mock_task_builder.build_tasks.assert_called_once_with(args)
+        task_builder.assert_called_once_with(mock_factory, args)
+        mock_task_builder.build_tasks.assert_called_once()
         task_runner.assert_called_once_with(mock_factory)
         mock_task_runner.run.assert_called_once_with(tasks)
         output.assert_called_once_with(mock_factory)
