@@ -169,10 +169,10 @@ def test_parse_cli_args_for_audit_s3_task() -> None:
 
 
 def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
-    with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -e -v debug".split()):
+    with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -e true -v debug".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
-    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce".split()):
+    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce True".split()):
         long_args = AwsScannerArgumentParser().parse_cli_args()
 
     for args in [short_args, long_args]:
@@ -181,6 +181,13 @@ def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
         assert args.mfa_token == "223344"
         assert args.accounts == ["5", "9"]
         assert args.enforce is True
+
+
+def test_parse_cli_args_for_enfore_false() -> None:
+    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce False".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+        assert long_args.enforce is False
 
 
 def test_cli_task_is_mandatory(caplog: Any) -> None:
