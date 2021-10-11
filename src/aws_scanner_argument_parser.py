@@ -53,7 +53,9 @@ class AwsScannerArgumentParser:
 
     @staticmethod
     def _add_enforce_arg(parser: ArgumentParser, cmd_help: str) -> None:
-        parser.add_argument("-e", "--enforce", action="store_true", help=cmd_help)
+        parser.add_argument(
+            "-e", "--enforce", type=lambda x: (str(x).lower() == "true"), choices=[True, False], help=cmd_help
+        )
 
     @staticmethod
     def _add_athena_task_args(parser: ArgumentParser) -> None:
