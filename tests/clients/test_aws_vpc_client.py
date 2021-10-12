@@ -135,6 +135,16 @@ class TestAwsKmsKeyCompliance(TestCase):
             client.build()._kms_enforcement_actions(),
         )
 
+    def test_recreate_alias_and_key_when_not_enabled(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(key(policy=compliant_key_policy(), with_default_tags=True, state="Disabled"))
+
+        self.assertEqual(
+            [delete_log_group_kms_key_alias_action(kms=client.kms), create_log_group_kms_key_action(kms=client.kms)],
+            client.build()._kms_enforcement_actions(),
+        )
+
     def test_recreate_alias_and_key_when_missing_tags(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_alias()
