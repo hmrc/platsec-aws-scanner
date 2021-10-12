@@ -100,7 +100,12 @@ class AwsVpcClient:
             return [DeleteLogGroupKmsKeyAliasAction(kms=self.kms), CreateLogGroupKmsKeyAction(kms_client=self.kms)]
 
     def _is_key_compliant(self, key: Optional[Key]) -> bool:
-        return key is not None and self._is_key_policy_compliant(key) and self._is_key_tags_compliant(key)
+        return (
+            key is not None
+            and self._is_key_policy_compliant(key)
+            and self._is_key_tags_compliant(key)
+            and key.state == "Enabled"
+        )
 
     def _is_key_policy_compliant(self, key: Key) -> bool:
         return key.policy is not None and key.policy["Statement"] == self.config.kms_key_policy_statements(
