@@ -96,7 +96,7 @@ class TestAwsLogDeliveryRoleCompliance(TestCase):
 
     def test_delivery_role_policy_exists(self) -> None:
         client = AwsVpcClientBuilder()
-        expected_policy = policy(name="vpc_flow_log_role_policy")
+        expected_policy = policy(name="delivery_role_policy")
         client.with_policies([expected_policy])
 
         self.assertTrue(client.build()._delivery_role_policy_exists())
@@ -325,7 +325,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_default_log_group()
 
         client.with_roles([])
-        client.with_policies([policy(name="vpc_flow_log_role_policy")])
+        client.with_policies([policy(name="delivery_role_policy")])
 
         self.assertEqual(
             [delete_flow_log_delivery_role_action(iam=client.iam), create_flow_log_delivery_role_action()],
@@ -502,9 +502,9 @@ class AwsVpcClientBuilder(TestCase):
         return self
 
     def with_policies(self, policies: Sequence[Policy]) -> AwsVpcClientBuilder:
-        def find_policy_arn(name: str) -> Optional[Policy]:
-            result = filter(lambda role: role.name == name, policies)
-            return next(result, None)
+        def find_policy_arn(name: str) -> Optional[str]:
+            result = next(filter(lambda p: p.name == name, policies), None)
+            return result.arn if result else None
 
         self.iam.find_policy_arn.side_effect = find_policy_arn
         return self
@@ -543,9 +543,9 @@ class AwsVpcClientBuilder(TestCase):
         return self
 
     def with_attach_role_policy(self, expected_role: Role) -> AwsVpcClientBuilder:
-        def attach_role_policy(role: Role, policy: Policy) -> None:
+        def attach_role_policy(role: Role, policy_arn: str) -> None:
             self.assertEqual(role.name, expected_role.name)
-            self.assertIn(policy, expected_role.policies)
+            self.assertIn(policy_arn, [p.arn for p in expected_role.policies])
             return None
 
         self.iam.attach_role_policy.side_effect = attach_role_policy

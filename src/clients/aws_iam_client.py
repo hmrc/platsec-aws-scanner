@@ -32,13 +32,13 @@ class AwsIamClient:
                 f"unable to create policy with name {name} and policy document {document}: {err}"
             ) from None
 
-    def attach_role_policy(self, role: Role, policy: Policy) -> Role:
-        self._logger.debug(f"attaching role {role.name} and policy {policy.arn}")
+    def attach_role_policy(self, role: Role, policy_arn: str) -> Role:
+        self._logger.debug(f"attaching role {role.name} and policy {policy_arn}")
         try:
-            self._iam.attach_role_policy(RoleName=role.name, PolicyArn=policy.arn)
+            self._iam.attach_role_policy(RoleName=role.name, PolicyArn=policy_arn)
             return self.get_role(role.name)
         except (BotoCoreError, ClientError) as err:
-            raise IamException(f"unable to attach role {role.name} and policy {policy.arn}: {err}") from None
+            raise IamException(f"unable to attach role {role.name} and policy {policy_arn}: {err}") from None
 
     def get_role(self, name: str) -> Role:
         try:
@@ -84,7 +84,7 @@ class AwsIamClient:
                 iter(
                     [
                         str(policy["Arn"])
-                        for page in self._iam.get_paginator("list_policies").paginate(Scope="Local")
+                        for page in self._iam.get_paginator("list_policies").paginate(Scope="All")
                         for policy in page["Policies"]
                         if policy["PolicyName"] == policy_name
                     ]

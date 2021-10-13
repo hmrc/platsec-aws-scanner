@@ -165,7 +165,7 @@ class AwsVpcClient:
         )
 
     def _delivery_role_policy_exists(self) -> bool:
-        return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy_name()))
+        return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
 
     def _vpc_log_group_enforcement_actions(self, kms_key_updated: bool) -> Sequence[ComplianceAction]:
         log_group = self._find_log_group(self.config.logs_vpc_log_group_name())
