@@ -23,15 +23,6 @@ class AwsIamClient:
                 f"unable to create role with name {name} and assume role policy document {assume_policy}: {err}"
             ) from None
 
-    def create_policy(self, name: str, document: Dict[str, Any]) -> Policy:
-        self._logger.debug(f"creating policy with name {name} and policy document {document}")
-        try:
-            return to_policy(self._iam.create_policy(PolicyName=name, PolicyDocument=dumps(document))["Policy"])
-        except (BotoCoreError, ClientError) as err:
-            raise IamException(
-                f"unable to create policy with name {name} and policy document {document}: {err}"
-            ) from None
-
     def attach_role_policy(self, role: Role, policy_arn: str) -> Role:
         self._logger.debug(f"attaching role {role.name} and policy {policy_arn}")
         try:
@@ -69,15 +60,6 @@ class AwsIamClient:
         except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to delete role {role_name}: {err}")
 
-    def delete_policy(self, policy_name: str) -> None:
-        policy_arn = self.find_policy_arn(policy_name)
-        if policy_arn:
-            for entity in self._list_entities_for_policy(policy_arn):
-                self._detach_role_policy(entity, policy_arn)
-            for version in self._list_policy_versions(policy_arn):
-                self._delete_policy_version(policy_arn, version)
-            self._delete_policy(policy_arn)
-
     def find_policy_arn(self, policy_name: str) -> Optional[str]:
         try:
             return next(
@@ -93,13 +75,6 @@ class AwsIamClient:
             )
         except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to find arn for policy {policy_name}: {err}") from None
-
-    def _delete_policy(self, policy_arn: str) -> None:
-        self._logger.debug(f"deleting policy {policy_arn}")
-        try:
-            self._iam.delete_policy(PolicyArn=policy_arn)
-        except (BotoCoreError, ClientError) as err:
-            raise IamException(f"unable to delete policy {policy_arn}: {err}")
 
     def _list_entities_for_policy(self, policy_arn: str) -> Sequence[str]:
         try:
