@@ -11,7 +11,7 @@ from src.data.aws_scanner_exceptions import AwsScannerException
 from tests import _raise, test_types_generator
 from tests import test_types_generator as generator
 from tests.clients.test_aws_vpc_client import AwsVpcClientBuilder
-from tests.test_types_generator import update_log_group_kms_key_action
+from tests.test_types_generator import policy, update_log_group_kms_key_action
 
 
 class TestAwsComplianceActions(TestCase):
@@ -70,14 +70,14 @@ class TestAwsComplianceActions(TestCase):
         )
 
     def test_apply_create_flow_log_delivery_role_action(self) -> None:
-        a_role = generator.role(name="vpc_flow_log_role")
+        a_role = generator.role(name="vpc_flow_log_role", policies=[policy(name="delivery_role_policy")])
         client = AwsVpcClientBuilder()
         client.with_create_role(a_role)
-        client.with_create_policies(a_role.policies)
+        client.with_policies(a_role.policies)
         client.with_attach_role_policy(a_role)
 
         generator.create_flow_log_delivery_role_action(iam=client.build().iam)._apply()
-        client.iam.attach_role_policy.assert_called_once_with(a_role, a_role.policies[0])
+        client.iam.attach_role_policy.assert_called_once_with(a_role, a_role.policies[0].arn)
 
     def test_plan_create_flow_log_delivery_role_action(self) -> None:
         self.assertEqual(
@@ -88,9 +88,7 @@ class TestAwsComplianceActions(TestCase):
     def test_apply_delete_flow_log_delivery_role_action(self) -> None:
         client = Mock(spec=AwsIamClient)
         generator.delete_flow_log_delivery_role_action(iam=client)._apply()
-        self.assertEqual(
-            [call.delete_policy("vpc_flow_log_role_policy"), call.delete_role("vpc_flow_log_role")], client.mock_calls
-        )
+        self.assertEqual([call.delete_role("vpc_flow_log_role")], client.mock_calls)
 
     def test_plan_delete_flow_log_delivery_role_action(self) -> None:
         self.assertEqual(

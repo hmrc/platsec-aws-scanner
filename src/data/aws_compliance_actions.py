@@ -53,10 +53,7 @@ class ComplianceAction(ABC):
 
     @abstractmethod
     def _apply(self) -> None:
-        """
-        :param client: an AWS client
-        :return: True if the action succeeded, False otherwise
-        """
+        """"""
 
     @abstractmethod
     def plan(self) -> ComplianceActionReport:
@@ -121,10 +118,7 @@ class CreateFlowLogDeliveryRoleAction(ComplianceAction):
                 config.logs_vpc_log_group_delivery_role(),
                 config.logs_vpc_log_group_delivery_role_assume_policy(),
             ),
-            self.iam.create_policy(
-                config.logs_vpc_log_group_delivery_role_policy_name(),
-                config.logs_vpc_log_group_delivery_role_policy_document(),
-            ),
+            str(self.iam.find_policy_arn(config.logs_vpc_log_group_delivery_role_policy())),
         )
 
     def plan(self) -> ComplianceActionReport:
@@ -141,7 +135,6 @@ class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
 
     def _apply(self) -> None:
         config = Config()
-        self.iam.delete_policy(config.logs_vpc_log_group_delivery_role_policy_name())
         self.iam.delete_role(config.logs_vpc_log_group_delivery_role())
 
     def plan(self) -> ComplianceActionReport:

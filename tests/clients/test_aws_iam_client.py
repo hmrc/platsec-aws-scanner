@@ -27,7 +27,7 @@ class TestAwsIamClient(TestCase):
     @staticmethod
     def list_policies() -> Mock:
         return Mock(
-            paginate=Mock(side_effect=lambda **k: iter(resp.LIST_POLICIES_PAGES) if k["Scope"] == "Local" else None)
+            paginate=Mock(side_effect=lambda **k: iter(resp.LIST_POLICIES_PAGES) if k["Scope"] == "All" else None)
         )
 
     @staticmethod
@@ -128,32 +128,18 @@ class TestAwsIamClient(TestCase):
         with self.assertRaisesRegex(IamException, "a_role"):
             AwsIamClient(mock_boto_iam).create_role("a_role", {})
 
-    def test_create_policy(self) -> None:
-        name, arn, version, document = "a_name", "an_arn", "v2", {"key": "val"}
-        mock_boto_iam = Mock(
-            create_policy=Mock(return_value={"Policy": {"PolicyName": name, "Arn": arn, "DefaultVersionId": version}})
-        )
-        created = AwsIamClient(mock_boto_iam).create_policy(name, document)
-        self.assertEqual(policy(name=name, arn=arn, default_version=version), created)
-        mock_boto_iam.create_policy.assert_called_once_with(PolicyName=name, PolicyDocument='{"key": "val"}')
-
-    def test_create_policy_failure(self) -> None:
-        mock_boto_iam = Mock(create_policy=Mock(side_effect=client_error("CreatePolicy", "EntityAlreadyExists", "no")))
-        with self.assertRaisesRegex(IamException, "a_policy"):
-            AwsIamClient(mock_boto_iam).create_policy("a_policy", {})
-
     def test_attach_role_policy(self) -> None:
-        a_role, a_policy = role(name="some_role", policies=[]), policy(arn="some_policy_arn")
-        updated_role = role(name="some_role", policies=[a_policy])
+        a_role, a_policy_arn = role(name="some_role", policies=[]), "some_policy_arn"
+        updated_role = role(name="some_role", policies=[policy(arn=a_policy_arn)])
         mock_boto_iam = Mock()
         with patch.object(AwsIamClient, "get_role", side_effect=lambda n: updated_role if n == "some_role" else None):
-            self.assertEqual(updated_role, AwsIamClient(mock_boto_iam).attach_role_policy(a_role, a_policy))
+            self.assertEqual(updated_role, AwsIamClient(mock_boto_iam).attach_role_policy(a_role, a_policy_arn))
         mock_boto_iam.attach_role_policy.assert_called_once_with(RoleName="some_role", PolicyArn="some_policy_arn")
 
     def test_attach_role_policy_failure(self) -> None:
         mock_iam = Mock(attach_role_policy=Mock(side_effect=client_error("AttachRolePolicy", "NoSuchEntity", "no")))
         with self.assertRaisesRegex(IamException, "unable to attach role a_role and policy a_policy_arn"):
-            AwsIamClient(mock_iam).attach_role_policy(role(name="a_role"), policy(arn="a_policy_arn"))
+            AwsIamClient(mock_iam).attach_role_policy(role(name="a_role"), "a_policy_arn")
 
     def test_delete_role(self) -> None:
         a_role = role(name="some_role", policies=[policy(arn="pol_1_arn"), policy(arn="pol_2_arn")])
@@ -180,38 +166,6 @@ class TestAwsIamClient(TestCase):
         with patch.object(AwsIamClient, "get_role"):
             with self.assertRaisesRegex(IamException, "unable to delete role broken_role: An error occurred"):
                 AwsIamClient(mock_iam).delete_role("broken_role")
-
-    def test_delete_policy(self) -> None:
-        mock_iam = Mock(
-            get_paginator=Mock(side_effect=lambda op: self.list_policies() if op == "list_policies" else None),
-            list_entities_for_policy=Mock(return_value=resp.LIST_ENTITIES_FOR_POLICY),
-            list_policy_versions=Mock(return_value=resp.LIST_POLICY_VERSIONS),
-        )
-        AwsIamClient(mock_iam).delete_policy("pol_5")
-        self.assertEqual(
-            [
-                call.get_paginator("list_policies"),
-                call.list_entities_for_policy(PolicyArn="pol_5_arn", EntityFilter="Role"),
-                call.detach_role_policy(RoleName="a_role", PolicyArn="pol_5_arn"),
-                call.detach_role_policy(RoleName="another_role", PolicyArn="pol_5_arn"),
-                call.list_policy_versions(PolicyArn="pol_5_arn"),
-                call.delete_policy_version(PolicyArn="pol_5_arn", VersionId="v2"),
-                call.delete_policy_version(PolicyArn="pol_5_arn", VersionId="v1"),
-                call.delete_policy(PolicyArn="pol_5_arn"),
-            ],
-            mock_iam.mock_calls,
-        )
-
-    def test_delete_policy_that_does_not_exist(self) -> None:
-        mock_iam = Mock()
-        with patch.object(AwsIamClient, "find_policy_arn", return_value=None):
-            AwsIamClient(mock_iam).delete_policy("ghost_policy")
-        self.assertFalse(mock_iam.mock_calls)
-
-    def test_delete_policy_failure(self) -> None:
-        mock_iam = Mock(delete_policy=Mock(side_effect=client_error("DeletePolicy", "Boom", "nope")))
-        with self.assertRaisesRegex(IamException, "unable to delete policy pol_arn"):
-            AwsIamClient(mock_iam)._delete_policy("pol_arn")
 
     def test_list_entities_for_policy_failure(self) -> None:
         mock_iam = Mock(list_entities_for_policy=Mock(side_effect=client_error("ListEntitiesForPolicy", "Boom", "no")))
