@@ -2,10 +2,11 @@ from itertools import chain
 from logging import getLogger
 from typing import Optional, Sequence, List, Any
 
+from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient, EXPECTED_TAGS
+from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
@@ -113,7 +114,7 @@ class AwsVpcClient:
         )
 
     def _is_key_tags_compliant(self, key: Key) -> bool:
-        return key.tags is not None and set(EXPECTED_TAGS).issubset(set(key.tags))
+        return key.tags is not None and set(PLATSEC_SCANNER_TAGS).issubset(set(key.tags))
 
     def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return [

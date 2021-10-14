@@ -5,13 +5,10 @@ from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 from typing import Any, Dict, Optional, Sequence
 
+from src import PLATSEC_SCANNER_TAGS
 from src.data.aws_scanner_exceptions import KmsException
-from src.data.aws_kms_types import Alias, Key, to_alias, to_key, Tag, to_tag
-
-EXPECTED_TAGS: Sequence[Tag] = [
-    Tag(key="allow-key-management-by-platsec-scanner", value="true"),
-    Tag(key="src-repo", value="https://github.com/hmrc/platsec-aws-scanner"),
-]
+from src.data.aws_kms_types import Alias, Key, to_alias, to_key
+from src.data.aws_common_types import Tag, to_tag
 
 
 class AwsKmsClient:
@@ -54,7 +51,7 @@ class AwsKmsClient:
             raise KmsException(f"unable to get policy for kms key with id '{key_id}': {err}") from None
 
     def create_key(self, alias: str, description: str) -> Key:
-        tags = list(map(lambda tag: {"TagKey": tag.key, "TagValue": tag.value}, EXPECTED_TAGS))
+        tags = list(map(lambda tag: {"TagKey": tag.key, "TagValue": tag.value}, PLATSEC_SCANNER_TAGS))
         try:
             key = to_key(
                 self._kms.create_key(

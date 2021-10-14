@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Sequence
 
+from src.data.aws_common_types import Tag
+
 
 @dataclass
 class Key:
@@ -36,13 +38,3 @@ class Alias:
 
 def to_alias(alias: Dict[str, Any]) -> Alias:
     return Alias(name=alias["AliasName"], arn=alias["AliasArn"], target_key_id=alias.get("TargetKeyId"))
-
-
-@dataclass(frozen=True)
-class Tag:
-    key: str
-    value: str
-
-
-def to_tag(tag: Dict[str, Any]) -> Tag:
-    return Tag(key=tag["TagKey"], value=tag["TagValue"])
