@@ -102,13 +102,6 @@ class AwsIamClient:
         except (BotoCoreError, ClientError) as err:
             raise IamException(f"unable to list policy versions for policy {policy_arn}: {err}") from None
 
-    def _delete_policy_version(self, policy_arn: str, version_id: str) -> None:
-        self._logger.debug(f"deleting version {version_id} from policy {policy_arn}")
-        try:
-            self._iam.delete_policy_version(PolicyArn=policy_arn, VersionId=version_id)
-        except (BotoCoreError, ClientError) as err:
-            raise IamException(f"unable to delete version {version_id} from policy {policy_arn}: {err}") from None
-
     def _enrich_role(self, role: Role) -> Role:
         role.policies = [self._enrich_policy(self._get_policy(p)) for p in self._list_attached_role_policies(role.name)]
         return role

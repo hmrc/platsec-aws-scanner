@@ -181,8 +181,3 @@ class TestAwsIamClient(TestCase):
         mock_iam = Mock(list_policy_versions=Mock(side_effect=client_error("ListEntitiesForPolicy", "Boom", "no")))
         with self.assertRaisesRegex(IamException, "unable to list policy versions for policy some_policy_arn"):
             AwsIamClient(mock_iam)._list_policy_versions("some_policy_arn")
-
-    def test_delete_policy_version_failure(self) -> None:
-        mock_iam = Mock(delete_policy_version=Mock(side_effect=client_error("DeletePolicyVersion", "Boom", "nope")))
-        with self.assertRaisesRegex(IamException, "unable to delete version v9 from policy a_pol"):
-            AwsIamClient(mock_iam)._delete_policy_version("a_pol", "v9")
