@@ -34,10 +34,7 @@ class AwsEC2Client:
                     LogDestinationType="cloud-watch-logs",
                     LogFormat=self._config.ec2_flow_log_format(),
                     TagSpecifications=[
-                        {
-                            "ResourceType": "vpc-flow-log",
-                            "Tags": [dict(Key=tag.key, Value=tag.value) for tag in PLATSEC_SCANNER_TAGS],
-                        }
+                        {"ResourceType": "vpc-flow-log", "Tags": [tag.to_dict() for tag in PLATSEC_SCANNER_TAGS]}
                     ],
                 ),
             )

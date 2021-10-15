@@ -51,12 +51,11 @@ class AwsKmsClient:
             raise KmsException(f"unable to get policy for kms key with id '{key_id}': {err}") from None
 
     def create_key(self, alias: str, description: str) -> Key:
-        tags = list(map(lambda tag: {"TagKey": tag.key, "TagValue": tag.value}, PLATSEC_SCANNER_TAGS))
         try:
             key = to_key(
                 self._kms.create_key(
                     Description=description,
-                    Tags=tags,
+                    Tags=[tag.to_dict("TagKey", "TagValue") for tag in PLATSEC_SCANNER_TAGS],
                 )["KeyMetadata"]
             )
         except (BotoCoreError, ClientError) as err:
