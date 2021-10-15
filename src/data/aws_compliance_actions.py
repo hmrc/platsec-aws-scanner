@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from logging import getLogger, Logger
 from typing import Any, Dict, Optional
@@ -34,7 +34,7 @@ class ComplianceActionReport:
         return self
 
 
-class ComplianceAction(ABC):
+class ComplianceAction:
     description: str
     logger: Logger
 

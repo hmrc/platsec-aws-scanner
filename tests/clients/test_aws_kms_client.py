@@ -1,8 +1,9 @@
-from src.data.aws_kms_types import to_key, Tag
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.clients.aws_kms_client import AwsKmsClient
+from src.data.aws_common_types import Tag
+from src.data.aws_kms_types import to_key
 from src.data.aws_scanner_exceptions import KmsException
 
 from tests import test_types_generator as generator
@@ -61,7 +62,7 @@ class TestAwsKmsClient(TestCase):
         boto_kms.create_key.assert_called_with(
             Description="brand new key",
             Tags=[
-                {"TagKey": "allow-key-management-by-platsec-scanner", "TagValue": "true"},
+                {"TagKey": "allow-management-by-platsec-scanner", "TagValue": "true"},
                 {"TagKey": "src-repo", "TagValue": "https://github.com/hmrc/platsec-aws-scanner"},
             ],
         )

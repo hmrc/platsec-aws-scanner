@@ -77,11 +77,23 @@ def test_describe_flow_logs_failure(caplog: Any) -> None:
 
 
 class TestAwsEC2ClientCreateFlowLogs(TestCase):
+    EXPECTED_TAGS = [
+        {
+            "ResourceType": "vpc-flow-log",
+            "Tags": [
+                {"Key": "allow-management-by-platsec-scanner", "Value": "true"},
+                {"Key": "src-repo", "Value": "https://github.com/hmrc/platsec-aws-scanner"},
+            ],
+        }
+    ]
+
     def create_flow_logs(self, **kwargs: Any) -> Any:
         self.assertEqual("VPC", kwargs["ResourceType"])
         self.assertEqual("ALL", kwargs["TrafficType"])
         self.assertEqual("cloud-watch-logs", kwargs["LogDestinationType"])
         self.assertEqual("${srcaddr} ${dstaddr}", kwargs["LogFormat"])
+        self.assertEqual(self.EXPECTED_TAGS, kwargs["TagSpecifications"])
+        self.assertEqual(8, len(kwargs), f"expected 8 arguments passed to create_flow_logs function, got {len(kwargs)}")
         resp_mapping: Dict[Any, Any] = {
             ("good-vpc", "lg-1", "perm-1"): lambda: responses.CREATE_FLOW_LOGS_SUCCESS,
             ("bad-vpc", "lg-2", "perm-2"): lambda: responses.CREATE_FLOW_LOGS_FAILURE,

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Sequence, Optional, Type, Dict, Any
 
+from src.data.aws_common_types import Tag
 from src.data.aws_iam_types import Role, Policy
-from src.data.aws_kms_types import Key, Tag
+from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
 from unittest import TestCase

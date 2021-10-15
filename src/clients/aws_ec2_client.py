@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
+from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
 from src.data.aws_ec2_types import FlowLog, Vpc, to_flow_log, to_vpc
@@ -32,6 +33,9 @@ class AwsEC2Client:
                     TrafficType="ALL",
                     LogDestinationType="cloud-watch-logs",
                     LogFormat=self._config.ec2_flow_log_format(),
+                    TagSpecifications=[
+                        {"ResourceType": "vpc-flow-log", "Tags": [tag.to_dict() for tag in PLATSEC_SCANNER_TAGS]}
+                    ],
                 ),
             )
         except (BotoCoreError, ClientError) as err:
