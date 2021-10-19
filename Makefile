@@ -69,3 +69,8 @@ container-release:
 		--tag container-release:local . \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION)
+
+push-lambda-image: container-release
+	@aws --profile $(ROLE) ecr get-login-password | docker login --username AWS --password-stdin $(ECR)
+	@docker tag container-release:local $(ECR)/platsec-aws-scanner:latest
+	@docker push $(ECR)/platsec-aws-scanner:latest
