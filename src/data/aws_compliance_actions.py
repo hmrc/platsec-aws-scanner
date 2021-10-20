@@ -25,8 +25,9 @@ class ComplianceActionReport:
         self.description = description
         self.details = details
 
-    def applied(self) -> ComplianceActionReport:
+    def applied(self, details: Optional[Dict[str, Any]] = None) -> ComplianceActionReport:
         self.status = "applied"
+        self.details = (self.details or dict()) | (details or dict()) or None
         return self
 
     def failed(self, reason: str) -> ComplianceActionReport:
@@ -45,14 +46,13 @@ class ComplianceAction:
     def apply(self) -> ComplianceActionReport:
         report = self.plan()
         try:
-            self._apply()
-            return report.applied()
+            return report.applied(details=self._apply())
         except AwsScannerException as ex:
             self.logger.error(f"{self.description} failed: {ex}")
             return report.failed(str(ex))
 
     @abstractmethod
-    def _apply(self) -> None:
+    def _apply(self) -> Optional[Dict[str, Any]]:
         """"""
 
     @abstractmethod
@@ -227,7 +227,7 @@ class CreateLogGroupKmsKeyAction(ComplianceAction):
         super().__init__("Create log group kms key")
         self.kms = kms_client
 
-    def _apply(self) -> None:
+    def _apply(self) -> Optional[Dict[str, Any]]:
         config = Config()
 
         key = self.kms.create_key(
@@ -236,6 +236,7 @@ class CreateLogGroupKmsKeyAction(ComplianceAction):
         )
         statements = config.kms_key_policy_statements(account_id=key.account_id, region=key.region)
         self.kms.put_key_policy_statements(key_id=key.id, statements=statements)
+        return dict(key_id=key.id)
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(description=self.description)
