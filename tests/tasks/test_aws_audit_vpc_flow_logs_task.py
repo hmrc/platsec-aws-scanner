@@ -10,6 +10,7 @@ from src.data.aws_ec2_types import Vpc
 
 from tests.test_types_generator import (
     aws_audit_vpc_flow_logs_task,
+    compliance_action_report,
     create_flow_log_action,
     delete_flow_log_action,
     task_report,
@@ -30,9 +31,8 @@ def enforcement_actions(v: Sequence[Vpc]) -> Sequence[ComplianceAction]:
 class TestAwsAuditVPCFlowLogsTask(TestCase):
     def test_run_plan_task(self, _: Mock, __: Mock) -> None:
         action_reports = [
-            ComplianceActionReport(status=None, description="Delete VPC flow log", details=dict(flow_log_id="fl-4")),
-            ComplianceActionReport(
-                status=None,
+            compliance_action_report(description="Delete VPC flow log", details=dict(flow_log_id="fl-4")),
+            compliance_action_report(
                 description="Create VPC flow log",
                 details=dict(vpc_id="vpc-7", log_group_name="/vpc/flow_log"),
             ),
@@ -47,15 +47,14 @@ class TestAwsAuditVPCFlowLogsTask(TestCase):
         return report
 
     def test_run_apply_task(self, _: Mock, __: Mock) -> None:
-        action_reports = [
-            ComplianceActionReport(
+        reports = [
+            compliance_action_report(
                 status="applied", description="Delete VPC flow log", details=dict(flow_log_id="fl-4")
             ),
-            ComplianceActionReport(
+            compliance_action_report(
                 status="applied",
                 description="Create VPC flow log",
                 details=dict(vpc_id="vpc-7", log_group_name="/vpc/flow_log"),
             ),
         ]
-        report = self.expected_report(action_reports)
-        self.assertEqual(report, aws_audit_vpc_flow_logs_task(enforce=True).run(vpc_client))
+        self.assertEqual(self.expected_report(reports), aws_audit_vpc_flow_logs_task(enforce=True).run(vpc_client))

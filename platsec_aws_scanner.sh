@@ -18,7 +18,8 @@ docker build \
   --build-arg PIP_PIPENV_VERSION="$PIP_PIPENV_VERSION" \
   --build-arg CONFIG_FILE="$CONFIG_FILE" \
   -f local.Dockerfile \
-  .
+  . \
+  > /dev/null
 
 rm -f "$CONFIG_FILE"
 

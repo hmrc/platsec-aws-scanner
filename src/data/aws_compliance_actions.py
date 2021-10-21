@@ -16,17 +16,18 @@ from src.data.aws_scanner_exceptions import AwsScannerException
 class ComplianceActionReport:
     description: Optional[str]
     status: Optional[str]
-    details: Optional[Dict[str, Any]]
+    details: Dict[str, Any]
 
     def __init__(
         self, status: Optional[str] = None, description: Optional[str] = None, details: Optional[Dict[str, Any]] = None
     ):
         self.status = status
         self.description = description
-        self.details = details
+        self.details = details or dict()
 
-    def applied(self) -> ComplianceActionReport:
+    def applied(self, details: Optional[Dict[str, Any]] = None) -> ComplianceActionReport:
         self.status = "applied"
+        self.details |= details or dict()
         return self
 
     def failed(self, reason: str) -> ComplianceActionReport:
@@ -45,14 +46,13 @@ class ComplianceAction:
     def apply(self) -> ComplianceActionReport:
         report = self.plan()
         try:
-            self._apply()
-            return report.applied()
+            return report.applied(details=self._apply())
         except AwsScannerException as ex:
             self.logger.error(f"{self.description} failed: {ex}")
             return report.failed(str(ex))
 
     @abstractmethod
-    def _apply(self) -> None:
+    def _apply(self) -> Optional[Dict[str, Any]]:
         """"""
 
     @abstractmethod
@@ -122,7 +122,9 @@ class CreateFlowLogDeliveryRoleAction(ComplianceAction):
         )
 
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
+        return ComplianceActionReport(
+            description=self.description, details=dict(role_name=Config().logs_vpc_log_group_delivery_role())
+        )
 
 
 @dataclass
@@ -153,7 +155,9 @@ class CreateVpcLogGroupAction(ComplianceAction):
         self.logs.create_log_group(Config().logs_vpc_log_group_name())
 
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
+        return ComplianceActionReport(
+            description=self.description, details=dict(log_group_name=Config().logs_vpc_log_group_name())
+        )
 
 
 @dataclass
@@ -227,7 +231,7 @@ class CreateLogGroupKmsKeyAction(ComplianceAction):
         super().__init__("Create log group kms key")
         self.kms = kms_client
 
-    def _apply(self) -> None:
+    def _apply(self) -> Optional[Dict[str, Any]]:
         config = Config()
 
         key = self.kms.create_key(
@@ -236,6 +240,7 @@ class CreateLogGroupKmsKeyAction(ComplianceAction):
         )
         statements = config.kms_key_policy_statements(account_id=key.account_id, region=key.region)
         self.kms.put_key_policy_statements(key_id=key.id, statements=statements)
+        return dict(key_id=key.id)
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(description=self.description)

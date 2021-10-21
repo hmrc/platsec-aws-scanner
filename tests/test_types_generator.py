@@ -13,6 +13,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
+    ComplianceActionReport,
     CreateLogGroupKmsKeyAction,
     CreateVpcLogGroupAction,
     CreateFlowLogAction,
@@ -418,3 +419,9 @@ def alias(
     target_key_id: Optional[str] = key().id,
 ) -> Alias:
     return Alias(name=name, arn=arn, target_key_id=target_key_id)
+
+
+def compliance_action_report(
+    description: Optional[str] = None, status: Optional[str] = None, details: Optional[Dict[str, Any]] = None
+) -> ComplianceActionReport:
+    return ComplianceActionReport(status=status, description=description, details=details or dict())
