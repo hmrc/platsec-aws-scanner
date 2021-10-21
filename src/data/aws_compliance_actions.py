@@ -16,18 +16,18 @@ from src.data.aws_scanner_exceptions import AwsScannerException
 class ComplianceActionReport:
     description: Optional[str]
     status: Optional[str]
-    details: Optional[Dict[str, Any]]
+    details: Dict[str, Any]
 
     def __init__(
         self, status: Optional[str] = None, description: Optional[str] = None, details: Optional[Dict[str, Any]] = None
     ):
         self.status = status
         self.description = description
-        self.details = details
+        self.details = details or dict()
 
     def applied(self, details: Optional[Dict[str, Any]] = None) -> ComplianceActionReport:
         self.status = "applied"
-        self.details = (self.details or dict()) | (details or dict()) or None
+        self.details |= details or dict()
         return self
 
     def failed(self, reason: str) -> ComplianceActionReport:

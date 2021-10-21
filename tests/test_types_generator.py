@@ -424,4 +424,4 @@ def alias(
 def compliance_action_report(
     description: Optional[str] = None, status: Optional[str] = None, details: Optional[Dict[str, Any]] = None
 ) -> ComplianceActionReport:
-    return ComplianceActionReport(status=status, description=description, details=details)
+    return ComplianceActionReport(status=status, description=description, details=details or dict())
