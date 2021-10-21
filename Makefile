@@ -10,7 +10,7 @@ ifdef CI_MODE
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
 		&& docker run test-run:ci
 else
-	DOCKER = docker build \
+	DOCKER = @docker build \
 		--file Dockerfile \
                 --build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
                 --build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
@@ -19,13 +19,14 @@ else
                 --build-arg "home=${HOME}" \
                 --build-arg "workdir=${PWD}" \
 		--tag test-run:local . \
+		> /dev/null \
 		&& docker run \
 		--interactive \
 		--rm \
 		--env "PYTHONWARNINGS=ignore:ResourceWarning" \
 		--volume "$(PWD):${PWD}:z" \
 		--workdir "${PWD}" \
-		test-run:local	
+		test-run:local
 endif
 
 PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
