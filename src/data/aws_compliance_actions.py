@@ -122,7 +122,9 @@ class CreateFlowLogDeliveryRoleAction(ComplianceAction):
         )
 
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
+        return ComplianceActionReport(
+            description=self.description, details=dict(role_name=Config().logs_vpc_log_group_delivery_role())
+        )
 
 
 @dataclass
@@ -153,7 +155,9 @@ class CreateVpcLogGroupAction(ComplianceAction):
         self.logs.create_log_group(Config().logs_vpc_log_group_name())
 
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
+        return ComplianceActionReport(
+            description=self.description, details=dict(log_group_name=Config().logs_vpc_log_group_name())
+        )
 
 
 @dataclass
