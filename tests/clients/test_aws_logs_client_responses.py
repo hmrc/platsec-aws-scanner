@@ -1,6 +1,8 @@
 from tests.test_types_generator import log_group, subscription_filter
 
-DESCRIBE_LOG_GROUPS = {"logGroups": [{"logGroupName": "lg_1"}, {"logGroupName": "lg_2", "kmsKeyId": "9"}]}
+DESCRIBE_LOG_GROUPS = {
+    "logGroups": [{"logGroupName": "lg_1", "retentionInDays": 3}, {"logGroupName": "lg_2", "kmsKeyId": "9"}]
+}
 
 DESCRIBE_SUBSCRIPTION_FILTERS = [
     {
@@ -28,6 +30,7 @@ DESCRIBE_SUBSCRIPTION_FILTERS = [
 EXPECTED_LOG_GROUPS = [
     log_group(
         name="lg_1",
+        retention_days=3,
         subscription_filters=[
             subscription_filter(
                 filter_name="VpcFlowLogsForward",

@@ -359,6 +359,7 @@ def log_group(
     name: str = "/vpc/flow_log",
     kms_key_id: Optional[str] = None,
     kms_key: Optional[Key] = None,
+    retention_days: Optional[int] = None,
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
     default_kms_key: bool = False,
 ) -> LogGroup:
@@ -369,6 +370,7 @@ def log_group(
         name=name,
         kms_key_id=kms_key_id,
         kms_key=kms_key,
+        retention_days=retention_days,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
     )
 
