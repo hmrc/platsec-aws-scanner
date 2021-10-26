@@ -43,6 +43,7 @@ EXPECTED_LOG_GROUPS = [
     log_group(
         name="lg_2",
         kms_key_id="9",
+        retention_days=None,
         subscription_filters=[
             subscription_filter(
                 filter_name="SecondFilter",

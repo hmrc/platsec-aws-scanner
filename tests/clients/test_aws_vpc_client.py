@@ -34,6 +34,7 @@ from tests.test_types_generator import (
     log_group,
     policy,
     put_vpc_log_group_subscription_filter_action,
+    put_vpc_log_group_retention_policy_action,
     role,
     subscription_filter,
     update_log_group_kms_key_action,
@@ -358,11 +359,11 @@ class TestAwsEnforcementActions(TestCase):
             [
                 create_vpc_log_group_action(logs=client.logs),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),
+                put_vpc_log_group_retention_policy_action(logs=client.logs),
                 update_log_group_kms_key_action(logs=client.logs, kms=client.kms),
             ],
             actions,
         )
-        self.assertEqual(3, len(actions))
 
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
         client = AwsVpcClientBuilder()
@@ -371,6 +372,26 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [put_vpc_log_group_subscription_filter_action(logs=client.logs)],
+            client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
+        )
+
+    def test_put_retention_policy_when_central_vpc_log_group_does_not_have_one(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([log_group(retention_days=None, default_kms_key=True)])
+        client.with_default_key()
+
+        self.assertEqual(
+            [put_vpc_log_group_retention_policy_action(logs=client.logs)],
+            client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
+        )
+
+    def test_put_retention_policy_when_central_vpc_log_group_retention_differs_from_config(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([log_group(retention_days=21, default_kms_key=True)])
+        client.with_default_key()
+
+        self.assertEqual(
+            [put_vpc_log_group_retention_policy_action(logs=client.logs)],
             client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
         )
 

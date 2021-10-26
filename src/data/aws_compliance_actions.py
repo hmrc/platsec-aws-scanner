@@ -234,9 +234,9 @@ class CreateLogGroupKmsKeyAction(ComplianceAction):
 class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
     logs: AwsLogsClient
 
-    def __init__(self, logs_client: AwsLogsClient) -> None:
+    def __init__(self, logs: AwsLogsClient) -> None:
         super().__init__("Put central VPC log group retention policy")
-        self.logs = logs_client
+        self.logs = logs
 
     def _apply(self) -> None:
         config = Config()
