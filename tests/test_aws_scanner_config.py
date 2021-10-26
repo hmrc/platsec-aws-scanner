@@ -191,3 +191,9 @@ def test_invalid_templated_config() -> None:
 def test_templated_config_missing_keyword() -> None:
     with pytest.raises(SystemExit):
         AwsScannerConfig().kms_key_policy_log_group_statement("1", "us")
+
+
+@patch.dict(os.environ, {"AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "bonjour"})
+def test_invalid_type_for_int_config_item() -> None:
+    with pytest.raises(SystemExit):
+        AwsScannerConfig().athena_query_timeout_seconds()

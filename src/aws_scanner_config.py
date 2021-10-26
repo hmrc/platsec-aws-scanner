@@ -28,19 +28,19 @@ class AwsScannerConfig:
         return self._get_config("athena", "query_results_bucket")
 
     def athena_query_timeout_seconds(self) -> int:
-        return int(self._get_config("athena", "query_timeout_seconds"))
+        return self._get_int_config("athena", "query_timeout_seconds")
 
     def athena_query_results_polling_delay_seconds(self) -> int:
-        return int(self._get_config("athena", "query_results_polling_delay_seconds"))
+        return self._get_int_config("athena", "query_results_polling_delay_seconds")
 
     def athena_query_throttling_seconds(self) -> int:
-        return int(self._get_config("athena", "query_throttling_seconds"))
+        return self._get_int_config("athena", "query_throttling_seconds")
 
     def cloudtrail_logs_bucket(self) -> str:
         return self._get_config("cloudtrail", "logs_bucket")
 
     def cloudtrail_logs_retention_days(self) -> int:
-        return int(self._get_config("cloudtrail", "logs_retention_days"))
+        return self._get_int_config("cloudtrail", "logs_retention_days")
 
     def cloudtrail_region(self) -> str:
         return self._get_config("cloudtrail", "region")
@@ -107,7 +107,7 @@ class AwsScannerConfig:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
 
     def logs_vpc_log_group_retention_policy_days(self) -> int:
-        return int(self._get_config("logs", "vpc_log_group_retention_policy_days"))
+        return self._get_int_config("logs", "vpc_log_group_retention_policy_days")
 
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
@@ -142,13 +142,13 @@ class AwsScannerConfig:
         return self._get_config("s3", "role")
 
     def session_duration_seconds(self) -> int:
-        return int(self._get_config("session", "duration_seconds"))
+        return self._get_int_config("session", "duration_seconds")
 
     def ssm_role(self) -> str:
         return self._get_config("ssm", "role")
 
     def tasks_executors(self) -> int:
-        return int(self._get_config("tasks", "executors"))
+        return self._get_int_config("tasks", "executors")
 
     def user_account(self) -> Account:
         return Account(self._get_config("user", "account"), "user")
@@ -161,6 +161,12 @@ class AwsScannerConfig:
             return os.environ.get(f"AWS_SCANNER_{section.upper()}_{key.upper()}") or self._config[section][key]
         except KeyError:
             sys.exit(f"missing config: section '{section}', key '{key}'")
+
+    def _get_int_config(self, section: str, key: str) -> int:
+        try:
+            return int(self._get_config(section, key))
+        except ValueError as err:
+            sys.exit(f"invalid config type: section '{section}', key '{key}', error: {err}")
 
     def _get_templated_config(self, section: str, key: str, keywords: Dict[str, str]) -> str:
         try:
