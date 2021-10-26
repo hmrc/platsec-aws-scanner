@@ -71,3 +71,13 @@ class TestAwsLogsClient(TestCase):
         boto = Mock(put_subscription_filter=Mock(side_effect=client_error("PubSubscriptionFilter", "Error", "nope")))
         with self.assertRaisesRegex(LogsException, "some_filter_name"):
             AwsLogsClient(boto).put_subscription_filter("lg", "some_filter_name", "pattern", "dest")
+
+    def test_put_retention_policy(self) -> None:
+        boto = Mock()
+        AwsLogsClient(boto).put_retention_policy("a_log_group", 7)
+        boto.put_retention_policy.assert_called_once_with(logGroupName="a_log_group", retentionInDays=7)
+
+    def test_put_retention_policy_failure(self) -> None:
+        boto = Mock(put_retention_policy=Mock(side_effect=client_error("PutRetentionPolicy", "Error", "boom")))
+        with self.assertRaisesRegex(LogsException, "14 days retention policy for log group 'broken_log_group'"):
+            AwsLogsClient(boto).put_retention_policy("broken_log_group", 14)

@@ -69,3 +69,11 @@ class AwsLogsClient:
             )
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to put subscription filter '{filter_name}': {err}") from None
+
+    def put_retention_policy(self, log_group_name: str, retention_days: int) -> None:
+        try:
+            self._logs.put_retention_policy(logGroupName=log_group_name, retentionInDays=retention_days)
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(
+                f"unable to put {retention_days} days retention policy for log group '{log_group_name}': {err}"
+            ) from None
