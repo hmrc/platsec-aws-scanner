@@ -61,7 +61,7 @@ python-test:
 		tests
 
 md-check:
-	@docker pull zemanlx/remark-lint:0.2.0
+	@docker pull zemanlx/remark-lint:0.2.0 > /dev/null
 	@docker run --rm -i -v $(PWD):/lint/input:ro zemanlx/remark-lint:0.2.0 --frail .
 
 container-release:
