@@ -37,8 +37,10 @@ from tests.test_types_generator import (
     put_vpc_log_group_retention_policy_action,
     role,
     subscription_filter,
+    tag_vpc_log_group_action,
     update_log_group_kms_key_action,
     vpc,
+    tag,
 )
 
 
@@ -360,6 +362,7 @@ class TestAwsEnforcementActions(TestCase):
                 create_vpc_log_group_action(logs=client.logs),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),
                 put_vpc_log_group_retention_policy_action(logs=client.logs),
+                tag_vpc_log_group_action(logs=client.logs),
                 update_log_group_kms_key_action(logs=client.logs, kms=client.kms),
             ],
             actions,
@@ -392,6 +395,16 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [put_vpc_log_group_retention_policy_action(logs=client.logs)],
+            client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
+        )
+
+    def test_tag_vpc_log_group_when_tags_missing(self) -> None:
+        client = AwsVpcClientBuilder()
+        client.with_log_groups([log_group(tags=[tag("unrelated_tag", "1")], default_kms_key=True)])
+        client.with_default_key()
+
+        self.assertEqual(
+            [tag_vpc_log_group_action(logs=client.logs)],
             client.build()._vpc_log_group_enforcement_actions(kms_key_updated=False),
         )
 

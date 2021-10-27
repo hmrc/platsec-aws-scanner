@@ -13,7 +13,7 @@ class LogGroup:
     kms_key: Optional[Key]
     retention_days: Optional[int]
     subscription_filters: Sequence[SubscriptionFilter]
-    tags: Optional[Sequence[Tag]]
+    tags: Sequence[Tag]
 
     def __init__(
         self,

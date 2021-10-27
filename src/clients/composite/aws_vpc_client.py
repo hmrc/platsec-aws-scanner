@@ -19,6 +19,7 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupRetentionPolicyAction,
     CreateLogGroupKmsKeyAction,
     DeleteLogGroupKmsKeyAliasAction,
+    TagVpcLogGroupAction,
     UpdateLogGroupKmsKeyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
@@ -179,12 +180,15 @@ class AwsVpcClient:
                 actions.append(UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config))
             if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days():
                 actions.append(PutVpcLogGroupRetentionPolicyAction(logs=self.logs))
+            if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
+                actions.append(TagVpcLogGroupAction(logs=self.logs))
         else:
             actions.extend(
                 [
                     CreateVpcLogGroupAction(logs=self.logs),
                     PutVpcLogGroupSubscriptionFilterAction(logs=self.logs),
                     PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
+                    TagVpcLogGroupAction(logs=self.logs),
                     UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config),
                 ]
             )

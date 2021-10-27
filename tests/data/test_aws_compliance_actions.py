@@ -25,7 +25,9 @@ from tests.test_types_generator import (
     create_log_group_kms_key_action,
     put_vpc_log_group_subscription_filter_action,
     put_vpc_log_group_retention_policy_action,
+    tag_vpc_log_group_action,
     key,
+    tag,
 )
 
 
@@ -217,3 +219,31 @@ def test_apply_put_vpc_log_group_retention_policy_action() -> None:
     logs = Mock(spec=AwsLogsClient)
     put_vpc_log_group_retention_policy_action(logs=logs)._apply()
     logs.put_retention_policy.assert_called_once_with(log_group_name="/vpc/flow_log", retention_days=14)
+
+
+def test_plan_tag_vpc_log_group_action() -> None:
+    assert (
+        compliance_action_report(
+            description="Tag central VPC log group",
+            details={
+                "log_group_name": "/vpc/flow_log",
+                "tags": [
+                    tag("allow-management-by-platsec-scanner", "true"),
+                    tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+                ],
+            },
+        )
+        == tag_vpc_log_group_action().plan()
+    )
+
+
+def test_apply_tag_vpc_log_group_action() -> None:
+    logs = Mock(spec=AwsLogsClient)
+    tag_vpc_log_group_action(logs=logs)._apply()
+    logs.tag_log_group.assert_called_once_with(
+        log_group_name="/vpc/flow_log",
+        tags=[
+            tag("allow-management-by-platsec-scanner", "true"),
+            tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+        ],
+    )

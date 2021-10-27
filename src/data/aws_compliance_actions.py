@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from logging import getLogger, Logger
 from typing import Any, Dict, Optional
 
+from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
@@ -253,4 +254,24 @@ class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
                 log_group_name=config.logs_vpc_log_group_name(),
                 retention_days=config.logs_vpc_log_group_retention_policy_days(),
             ),
+        )
+
+
+@dataclass
+class TagVpcLogGroupAction(ComplianceAction):
+    logs: AwsLogsClient
+
+    def __init__(self, logs: AwsLogsClient) -> None:
+        super().__init__("Tag central VPC log group")
+        self.logs = logs
+
+    def _apply(self) -> None:
+        config = Config()
+        self.logs.tag_log_group(log_group_name=config.logs_vpc_log_group_name(), tags=PLATSEC_SCANNER_TAGS)
+
+    def plan(self) -> ComplianceActionReport:
+        config = Config()
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(log_group_name=config.logs_vpc_log_group_name(), tags=PLATSEC_SCANNER_TAGS),
         )

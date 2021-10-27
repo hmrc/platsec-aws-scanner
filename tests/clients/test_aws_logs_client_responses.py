@@ -63,5 +63,6 @@ EXPECTED_LOG_GROUPS = [
                 destination_arn="arn:aws:logs:us-east-1:223322332233:destination:OtherDestination",
             )
         ],
+        tags=[],
     ),
 ]
