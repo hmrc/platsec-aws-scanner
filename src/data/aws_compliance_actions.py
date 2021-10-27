@@ -55,9 +55,8 @@ class ComplianceAction:
     def _apply(self) -> Optional[Dict[str, Any]]:
         """"""
 
-    @abstractmethod
     def plan(self) -> ComplianceActionReport:
-        """"""
+        return ComplianceActionReport(description=self.description)
 
 
 @dataclass
@@ -139,9 +138,6 @@ class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
         config = Config()
         self.iam.delete_role(config.logs_vpc_log_group_delivery_role())
 
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
-
 
 @dataclass
 class CreateVpcLogGroupAction(ComplianceAction):
@@ -178,9 +174,6 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
             destination_arn=config.logs_vpc_log_group_destination(),
         )
 
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
-
 
 @dataclass
 class UpdateLogGroupKmsKeyAction(ComplianceAction):
@@ -203,9 +196,6 @@ class UpdateLogGroupKmsKeyAction(ComplianceAction):
         key_id = self.kms.get_alias(self.config.kms_key_alias()).target_key_id
         return self.kms.get_key(key_id).arn  # type: ignore # this key will exist if the kms action has run
 
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
-
 
 @dataclass
 class DeleteLogGroupKmsKeyAliasAction(ComplianceAction):
@@ -218,9 +208,6 @@ class DeleteLogGroupKmsKeyAliasAction(ComplianceAction):
     def _apply(self) -> None:
         config = Config()
         self.kms.delete_alias(name=config.kms_key_alias())
-
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
 
 
 @dataclass
@@ -242,5 +229,28 @@ class CreateLogGroupKmsKeyAction(ComplianceAction):
         self.kms.put_key_policy_statements(key_id=key.id, statements=statements)
         return dict(key_id=key.id)
 
+
+@dataclass
+class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
+    logs: AwsLogsClient
+
+    def __init__(self, logs: AwsLogsClient) -> None:
+        super().__init__("Put central VPC log group retention policy")
+        self.logs = logs
+
+    def _apply(self) -> None:
+        config = Config()
+        self.logs.put_retention_policy(
+            log_group_name=config.logs_vpc_log_group_name(),
+            retention_days=config.logs_vpc_log_group_retention_policy_days(),
+        )
+
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description)
+        config = Config()
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(
+                log_group_name=config.logs_vpc_log_group_name(),
+                retention_days=config.logs_vpc_log_group_retention_policy_days(),
+            ),
+        )

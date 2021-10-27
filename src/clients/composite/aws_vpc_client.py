@@ -16,6 +16,7 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupSubscriptionFilterAction,
+    PutVpcLogGroupRetentionPolicyAction,
     CreateLogGroupKmsKeyAction,
     DeleteLogGroupKmsKeyAliasAction,
     UpdateLogGroupKmsKeyAction,
@@ -176,11 +177,14 @@ class AwsVpcClient:
                 actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
             if kms_key_updated or log_group.kms_key_id is None:
                 actions.append(UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config))
+            if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days():
+                actions.append(PutVpcLogGroupRetentionPolicyAction(logs=self.logs))
         else:
             actions.extend(
                 [
                     CreateVpcLogGroupAction(logs=self.logs),
                     PutVpcLogGroupSubscriptionFilterAction(logs=self.logs),
+                    PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
                     UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config),
                 ]
             )

@@ -21,6 +21,7 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogAction,
     DeleteLogGroupKmsKeyAliasAction,
     DeleteFlowLogDeliveryRoleAction,
+    PutVpcLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
     UpdateLogGroupKmsKeyAction,
 )
@@ -344,6 +345,12 @@ def delete_log_group_kms_key_alias_action(
     return DeleteLogGroupKmsKeyAliasAction(kms=kms)
 
 
+def put_vpc_log_group_retention_policy_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+) -> PutVpcLogGroupRetentionPolicyAction:
+    return PutVpcLogGroupRetentionPolicyAction(logs=logs)
+
+
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce)
 
@@ -352,6 +359,7 @@ def log_group(
     name: str = "/vpc/flow_log",
     kms_key_id: Optional[str] = None,
     kms_key: Optional[Key] = None,
+    retention_days: Optional[int] = 14,
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
     default_kms_key: bool = False,
 ) -> LogGroup:
@@ -362,6 +370,7 @@ def log_group(
         name=name,
         kms_key_id=kms_key_id,
         kms_key=kms_key,
+        retention_days=retention_days,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
     )
 
