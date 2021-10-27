@@ -5,8 +5,9 @@ from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
 from src.aws_scanner_config import AwsScannerConfig as Config
-from src.data.aws_scanner_exceptions import LogsException
+from src.data.aws_common_types import Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter, to_log_group, to_subscription_filter
+from src.data.aws_scanner_exceptions import LogsException
 
 
 class AwsLogsClient:
@@ -26,6 +27,7 @@ class AwsLogsClient:
 
     def enrich_log_group(self, log_group: LogGroup) -> LogGroup:
         log_group.subscription_filters = self.describe_subscription_filters(log_group.name)
+        log_group.tags = self.list_tags_log_group(log_group.name)
         return log_group
 
     def describe_subscription_filters(self, log_group_name: str) -> Sequence[SubscriptionFilter]:
@@ -37,12 +39,27 @@ class AwsLogsClient:
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to describe subscription filters for '{log_group_name}': {err}") from None
 
+    def list_tags_log_group(self, log_group_name: str) -> Sequence[Tag]:
+        try:
+            return [
+                Tag(key=tag[0], value=tag[1])
+                for tag in self._logs.list_tags_log_group(logGroupName=log_group_name)["tags"].items()
+            ]
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(f"unable to list tags for log group '{log_group_name}': {err}") from None
+
     def create_log_group(self, name: str) -> None:
         self._logger.debug(f"creating log group with name '{name}'")
         try:
             self._logs.create_log_group(logGroupName=name)
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to create log group with name '{name}': {err}") from None
+
+    def tag_log_group(self, log_group_name: str, tags: Sequence[Tag]) -> None:
+        try:
+            self._logs.tag_log_group(logGroupName=log_group_name, tags={tag.key: tag.value for tag in tags})
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(f"unable to tag log group '{log_group_name}' with tags '{tags}': {err}") from None
 
     def associate_kms_key(self, log_group_name: str, kms_key_arn: str) -> None:
         try:

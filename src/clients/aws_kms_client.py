@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Sequence
 from src import PLATSEC_SCANNER_TAGS
 from src.data.aws_scanner_exceptions import KmsException
 from src.data.aws_kms_types import Alias, Key, to_alias, to_key
-from src.data.aws_common_types import Tag, to_tag
+from src.data.aws_common_types import Tag
 
 
 class AwsKmsClient:
@@ -93,6 +93,11 @@ class AwsKmsClient:
 
     def _list_resource_tags(self, key_id: str) -> Sequence[Tag]:
         try:
-            return list(map(lambda tag: to_tag(tag), self._kms.list_resource_tags(KeyId=key_id)["Tags"]))
+            return list(
+                map(
+                    lambda tag: Tag(key=tag["TagKey"], value=tag["TagValue"]),
+                    self._kms.list_resource_tags(KeyId=key_id)["Tags"],
+                )
+            )
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to list tags for kms key '{key_id}': {err}") from None

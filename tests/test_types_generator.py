@@ -361,6 +361,7 @@ def log_group(
     kms_key: Optional[Key] = None,
     retention_days: Optional[int] = 14,
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
+    tags: Optional[Sequence[Tag]] = None,
     default_kms_key: bool = False,
 ) -> LogGroup:
     if default_kms_key:
@@ -372,6 +373,7 @@ def log_group(
         kms_key=kms_key,
         retention_days=retention_days,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
+        tags=tags,
     )
 
 
@@ -434,3 +436,7 @@ def compliance_action_report(
     description: Optional[str] = None, status: Optional[str] = None, details: Optional[Dict[str, Any]] = None
 ) -> ComplianceActionReport:
     return ComplianceActionReport(status=status, description=description, details=details or dict())
+
+
+def tag(key: str, value: str) -> Tag:
+    return Tag(key=key, value=value)
