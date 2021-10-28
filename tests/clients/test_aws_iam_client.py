@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch, call
 
 from unittest import TestCase
 from src.clients.aws_iam_client import AwsIamClient
+from src.data.aws_iam_types import to_role
 from src.data.aws_scanner_exceptions import IamException
 
 from tests.clients import test_aws_iam_client_responses as resp
@@ -55,6 +56,9 @@ class TestAwsIamClient(TestCase):
             ),
         )
         self.assertEqual(resp.EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
+
+    def test_to_role_with_no_tags(self) -> None:
+        self.assertEqual(resp.EXPECTED_ROLE_WITH_NO_TAGS, to_role(resp.ROLE_WITH_NO_TAGS))
 
     def test_find_role_by_arn(self) -> None:
         client = AwsIamClient(Mock())
@@ -116,7 +120,9 @@ class TestAwsIamClient(TestCase):
         name, arn, assume_policy = "a_name", "an_arn", {"key": "val"}
         mock_boto_iam = Mock(
             create_role=Mock(
-                return_value={"Role": {"RoleName": name, "Arn": arn, "AssumeRolePolicyDocument": assume_policy}}
+                return_value={
+                    "Role": {"RoleName": name, "Arn": arn, "AssumeRolePolicyDocument": assume_policy, "Tags": []}
+                }
             )
         )
         created = AwsIamClient(mock_boto_iam).create_role(name, assume_policy)

@@ -1,4 +1,4 @@
-from tests.test_types_generator import role, policy
+from tests.test_types_generator import role, policy, tag
 
 GET_ROLE = {
     "Role": {
@@ -7,7 +7,16 @@ GET_ROLE = {
         "AssumeRolePolicyDocument": {
             "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]
         },
+        "Tags": [{"Key": "a_tag", "Value": "a value"}, {"Key": "some_tag", "Value": "some value"}],
     }
+}
+
+ROLE_WITH_NO_TAGS = {
+    "RoleName": "another_role",
+    "Arn": "arn:aws:iam::888777666555:role/another_role",
+    "AssumeRolePolicyDocument": {
+        "Statement": [{"Effect": "Allow", "Principal": {"Service": "logs.amazonaws.com"}, "Action": "sts:AssumeRole"}]
+    },
 }
 
 LIST_ATTACHED_ROLE_POLICIES_PAGES = [
@@ -64,6 +73,17 @@ EXPECTED_ROLE = role(
             },
         )
     ],
+    tags=[tag("a_tag", "a value"), tag("some_tag", "some value")],
+)
+
+EXPECTED_ROLE_WITH_NO_TAGS = role(
+    name="another_role",
+    arn="arn:aws:iam::888777666555:role/another_role",
+    assume_policy={
+        "Statement": [{"Effect": "Allow", "Principal": {"Service": "logs.amazonaws.com"}, "Action": "sts:AssumeRole"}]
+    },
+    policies=[],
+    tags=[],
 )
 
 LIST_ENTITIES_FOR_POLICY = {"PolicyRoles": [{"RoleName": "a_role"}, {"RoleName": "another_role"}]}

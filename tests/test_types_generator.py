@@ -257,6 +257,7 @@ def role(
     arn: str = "arn:aws:iam::112233445566:role/a_role",
     assume_policy: Optional[Dict[str, Any]] = None,
     policies: Optional[Sequence[Policy]] = None,
+    tags: Optional[Sequence[Tag]] = None,
 ) -> Role:
     return Role(
         name=name,
@@ -271,6 +272,7 @@ def role(
                 document={"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]},
             )
         ],
+        tags=tags,
     )
 
 
