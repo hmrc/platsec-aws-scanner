@@ -19,6 +19,7 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupRetentionPolicyAction,
     CreateLogGroupKmsKeyAction,
     DeleteLogGroupKmsKeyAliasAction,
+    TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
     UpdateLogGroupKmsKeyAction,
 )
@@ -148,7 +149,8 @@ class AwsVpcClient:
         )
 
     def _delivery_role_enforcement_actions(self) -> Sequence[ComplianceAction]:
-        return list(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
+        recreate_role_actions = list(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
+        return recreate_role_actions or self._tag_delivery_role_action()
 
     def _delete_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
@@ -162,10 +164,16 @@ class AwsVpcClient:
     def _create_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
         return (
-            [CreateFlowLogDeliveryRoleAction(iam=self.iam)]
+            [CreateFlowLogDeliveryRoleAction(iam=self.iam), TagFlowLogDeliveryRoleAction(self.iam)]
             if not self._is_flow_log_role_compliant(delivery_role)
             else []
         )
+
+    def _tag_delivery_role_action(self) -> Sequence[ComplianceAction]:
+        delivery_role = self._find_flow_log_delivery_role()
+        if delivery_role and not set(PLATSEC_SCANNER_TAGS).issubset(delivery_role.tags):
+            return [TagFlowLogDeliveryRoleAction(iam=self.iam)]
+        return []
 
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))

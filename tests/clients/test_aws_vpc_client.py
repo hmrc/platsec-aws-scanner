@@ -37,6 +37,7 @@ from tests.test_types_generator import (
     put_vpc_log_group_retention_policy_action,
     role,
     subscription_filter,
+    tag_flow_log_delivery_role_action,
     tag_vpc_log_group_action,
     update_log_group_kms_key_action,
     vpc,
@@ -319,7 +320,10 @@ class TestAwsEnforcementActions(TestCase):
         client.with_roles([])
         client.with_policies([])
 
-        self.assertEqual([create_flow_log_delivery_role_action()], client.build()._delivery_role_enforcement_actions())
+        self.assertEqual(
+            [create_flow_log_delivery_role_action(iam=client.iam), tag_flow_log_delivery_role_action(iam=client.iam)],
+            client.build()._delivery_role_enforcement_actions(),
+        )
 
     def test_delete_and_create_delivery_role_action_when_role_is_missing_and_policy_exists(self) -> None:
         expected_key = key(policy=compliant_key_policy())
@@ -332,7 +336,11 @@ class TestAwsEnforcementActions(TestCase):
         client.with_policies([policy(name="delivery_role_policy")])
 
         self.assertEqual(
-            [delete_flow_log_delivery_role_action(iam=client.iam), create_flow_log_delivery_role_action()],
+            [
+                delete_flow_log_delivery_role_action(iam=client.iam),
+                create_flow_log_delivery_role_action(iam=client.iam),
+                tag_flow_log_delivery_role_action(iam=client.iam),
+            ],
             client.build()._delivery_role_enforcement_actions(),
         )
 
@@ -345,7 +353,24 @@ class TestAwsEnforcementActions(TestCase):
         client.with_roles([role(name="vpc_flow_log_role", policies=[])])
 
         self.assertEqual(
-            [delete_flow_log_delivery_role_action(iam=client.iam), create_flow_log_delivery_role_action()],
+            [
+                delete_flow_log_delivery_role_action(iam=client.iam),
+                create_flow_log_delivery_role_action(iam=client.iam),
+                tag_flow_log_delivery_role_action(iam=client.iam),
+            ],
+            client.build()._delivery_role_enforcement_actions(),
+        )
+
+    def test_tag_flow_log_delivery_role_when_required_tags_missing(self) -> None:
+        expected_key = key(policy=compliant_key_policy())
+        client = AwsVpcClientBuilder()
+        client.with_default_alias()
+        client.with_key(expected_key)
+        client.with_default_log_group()
+        client.with_roles([role(name="vpc_flow_log_role", tags=[tag("unrelated_tag", "some value")])])
+
+        self.assertEqual(
+            [tag_flow_log_delivery_role_action(iam=client.iam)],
             client.build()._delivery_role_enforcement_actions(),
         )
 

@@ -141,6 +141,24 @@ class DeleteFlowLogDeliveryRoleAction(ComplianceAction):
 
 
 @dataclass
+class TagFlowLogDeliveryRoleAction(ComplianceAction):
+    iam: AwsIamClient
+
+    def __init__(self, iam: AwsIamClient) -> None:
+        super().__init__("Tag delivery role for VPC flow log")
+        self.iam = iam
+
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(role_name=Config().logs_vpc_log_group_delivery_role(), tags=PLATSEC_SCANNER_TAGS),
+        )
+
+    def _apply(self) -> None:
+        self.iam.tag_role(name=Config().logs_vpc_log_group_delivery_role(), tags=PLATSEC_SCANNER_TAGS)
+
+
+@dataclass
 class CreateVpcLogGroupAction(ComplianceAction):
     logs: AwsLogsClient
 

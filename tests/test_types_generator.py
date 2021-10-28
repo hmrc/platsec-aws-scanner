@@ -23,6 +23,7 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
+    TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
     UpdateLogGroupKmsKeyAction,
 )
@@ -257,7 +258,7 @@ def role(
     arn: str = "arn:aws:iam::112233445566:role/a_role",
     assume_policy: Optional[Dict[str, Any]] = None,
     policies: Optional[Sequence[Policy]] = None,
-    tags: Optional[Sequence[Tag]] = None,
+    tags: Optional[Sequence[Tag]] = PLATSEC_SCANNER_TAGS,
 ) -> Role:
     return Role(
         name=name,
@@ -352,6 +353,10 @@ def put_vpc_log_group_retention_policy_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
 ) -> PutVpcLogGroupRetentionPolicyAction:
     return PutVpcLogGroupRetentionPolicyAction(logs=logs)
+
+
+def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
+    return TagFlowLogDeliveryRoleAction(iam=iam)
 
 
 def tag_vpc_log_group_action(

@@ -3,11 +3,10 @@ from unittest.mock import Mock, patch, call
 
 from unittest import TestCase
 from src.clients.aws_iam_client import AwsIamClient
-from src.data.aws_iam_types import to_role
 from src.data.aws_scanner_exceptions import IamException
 
 from tests.clients import test_aws_iam_client_responses as resp
-from tests.test_types_generator import client_error, role, policy
+from tests.test_types_generator import client_error, role, policy, tag
 
 
 class TestAwsIamClient(TestCase):
@@ -56,9 +55,6 @@ class TestAwsIamClient(TestCase):
             ),
         )
         self.assertEqual(resp.EXPECTED_ROLE, AwsIamClient(mock_boto_iam).get_role("a_role"))
-
-    def test_to_role_with_no_tags(self) -> None:
-        self.assertEqual(resp.EXPECTED_ROLE_WITH_NO_TAGS, to_role(resp.ROLE_WITH_NO_TAGS))
 
     def test_find_role_by_arn(self) -> None:
         client = AwsIamClient(Mock())
@@ -120,13 +116,11 @@ class TestAwsIamClient(TestCase):
         name, arn, assume_policy = "a_name", "an_arn", {"key": "val"}
         mock_boto_iam = Mock(
             create_role=Mock(
-                return_value={
-                    "Role": {"RoleName": name, "Arn": arn, "AssumeRolePolicyDocument": assume_policy, "Tags": []}
-                }
+                return_value={"Role": {"RoleName": name, "Arn": arn, "AssumeRolePolicyDocument": assume_policy}}
             )
         )
         created = AwsIamClient(mock_boto_iam).create_role(name, assume_policy)
-        self.assertEqual(role(name=name, arn=arn, assume_policy=assume_policy, policies=[]), created)
+        self.assertEqual(role(name=name, arn=arn, assume_policy=assume_policy, policies=[], tags=[]), created)
         mock_boto_iam.create_role.assert_called_once_with(RoleName=name, AssumeRolePolicyDocument='{"key": "val"}')
 
     def test_create_role_failure(self) -> None:
@@ -187,3 +181,16 @@ class TestAwsIamClient(TestCase):
         mock_iam = Mock(list_policy_versions=Mock(side_effect=client_error("ListEntitiesForPolicy", "Boom", "no")))
         with self.assertRaisesRegex(IamException, "unable to list policy versions for policy some_policy_arn"):
             AwsIamClient(mock_iam)._list_policy_versions("some_policy_arn")
+
+    def test_tag_role(self) -> None:
+        mock_iam = Mock()
+        AwsIamClient(mock_iam).tag_role("some_role", [tag("a_key", "a value"), tag("some_key", "some value")])
+        mock_iam.tag_role.assert_called_once_with(
+            RoleName="some_role",
+            Tags=[{"Key": "a_key", "Value": "a value"}, {"Key": "some_key", "Value": "some value"}],
+        )
+
+    def test_tag_role_failure(self) -> None:
+        mock_iam = Mock(tag_role=Mock(side_effect=client_error("TagRole", "AccessDenied", "nope!")))
+        with self.assertRaisesRegex(IamException, "unable to tag role a_role"):
+            AwsIamClient(mock_iam).tag_role("a_role", [tag("k", "v")])

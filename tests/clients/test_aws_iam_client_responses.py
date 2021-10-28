@@ -11,14 +11,6 @@ GET_ROLE = {
     }
 }
 
-ROLE_WITH_NO_TAGS = {
-    "RoleName": "another_role",
-    "Arn": "arn:aws:iam::888777666555:role/another_role",
-    "AssumeRolePolicyDocument": {
-        "Statement": [{"Effect": "Allow", "Principal": {"Service": "logs.amazonaws.com"}, "Action": "sts:AssumeRole"}]
-    },
-}
-
 LIST_ATTACHED_ROLE_POLICIES_PAGES = [
     {"AttachedPolicies": [{"PolicyName": "a_policy", "PolicyArn": "arn:aws:iam::112233445566:policy/a_policy"}]}
 ]
@@ -74,16 +66,6 @@ EXPECTED_ROLE = role(
         )
     ],
     tags=[tag("a_tag", "a value"), tag("some_tag", "some value")],
-)
-
-EXPECTED_ROLE_WITH_NO_TAGS = role(
-    name="another_role",
-    arn="arn:aws:iam::888777666555:role/another_role",
-    assume_policy={
-        "Statement": [{"Effect": "Allow", "Principal": {"Service": "logs.amazonaws.com"}, "Action": "sts:AssumeRole"}]
-    },
-    policies=[],
-    tags=[],
 )
 
 LIST_ENTITIES_FOR_POLICY = {"PolicyRoles": [{"RoleName": "a_role"}, {"RoleName": "another_role"}]}

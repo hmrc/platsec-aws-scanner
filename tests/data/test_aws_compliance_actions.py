@@ -25,6 +25,7 @@ from tests.test_types_generator import (
     create_log_group_kms_key_action,
     put_vpc_log_group_subscription_filter_action,
     put_vpc_log_group_retention_policy_action,
+    tag_flow_log_delivery_role_action,
     tag_vpc_log_group_action,
     key,
     tag,
@@ -242,6 +243,34 @@ def test_apply_tag_vpc_log_group_action() -> None:
     tag_vpc_log_group_action(logs=logs)._apply()
     logs.tag_log_group.assert_called_once_with(
         log_group_name="/vpc/flow_log",
+        tags=[
+            tag("allow-management-by-platsec-scanner", "true"),
+            tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+        ],
+    )
+
+
+def test_plan_tag_flow_log_delivery_role_action() -> None:
+    assert (
+        compliance_action_report(
+            description="Tag delivery role for VPC flow log",
+            details={
+                "role_name": "vpc_flow_log_role",
+                "tags": [
+                    tag("allow-management-by-platsec-scanner", "true"),
+                    tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+                ],
+            },
+        )
+        == tag_flow_log_delivery_role_action().plan()
+    )
+
+
+def test_apply_tag_flow_log_delivery_role_action() -> None:
+    iam = Mock(spec=AwsIamClient)
+    tag_flow_log_delivery_role_action(iam=iam)._apply()
+    iam.tag_role.assert_called_once_with(
+        name="vpc_flow_log_role",
         tags=[
             tag("allow-management-by-platsec-scanner", "true"),
             tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
