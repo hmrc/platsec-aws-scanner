@@ -23,6 +23,8 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
+    TagFlowLogDeliveryRoleAction,
+    TagVpcLogGroupAction,
     UpdateLogGroupKmsKeyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
@@ -256,6 +258,7 @@ def role(
     arn: str = "arn:aws:iam::112233445566:role/a_role",
     assume_policy: Optional[Dict[str, Any]] = None,
     policies: Optional[Sequence[Policy]] = None,
+    tags: Optional[Sequence[Tag]] = PLATSEC_SCANNER_TAGS,
 ) -> Role:
     return Role(
         name=name,
@@ -270,6 +273,7 @@ def role(
                 document={"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]},
             )
         ],
+        tags=tags,
     )
 
 
@@ -351,6 +355,16 @@ def put_vpc_log_group_retention_policy_action(
     return PutVpcLogGroupRetentionPolicyAction(logs=logs)
 
 
+def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
+    return TagFlowLogDeliveryRoleAction(iam=iam)
+
+
+def tag_vpc_log_group_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+) -> TagVpcLogGroupAction:
+    return TagVpcLogGroupAction(logs=logs)
+
+
 def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce)
 
@@ -361,6 +375,7 @@ def log_group(
     kms_key: Optional[Key] = None,
     retention_days: Optional[int] = 14,
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
+    tags: Optional[Sequence[Tag]] = PLATSEC_SCANNER_TAGS,
     default_kms_key: bool = False,
 ) -> LogGroup:
     if default_kms_key:
@@ -372,6 +387,7 @@ def log_group(
         kms_key=kms_key,
         retention_days=retention_days,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
+        tags=tags,
     )
 
 
@@ -434,3 +450,7 @@ def compliance_action_report(
     description: Optional[str] = None, status: Optional[str] = None, details: Optional[Dict[str, Any]] = None
 ) -> ComplianceActionReport:
     return ComplianceActionReport(status=status, description=description, details=details or dict())
+
+
+def tag(key: str, value: str) -> Tag:
+    return Tag(key=key, value=value)

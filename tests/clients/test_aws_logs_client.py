@@ -5,13 +5,14 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import LogsException
 
 from tests.clients import test_aws_logs_client_responses as responses
-from tests.test_types_generator import client_error
+from tests.test_types_generator import client_error, tag
 
 
 def test_describe_log_groups() -> None:
     boto = Mock(
         describe_log_groups=Mock(return_value=responses.DESCRIBE_LOG_GROUPS),
         describe_subscription_filters=Mock(side_effect=responses.DESCRIBE_SUBSCRIPTION_FILTERS),
+        list_tags_log_group=Mock(side_effect=responses.LIST_TAGS_LOG_GROUP),
     )
     log_groups = AwsLogsClient(boto).describe_log_groups("lg")
     boto.describe_log_groups.assert_called_once_with(logGroupNamePrefix="lg")
@@ -35,10 +36,34 @@ def test_describe_subscription_filters_failure() -> None:
         AwsLogsClient(boto).describe_subscription_filters("a_log_group")
 
 
+def test_list_tags_log_group_failure() -> None:
+    boto = Mock(list_tags_log_group=Mock(side_effect=client_error("ListTagsLogGroup", "AccessDenied", "no")))
+    with raises(LogsException, match="some_log_group"):
+        AwsLogsClient(boto).list_tags_log_group("some_log_group")
+
+
 def test_create_log_group() -> None:
     boto = Mock()
     AwsLogsClient(boto).create_log_group("some_log_group")
     boto.create_log_group.assert_called_once_with(logGroupName="some_log_group")
+
+
+def test_create_log_group_failure() -> None:
+    boto = Mock(create_log_group=Mock(side_effect=client_error("CreateLogGroup", "AccessDenied", "nope")))
+    with raises(LogsException, match="a_log_group"):
+        AwsLogsClient(boto).create_log_group("a_log_group")
+
+
+def test_tag_log_group() -> None:
+    boto = Mock()
+    AwsLogsClient(boto).tag_log_group("lg", [tag("a", "1"), tag("b", "2")])
+    boto.tag_log_group.assert_called_once_with(logGroupName="lg", tags={"a": "1", "b": "2"})
+
+
+def test_tag_log_group_failure() -> None:
+    boto = Mock(tag_log_group=Mock(side_effect=client_error("TagLogGroup", "AccessDenied", "stop")))
+    with raises(LogsException, match="lg"):
+        AwsLogsClient(boto).tag_log_group("lg", [])
 
 
 def test_associate_kms_key() -> None:
@@ -51,12 +76,6 @@ def test_associate_kms_key_failure() -> None:
     boto = Mock(associate_kms_key=Mock(side_effect=client_error("AssociateKmsKey", "AccessDenied", "no!")))
     with raises(LogsException, match="unable to associate kms key 'a_key' with log group 'lg': An error"):
         AwsLogsClient(boto).associate_kms_key("lg", "a_key")
-
-
-def test_create_log_group_failure() -> None:
-    boto = Mock(create_log_group=Mock(side_effect=client_error("CreateLogGroup", "AccessDenied", "nope")))
-    with raises(LogsException, match="a_log_group"):
-        AwsLogsClient(boto).create_log_group("a_log_group")
 
 
 def test_put_subscription_filter() -> None:

@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Sequence
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
+from src.data.aws_common_types import Tag
 from src.data.aws_iam_types import Policy, Role, to_policy, to_role
 from src.data.aws_scanner_exceptions import IamException
 
@@ -22,6 +23,12 @@ class AwsIamClient:
             raise IamException(
                 f"unable to create role with name {name} and assume role policy document {assume_policy}: {err}"
             ) from None
+
+    def tag_role(self, name: str, tags: Sequence[Tag]) -> None:
+        try:
+            self._iam.tag_role(RoleName=name, Tags=[tag.to_dict() for tag in tags])
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to tag role {name} with {tags}: {err}") from None
 
     def attach_role_policy(self, role: Role, policy_arn: str) -> Role:
         self._logger.debug(f"attaching role {role.name} and policy {policy_arn}")

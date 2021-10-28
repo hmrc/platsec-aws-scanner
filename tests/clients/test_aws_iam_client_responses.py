@@ -1,4 +1,4 @@
-from tests.test_types_generator import role, policy
+from tests.test_types_generator import role, policy, tag
 
 GET_ROLE = {
     "Role": {
@@ -7,6 +7,7 @@ GET_ROLE = {
         "AssumeRolePolicyDocument": {
             "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]
         },
+        "Tags": [{"Key": "a_tag", "Value": "a value"}, {"Key": "some_tag", "Value": "some value"}],
     }
 }
 
@@ -64,6 +65,7 @@ EXPECTED_ROLE = role(
             },
         )
     ],
+    tags=[tag("a_tag", "a value"), tag("some_tag", "some value")],
 )
 
 LIST_ENTITIES_FOR_POLICY = {"PolicyRoles": [{"RoleName": "a_role"}, {"RoleName": "another_role"}]}

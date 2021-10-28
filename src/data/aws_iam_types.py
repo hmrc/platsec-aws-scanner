@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Sequence
 
+from src.data.aws_common_types import Tag
+
 
 @dataclass
 class Role:
@@ -10,16 +12,30 @@ class Role:
     arn: str
     assume_policy: Dict[str, Any]
     policies: Sequence[Policy]
+    tags: Sequence[Tag]
 
-    def __init__(self, name: str, arn: str, assume_policy: Dict[str, Any], policies: Optional[Sequence[Policy]] = None):
+    def __init__(
+        self,
+        name: str,
+        arn: str,
+        assume_policy: Dict[str, Any],
+        policies: Optional[Sequence[Policy]] = None,
+        tags: Optional[Sequence[Tag]] = None,
+    ):
         self.name = name
         self.arn = arn
         self.assume_policy = assume_policy
         self.policies = policies or []
+        self.tags = tags or []
 
 
 def to_role(role: Dict[Any, Any]) -> Role:
-    return Role(name=role["RoleName"], arn=role["Arn"], assume_policy=role["AssumeRolePolicyDocument"])
+    return Role(
+        name=role["RoleName"],
+        arn=role["Arn"],
+        assume_policy=role["AssumeRolePolicyDocument"],
+        tags=[Tag(tag["Key"], tag["Value"]) for tag in role["Tags"]] if role.get("Tags") else [],
+    )
 
 
 @dataclass

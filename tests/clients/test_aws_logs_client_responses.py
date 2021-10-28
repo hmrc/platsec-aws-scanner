@@ -1,4 +1,4 @@
-from tests.test_types_generator import log_group, subscription_filter
+from tests.test_types_generator import log_group, subscription_filter, tag
 
 DESCRIBE_LOG_GROUPS = {
     "logGroups": [{"logGroupName": "lg_1", "retentionInDays": 3}, {"logGroupName": "lg_2", "kmsKeyId": "9"}]
@@ -27,6 +27,16 @@ DESCRIBE_SUBSCRIPTION_FILTERS = [
     },
 ]
 
+LIST_TAGS_LOG_GROUP = [
+    {
+        "tags": {
+            "a_tag": "a_value",
+            "another_tag": "another_value",
+        }
+    },
+    {"tags": {}},
+]
+
 EXPECTED_LOG_GROUPS = [
     log_group(
         name="lg_1",
@@ -39,6 +49,7 @@ EXPECTED_LOG_GROUPS = [
                 destination_arn="arn:aws:logs:us-east-1:223322332233:destination:SomeDestination",
             )
         ],
+        tags=[tag("a_tag", "a_value"), tag("another_tag", "another_value")],
     ),
     log_group(
         name="lg_2",
@@ -52,5 +63,6 @@ EXPECTED_LOG_GROUPS = [
                 destination_arn="arn:aws:logs:us-east-1:223322332233:destination:OtherDestination",
             )
         ],
+        tags=[],
     ),
 ]

@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Sequence
 
+from src.data.aws_common_types import Tag
 from src.data.aws_kms_types import Key
 
 
@@ -12,6 +13,7 @@ class LogGroup:
     kms_key: Optional[Key]
     retention_days: Optional[int]
     subscription_filters: Sequence[SubscriptionFilter]
+    tags: Sequence[Tag]
 
     def __init__(
         self,
@@ -20,12 +22,14 @@ class LogGroup:
         kms_key: Optional[Key] = None,
         retention_days: Optional[int] = None,
         subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
+        tags: Optional[Sequence[Tag]] = None,
     ):
         self.name = name
         self.kms_key_id = kms_key_id
         self.kms_key = kms_key
         self.retention_days = retention_days
         self.subscription_filters = subscription_filters or []
+        self.tags = tags or []
 
     def with_kms_key(self, kms_key: Optional[Key]) -> LogGroup:
         self.kms_key = kms_key
