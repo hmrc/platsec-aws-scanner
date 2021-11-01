@@ -7,29 +7,25 @@ from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
     ComplianceActionReport,
-    CreateLogGroupKmsKeyAction,
     CreateVpcLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
-    DeleteLogGroupKmsKeyAliasAction,
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
-    UpdateLogGroupKmsKeyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Policy, Role
-from src.data.aws_kms_types import Alias, Key
+from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -333,22 +329,6 @@ def put_vpc_log_group_subscription_filter_action(
     return PutVpcLogGroupSubscriptionFilterAction(logs=logs)
 
 
-def update_log_group_kms_key_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient), kms: AwsKmsClient = Mock(spec=AwsKmsClient)
-) -> UpdateLogGroupKmsKeyAction:
-    return UpdateLogGroupKmsKeyAction(logs=logs, kms=kms, config=AwsScannerConfig())
-
-
-def create_log_group_kms_key_action(kms: AwsKmsClient) -> CreateLogGroupKmsKeyAction:
-    return CreateLogGroupKmsKeyAction(kms_client=kms)
-
-
-def delete_log_group_kms_key_alias_action(
-    kms: AwsKmsClient = Mock(spec=AwsKmsClient),
-) -> DeleteLogGroupKmsKeyAliasAction:
-    return DeleteLogGroupKmsKeyAliasAction(kms=kms)
-
-
 def put_vpc_log_group_retention_policy_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
 ) -> PutVpcLogGroupRetentionPolicyAction:
@@ -436,14 +416,6 @@ def compliant_key_policy() -> Dict[str, Any]:
             {"account": "112233445566", "region": "us-east-1", "log_group_name": "/vpc/flow_log"},
         ]
     }
-
-
-def alias(
-    name: str = "alias/alias-1",
-    arn: str = "arn:aws:kms:us-east-1:111222333444:alias/alias-1",
-    target_key_id: Optional[str] = key().id,
-) -> Alias:
-    return Alias(name=name, arn=arn, target_key_id=target_key_id)
 
 
 def compliance_action_report(

@@ -17,15 +17,11 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogDeliveryRoleAction,
     PutVpcLogGroupSubscriptionFilterAction,
     PutVpcLogGroupRetentionPolicyAction,
-    CreateLogGroupKmsKeyAction,
-    DeleteLogGroupKmsKeyAliasAction,
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
-    UpdateLogGroupKmsKeyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
-from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 
 
@@ -78,11 +74,10 @@ class AwsVpcClient:
         )
 
     def enforcement_actions(self, vpcs: Sequence[Vpc]) -> Sequence[ComplianceAction]:
-        kms_actions = self._kms_enforcement_actions()
-        log_group_actions = self._vpc_log_group_enforcement_actions(kms_key_updated=bool(kms_actions))
+        log_group_actions = self._vpc_log_group_enforcement_actions()
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
-        return list(chain(kms_actions, log_group_actions, delivery_role_actions, vpc_actions))
+        return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
 
     def _vpc_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return list(
@@ -92,32 +87,6 @@ class AwsVpcClient:
                 self._create_flow_log_actions(vpc),
             )
         )
-
-    def _kms_enforcement_actions(self) -> Sequence[ComplianceAction]:
-        alias = self.kms.find_alias(self.config.kms_key_alias())
-        key = self.kms.get_key(alias.target_key_id) if alias and alias.target_key_id else None
-        if alias is None:
-            return [CreateLogGroupKmsKeyAction(kms_client=self.kms)]
-        elif self._is_key_compliant(key):
-            return []
-        else:
-            return [DeleteLogGroupKmsKeyAliasAction(kms=self.kms), CreateLogGroupKmsKeyAction(kms_client=self.kms)]
-
-    def _is_key_compliant(self, key: Optional[Key]) -> bool:
-        return (
-            key is not None
-            and self._is_key_policy_compliant(key)
-            and self._is_key_tags_compliant(key)
-            and key.state == "Enabled"
-        )
-
-    def _is_key_policy_compliant(self, key: Key) -> bool:
-        return key.policy is not None and key.policy["Statement"] == self.config.kms_key_policy_statements(
-            key.account_id, key.region
-        )
-
-    def _is_key_tags_compliant(self, key: Key) -> bool:
-        return key.tags is not None and set(PLATSEC_SCANNER_TAGS).issubset(set(key.tags))
 
     def _delete_misconfigured_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return [
@@ -178,14 +147,12 @@ class AwsVpcClient:
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
 
-    def _vpc_log_group_enforcement_actions(self, kms_key_updated: bool) -> Sequence[ComplianceAction]:
+    def _vpc_log_group_enforcement_actions(self) -> Sequence[ComplianceAction]:
         log_group = self._find_log_group(self.config.logs_vpc_log_group_name())
         actions: List[Any] = []
         if log_group:
             if not self._is_central_vpc_log_group(log_group):
                 actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
-            if kms_key_updated or log_group.kms_key_id is None:
-                actions.append(UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config))
             if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days():
                 actions.append(PutVpcLogGroupRetentionPolicyAction(logs=self.logs))
             if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
@@ -197,7 +164,6 @@ class AwsVpcClient:
                     PutVpcLogGroupSubscriptionFilterAction(logs=self.logs),
                     PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
                     TagVpcLogGroupAction(logs=self.logs),
-                    UpdateLogGroupKmsKeyAction(logs=self.logs, kms=self.kms, config=self.config),
                 ]
             )
 

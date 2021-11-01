@@ -4,8 +4,7 @@ import sys
 from configparser import ConfigParser
 from json import JSONDecodeError, loads
 from logging import getLogger
-from string import Template
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List
 
 from src.data.aws_organizations_types import Account
 
@@ -62,25 +61,6 @@ class AwsScannerConfig:
 
     def iam_role(self) -> str:
         return self._get_config("iam", "role")
-
-    def kms_key_alias(self) -> str:
-        return self._get_config("kms", "key_alias")
-
-    def kms_key_policy_default_statement(self, account_id: str) -> Dict[str, Any]:
-        return self._get_templated_json_config("kms", "key_policy_default_statement", {"account_id": account_id})
-
-    def kms_key_policy_log_group_statement(self, account_id: str, region: str) -> Dict[str, Any]:
-        return self._get_templated_json_config(
-            "kms",
-            "key_policy_log_group_statement",
-            {"account_id": account_id, "region": region, "log_group_name": self.logs_vpc_log_group_name()},
-        )
-
-    def kms_key_policy_statements(self, account_id: str, region: str) -> Sequence[Dict[str, Any]]:
-        return [
-            self.kms_key_policy_default_statement(account_id),
-            self.kms_key_policy_log_group_statement(account_id, region),
-        ]
 
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
@@ -168,12 +148,6 @@ class AwsScannerConfig:
         except ValueError as err:
             sys.exit(f"invalid config type: section '{section}', key '{key}', error: {err}")
 
-    def _get_templated_config(self, section: str, key: str, keywords: Dict[str, str]) -> str:
-        try:
-            return Template(self._get_config(section, key)).substitute(**keywords)
-        except (ValueError, KeyError) as err:
-            sys.exit(f"invalid config: section '{section}', key '{key}', error: {err}")
-
     @staticmethod
     def _to_json(json_str: str, section: str, key: str) -> Dict[str, Any]:
         try:
@@ -183,9 +157,6 @@ class AwsScannerConfig:
 
     def _get_json_config(self, section: str, key: str) -> Dict[str, Any]:
         return self._to_json(self._get_config(section, key), section, key)
-
-    def _get_templated_json_config(self, section: str, key: str, keywords: Dict[str, str]) -> Dict[str, Any]:
-        return self._to_json(self._get_templated_config(section, key, keywords), section, key)
 
     def _load_config(self) -> ConfigParser:
         config = ConfigParser()

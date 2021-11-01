@@ -26,13 +26,6 @@ def test_init_config_from_file() -> None:
     assert "ALL" == config.ec2_flow_log_traffic_type()
     assert "${srcaddr} ${dstaddr}" == config.ec2_flow_log_format()
     assert "iam_role" == config.iam_role()
-    assert "an_alias" == config.kms_key_alias()
-    assert {"account": "1234"} == config.kms_key_policy_default_statement("1234")
-    assert {
-        "account": "89",
-        "log_group_name": "/vpc/flow_log",
-        "region": "us",
-    } == config.kms_key_policy_log_group_statement("89", "us")
     assert "kms_role" == config.kms_role()
     assert "/vpc/flow_log" == config.logs_vpc_log_group_name()
     assert "[version, account_id, interface_id]" == config.logs_vpc_log_group_pattern()
@@ -77,9 +70,6 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_EC2_FLOW_LOG_TRAFFIC_TYPE": "ACCEPT",
         "AWS_SCANNER_EC2_FLOW_LOG_FORMAT": "${srcaddr}",
         "AWS_SCANNER_IAM_ROLE": "the_iam_role",
-        "AWS_SCANNER_KMS_KEY_POLICY_DEFAULT_STATEMENT": '{"arn": ":$account_id:"}',
-        "AWS_SCANNER_KMS_KEY_POLICY_LOG_GROUP_STATEMENT": '{"region": "$region-west-1"}',
-        "AWS_SCANNER_KMS_KEY_ALIAS": "the_kms_key_alias",
         "AWS_SCANNER_KMS_ROLE": "the_kms_role",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
@@ -122,9 +112,6 @@ def test_init_config_from_env_vars() -> None:
     assert "ACCEPT" == config.ec2_flow_log_traffic_type()
     assert "${srcaddr}" == config.ec2_flow_log_format()
     assert "the_iam_role" == config.iam_role()
-    assert {"arn": ":0:"} == config.kms_key_policy_default_statement("0")
-    assert {"region": "eu-west-1"} == config.kms_key_policy_log_group_statement("9", "eu")
-    assert "the_kms_key_alias" == config.kms_key_alias()
     assert "the_kms_role" == config.kms_role()
     assert "/vpc/central_flow_log_name" == config.logs_vpc_log_group_name()
     assert "[version, account_id]" == config.logs_vpc_log_group_pattern()
@@ -179,18 +166,6 @@ def test_invalid_format_logs_vpc_log_group_delivery_role_assume_policy() -> None
 def test_invalid_format_logs_vpc_log_group_delivery_role_policy_document() -> None:
     with pytest.raises(SystemExit, match="vpc_log_group_delivery_role_policy_document"):
         AwsScannerConfig().logs_vpc_log_group_delivery_role_policy_document()
-
-
-@patch.dict(os.environ, {"AWS_SCANNER_KMS_KEY_POLICY_DEFAULT_STATEMENT": "$1"})
-def test_invalid_templated_config() -> None:
-    with pytest.raises(SystemExit, match="key_policy_default_statement"):
-        AwsScannerConfig().kms_key_policy_default_statement("1")
-
-
-@patch.dict(os.environ, {"AWS_SCANNER_KMS_KEY_POLICY_LOG_GROUP_STATEMENT": "$missing"})
-def test_templated_config_missing_keyword() -> None:
-    with pytest.raises(SystemExit):
-        AwsScannerConfig().kms_key_policy_log_group_statement("1", "us")
 
 
 @patch.dict(os.environ, {"AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "bonjour"})
