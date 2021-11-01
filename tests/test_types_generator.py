@@ -52,6 +52,7 @@ from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 from src.tasks.aws_vpc_task import AwsVpcTask
+from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 
 
 def partition(year: int = 2020, month: int = 11, region: str = "eu") -> AwsAthenaDataPartition:
@@ -82,6 +83,10 @@ def vpc_task(account: Account = account(), description: str = "vpc_task", enforc
 
 def s3_task(account: Account = account(), description: str = "s3_task") -> AwsS3Task:
     return AwsS3Task(description=description, account=account)
+
+
+def iam_task(account: Account = account(), description: str = "iam_task") -> AwsAuditIamTask:
+    return AwsAuditIamTask(description=description, account=account)
 
 
 def ssm_task(account: Account = account(), description: str = "ssm_task") -> AwsSSMTask:

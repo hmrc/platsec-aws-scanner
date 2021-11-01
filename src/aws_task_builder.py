@@ -7,6 +7,7 @@ from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
+from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -42,6 +43,7 @@ class AwsTaskBuilder:
             Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, args.accounts),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
+            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask, args.accounts),
             Cmd.cost_explorer: lambda: self._services_tasks(
                 AwsAuditCostExplorerTask, args.accounts, services=args.services, year=args.year, month=args.month
             ),
