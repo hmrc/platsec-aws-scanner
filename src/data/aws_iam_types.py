@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, Optional, Sequence
 
 from src.data.aws_common_types import Tag
@@ -48,3 +49,16 @@ class Policy:
 
 def to_policy(policy: Dict[Any, Any]) -> Policy:
     return Policy(name=policy["PolicyName"], arn=policy["Arn"], default_version=policy["DefaultVersionId"])
+
+
+@dataclass
+class User:
+    user_name: str
+
+
+@dataclass
+class AccessKey:
+    id: str
+    user_name: str
+    created: datetime
+    last_used: Optional[datetime] = None
