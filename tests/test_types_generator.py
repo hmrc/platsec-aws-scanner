@@ -409,15 +409,6 @@ def key(
     )
 
 
-def compliant_key_policy() -> Dict[str, Any]:
-    return {
-        "Statement": [
-            {"account": "112233445566"},
-            {"account": "112233445566", "region": "us-east-1", "log_group_name": "/vpc/flow_log"},
-        ]
-    }
-
-
 def compliance_action_report(
     description: Optional[str] = None, status: Optional[str] = None, details: Optional[Dict[str, Any]] = None
 ) -> ComplianceActionReport:

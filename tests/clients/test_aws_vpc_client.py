@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Sequence, Optional, Type, Dict, Any
 
 from src.data.aws_iam_types import Role, Policy
-from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
 from unittest import TestCase
@@ -19,7 +18,6 @@ from src.data.aws_compliance_actions import (
 )
 
 from tests.test_types_generator import (
-    compliant_key_policy,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     create_vpc_log_group_action,
@@ -56,7 +54,6 @@ class TestAwsVpcClient(TestCase):
         client = AwsVpcClientBuilder()
         client.with_default_vpc()
         client.with_default_log_group()
-        client.with_default_key()
         client.with_roles([role(), role(arn=str(flow_log().deliver_log_role_arn))])
 
         enriched = client.build().list_vpcs()
@@ -138,18 +135,14 @@ class TestAwsEnforcementActions(TestCase):
         return Mock(spec=action, apply=Mock(side_effect=lambda c: applied_action if c == expected_client else None))
 
     def test_do_nothing_when_all_correct(self) -> None:
-        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role()])
 
         self.assertEqual([], client.build().enforcement_actions([vpc()]))
 
     def test_create_vpc_flow_logs(self) -> None:
-        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role()])
 
@@ -159,9 +152,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_delete_redundant_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role()])
 
@@ -182,9 +173,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_delete_misconfigured_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role()])
 
@@ -196,9 +185,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_create_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role()])
 
@@ -208,9 +195,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_vpc_delete_misconfigured_and_create_centralised(self) -> None:
-        expected_key = key(policy=compliant_key_policy(), with_default_tags=True)
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role()])
 
@@ -220,9 +205,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_create_delivery_role_action_when_role_is_missing(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
 
         client.with_roles([])
@@ -234,9 +217,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_delete_and_create_delivery_role_action_when_role_is_missing_and_policy_exists(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
 
         client.with_roles([])
@@ -252,9 +233,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_delete_and_create_delivery_role_action_when_role_is_not_compliant(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role(name="vpc_flow_log_role", policies=[])])
 
@@ -268,9 +247,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_tag_flow_log_delivery_role_when_required_tags_missing(self) -> None:
-        expected_key = key(policy=compliant_key_policy())
         client = AwsVpcClientBuilder()
-        client.with_key(expected_key)
         client.with_default_log_group()
         client.with_roles([role(name="vpc_flow_log_role", tags=[tag("unrelated_tag", "some value")])])
 
@@ -282,7 +259,6 @@ class TestAwsEnforcementActions(TestCase):
     def test_create_central_vpc_log_group_when_missing_with_subscription_filter(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([])
-        client.with_default_key()
 
         actions = client.build()._vpc_log_group_enforcement_actions()
 
@@ -299,7 +275,6 @@ class TestAwsEnforcementActions(TestCase):
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(subscription_filters=[], default_kms_key=True)])
-        client.with_default_key()
 
         self.assertEqual(
             [put_vpc_log_group_subscription_filter_action(logs=client.logs)],
@@ -309,7 +284,6 @@ class TestAwsEnforcementActions(TestCase):
     def test_put_retention_policy_when_central_vpc_log_group_does_not_have_one(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(retention_days=None, default_kms_key=True)])
-        client.with_default_key()
 
         self.assertEqual(
             [put_vpc_log_group_retention_policy_action(logs=client.logs)],
@@ -319,7 +293,6 @@ class TestAwsEnforcementActions(TestCase):
     def test_put_retention_policy_when_central_vpc_log_group_retention_differs_from_config(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(retention_days=21, default_kms_key=True)])
-        client.with_default_key()
 
         self.assertEqual(
             [put_vpc_log_group_retention_policy_action(logs=client.logs)],
@@ -329,7 +302,6 @@ class TestAwsEnforcementActions(TestCase):
     def test_tag_vpc_log_group_when_tags_missing(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(tags=[tag("unrelated_tag", "1")], default_kms_key=True)])
-        client.with_default_key()
 
         self.assertEqual(
             [tag_vpc_log_group_action(logs=client.logs)],
@@ -339,7 +311,6 @@ class TestAwsEnforcementActions(TestCase):
     def test_no_central_vpc_log_group_action_when_log_group_is_compliant(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_log_group()
-        client.with_default_key()
 
         self.assertEqual([], client.build()._vpc_log_group_enforcement_actions())
 
@@ -395,11 +366,7 @@ class AwsVpcClientBuilder(TestCase):
         return self
 
     def with_default_key(self) -> AwsVpcClientBuilder:
-        self.with_key(key())
-        return self
-
-    def with_key(self, key: Key) -> AwsVpcClientBuilder:
-        self.kms.get_key.side_effect = lambda k: key if k == key.id else self.fail(f"expected {key.id}, got {k}")
+        self.kms.get_key.side_effect = lambda k: key() if k == key().id else self.fail(f"expected {key().id}, got {k}")
         return self
 
     def with_default_log_group(self) -> AwsVpcClientBuilder:
@@ -411,6 +378,7 @@ class AwsVpcClientBuilder(TestCase):
             return list(filter(lambda log_group: log_group.name.startswith(name_prefix), log_groups))
 
         self.logs.describe_log_groups.side_effect = describe_log_groups
+        self.with_default_key()
         return self
 
     def with_roles(self, roles: Sequence[Role]) -> AwsVpcClientBuilder:
