@@ -66,18 +66,6 @@ def test_tag_log_group_failure() -> None:
         AwsLogsClient(boto).tag_log_group("lg", [])
 
 
-def test_associate_kms_key() -> None:
-    boto = Mock()
-    AwsLogsClient(boto).associate_kms_key(log_group_name="some_log_group", kms_key_arn="kms_key_arn")
-    boto.associate_kms_key.assert_called_once_with(logGroupName="some_log_group", kmsKeyId="kms_key_arn")
-
-
-def test_associate_kms_key_failure() -> None:
-    boto = Mock(associate_kms_key=Mock(side_effect=client_error("AssociateKmsKey", "AccessDenied", "no!")))
-    with raises(LogsException, match="unable to associate kms key 'a_key' with log group 'lg': An error"):
-        AwsLogsClient(boto).associate_kms_key("lg", "a_key")
-
-
 def test_put_subscription_filter() -> None:
     log_group_name = "/vpc/central_flow_log"
     filter_name = "VpcFlowLogsForward"
