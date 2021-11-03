@@ -31,7 +31,8 @@ class TestAwsParallelTaskRunner(TestCase):
             task_report(description="other task", results={"outcome_2": "success_2"}, partition=None), reports
         )
 
-        self.assertEqual(
-            ["ERROR:AwsParallelTaskRunner:task 'boom' for 'wrong account (5678)' failed with: 'oops'"],
-            error_log.output,
+        expected_error_msg = (
+            "ERROR:AwsParallelTaskRunner:task 'boom' for 'wrong account (5678)' failed with: "
+            "'AwsScannerException: oops'"
         )
+        self.assertEqual([expected_error_msg], error_log.output)

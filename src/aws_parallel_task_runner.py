@@ -20,5 +20,5 @@ class AwsParallelTaskRunner(AwsTaskRunner):
         try:
             return future.result()
         except AwsScannerException as ex:
-            self._logger.error(f"{all_futures[future]} failed with: '{ex}'")
+            self._logger.error(f"{all_futures[future]} failed with: '{type(ex).__name__}: {ex}'")
         return None
