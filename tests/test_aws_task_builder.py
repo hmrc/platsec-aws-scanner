@@ -7,6 +7,7 @@ from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
 from src.aws_task_builder import AwsTaskBuilder
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
+from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
@@ -93,6 +94,12 @@ class TestAwsTaskBuilder(TestCase):
         self.assert_tasks_equal(
             [AwsAuditVPCFlowLogsTask(acct1, False), AwsAuditVPCFlowLogsTask(acct2, False)],
             task_builder().build_tasks(args(task=Cmd.audit_vpc_flow_logs, enforce=False)),
+        )
+
+    def test_audit_iam_tasks(self) -> None:
+        self.assert_tasks_equal(
+            [AwsAuditIamTask(acct1), AwsAuditIamTask(acct2)],
+            task_builder().build_tasks(args(task=Cmd.audit_iam)),
         )
 
     def assert_tasks_equal(self, expected: Sequence[AwsTask], actual: Sequence[AwsTask]) -> None:

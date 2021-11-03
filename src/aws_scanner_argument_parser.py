@@ -37,6 +37,7 @@ class AwsScannerCommands:
     list_ssm_parameters: str = "list_ssm_parameters"
     drop: str = "drop"
     audit_s3: str = "audit_s3"
+    audit_iam: str = "audit_iam"
     audit_vpc_flow_logs: str = "audit_vpc_flow_logs"
     cost_explorer: str = "cost_explorer"
 
@@ -106,6 +107,7 @@ class AwsScannerArgumentParser:
         self._add_create_table_command(subparsers)
         self._add_drop_command(subparsers)
         self._add_audit_s3_command(subparsers)
+        self._add_audit_iam_command(subparsers)
         self._add_audit_vpc_flow_logs_command(subparsers)
         self._add_cost_explorer_command(subparsers)
         return parser
@@ -119,6 +121,13 @@ class AwsScannerArgumentParser:
     def _add_audit_s3_command(self, subparsers: Any) -> None:
         desc = "audit S3 bucket compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_s3, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+
+    def _add_audit_iam_command(self, subparsers: Any) -> None:
+        desc = "audit iam compliance"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_iam, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
