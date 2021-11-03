@@ -166,13 +166,17 @@ def test_parse_cli_args_for_audit_s3_task() -> None:
         assert args.mfa_token == "446468"
         assert args.accounts == ["1", "2"]
         assert args.log_level == "ERROR"
+        assert args.disable_account_lookup is False
 
 
 def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
-    with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -e true -v debug".split()):
+    with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -d true -e true -v debug".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
-    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce True".split()):
+    with patch(
+        "sys.argv",
+        ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --disable_account_lookup 1 --enforce True".split(),
+    ):
         long_args = AwsScannerArgumentParser().parse_cli_args()
 
     for args in [short_args, long_args]:
@@ -181,6 +185,7 @@ def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
         assert args.mfa_token == "223344"
         assert args.accounts == ["5", "9"]
         assert args.enforce is True
+        assert args.disable_account_lookup is True
 
 
 def test_parse_cli_args_for_enfore_false() -> None:
@@ -214,6 +219,7 @@ def test_parse_lambda_args_for_service_usage_task() -> None:
             "services": "ssm",
             "username": "something",
             "token": "1",
+            "disable_account_lookup": 1,
         }
     )
     assert lambda_args.task == "service_usage"
@@ -224,3 +230,4 @@ def test_parse_lambda_args_for_service_usage_task() -> None:
     assert lambda_args.partition.region == "eu"
     assert lambda_args.accounts is None
     assert lambda_args.services == ["ssm"]
+    assert lambda_args.disable_account_lookup is True

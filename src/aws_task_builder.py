@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
 
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
+from src.clients.aws_client_factory import AwsClientFactory
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
@@ -20,36 +21,51 @@ from src.tasks.aws_task import AwsTask
 
 
 class AwsTaskBuilder:
-    def __init__(self, orgs: AwsOrganizationsClient):
-        self._logger = getLogger(self.__class__.__name__)
-        self._orgs = orgs
+    _args: AwsScannerArguments
+    _orgs: Optional[AwsOrganizationsClient]
 
-    def build_tasks(self, args: AwsScannerArguments) -> Sequence[AwsTask]:
+    def __init__(self, factory: AwsClientFactory, args: AwsScannerArguments):
+        self._logger = getLogger(self.__class__.__name__)
+        self._args = args
+        self._orgs = None if args.disable_account_lookup else factory.get_organizations_client()
+
+    def build_tasks(self) -> Sequence[AwsTask]:
         task_mapping: Dict[str, Callable[[], Sequence[AwsTask]]] = {
             Cmd.service_usage: lambda: self._services_tasks(
                 AwsServiceUsageScannerTask,
-                args.accounts,
-                services=args.services,
-                partition=args.partition,
+                self._args.accounts,
+                services=self._args.services,
+                partition=self._args.partition,
             ),
             Cmd.role_usage: lambda: self._tasks(
-                AwsRoleUsageScannerTask, args.accounts, partition=args.partition, role=args.role
+                AwsRoleUsageScannerTask, self._args.accounts, partition=self._args.partition, role=self._args.role
             ),
             Cmd.find_principal: lambda: self._tasks(
-                AwsPrincipalByIPFinderTask, args.accounts, partition=args.partition, source_ip=args.source_ip
+                AwsPrincipalByIPFinderTask,
+                self._args.accounts,
+                partition=self._args.partition,
+                source_ip=self._args.source_ip,
             ),
-            Cmd.create_table: lambda: self._tasks(AwsCreateAthenaTableTask, args.accounts, partition=args.partition),
+            Cmd.create_table: lambda: self._tasks(
+                AwsCreateAthenaTableTask, self._args.accounts, partition=self._args.partition
+            ),
             Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask),
-            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, args.accounts),
+            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, self._args.accounts),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
-            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, args.accounts),
-            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask, args.accounts),
+            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, self._args.accounts),
+            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask, self._args.accounts),
             Cmd.cost_explorer: lambda: self._services_tasks(
-                AwsAuditCostExplorerTask, args.accounts, services=args.services, year=args.year, month=args.month
+                AwsAuditCostExplorerTask,
+                self._args.accounts,
+                services=self._args.services,
+                year=self._args.year,
+                month=self._args.month,
             ),
-            Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, args.accounts, enforce=args.enforce),
+            Cmd.audit_vpc_flow_logs: lambda: self._tasks(
+                AwsAuditVPCFlowLogsTask, self._args.accounts, enforce=self._args.enforce
+            ),
         }
-        return task_mapping[args.task]()
+        return task_mapping[self._args.task]()
 
     def _tasks(self, task: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
@@ -74,4 +90,8 @@ class AwsTaskBuilder:
         return [task(**kwargs)]
 
     def _get_target_accounts(self, accounts: Optional[List[str]]) -> Sequence[Account]:
+        if not self._orgs:
+            if not accounts:
+                raise SystemExit("account lookup is disabled and no target accounts were provided")
+            return [Account(acc, acc) for acc in accounts]
         return self._orgs.find_account_by_ids(accounts) if accounts else self._orgs.get_target_accounts()

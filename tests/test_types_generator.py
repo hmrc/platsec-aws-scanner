@@ -219,6 +219,7 @@ def aws_scanner_arguments(
     source_ip: str = "127.0.0.1",
     log_level: str = "ERROR",
     enforce: bool = False,
+    disable_account_lookup: bool = False,
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -233,6 +234,7 @@ def aws_scanner_arguments(
         source_ip=source_ip,
         log_level=log_level,
         enforce=enforce,
+        disable_account_lookup=disable_account_lookup,
     )
 
 

@@ -22,6 +22,7 @@ class AwsScannerArguments:
     source_ip: str
     log_level: str
     enforce: bool
+    disable_account_lookup: bool
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
@@ -51,6 +52,7 @@ class AwsScannerArgumentParser:
     @staticmethod
     def _add_accounts_args(parser: ArgumentParser) -> None:
         parser.add_argument("-a", "--accounts", type=str, help="comma-separated list of target accounts")
+        parser.add_argument("-d", "--disable_account_lookup", type=bool, help="disable account lookup")
 
     @staticmethod
     def _add_enforce_arg(parser: ArgumentParser, cmd_help: str) -> None:
@@ -219,4 +221,5 @@ class AwsScannerArgumentParser:
             source_ip=str(args.get("ip")),
             log_level=str(args.get("verbosity")).upper(),
             enforce=bool(args.get("enforce")),
+            disable_account_lookup=bool(args.get("disable_account_lookup")),
         )
