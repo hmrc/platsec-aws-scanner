@@ -32,5 +32,4 @@ docker run \
   --env AWS_SECRET_ACCESS_KEY \
   --env AWS_SESSION_TOKEN \
   --env AWS_SECURITY_TOKEN \
-  "$IMAGE_TAG" "$@" \
-  | jq
+  "$IMAGE_TAG" "$@"
