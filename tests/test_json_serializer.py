@@ -1,3 +1,4 @@
+import datetime
 from unittest import TestCase
 
 from dataclasses import dataclass
@@ -16,3 +17,13 @@ class TestJsonSerializer(TestCase):
         greetings: str = "Bonjour!"
         empty: Optional[str] = None
         func: Callable[[], str] = lambda: "hello"
+
+    def test_serialize_datetime(self) -> None:
+        self.assertEqual(
+            '{"name": "Andy", "born": "2021-11-01T15:30:10"}', to_json(TestJsonSerializer.TestDatetimeObject())
+        )
+
+    @dataclass
+    class TestDatetimeObject:
+        name: str = "Andy"
+        born: datetime.datetime = datetime.datetime(2021, 11, 1, 15, 30, 10)
