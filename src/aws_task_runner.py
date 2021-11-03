@@ -6,6 +6,7 @@ from src.data.aws_task_report import AwsTaskReport
 from src.clients.aws_client_factory import AwsClientFactory
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
+from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -37,4 +38,6 @@ class AwsTaskRunner:
             return task.run(self._client_factory.get_s3_client(task.account))
         elif isinstance(task, AwsVpcTask):
             return task.run(self._client_factory.get_vpc_client(task.account))
+        elif isinstance(task, AwsAuditIamTask):
+            return task.run(self._client_factory.get_iam_client(task.account))
         raise UnsupportedTaskException(task)

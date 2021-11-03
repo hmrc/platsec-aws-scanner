@@ -7,7 +7,7 @@ from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 
-from tests.test_types_generator import account, athena_task, s3_task, ssm_task, task_report, vpc_task
+from tests.test_types_generator import account, athena_task, audit_iam_task, s3_task, ssm_task, task_report, vpc_task
 
 
 class TestAwsTaskRunner(TestCase):
@@ -70,6 +70,13 @@ class TestAwsTaskRunner(TestCase):
         client = Mock()
         client_factory = Mock(get_vpc_client=Mock(side_effect=lambda acc: client if acc == account() else None))
         task = vpc_task()
+        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
+    def test_run_audit_iam_task(self) -> None:
+        client = Mock()
+        client_factory = Mock(get_iam_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+        task = audit_iam_task()
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 

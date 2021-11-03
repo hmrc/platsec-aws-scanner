@@ -45,6 +45,7 @@ from src.data.aws_s3_types import (
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
+from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
@@ -96,6 +97,10 @@ def cloudtrail_task(
     account: Account = account(), description: str = "task", partition: AwsAthenaDataPartition = partition()
 ) -> AwsCloudTrailTask:
     return AwsCloudTrailTask(description=description, account=account, partition=partition)
+
+
+def audit_iam_task(account: Account = account()) -> AwsAuditIamTask:
+    return AwsAuditIamTask(account=account)
 
 
 def task_report(
