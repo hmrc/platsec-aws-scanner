@@ -90,7 +90,7 @@ class AwsScannerArgumentParser:
             "-v",
             "--verbosity",
             choices=["error", "warning", "info", "debug"],
-            default="error",
+            default="warning",
             help="log level configuration",
         )
 

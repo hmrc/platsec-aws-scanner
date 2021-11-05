@@ -195,6 +195,22 @@ def test_parse_cli_args_for_enfore_false() -> None:
         assert long_args.enforce is False
 
 
+def test_default_log_level_is_warning() -> None:
+    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
+        args = AwsScannerArgumentParser().parse_cli_args()
+
+        assert args.log_level == "WARNING"
+
+
+def test_invalid_log_level_logs_and_exits(caplog: Any) -> None:
+    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 -v banana".split()):
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(SystemExit):
+                AwsScannerArgumentParser().parse_cli_args()
+                assert "banana" in caplog.text
+                assert "verbosity" in caplog.text
+
+
 def test_cli_task_is_mandatory(caplog: Any) -> None:
     with patch("sys.argv", ".".split()):
         with caplog.at_level(logging.ERROR):
