@@ -28,9 +28,7 @@ else
 		test-run:local
 endif
 
-PYTHON_COVERAGE_OMIT = "tests/*,*__init__*,*.local/*"
 PYTHON_COVERAGE_FAIL_UNDER_PERCENT = 100
-PYTHON_TEST_PATTERN ?= "test_*.py"
 GROUP_ID ?= $(shell id -g)
 USER_ID ?= $(shell id -u)
 SHELL := /bin/bash
