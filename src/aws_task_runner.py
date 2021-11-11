@@ -39,5 +39,5 @@ class AwsTaskRunner:
         elif isinstance(task, AwsVpcTask):
             return task.run(self._client_factory.get_vpc_client(task.account))
         elif isinstance(task, AwsAuditIamTask):
-            return task.run(self._client_factory.get_iam_client(task.account))
+            return task.run(self._client_factory.get_iam_client_for_audit(task.account))
         raise UnsupportedTaskException(task)

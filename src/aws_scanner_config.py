@@ -62,6 +62,9 @@ class AwsScannerConfig:
     def iam_role(self) -> str:
         return self._get_config("iam", "role")
 
+    def iam_audit_role(self) -> str:
+        return self._get_config("iam", "audit_role")
+
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
 

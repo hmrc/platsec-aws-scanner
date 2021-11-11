@@ -1,7 +1,9 @@
+from typing import Any
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.aws_task_runner import AwsTaskRunner
+from src.clients.aws_client_factory import AwsClientFactory
 from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
@@ -73,12 +75,19 @@ class TestAwsTaskRunner(TestCase):
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 
-    def test_run_audit_iam_task(self) -> None:
-        client = Mock()
-        client_factory = Mock(get_iam_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+    @patch("src.clients.aws_client_factory.AwsClientFactory._get_client")
+    @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
+    @patch("src.tasks.aws_task.AwsTask.run")
+    def test_run_audit_iam_task(self, task_run: Any, _get_session_token: Any, _get_client: Any) -> None:
+        boto_client = Mock()
+        _get_client.return_value = boto_client
         task = audit_iam_task()
-        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
-        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
+        AwsTaskRunner(AwsClientFactory("1234456", "username"))._run_task(task)
+
+        _get_client.assert_called_once_with("iam", task.account, "iam_audit_role")
+        task_run.assert_called_once()
+        self.assertIs(boto_client, task_run.call_args.args[0]._iam)
 
     def test_run_unsupported_task(self) -> None:
         mock_unsupported_task = Mock()
