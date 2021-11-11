@@ -26,6 +26,7 @@ def test_init_config_from_file() -> None:
     assert "ALL" == config.ec2_flow_log_traffic_type()
     assert "${srcaddr} ${dstaddr}" == config.ec2_flow_log_format()
     assert "iam_role" == config.iam_role()
+    assert "iam_audit_role" == config.iam_audit_role()
     assert "kms_role" == config.kms_role()
     assert "/vpc/flow_log" == config.logs_vpc_log_group_name()
     assert "[version, account_id, interface_id]" == config.logs_vpc_log_group_pattern()
@@ -70,6 +71,7 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_EC2_FLOW_LOG_TRAFFIC_TYPE": "ACCEPT",
         "AWS_SCANNER_EC2_FLOW_LOG_FORMAT": "${srcaddr}",
         "AWS_SCANNER_IAM_ROLE": "the_iam_role",
+        "AWS_SCANNER_IAM_AUDIT_ROLE": "the_iam_audit_role",
         "AWS_SCANNER_KMS_ROLE": "the_kms_role",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
@@ -112,6 +114,7 @@ def test_init_config_from_env_vars() -> None:
     assert "ACCEPT" == config.ec2_flow_log_traffic_type()
     assert "${srcaddr}" == config.ec2_flow_log_format()
     assert "the_iam_role" == config.iam_role()
+    assert "the_iam_audit_role" == config.iam_audit_role()
     assert "the_kms_role" == config.kms_role()
     assert "/vpc/central_flow_log_name" == config.logs_vpc_log_group_name()
     assert "[version, account_id]" == config.logs_vpc_log_group_pattern()

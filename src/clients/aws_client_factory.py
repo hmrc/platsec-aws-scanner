@@ -87,6 +87,9 @@ class AwsClientFactory:
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account))
 
+    def get_iam_client_for_audit(self, account: Account) -> AwsIamClient:
+        return AwsIamClient(self._get_client("iam", account, self._config.iam_audit_role()))
+
     def get_kms_client(self, account: Account) -> AwsKmsClient:
         return AwsKmsClient(self.get_kms_boto_client(account))
 
