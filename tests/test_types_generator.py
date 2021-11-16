@@ -273,7 +273,7 @@ def role(
             policy(
                 name="vpc_flow_log_role_policy",
                 arn="arn:vpc_flow_log_role_policy",
-                document={"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]},
+                document={"Statement": [{"Effect": "Allow", "Action": ["logs:*"], "Resource": "*"}]},
             )
         ],
         tags=tags,

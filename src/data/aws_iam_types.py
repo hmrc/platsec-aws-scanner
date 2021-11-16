@@ -48,7 +48,7 @@ class Policy:
     default_version: str
     document: Optional[Dict[str, Any]] = None
 
-    def document_equals(self, doc: Dict[str, Any]) -> bool:
+    def doc_equals(self, doc: Dict[str, Any]) -> bool:
         unrolled = self._unroll_statements(self.document) if self.document else set()
         return unrolled == self._unroll_statements(doc)
 

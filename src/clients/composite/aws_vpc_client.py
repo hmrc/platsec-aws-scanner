@@ -58,7 +58,8 @@ class AwsVpcClient:
         return bool(
             role
             and role.assume_policy == self.config.logs_vpc_log_group_delivery_role_assume_policy()
-            and [p.document for p in role.policies] == [self.config.logs_vpc_log_group_delivery_role_policy_document()]
+            and role.policies
+            and all(p.doc_equals(self.config.logs_vpc_log_group_delivery_role_policy_document()) for p in role.policies)
         )
 
     def _is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
