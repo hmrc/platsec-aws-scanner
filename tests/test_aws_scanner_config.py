@@ -34,7 +34,7 @@ def test_init_config_from_file() -> None:
     assert "vpc_flow_log_role" == config.logs_vpc_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
     assert {
-        "Statement": [{"Action": ["logs:PutLogEvents"], "Effect": "Allow"}]
+        "Statement": [{"Action": ["logs:*"], "Effect": "Allow", "Resource": "*"}]
     } == config.logs_vpc_log_group_delivery_role_policy_document()
     assert 14 == config.logs_vpc_log_group_retention_policy_days()
     assert "logs_role" == config.logs_role()

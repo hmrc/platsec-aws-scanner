@@ -71,7 +71,7 @@ class TestAwsLogDeliveryRoleCompliance(TestCase):
     def test_flow_log_role_compliant(self) -> None:
         delivery_role = role(
             assume_policy={"Statement": [{"Action": "sts:AssumeRole"}]},
-            policies=[policy(document={"Statement": [{"Effect": "Allow", "Action": ["logs:PutLogEvents"]}]})],
+            policies=[policy(document={"Statement": [{"Effect": "Allow", "Action": ["logs:*"], "Resource": "*"}]})],
         )
         client = AwsVpcClientBuilder().build()
         self.assertTrue(client._is_flow_log_role_compliant(delivery_role))
@@ -83,7 +83,7 @@ class TestAwsLogDeliveryRoleCompliance(TestCase):
         )
         invalid_policy_document = role(
             assume_policy={"Statement": [{"Action": "sts:AssumeRole"}]},
-            policies=[policy(document={"Statement": [{"Effect": "Allow", "Action": ["logs:bla"]}]})],
+            policies=[policy(document={"Statement": [{"Effect": "Allow", "Action": ["logs:bla"], "Resource": "*"}]})],
         )
         missing_policy_document = role(assume_policy={"Statement": [{"Action": "sts:AssumeRole"}]}, policies=[])
         client = AwsVpcClientBuilder().build()
