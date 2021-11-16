@@ -85,5 +85,9 @@ class UnknownQueryStateException(AwsScannerException):
     pass
 
 
+class UnsupportedPolicyDocumentElement(AwsScannerException):
+    pass
+
+
 class UnsupportedTaskException(AwsScannerException):
     pass
