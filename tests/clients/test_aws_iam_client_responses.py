@@ -93,3 +93,18 @@ LIST_POLICIES_PAGES = [
         ]
     },
 ]
+
+GET_ACCOUNT_PASSWORD_POLICY = {
+    "PasswordPolicy": {
+        "AllowUsersToChangePassword": False,
+        "ExpirePasswords": False,
+        "HardExpiry": False,
+        "MaxPasswordAge": 90,
+        "MinimumPasswordLength": 8,
+        "PasswordReusePrevention": 12,
+        "RequireLowercaseCharacters": False,
+        "RequireNumbers": True,
+        "RequireSymbols": True,
+        "RequireUppercaseCharacters": False,
+    }
+}

@@ -6,7 +6,7 @@ from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
 from src.data.aws_common_types import Tag
-from src.data.aws_iam_types import Policy, Role, to_policy, to_role, User, AccessKey
+from src.data.aws_iam_types import Policy, Role, to_policy, to_role, User, AccessKey, PasswordPolicy, to_password_policy
 from src.data.aws_scanner_exceptions import IamException
 
 
@@ -171,3 +171,25 @@ class AwsIamClient:
             getLogger().warning(f"unable to get access key last used for key: {key_id}: {e}")
 
         return None
+
+    def get_account_password_policy(self) -> PasswordPolicy:
+        try:
+            return to_password_policy(self._iam.get_account_password_policy())
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to get account password policy: {err}") from None
+
+    def update_account_password_policy(self, policy: PasswordPolicy) -> None:
+        try:
+            self._iam.update_account_password_policy(
+                MinimumPasswordLength=policy.minimum_password_length,
+                RequireSymbols=policy.require_symbols,
+                RequireNumbers=policy.require_numbers,
+                RequireUppercaseCharacters=policy.require_uppercase_chars,
+                RequireLowercaseCharacters=policy.require_lowercase_chars,
+                AllowUsersToChangePassword=policy.allow_users_to_change_password,
+                MaxPasswordAge=policy.max_password_age,
+                PasswordReusePrevention=policy.password_reuse_prevention,
+                HardExpiry=policy.hard_expiry,
+            )
+        except (BotoCoreError, ClientError) as err:
+            raise IamException(f"unable to update account password policy with {policy}: {err}") from None

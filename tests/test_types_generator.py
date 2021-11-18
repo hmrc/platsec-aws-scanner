@@ -25,7 +25,7 @@ from src.data.aws_compliance_actions import (
     TagVpcLogGroupAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
-from src.data.aws_iam_types import Policy, Role
+from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
@@ -435,3 +435,29 @@ def compliance_action_report(
 
 def tag(key: str, value: str) -> Tag:
     return Tag(key=key, value=value)
+
+
+def password_policy(
+    minimum_password_length: int = 8,
+    require_symbols: bool = True,
+    require_numbers: bool = True,
+    require_uppercase_chars: bool = False,
+    require_lowercase_chars: bool = False,
+    allow_users_to_change_password: bool = False,
+    expire_passwords: bool = False,
+    max_password_age: int = 90,
+    password_reuse_prevention: int = 12,
+    hard_expiry: bool = False,
+) -> PasswordPolicy:
+    return PasswordPolicy(
+        minimum_password_length=minimum_password_length,
+        require_symbols=require_symbols,
+        require_numbers=require_numbers,
+        require_uppercase_chars=require_uppercase_chars,
+        require_lowercase_chars=require_lowercase_chars,
+        allow_users_to_change_password=allow_users_to_change_password,
+        expire_passwords=expire_passwords,
+        max_password_age=max_password_age,
+        password_reuse_prevention=password_reuse_prevention,
+        hard_expiry=hard_expiry,
+    )

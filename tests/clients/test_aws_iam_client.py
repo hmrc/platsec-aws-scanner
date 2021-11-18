@@ -6,7 +6,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.data.aws_scanner_exceptions import IamException
 
 from tests.clients import test_aws_iam_client_responses as resp
-from tests.test_types_generator import client_error, role, policy, tag
+from tests.test_types_generator import client_error, role, policy, tag, password_policy
 
 
 def get_role(**kwargs: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -204,3 +204,63 @@ def test_tag_role_failure() -> None:
     mock_iam = Mock(tag_role=Mock(side_effect=client_error("TagRole", "AccessDenied", "nope!")))
     with raises(IamException, match="unable to tag role a_role"):
         AwsIamClient(mock_iam).tag_role("a_role", [tag("k", "v")])
+
+
+def test_get_account_password_policy() -> None:
+    mock_iam = Mock(get_account_password_policy=Mock(return_value=resp.GET_ACCOUNT_PASSWORD_POLICY))
+    expected_password_policy = password_policy(
+        minimum_password_length=8,
+        require_symbols=True,
+        require_numbers=True,
+        require_uppercase_chars=False,
+        require_lowercase_chars=False,
+        allow_users_to_change_password=False,
+        expire_passwords=False,
+        max_password_age=90,
+        password_reuse_prevention=12,
+        hard_expiry=False,
+    )
+    assert expected_password_policy == AwsIamClient(mock_iam).get_account_password_policy()
+
+
+def test_get_account_password_policy_failure() -> None:
+    mock_iam = Mock(get_account_password_policy=Mock(side_effect=client_error("GetAccountPasswordPolicy", "No", "no")))
+    with raises(IamException, match="No"):
+        AwsIamClient(mock_iam).get_account_password_policy()
+
+
+def test_update_account_password_policy() -> None:
+    mock_iam = Mock()
+    a_password_policy = password_policy(
+        minimum_password_length=30,
+        require_symbols=True,
+        require_numbers=False,
+        require_uppercase_chars=True,
+        require_lowercase_chars=False,
+        allow_users_to_change_password=True,
+        max_password_age=30,
+        password_reuse_prevention=5,
+        hard_expiry=True,
+    )
+    AwsIamClient(mock_iam).update_account_password_policy(a_password_policy)
+    mock_iam.update_account_password_policy.assert_called_once_with(
+        MinimumPasswordLength=30,
+        RequireSymbols=True,
+        RequireNumbers=False,
+        RequireUppercaseCharacters=True,
+        RequireLowercaseCharacters=False,
+        AllowUsersToChangePassword=True,
+        MaxPasswordAge=30,
+        PasswordReusePrevention=5,
+        HardExpiry=True,
+    )
+
+
+def test_update_account_password_policy_failure() -> None:
+    mock_iam = Mock(
+        update_account_password_policy=Mock(
+            side_effect=client_error("UpdateAccountPasswordPolicy", "Nope", "you can't")
+        )
+    )
+    with raises(IamException, match="Nope"):
+        AwsIamClient(mock_iam).update_account_password_policy(password_policy())
