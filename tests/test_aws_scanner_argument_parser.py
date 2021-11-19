@@ -206,6 +206,21 @@ def test_parse_cli_args_with_subscription_filter() -> None:
         assert long_args.with_subscription_filter is True
 
 
+def test_parse_cli_args_for_audit_password_policy_task() -> None:
+    with patch("sys.argv", ". audit_password_policy -t 797879 -a 7,8 -e true".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". audit_password_policy --token 797879 --accounts 7,8 --enforce True".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "audit_password_policy"
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "797879"
+        assert args.accounts == ["7", "8"]
+        assert args.enforce is True
+
+
 def test_default_log_level_is_warning() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
         args = AwsScannerArgumentParser().parse_cli_args()
