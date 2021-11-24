@@ -71,6 +71,9 @@ class AwsScannerConfig:
     def logs_vpc_log_group_name(self) -> str:
         return self._get_config("logs", "vpc_log_group_name")
 
+    def logs_vpc_log_group_subscription_filter_name(self) -> str:
+        return f"{self.logs_vpc_log_group_name()}_sub_filter"
+
     def logs_vpc_log_group_pattern(self) -> str:
         return self._get_config("logs", "vpc_log_group_pattern")
 

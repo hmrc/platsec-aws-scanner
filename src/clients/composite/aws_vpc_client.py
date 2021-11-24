@@ -15,6 +15,7 @@ from src.data.aws_compliance_actions import (
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
+    DeleteVpcLogGroupSubscriptionFilterAction,
     PutVpcLogGroupSubscriptionFilterAction,
     PutVpcLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
@@ -74,8 +75,8 @@ class AwsVpcClient:
             or not flow_log.deliver_log_role_arn.endswith(f":role/{self.config.logs_vpc_log_group_delivery_role()}")
         )
 
-    def enforcement_actions(self, vpcs: Sequence[Vpc]) -> Sequence[ComplianceAction]:
-        log_group_actions = self._vpc_log_group_enforcement_actions()
+    def enforcement_actions(self, vpcs: Sequence[Vpc], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
+        log_group_actions = self._vpc_log_group_enforcement_actions(with_subscription_filter)
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
@@ -148,11 +149,13 @@ class AwsVpcClient:
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
 
-    def _vpc_log_group_enforcement_actions(self) -> Sequence[ComplianceAction]:
+    def _vpc_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         log_group = self._find_log_group(self.config.logs_vpc_log_group_name())
         actions: List[Any] = []
         if log_group:
-            if not self._is_central_vpc_log_group(log_group):
+            if self._is_central_vpc_log_group(log_group) and not with_subscription_filter:
+                actions.append(DeleteVpcLogGroupSubscriptionFilterAction(logs=self.logs))
+            if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
                 actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
             if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days():
                 actions.append(PutVpcLogGroupRetentionPolicyAction(logs=self.logs))
@@ -162,11 +165,12 @@ class AwsVpcClient:
             actions.extend(
                 [
                     CreateVpcLogGroupAction(logs=self.logs),
-                    PutVpcLogGroupSubscriptionFilterAction(logs=self.logs),
                     PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
                     TagVpcLogGroupAction(logs=self.logs),
                 ]
             )
+            if with_subscription_filter:
+                actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
 
         return actions
 
