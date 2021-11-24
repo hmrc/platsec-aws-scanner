@@ -184,12 +184,37 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
 
     def _apply(self) -> None:
         config = Config()
-        log_group_name = config.logs_vpc_log_group_name()
         self.logs.put_subscription_filter(
-            log_group_name=log_group_name,
-            filter_name=f"{log_group_name}_sub_filter",
+            log_group_name=config.logs_vpc_log_group_name(),
+            filter_name=config.logs_vpc_log_group_subscription_filter_name(),
             filter_pattern=config.logs_vpc_log_group_pattern(),
             destination_arn=config.logs_vpc_log_group_destination(),
+        )
+
+
+@dataclass
+class DeleteVpcLogGroupSubscriptionFilterAction(ComplianceAction):
+    logs: AwsLogsClient
+
+    def __init__(self, logs: AwsLogsClient) -> None:
+        super().__init__("Delete central VPC log group subscription filter")
+        self.logs = logs
+
+    def plan(self) -> ComplianceActionReport:
+        config = Config()
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(
+                log_group_name=config.logs_vpc_log_group_name(),
+                subscription_filter_name=config.logs_vpc_log_group_subscription_filter_name(),
+            ),
+        )
+
+    def _apply(self) -> None:
+        config = Config()
+        self.logs.delete_subscription_filter(
+            log_group_name=config.logs_vpc_log_group_name(),
+            filter_name=config.logs_vpc_log_group_subscription_filter_name(),
         )
 
 

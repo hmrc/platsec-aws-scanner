@@ -18,6 +18,7 @@ from src.data.aws_compliance_actions import (
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
+    DeleteVpcLogGroupSubscriptionFilterAction,
     PutVpcLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
@@ -220,6 +221,7 @@ def aws_scanner_arguments(
     log_level: str = "ERROR",
     enforce: bool = False,
     disable_account_lookup: bool = False,
+    with_subscription_filter: bool = False,
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -235,6 +237,7 @@ def aws_scanner_arguments(
         log_level=log_level,
         enforce=enforce,
         disable_account_lookup=disable_account_lookup,
+        with_subscription_filter=with_subscription_filter,
     )
 
 
@@ -336,6 +339,12 @@ def put_vpc_log_group_subscription_filter_action(
     return PutVpcLogGroupSubscriptionFilterAction(logs=logs)
 
 
+def delete_vpc_log_group_subscription_filter_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+) -> DeleteVpcLogGroupSubscriptionFilterAction:
+    return DeleteVpcLogGroupSubscriptionFilterAction(logs=logs)
+
+
 def put_vpc_log_group_retention_policy_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
 ) -> PutVpcLogGroupRetentionPolicyAction:
@@ -352,8 +361,10 @@ def tag_vpc_log_group_action(
     return TagVpcLogGroupAction(logs=logs)
 
 
-def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:
-    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce)
+def aws_audit_vpc_flow_logs_task(
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+) -> AwsAuditVPCFlowLogsTask:
+    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
 
 
 def log_group(

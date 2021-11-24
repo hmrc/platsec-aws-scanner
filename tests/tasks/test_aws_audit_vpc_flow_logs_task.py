@@ -22,8 +22,12 @@ vpcs = [vpc(id="vpc-1"), vpc(id="vpc-2")]
 actions = [delete_flow_log_action(flow_log_id="fl-4"), create_flow_log_action(vpc_id="vpc-7")]
 
 
-def enforcement_actions(v: Sequence[Vpc]) -> Sequence[ComplianceAction]:
-    return [delete_flow_log_action(flow_log_id="fl-4"), create_flow_log_action(vpc_id="vpc-7")] if v == vpcs else []
+def enforcement_actions(v: Sequence[Vpc], with_sub_filter: bool) -> Sequence[ComplianceAction]:
+    return (
+        [delete_flow_log_action(flow_log_id="fl-4"), create_flow_log_action(vpc_id="vpc-7")]
+        if v == vpcs and with_sub_filter
+        else []
+    )
 
 
 @patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
@@ -38,7 +42,9 @@ class TestAwsAuditVPCFlowLogsTask(TestCase):
             ),
         ]
         report = self.expected_report(action_reports)
-        self.assertEqual(report, aws_audit_vpc_flow_logs_task(enforce=False).run(vpc_client))
+        self.assertEqual(
+            report, aws_audit_vpc_flow_logs_task(enforce=False, with_subscription_filter=True).run(vpc_client)
+        )
 
     @staticmethod
     def expected_report(action_reports: Sequence[ComplianceActionReport]) -> AwsTaskReport:
@@ -57,4 +63,7 @@ class TestAwsAuditVPCFlowLogsTask(TestCase):
                 details=dict(vpc_id="vpc-7", log_group_name="/vpc/flow_log"),
             ),
         ]
-        self.assertEqual(self.expected_report(reports), aws_audit_vpc_flow_logs_task(enforce=True).run(vpc_client))
+        self.assertEqual(
+            self.expected_report(reports),
+            aws_audit_vpc_flow_logs_task(enforce=True, with_subscription_filter=True).run(vpc_client),
+        )

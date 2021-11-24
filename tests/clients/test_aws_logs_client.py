@@ -97,3 +97,15 @@ def test_put_retention_policy_failure() -> None:
     boto = Mock(put_retention_policy=Mock(side_effect=client_error("PutRetentionPolicy", "Error", "boom")))
     with raises(LogsException, match="14 days retention policy for log group 'broken_log_group'"):
         AwsLogsClient(boto).put_retention_policy("broken_log_group", 14)
+
+
+def test_delete_subscription_filter() -> None:
+    boto = Mock()
+    AwsLogsClient(boto).delete_subscription_filter("a_log_group", "a_filter")
+    boto.delete_subscription_filter.assert_called_once_with(logGroupName="a_log_group", filterName="a_filter")
+
+
+def test_delete_subscription_filter_failure() -> None:
+    boto = Mock(delete_subscription_filter=Mock(side_effect=client_error("DeleteSubscriptionFilter", "No", "no!")))
+    with raises(LogsException, match="some_broken_filter"):
+        AwsLogsClient(boto).delete_subscription_filter("a_log_group", "some_broken_filter")

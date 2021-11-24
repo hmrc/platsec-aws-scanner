@@ -62,7 +62,10 @@ class AwsTaskBuilder:
                 month=self._args.month,
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(
-                AwsAuditVPCFlowLogsTask, self._args.accounts, enforce=self._args.enforce
+                AwsAuditVPCFlowLogsTask,
+                self._args.accounts,
+                enforce=self._args.enforce,
+                with_subscription_filter=self._args.with_subscription_filter,
             ),
         }
         return task_mapping[self._args.task]()
