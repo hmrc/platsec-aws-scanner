@@ -123,5 +123,5 @@ def to_password_policy(policy_response: Dict[str, Any]) -> PasswordPolicy:
         expire_passwords=password_policy["ExpirePasswords"],
         max_password_age=password_policy["MaxPasswordAge"],
         password_reuse_prevention=password_policy["PasswordReusePrevention"],
-        hard_expiry=password_policy["HardExpiry"],
+        hard_expiry=password_policy.get("HardExpiry") or False,
     )

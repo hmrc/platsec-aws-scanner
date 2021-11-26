@@ -9,6 +9,7 @@ from src.data.aws_organizations_types import Account
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
+from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -66,6 +67,9 @@ class AwsTaskBuilder:
                 self._args.accounts,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
+            ),
+            Cmd.audit_password_policy: lambda: self._tasks(
+                AwsAuditPasswordPolicyTask, self._args.accounts, enforce=self._args.enforce
             ),
         }
         return task_mapping[self._args.task]()
