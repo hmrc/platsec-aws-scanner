@@ -46,6 +46,7 @@ from src.data.aws_s3_types import (
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
@@ -92,6 +93,12 @@ def ssm_task(account: Account = account(), description: str = "ssm_task") -> Aws
 
 def organizations_task(account: Account = account(), description: str = "org_task") -> AwsOrganizationsTask:
     return AwsOrganizationsTask(description=description, account=account)
+
+
+def cost_explorer_task(
+    account: Account = account(), service: str = "bla", year: int = 2021, month: int = 4
+) -> AwsAuditCostExplorerTask:
+    return AwsAuditCostExplorerTask(account=account, service=service, year=year, month=month)
 
 
 def cloudtrail_task(

@@ -1,15 +1,23 @@
-from typing import Any
+from typing import Any, Dict
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from src.aws_task_runner import AwsTaskRunner
 from src.clients.aws_client_factory import AwsClientFactory
 from src.data.aws_scanner_exceptions import UnsupportedTaskException
-from src.tasks.aws_athena_task import AwsAthenaTask
-from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
-from src.tasks.aws_organizations_task import AwsOrganizationsTask
+from src.tasks.aws_task import AwsTask
 
-from tests.test_types_generator import account, athena_task, audit_iam_task, s3_task, ssm_task, task_report, vpc_task
+from tests.test_types_generator import (
+    account,
+    athena_task,
+    audit_iam_task,
+    cost_explorer_task,
+    organizations_task,
+    s3_task,
+    ssm_task,
+    task_report,
+    vpc_task,
+)
 
 
 class TestAwsTaskRunner(TestCase):
@@ -31,28 +39,23 @@ class TestAwsTaskRunner(TestCase):
     def test_run_athena_task(self) -> None:
         mock_client = Mock()
         mock_client_factory = Mock(get_athena_client=Mock(return_value=mock_client))
-        mock_task = Mock(
-            spec=AwsAthenaTask, run=Mock(side_effect=lambda client: task_report() if client == mock_client else None)
-        )
-        self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(mock_task))
+        task = athena_task()
+        task.run = Mock(side_effect=lambda client: task_report() if client == mock_client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(task))
 
     def test_run_cost_explorer_task(self) -> None:
         mock_client = Mock()
         mock_client_factory = Mock(get_cost_explorer_client=Mock(return_value=mock_client))
-        mock_task = Mock(
-            spec=AwsAuditCostExplorerTask,
-            run=Mock(side_effect=lambda client: task_report() if client == mock_client else None),
-        )
-        self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(mock_task))
+        task = cost_explorer_task()
+        task.run = Mock(side_effect=lambda client: task_report() if client == mock_client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(task))
 
     def test_run_organization_task(self) -> None:
         mock_client = Mock()
         mock_client_factory = Mock(get_organizations_client=Mock(return_value=mock_client))
-        mock_task = Mock(
-            spec=AwsOrganizationsTask,
-            run=Mock(side_effect=lambda client: task_report() if client == mock_client else None),
-        )
-        self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(mock_task))
+        task = organizations_task()
+        task.run = Mock(side_effect=lambda client: task_report() if client == mock_client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(mock_client_factory)._run_task(task))
 
     def test_run_ssm_task(self) -> None:
         client = Mock()
@@ -90,6 +93,9 @@ class TestAwsTaskRunner(TestCase):
         self.assertIs(boto_client, task_run.call_args.args[0]._iam)
 
     def test_run_unsupported_task(self) -> None:
-        mock_unsupported_task = Mock()
+        class UnsupportedTask(AwsTask):
+            def _run_task(self, client: Any) -> Dict[Any, Any]:
+                return dict()
+
         with self.assertRaises(UnsupportedTaskException):
-            AwsTaskRunner(Mock())._run_task(mock_unsupported_task)
+            AwsTaskRunner(Mock())._run_task(UnsupportedTask("unsupported", account()))
