@@ -80,9 +80,6 @@ class AwsScannerConfig:
             hard_expiry=self.iam_password_policy_hard_expiry(),
         )
 
-    def iam_password_policy_role(self) -> str:
-        return self._get_config("iam", "password_policy_role")
-
     def iam_password_policy_minimum_password_length(self) -> int:
         return self._get_int_config("iam", "password_policy_minimum_password_length")
 

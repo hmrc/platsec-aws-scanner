@@ -27,7 +27,6 @@ def test_init_config_from_file() -> None:
     assert "${srcaddr} ${dstaddr}" == config.ec2_flow_log_format()
     assert "iam_role" == config.iam_role()
     assert "iam_audit_role" == config.iam_audit_role()
-    assert "iam_password_policy_role" == config.iam_password_policy_role()
     assert 8 == config.iam_password_policy_minimum_password_length()
     assert config.iam_password_policy_require_symbols()
     assert config.iam_password_policy_require_numbers()
