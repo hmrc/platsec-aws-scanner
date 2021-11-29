@@ -147,7 +147,7 @@ class AwsScannerConfig:
         return self._get_config("organization", "role")
 
     def organization_include_root_accounts(self) -> bool:
-        return str(self._get_config("organization", "include_root_accounts")).lower() == "true"
+        return self._get_bool_config("organization", "include_root_accounts")
 
     def organization_parent(self) -> str:
         return self._get_config("organization", "parent")
