@@ -20,11 +20,13 @@ from tests.test_types_generator import (
     delete_flow_log_delivery_role_action,
     delete_vpc_log_group_subscription_filter_action,
     create_vpc_log_group_action,
+    password_policy,
     put_vpc_log_group_subscription_filter_action,
     put_vpc_log_group_retention_policy_action,
     tag_flow_log_delivery_role_action,
     tag_vpc_log_group_action,
     tag,
+    update_password_policy_action,
 )
 
 
@@ -238,3 +240,16 @@ def test_apply_tag_flow_log_delivery_role_action() -> None:
             tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
         ],
     )
+
+
+def test_plan_update_password_policy_action() -> None:
+    assert update_password_policy_action().plan() == compliance_action_report(
+        description="Update IAM password policy",
+        details={"password_policy": password_policy()},
+    )
+
+
+def test_apply_update_password_policy_action() -> None:
+    iam = Mock(spec=AwsIamClient)
+    update_password_policy_action(iam=iam)._apply()
+    iam.update_account_password_policy.assert_called_once_with(password_policy())

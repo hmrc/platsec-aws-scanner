@@ -6,6 +6,7 @@ from json import JSONDecodeError, loads
 from logging import getLogger
 from typing import Any, Dict, List
 
+from src.data.aws_iam_types import PasswordPolicy
 from src.data.aws_organizations_types import Account
 
 
@@ -64,6 +65,20 @@ class AwsScannerConfig:
 
     def iam_audit_role(self) -> str:
         return self._get_config("iam", "audit_role")
+
+    def iam_password_policy(self) -> PasswordPolicy:
+        return PasswordPolicy(
+            minimum_password_length=self.iam_password_policy_minimum_password_length(),
+            require_symbols=self.iam_password_policy_require_symbols(),
+            require_numbers=self.iam_password_policy_require_numbers(),
+            require_uppercase_chars=self.iam_password_policy_require_uppercase_chars(),
+            require_lowercase_chars=self.iam_password_policy_require_lowercase_chars(),
+            allow_users_to_change_password=self.iam_password_policy_allow_users_to_change_password(),
+            expire_passwords=self.iam_password_policy_max_password_age() > 0,
+            max_password_age=self.iam_password_policy_max_password_age(),
+            password_reuse_prevention=self.iam_password_policy_password_reuse_prevention(),
+            hard_expiry=self.iam_password_policy_hard_expiry(),
+        )
 
     def iam_password_policy_role(self) -> str:
         return self._get_config("iam", "password_policy_role")

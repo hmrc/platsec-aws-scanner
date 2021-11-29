@@ -23,6 +23,7 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
+    UpdatePasswordPolicyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
@@ -373,6 +374,10 @@ def tag_vpc_log_group_action(
     return TagVpcLogGroupAction(logs=logs)
 
 
+def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:
+    return UpdatePasswordPolicyAction(iam=iam)
+
+
 def aws_audit_vpc_flow_logs_task(
     account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
 ) -> AwsAuditVPCFlowLogsTask:
@@ -456,7 +461,7 @@ def password_policy(
     require_uppercase_chars: bool = False,
     require_lowercase_chars: bool = False,
     allow_users_to_change_password: bool = False,
-    expire_passwords: bool = False,
+    expire_passwords: bool = True,
     max_password_age: int = 90,
     password_reuse_prevention: int = 12,
     hard_expiry: bool = False,

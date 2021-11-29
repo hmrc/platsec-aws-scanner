@@ -262,3 +262,21 @@ class TagVpcLogGroupAction(ComplianceAction):
             description=self.description,
             details=dict(log_group_name=config.logs_vpc_log_group_name(), tags=PLATSEC_SCANNER_TAGS),
         )
+
+
+@dataclass
+class UpdatePasswordPolicyAction(ComplianceAction):
+    iam: AwsIamClient
+
+    def __init__(self, iam: AwsIamClient) -> None:
+        super().__init__("Update IAM password policy")
+        self.iam = iam
+
+    def _apply(self) -> None:
+        self.iam.update_account_password_policy(Config().iam_password_policy())
+
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(password_policy=Config().iam_password_policy()),
+        )
