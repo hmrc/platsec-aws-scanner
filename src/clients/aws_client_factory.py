@@ -11,6 +11,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_athena_client import AwsAthenaClient
 from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
 from src.clients.aws_ec2_client import AwsEC2Client
+from src.clients.aws_iam_audit_client import AwsIamAuditClient
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
@@ -60,8 +61,8 @@ class AwsClientFactory:
     def get_logs_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("logs", account, self._config.logs_role())
 
-    def get_iam_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("iam", account, self._config.iam_role())
+    def get_iam_boto_client(self, account: Account, role: str) -> BaseClient:
+        return self._get_client("iam", account, role)
 
     def get_kms_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("kms", account, self._config.kms_role())
@@ -85,10 +86,10 @@ class AwsClientFactory:
         return AwsLogsClient(self.get_logs_boto_client(account))
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
-        return AwsIamClient(self.get_iam_boto_client(account))
+        return AwsIamClient(self.get_iam_boto_client(account, self._config.iam_role()))
 
-    def get_iam_client_for_audit(self, account: Account) -> AwsIamClient:
-        return AwsIamClient(self._get_client("iam", account, self._config.iam_audit_role()))
+    def get_iam_client_for_audit(self, account: Account) -> AwsIamAuditClient:
+        return AwsIamAuditClient(self.get_iam_boto_client(account, self._config.iam_audit_role()))
 
     def get_kms_client(self, account: Account) -> AwsKmsClient:
         return AwsKmsClient(self.get_kms_boto_client(account))
