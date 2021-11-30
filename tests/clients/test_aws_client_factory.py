@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from botocore.exceptions import NoCredentialsError
 
 from src.clients.aws_client_factory import AwsClientFactory, AwsCredentials
+from src.clients.aws_iam_audit_client import AwsIamAuditClient
 from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
@@ -107,7 +108,7 @@ class TestGetBotoClients(TestCase):
         iam_account = account(identifier="977644311255", name="some_iam_account")
         self.assert_get_client(
             method_under_test="get_iam_boto_client",
-            method_args={"account": iam_account},
+            method_args={"account": iam_account, "role": "iam_role"},
             service="iam",
             target_account=iam_account,
             role="iam_role",
@@ -197,10 +198,20 @@ class TestGetClients(TestCase):
         iam_boto_client = Mock()
         with patch(
             f"{self.factory_path}.get_iam_boto_client",
-            side_effect=lambda acc: iam_boto_client if acc == account() else None,
+            side_effect=lambda acc, role: iam_boto_client if acc == account() and role == "iam_role" else None,
         ):
             iam_client = AwsClientFactory(self.mfa, self.username).get_iam_client(account())
             self.assertEqual(iam_client._iam, iam_boto_client)
+
+    def test_get_iam_client_for_audit(self, _: Mock) -> None:
+        iam_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_iam_boto_client",
+            side_effect=lambda acc, role: iam_boto_client if acc == account() and role == "iam_audit_role" else None,
+        ):
+            iam_client = AwsClientFactory(self.mfa, self.username).get_iam_client_for_audit(account())
+            self.assertEqual(iam_client._iam, iam_boto_client)
+            self.assertEqual(type(iam_client), AwsIamAuditClient)
 
     def test_get_kms_client(self, _: Mock) -> None:
         kms_boto_client = Mock()
