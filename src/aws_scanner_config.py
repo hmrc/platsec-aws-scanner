@@ -6,6 +6,7 @@ from json import JSONDecodeError, loads
 from logging import getLogger
 from typing import Any, Dict, List
 
+from src.data.aws_iam_types import PasswordPolicy
 from src.data.aws_organizations_types import Account
 
 
@@ -65,6 +66,47 @@ class AwsScannerConfig:
     def iam_audit_role(self) -> str:
         return self._get_config("iam", "audit_role")
 
+    def iam_password_policy(self) -> PasswordPolicy:
+        return PasswordPolicy(
+            minimum_password_length=self.iam_password_policy_minimum_password_length(),
+            require_symbols=self.iam_password_policy_require_symbols(),
+            require_numbers=self.iam_password_policy_require_numbers(),
+            require_uppercase_chars=self.iam_password_policy_require_uppercase_chars(),
+            require_lowercase_chars=self.iam_password_policy_require_lowercase_chars(),
+            allow_users_to_change_password=self.iam_password_policy_allow_users_to_change_password(),
+            expire_passwords=self.iam_password_policy_max_password_age() > 0,
+            max_password_age=self.iam_password_policy_max_password_age(),
+            password_reuse_prevention=self.iam_password_policy_password_reuse_prevention(),
+            hard_expiry=self.iam_password_policy_hard_expiry(),
+        )
+
+    def iam_password_policy_minimum_password_length(self) -> int:
+        return self._get_int_config("iam", "password_policy_minimum_password_length")
+
+    def iam_password_policy_require_symbols(self) -> bool:
+        return self._get_bool_config("iam", "password_policy_require_symbols")
+
+    def iam_password_policy_require_numbers(self) -> bool:
+        return self._get_bool_config("iam", "password_policy_require_numbers")
+
+    def iam_password_policy_require_uppercase_chars(self) -> bool:
+        return self._get_bool_config("iam", "password_policy_require_uppercase_chars")
+
+    def iam_password_policy_require_lowercase_chars(self) -> bool:
+        return self._get_bool_config("iam", "password_policy_require_lowercase_chars")
+
+    def iam_password_policy_allow_users_to_change_password(self) -> bool:
+        return self._get_bool_config("iam", "password_policy_allow_users_to_change_password")
+
+    def iam_password_policy_max_password_age(self) -> int:
+        return self._get_int_config("iam", "password_policy_max_password_age")
+
+    def iam_password_policy_password_reuse_prevention(self) -> int:
+        return self._get_int_config("iam", "password_policy_password_reuse_prevention")
+
+    def iam_password_policy_hard_expiry(self) -> bool:
+        return self._get_bool_config("iam", "password_policy_hard_expiry")
+
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
 
@@ -105,7 +147,7 @@ class AwsScannerConfig:
         return self._get_config("organization", "role")
 
     def organization_include_root_accounts(self) -> bool:
-        return str(self._get_config("organization", "include_root_accounts")).lower() == "true"
+        return self._get_bool_config("organization", "include_root_accounts")
 
     def organization_parent(self) -> str:
         return self._get_config("organization", "parent")
@@ -153,6 +195,9 @@ class AwsScannerConfig:
             return int(self._get_config(section, key))
         except ValueError as err:
             sys.exit(f"invalid config type: section '{section}', key '{key}', error: {err}")
+
+    def _get_bool_config(self, section: str, key: str) -> bool:
+        return str(self._get_config(section, key)) == "true"
 
     @staticmethod
     def _to_json(json_str: str, section: str, key: str) -> Dict[str, Any]:

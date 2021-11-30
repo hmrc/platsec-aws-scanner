@@ -23,9 +23,10 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
+    UpdatePasswordPolicyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
-from src.data.aws_iam_types import Policy, Role
+from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
@@ -46,7 +47,9 @@ from src.data.aws_s3_types import (
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
+from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
@@ -94,6 +97,12 @@ def organizations_task(account: Account = account(), description: str = "org_tas
     return AwsOrganizationsTask(description=description, account=account)
 
 
+def cost_explorer_task(
+    account: Account = account(), service: str = "bla", year: int = 2021, month: int = 4
+) -> AwsAuditCostExplorerTask:
+    return AwsAuditCostExplorerTask(account=account, service=service, year=year, month=month)
+
+
 def cloudtrail_task(
     account: Account = account(), description: str = "task", partition: AwsAthenaDataPartition = partition()
 ) -> AwsCloudTrailTask:
@@ -102,6 +111,10 @@ def cloudtrail_task(
 
 def audit_iam_task(account: Account = account()) -> AwsAuditIamTask:
     return AwsAuditIamTask(account=account)
+
+
+def audit_password_policy_task(account: Account = account(), enforce: bool = False) -> AwsAuditPasswordPolicyTask:
+    return AwsAuditPasswordPolicyTask(account=account, enforce=enforce)
 
 
 def task_report(
@@ -361,6 +374,10 @@ def tag_vpc_log_group_action(
     return TagVpcLogGroupAction(logs=logs)
 
 
+def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:
+    return UpdatePasswordPolicyAction(iam=iam)
+
+
 def aws_audit_vpc_flow_logs_task(
     account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
 ) -> AwsAuditVPCFlowLogsTask:
@@ -435,3 +452,29 @@ def compliance_action_report(
 
 def tag(key: str, value: str) -> Tag:
     return Tag(key=key, value=value)
+
+
+def password_policy(
+    minimum_password_length: int = 8,
+    require_symbols: bool = True,
+    require_numbers: bool = True,
+    require_uppercase_chars: bool = False,
+    require_lowercase_chars: bool = False,
+    allow_users_to_change_password: bool = False,
+    expire_passwords: bool = True,
+    max_password_age: int = 90,
+    password_reuse_prevention: int = 12,
+    hard_expiry: bool = False,
+) -> PasswordPolicy:
+    return PasswordPolicy(
+        minimum_password_length=minimum_password_length,
+        require_symbols=require_symbols,
+        require_numbers=require_numbers,
+        require_uppercase_chars=require_uppercase_chars,
+        require_lowercase_chars=require_lowercase_chars,
+        allow_users_to_change_password=allow_users_to_change_password,
+        expire_passwords=expire_passwords,
+        max_password_age=max_password_age,
+        password_reuse_prevention=password_reuse_prevention,
+        hard_expiry=hard_expiry,
+    )

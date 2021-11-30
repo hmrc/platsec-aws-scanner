@@ -95,3 +95,33 @@ class AccessKey:
     user_name: str
     created: datetime
     last_used: Optional[datetime] = None
+
+
+@dataclass
+class PasswordPolicy:
+    minimum_password_length: int
+    require_symbols: bool
+    require_numbers: bool
+    require_uppercase_chars: bool
+    require_lowercase_chars: bool
+    allow_users_to_change_password: bool
+    expire_passwords: bool
+    max_password_age: int
+    password_reuse_prevention: int
+    hard_expiry: bool
+
+
+def to_password_policy(policy_response: Dict[str, Any]) -> PasswordPolicy:
+    password_policy = policy_response["PasswordPolicy"]
+    return PasswordPolicy(
+        minimum_password_length=password_policy["MinimumPasswordLength"],
+        require_symbols=password_policy["RequireSymbols"],
+        require_numbers=password_policy["RequireNumbers"],
+        require_uppercase_chars=password_policy["RequireUppercaseCharacters"],
+        require_lowercase_chars=password_policy["RequireLowercaseCharacters"],
+        allow_users_to_change_password=password_policy["AllowUsersToChangePassword"],
+        expire_passwords=password_policy["ExpirePasswords"],
+        max_password_age=password_policy["MaxPasswordAge"],
+        password_reuse_prevention=password_policy["PasswordReusePrevention"],
+        hard_expiry=password_policy.get("HardExpiry") or False,
+    )
