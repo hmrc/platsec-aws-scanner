@@ -99,7 +99,6 @@ GET_ACCOUNT_PASSWORD_POLICY = {
         "AllowUsersToChangePassword": False,
         "ExpirePasswords": False,
         "HardExpiry": False,
-        "MaxPasswordAge": 90,
         "MinimumPasswordLength": 8,
         "PasswordReusePrevention": 12,
         "RequireLowercaseCharacters": False,

@@ -99,29 +99,29 @@ class AccessKey:
 
 @dataclass
 class PasswordPolicy:
-    minimum_password_length: int
-    require_symbols: bool
-    require_numbers: bool
-    require_uppercase_chars: bool
-    require_lowercase_chars: bool
-    allow_users_to_change_password: bool
-    expire_passwords: bool
-    max_password_age: int
-    password_reuse_prevention: int
-    hard_expiry: bool
+    minimum_password_length: Optional[int]
+    require_symbols: Optional[bool]
+    require_numbers: Optional[bool]
+    require_uppercase_chars: Optional[bool]
+    require_lowercase_chars: Optional[bool]
+    allow_users_to_change_password: Optional[bool]
+    expire_passwords: Optional[bool]
+    max_password_age: Optional[int]
+    password_reuse_prevention: Optional[int]
+    hard_expiry: Optional[bool]
 
 
 def to_password_policy(policy_response: Dict[str, Any]) -> PasswordPolicy:
     password_policy = policy_response["PasswordPolicy"]
     return PasswordPolicy(
-        minimum_password_length=password_policy["MinimumPasswordLength"],
-        require_symbols=password_policy["RequireSymbols"],
-        require_numbers=password_policy["RequireNumbers"],
-        require_uppercase_chars=password_policy["RequireUppercaseCharacters"],
-        require_lowercase_chars=password_policy["RequireLowercaseCharacters"],
-        allow_users_to_change_password=password_policy["AllowUsersToChangePassword"],
-        expire_passwords=password_policy["ExpirePasswords"],
-        max_password_age=password_policy["MaxPasswordAge"],
-        password_reuse_prevention=password_policy["PasswordReusePrevention"],
-        hard_expiry=password_policy.get("HardExpiry") or False,
+        minimum_password_length=password_policy.get("MinimumPasswordLength"),
+        require_symbols=password_policy.get("RequireSymbols"),
+        require_numbers=password_policy.get("RequireNumbers"),
+        require_uppercase_chars=password_policy.get("RequireUppercaseCharacters"),
+        require_lowercase_chars=password_policy.get("RequireLowercaseCharacters"),
+        allow_users_to_change_password=password_policy.get("AllowUsersToChangePassword"),
+        expire_passwords=password_policy.get("ExpirePasswords"),
+        max_password_age=password_policy.get("MaxPasswordAge"),
+        password_reuse_prevention=password_policy.get("PasswordReusePrevention"),
+        hard_expiry=password_policy.get("HardExpiry"),
     )
