@@ -216,7 +216,7 @@ def test_get_account_password_policy() -> None:
         require_lowercase_chars=False,
         allow_users_to_change_password=False,
         expire_passwords=False,
-        max_password_age=90,
+        max_password_age=None,
         password_reuse_prevention=12,
         hard_expiry=False,
     )

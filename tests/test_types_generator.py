@@ -455,16 +455,16 @@ def tag(key: str, value: str) -> Tag:
 
 
 def password_policy(
-    minimum_password_length: int = 8,
-    require_symbols: bool = True,
-    require_numbers: bool = True,
-    require_uppercase_chars: bool = False,
-    require_lowercase_chars: bool = False,
-    allow_users_to_change_password: bool = False,
-    expire_passwords: bool = True,
-    max_password_age: int = 90,
-    password_reuse_prevention: int = 12,
-    hard_expiry: bool = False,
+    minimum_password_length: Optional[int] = 8,
+    require_symbols: Optional[bool] = True,
+    require_numbers: Optional[bool] = True,
+    require_uppercase_chars: Optional[bool] = False,
+    require_lowercase_chars: Optional[bool] = False,
+    allow_users_to_change_password: Optional[bool] = False,
+    expire_passwords: Optional[bool] = True,
+    max_password_age: Optional[int] = 90,
+    password_reuse_prevention: Optional[int] = 12,
+    hard_expiry: Optional[bool] = False,
 ) -> PasswordPolicy:
     return PasswordPolicy(
         minimum_password_length=minimum_password_length,
