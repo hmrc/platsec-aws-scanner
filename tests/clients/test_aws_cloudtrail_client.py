@@ -38,6 +38,12 @@ class TestCheckLogFileValidationIsEnabled(TestCase):
                 }
         self.assertEqual(False, client._check_logfile_validation_enabled(trail))
 
+    def test_check_logfile_validation_enabled_success(self) -> None:
+        boto_cloudtrail = Mock(describe_trails=Mock())
+        client = AwsCloudtrailAuditClient(boto_cloudtrail)
+        with self.assertRaises(CloudtrailException):
+            client._check_logfile_validation_enabled({})
+
 
 class TestDescribeTrails(TestCase):
     def test_describe_trails_return_empty(self) -> None:
