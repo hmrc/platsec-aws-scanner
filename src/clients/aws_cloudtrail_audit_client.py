@@ -7,13 +7,16 @@ from botocore.exceptions import BotoCoreError, ClientError
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
-from src.data.aws_scanner_exceptions import EC2Exception
 
 
-class AwsCloudtrailClient:
+class AwsCloudtrailAuditClient:
     def __init__(self, boto_cloudtrail: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
         self._cloudtrail = boto_cloudtrail
 
-    def get_trails(self):
-        return self._cloudtrail.list_trails()
+    def _get_trails(self) -> Dict[str, List]:
+        return self._cloudtrail.describe_trails()
+
+    def _check_logfile_validation_enabled(self, trail) -> bool:
+        print(trail["LogFileValidationEnabled"])
+        return trail["LogFileValidationEnabled"]

@@ -1,40 +1,32 @@
-LIST_TRAILS_RESPONSE_ONE = {
-    "Trails": [
+DESCRIBE_TRAILS_RESPONSE_EMPTY = {"Trails": []}
+
+DESCRIBE_TRAILS_RESPONSE_ONE = {
+    "trailList": [
         {
-            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-            "Name": "test_trail_001",
+            "Name": "dummy-trail-1",
             "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": True,
+            "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
         },
     ]
 }
 
-LIST_TRAILS_RESPONSE_TWO = {
-    "Trails": [
+DESCRIBE_TRAILS_RESPONSE_TWO = {
+    "trailList": [
         {
-            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-            "Name": "test_trail_001",
+            "Name": "dummy-trail-1",
             "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": True,
+            "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
         },
         {
-            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-2",
-            "Name": "test_trail_002",
+            "Name": "dummy-trail-2",
             "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-2",
+            "LogFileValidationEnabled": True,
+            "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789013",
         },
     ]
-}
-
-LIST_TRAILS_RESPONSE_WITH_TOKEN = {
-    "Trails": [
-        {
-            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-            "Name": "test_trail_001",
-            "HomeRegion": "eu-west-2",
-        },
-        {
-            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-2",
-            "Name": "test_trail_002",
-            "HomeRegion": "eu-west-2",
-        },
-    ],
-    "NextToken": "xyxyxxyy",
 }
