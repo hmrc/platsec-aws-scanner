@@ -17,23 +17,35 @@ class TestCheckLogFileEncryptionIsEnabled(TestCase):
         boto_cloudtrail = Mock(describe_trails=Mock())
         client = AwsCloudtrailAuditClient(boto_cloudtrail)
         trail = {
-                    "Name": "dummy-trail-1",
-                    "HomeRegion": "eu-west-2",
-                    "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-                    "LogFileValidationEnabled": True,
-                    "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
-                }
+            "Name": "dummy-trail-1",
+            "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": True,
+            "KmsKeyId": "arn:aws:kms:eu-west-2:123456789012:key/12345678-1234-1234-1234-123456789012",
+        }
         self.assertEqual(True, client._check_logfile_encryption(trail))
 
     def test_check_logfile_encryption_not_enabled_success(self) -> None:
         boto_cloudtrail = Mock(describe_trails=Mock())
         client = AwsCloudtrailAuditClient(boto_cloudtrail)
         trail = {
-                    "Name": "dummy-trail-1",
-                    "HomeRegion": "eu-west-2",
-                    "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-                    "LogFileValidationEnabled": False,
-                }
+            "Name": "dummy-trail-1",
+            "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": False,
+        }
+        self.assertEqual(False, client._check_logfile_encryption(trail))
+
+    def test_check_logfile_encryption_regex_fail(self) -> None:
+        boto_cloudtrail = Mock(describe_trails=Mock())
+        client = AwsCloudtrailAuditClient(boto_cloudtrail)
+        trail = {
+            "Name": "dummy-trail-1",
+            "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": False,
+            "KmsKeyId": "not a proper arn",
+        }
         self.assertEqual(False, client._check_logfile_encryption(trail))
 
 
@@ -42,24 +54,24 @@ class TestCheckLogFileValidationIsEnabled(TestCase):
         boto_cloudtrail = Mock(describe_trails=Mock())
         client = AwsCloudtrailAuditClient(boto_cloudtrail)
         trail = {
-                    "Name": "dummy-trail-1",
-                    "HomeRegion": "eu-west-2",
-                    "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-                    "LogFileValidationEnabled": True,
-                    "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
-                }
+            "Name": "dummy-trail-1",
+            "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": True,
+            "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
+        }
         self.assertEqual(True, client._check_logfile_validation_enabled(trail))
 
     def test_check_logfile_validation_not_enabled_success(self) -> None:
         boto_cloudtrail = Mock(describe_trails=Mock())
         client = AwsCloudtrailAuditClient(boto_cloudtrail)
         trail = {
-                    "Name": "dummy-trail-1",
-                    "HomeRegion": "eu-west-2",
-                    "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-                    "LogFileValidationEnabled": False,
-                    "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
-                }
+            "Name": "dummy-trail-1",
+            "HomeRegion": "eu-west-2",
+            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+            "LogFileValidationEnabled": False,
+            "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
+        }
         self.assertEqual(False, client._check_logfile_validation_enabled(trail))
 
     def test_check_logfile_validation_enabled_no_trail(self) -> None:

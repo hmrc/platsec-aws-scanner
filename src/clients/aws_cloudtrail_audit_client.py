@@ -1,6 +1,6 @@
 from logging import getLogger
 from typing import Any, Dict, List
-
+import re
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 from src.data.aws_scanner_exceptions import CloudtrailException
@@ -27,5 +27,7 @@ class AwsCloudtrailAuditClient:
     def _check_logfile_encryption(trail) -> bool:
         if "KmsKeyId" not in trail:
             return False
-        # TODO: regex the arn
-        return True
+        compiled = re.compile(
+            r"^arn:aws:kms:eu-west-2:([0-9]{12}):key/([0-9]{8})-([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{12})$"
+        )
+        return bool(compiled.match(trail["KmsKeyId"]))
