@@ -12,6 +12,31 @@ from tests.clients.test_aws_cloudtrail_responses import (
 from src.aws_scanner_config import AwsScannerConfig as Config
 
 
+class TestCheckLogFileEncryptionIsEnabled(TestCase):
+    def test_check_logfile_encryption_enabled_success(self) -> None:
+        boto_cloudtrail = Mock(describe_trails=Mock())
+        client = AwsCloudtrailAuditClient(boto_cloudtrail)
+        trail = {
+                    "Name": "dummy-trail-1",
+                    "HomeRegion": "eu-west-2",
+                    "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+                    "LogFileValidationEnabled": True,
+                    "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
+                }
+        self.assertEqual(True, client._check_logfile_encryption(trail))
+
+    def test_check_logfile_encryption_not_enabled_success(self) -> None:
+        boto_cloudtrail = Mock(describe_trails=Mock())
+        client = AwsCloudtrailAuditClient(boto_cloudtrail)
+        trail = {
+                    "Name": "dummy-trail-1",
+                    "HomeRegion": "eu-west-2",
+                    "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
+                    "LogFileValidationEnabled": False,
+                }
+        self.assertEqual(False, client._check_logfile_encryption(trail))
+
+
 class TestCheckLogFileValidationIsEnabled(TestCase):
     def test_check_logfile_validation_enabled_success(self) -> None:
         boto_cloudtrail = Mock(describe_trails=Mock())
@@ -65,7 +90,7 @@ class TestCheckLogFileValidationIsEnabled(TestCase):
             "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
             "KmsKeyId": "arn:aws:kms:us-east-2:123456789012:key/12345678-1234-1234-1234-123456789012",
         }
-        with self.assertRaises(CloudtrailException):
+        with self.assertRaisesRegex(CloudtrailException, "unable to determine logfile validation status"):
             client._check_logfile_validation_enabled(trail)
 
 

@@ -20,5 +20,12 @@ class AwsCloudtrailAuditClient:
     @staticmethod
     def _check_logfile_validation_enabled(trail) -> bool:
         if "LogFileValidationEnabled" not in trail or type(trail["LogFileValidationEnabled"]) is not bool:
-            raise CloudtrailException(f"unable to get logfile validation data")
+            raise CloudtrailException(f"unable to determine logfile validation status")
         return trail["LogFileValidationEnabled"]
+
+    @staticmethod
+    def _check_logfile_encryption(trail) -> bool:
+        if "KmsKeyId" not in trail:
+            return False
+        # TODO: regex the arn
+        return True
