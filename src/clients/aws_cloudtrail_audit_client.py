@@ -14,17 +14,21 @@ class AwsCloudtrailAuditClient:
         self._logger = getLogger(self.__class__.__name__)
         self._cloudtrail = boto_cloudtrail
 
-    def _get_trails(self) -> Dict[str, List]:
-        return self._cloudtrail.describe_trails()
+    def get_trails(self) -> Dict[str, List]:
+        try:
+            return self._cloudtrail.describe_trails()
+        except (BotoCoreError, ClientError) as err:
+            self._logger.error(f"unable to get trails: {err}")
+            raise CloudtrailException(f"unable to get trails")
 
     @staticmethod
-    def _check_logfile_validation_enabled(trail) -> bool:
+    def check_logfile_validation_enabled(trail) -> bool:
         if "LogFileValidationEnabled" not in trail or type(trail["LogFileValidationEnabled"]) is not bool:
             raise CloudtrailException(f"unable to determine logfile validation status")
         return trail["LogFileValidationEnabled"]
 
     @staticmethod
-    def _check_logfile_encryption(trail) -> bool:
+    def check_logfile_encryption(trail) -> bool:
         if "KmsKeyId" not in trail:
             return False
         compiled = re.compile(
