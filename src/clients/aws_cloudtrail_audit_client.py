@@ -19,6 +19,6 @@ class AwsCloudtrailAuditClient:
 
     @staticmethod
     def _check_logfile_validation_enabled(trail) -> bool:
-        if "LogFileValidationEnabled" not in trail:
+        if "LogFileValidationEnabled" not in trail or type(trail["LogFileValidationEnabled"]) is not bool:
             raise CloudtrailException(f"unable to get logfile validation data")
         return trail["LogFileValidationEnabled"]
