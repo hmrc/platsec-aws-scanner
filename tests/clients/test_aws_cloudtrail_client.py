@@ -44,7 +44,7 @@ class TestCheckLogFileEncryptionIsEnabled(TestCase):
             "HomeRegion": "eu-west-2",
             "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
             "LogFileValidationEnabled": False,
-            "KmsKeyId": "not a proper arn",
+            "KmsKeyId": "not_a_real_arn",
         }
         self.assertEqual(False, client._check_logfile_encryption(trail))
 
