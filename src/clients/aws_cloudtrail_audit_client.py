@@ -21,17 +21,18 @@ class AwsCloudtrailAuditClient:
             self._logger.error(f"unable to get trails: {err}")
             raise CloudtrailException(f"unable to get trails")
 
+    def get_trail_status(self, trail_name: str) -> str:
+        try:
+            return self._cloudtrail.get_trail_status(trail_name)
+        except (BotoCoreError, ClientError) as err:
+            self._logger.error(f"unable to get trail status for {trail_name} : {err}")
+            raise CloudtrailException(f"unable to get trail status for {trail_name}")
+
     @staticmethod
     def check_logfile_validation_enabled(trail) -> bool:
-        if "LogFileValidationEnabled" not in trail or type(trail["LogFileValidationEnabled"]) is not bool:
-            raise CloudtrailException(f"unable to determine logfile validation status")
         return trail["LogFileValidationEnabled"]
 
     @staticmethod
     def check_logfile_encryption(trail) -> bool:
-        if "KmsKeyId" not in trail:
-            return False
-        compiled = re.compile(
-            r"^arn:aws:kms:eu-west-2:([0-9]{12}):key/([0-9]{8})-([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{12})$"
-        )
-        return bool(compiled.match(trail["KmsKeyId"]))
+        key_id = "replace this with representation of the real key"
+        return "KmsKeyId" in trail and trail["KmsKeyId"] is key_id
