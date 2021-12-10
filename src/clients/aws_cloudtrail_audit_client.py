@@ -1,12 +1,12 @@
 from logging import getLogger
-from typing import Any, Dict, List
-import re
+from typing import Any, Dict, List, Sequence
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 from src.data.aws_scanner_exceptions import CloudtrailException
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
+from src.data.aws_cloudtrail_types import Trail, to_trail
 
 
 class AwsCloudtrailAuditClient:
@@ -14,19 +14,21 @@ class AwsCloudtrailAuditClient:
         self._logger = getLogger(self.__class__.__name__)
         self._cloudtrail = boto_cloudtrail
 
-    def get_trails(self) -> Dict[str, List]:
+    def get_trails(self) -> Sequence[Trail]:
         try:
-            return self._cloudtrail.describe_trails()
+            return [
+                self._get_trail_status(to_trail(trail)) for trail in self._cloudtrail.describe_trails()["trailList"]
+            ]
         except (BotoCoreError, ClientError) as err:
             self._logger.error(f"unable to get trails: {err}")
             raise CloudtrailException(f"unable to get trails")
 
-    def get_trail_status(self, trail_name: str) -> str:
+    def _get_trail_status(self, trail: Trail) -> Trail:
         try:
-            return self._cloudtrail.get_trail_status(trail_name)
+            return trail.update_logging(self._cloudtrail.get_trail_status(Name=trail.name)["IsLogging"])
         except (BotoCoreError, ClientError) as err:
-            self._logger.error(f"unable to get trail status for {trail_name} : {err}")
-            raise CloudtrailException(f"unable to get trail status for {trail_name}")
+            self._logger.error(f"unable to get trail status for {trail.name} : {err}")
+            raise CloudtrailException(f"unable to get trail status for {trail.name}")
 
     @staticmethod
     def check_logfile_validation_enabled(trail) -> bool:
