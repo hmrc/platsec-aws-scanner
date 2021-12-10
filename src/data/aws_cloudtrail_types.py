@@ -14,26 +14,18 @@ class Trail:
     include_global_service_events: bool
     event_selectors: Sequence[EventSelector]
 
-    def update_logging(self, val: bool) -> Trail:
-        self.is_logging = val
-        return self
-
 
 def to_trail(trail: Dict[str, Any]) -> Trail:
     return Trail(
-        name=trail.get("Name"),
-        s3_bucket_name=trail.get("S3BucketName"),
+        name=trail["Name"],
+        s3_bucket_name=trail.get("S3BucketName") or "",
         is_logging=False,
-        is_multiregion_trail=trail.get("IsMultiRegionTrail"),
-        kms_key_id=trail.get("KmsKeyId"),
-        log_file_validation_enabled=trail.get("LogFileValidationEnabled"),
-        include_global_service_events=trail.get("IncludeGlobalServiceEvents"),
+        is_multiregion_trail=trail["IsMultiRegionTrail"],
+        kms_key_id=trail.get("KmsKeyId") or "",
+        log_file_validation_enabled=trail["LogFileValidationEnabled"],
+        include_global_service_events=trail["IncludeGlobalServiceEvents"],
         event_selectors=[],
     )
-
-
-def to_event_selector(es: Dict[str, Any]) -> EventSelector:
-    return None
 
 
 @dataclass
@@ -43,7 +35,19 @@ class EventSelector:
     data_resources: Sequence[DataResource]
 
 
+def to_event_selector(es: Dict[str, Any]) -> EventSelector:
+    return EventSelector(
+        read_write_type=es["ReadWriteType"],
+        include_management_events=es["IncludeManagementEvents"],
+        data_resources=[to_data_resource(dr) for dr in es["DataResources"]],
+    )
+
+
 @dataclass
 class DataResource:
     type: str
     values: Sequence[str]
+
+
+def to_data_resource(dr: Dict[str, Any]) -> DataResource:
+    return DataResource(type=dr["Type"], values=dr["Values"])

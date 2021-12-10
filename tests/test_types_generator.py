@@ -28,7 +28,7 @@ from src.data.aws_compliance_actions import (
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
-from src.data.aws_cloudtrail_types import Trail, EventSelector, DataResource
+from src.data.aws_cloudtrail_types import DataResource, EventSelector, Trail
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -111,7 +111,7 @@ def cloudtrail_task(
     return AwsCloudTrailTask(description=description, account=account, partition=partition)
 
 
-def cloudtrail_audit_task(account: Account = account()) -> AwsAuditCloudtrailTask:
+def audit_cloudtrail_task(account: Account = account()) -> AwsAuditCloudtrailTask:
     return AwsAuditCloudtrailTask(account=account)
 
 

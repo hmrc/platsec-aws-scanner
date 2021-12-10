@@ -1,50 +1,27 @@
+from typing import Any, Dict
+
 from tests.test_types_generator import trail, data_resource, event_selector
 
-GET_TRAIL_STATUS_RESPONSE_LOGGING = {
-    "IsLogging": True,
-}
+GET_TRAIL_STATUS_IS_LOGGING = {"IsLogging": True}
 
-GET_TRAIL_STATUS_RESPONSE_NOT_LOGGING = {
-    "IsLogging": False,
-}
+GET_TRAIL_STATUS_IS_NOT_LOGGING = {"IsLogging": False}
 
 GET_EVENT_SELECTORS = {
     "EventSelectors": [
         {
             "ReadWriteType": "All",
             "IncludeManagementEvents": False,
-            "DataResources": [
-                {
-                    "Type": "some_type",
-                    "Values": [
-                        "banana",
-                    ],
-                },
-            ],
-            "ExcludeManagementEventSources": [
-                "pineapple",
-            ],
+            "DataResources": [{"Type": "some_type", "Values": ["banana"]}],
+            "ExcludeManagementEventSources": ["pineapple"],
         }
     ]
 }
 
-GET_EVENT_SELECTORS_EMPTY = {"EventSelectors": []}
+GET_EVENT_SELECTORS_EMPTY: Dict[str, Any] = {"EventSelectors": []}
 
-GET_TRAIL_STATUS_RESPONSE_EXTRA_DATA = {"IsLogging": True, "OtherInfo": "Sorted"}
+GET_TRAIL_STATUS = {"IsLogging": True, "OtherInfo": "Sorted"}
 
-DESCRIBE_TRAILS_RESPONSE_ONE = {
-    "trailList": [
-        {
-            "Name": "dummy-trail-1",
-            "HomeRegion": "eu-west-2",
-            "TrailARN": "arn:aws:cloudtrail:eu-west-2:012345678901:trail/dummy-trail-1",
-            "LogFileValidationEnabled": True,
-            "KmsKeyId": "arn:aws:kms:eu-west-2:123456789012:key/12345678-1234-1234-1234-123456789012",
-        },
-    ]
-}
-
-DESCRIBE_TRAILS_RESPONSE_TWO = {
+DESCRIBE_TRAILS = {
     "trailList": [
         {
             "Name": "dummy-trail-1",
@@ -80,7 +57,7 @@ EXPECTED_TRAILS = [
         include_global_service_events=False,
         event_selectors=[
             event_selector(
-                read_write_type="ALL",
+                read_write_type="All",
                 include_management_events=False,
                 data_resources=[data_resource(type="some_type", values=["banana"])],
             )
