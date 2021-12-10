@@ -18,4 +18,4 @@ class LogfileValidation:
 @dataclass
 class LogfileEncryption:
     enabled: bool = False
-
+    type: str = "cmk"
