@@ -6,10 +6,10 @@ from typing import Any, Dict, Sequence
 
 from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd, AwsScannerArguments
 from src.aws_task_builder import AwsTaskBuilder
+from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
-
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -121,6 +121,10 @@ class TestAwsTaskBuilder(TestCase):
             [AwsAuditPasswordPolicyTask(acct1, True), AwsAuditPasswordPolicyTask(acct2, True)],
             task_builder(args(task=Cmd.audit_password_policy, enforce=True)).build_tasks(),
         )
+
+    def test_unsupported_task(self) -> None:
+        with self.assertRaisesRegex(UnsupportedTaskException, "banana"):
+            task_builder(args(task="banana")).build_tasks()
 
     def assert_tasks_equal(self, expected: Sequence[AwsTask], actual: Sequence[AwsTask]) -> None:
         self.assertEqual(len(expected), len(actual), f"expected {len(expected)} tasks but got {len(actual)}")

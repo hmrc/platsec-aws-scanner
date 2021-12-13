@@ -6,6 +6,7 @@ from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
 from src.clients.aws_client_factory import AwsClientFactory
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
+from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
@@ -72,7 +73,10 @@ class AwsTaskBuilder:
                 AwsAuditPasswordPolicyTask, self._args.accounts, enforce=self._args.enforce
             ),
         }
-        return task_mapping[self._args.task]()
+        try:
+            return task_mapping[self._args.task]()
+        except KeyError:
+            raise UnsupportedTaskException(f"task '{self._args.task}' is not supported") from None
 
     def _tasks(self, task: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
