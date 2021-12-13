@@ -8,6 +8,7 @@ from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
+from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
@@ -72,15 +73,16 @@ class AwsTaskBuilder:
             Cmd.audit_password_policy: lambda: self._tasks(
                 AwsAuditPasswordPolicyTask, self._args.accounts, enforce=self._args.enforce
             ),
+            Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask, self._args.accounts),
         }
         try:
             return task_mapping[self._args.task]()
         except KeyError:
             raise UnsupportedTaskException(f"task '{self._args.task}' is not supported") from None
 
-    def _tasks(self, task: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
-        self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
-        return [task(account=account, **kwargs) for account in self._get_target_accounts(accounts)]
+    def _tasks(self, task_type: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
+        self._logger.info(f"creating {task_type.__name__} tasks with {kwargs}")
+        return [task_type(account=account, **kwargs) for account in self._get_target_accounts(accounts)]
 
     def _services_tasks(
         self,

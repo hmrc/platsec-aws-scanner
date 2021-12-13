@@ -21,7 +21,7 @@ from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_task import AwsTask
 
-from tests.test_types_generator import account, partition
+from tests.test_types_generator import account, partition, audit_cloudtrail_task
 from tests.test_types_generator import aws_scanner_arguments as args
 
 acct1 = account("999888777666")
@@ -120,6 +120,12 @@ class TestAwsTaskBuilder(TestCase):
         self.assert_tasks_equal(
             [AwsAuditPasswordPolicyTask(acct1, True), AwsAuditPasswordPolicyTask(acct2, True)],
             task_builder(args(task=Cmd.audit_password_policy, enforce=True)).build_tasks(),
+        )
+
+    def test_audit_cloudtrail_task(self) -> None:
+        self.assert_tasks_equal(
+            [(audit_cloudtrail_task(account=acct1)), (audit_cloudtrail_task(account=acct2))],
+            task_builder(args(task=Cmd.audit_cloudtrail)).build_tasks(),
         )
 
     def test_unsupported_task(self) -> None:
