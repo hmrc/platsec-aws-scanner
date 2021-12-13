@@ -2,7 +2,7 @@ from inspect import signature
 from logging import getLogger
 from typing import Any, Callable, Dict, Sequence, Type
 
-from src.data.aws_scanner_exceptions import UnsupportedTaskException
+from src.data.aws_scanner_exceptions import UnsupportedClientException
 from src.data.aws_task_report import AwsTaskReport
 from src.clients.aws_client_factory import AwsClientFactory
 from src.tasks.aws_task import AwsTask
@@ -42,7 +42,9 @@ class AwsTaskRunner:
             AwsVpcClient: lambda: task.run(self._client_factory.get_vpc_client(task.account)),
         }
 
-        if not client_param or client_param.annotation not in task_client_mapping:
-            raise UnsupportedTaskException(task)
+        if not client_param:
+            raise UnsupportedClientException(f"{task} requires a client argument")
+        if client_param.annotation not in task_client_mapping:
+            raise UnsupportedClientException(f"client type {client_param.annotation} is not supported")
 
         return task_client_mapping[client_param.annotation]()
