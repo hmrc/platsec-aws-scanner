@@ -10,7 +10,7 @@ from src.data.aws_cloudtrail_types import EventSelector, Trail, to_event_selecto
 class AwsCloudtrailClient:
     def __init__(self, cloudtrail: BaseClient):
         self._logger = getLogger(self.__class__.__name__)
-        self.cloudtrail = cloudtrail
+        self._cloudtrail = cloudtrail
 
     def get_trails(self) -> Sequence[Trail]:
         return [self._enrich_trail(trail) for trail in self._describe_trails()]
@@ -22,14 +22,14 @@ class AwsCloudtrailClient:
 
     def _describe_trails(self) -> Sequence[Trail]:
         return boto_try(
-            lambda: [to_trail(t) for t in self.cloudtrail.describe_trails()["trailList"]],
+            lambda: [to_trail(t) for t in self._cloudtrail.describe_trails()["trailList"]],
             list,
             "unable to describe trails",
         )
 
     def _get_trail_logging(self, trail: Trail) -> bool:
         return boto_try(
-            lambda: bool(self.cloudtrail.get_trail_status(Name=trail.name)["IsLogging"]),
+            lambda: bool(self._cloudtrail.get_trail_status(Name=trail.name)["IsLogging"]),
             bool,
             f"unable to get trail status for trail {trail.name}",
         )
@@ -38,7 +38,7 @@ class AwsCloudtrailClient:
         return boto_try(
             lambda: [
                 to_event_selector(es)
-                for es in self.cloudtrail.get_event_selectors(TrailName=trail.name)["EventSelectors"]
+                for es in self._cloudtrail.get_event_selectors(TrailName=trail.name)["EventSelectors"]
             ],
             list,
             f"unable to get event selectors for trail {trail.name}",

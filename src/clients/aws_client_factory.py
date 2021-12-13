@@ -18,6 +18,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data import SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
@@ -67,6 +68,9 @@ class AwsClientFactory:
     def get_kms_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("kms", account, self._config.kms_role())
 
+    def get_cloudtrail_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("cloudtrail", account, self._config.cloudtrail_role())
+
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
 
@@ -93,6 +97,9 @@ class AwsClientFactory:
 
     def get_kms_client(self, account: Account) -> AwsKmsClient:
         return AwsKmsClient(self.get_kms_boto_client(account))
+
+    def get_cloudtrail_client(self, account: Account) -> AwsCloudtrailClient:
+        return AwsCloudtrailClient(self.get_cloudtrail_boto_client(account))
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
