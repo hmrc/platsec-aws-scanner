@@ -10,6 +10,7 @@ from src.tasks.aws_task import AwsTask
 from tests.test_types_generator import (
     account,
     athena_task,
+    audit_cloudtrail_task,
     audit_iam_task,
     cost_explorer_task,
     organizations_task,
@@ -75,6 +76,13 @@ class TestAwsTaskRunner(TestCase):
         client = Mock()
         client_factory = Mock(get_vpc_client=Mock(side_effect=lambda acc: client if acc == account() else None))
         task = vpc_task()
+        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
+    def test_run_audit_cloudtrail_task(self) -> None:
+        client = Mock()
+        client_factory = Mock(get_cloudtrail_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+        task = audit_cloudtrail_task()
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 

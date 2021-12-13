@@ -14,6 +14,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 
 
@@ -33,6 +34,7 @@ class AwsTaskRunner:
 
         task_client_mapping: Dict[Type[Any], Callable[[], AwsTaskReport]] = {
             AwsAthenaClient: lambda: task.run(self._client_factory.get_athena_client()),
+            AwsCloudtrailClient: lambda: task.run(self._client_factory.get_cloudtrail_client(task.account)),
             AwsCostExplorerClient: lambda: task.run(self._client_factory.get_cost_explorer_client(task.account)),
             AwsIamClient: lambda: task.run(self._client_factory.get_iam_client(task.account)),
             AwsIamAuditClient: lambda: task.run(self._client_factory.get_iam_client_for_audit(task.account)),
