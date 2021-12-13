@@ -10,14 +10,14 @@ def test_get_trails_success() -> None:
         describe_trails=Mock(return_value=resp.DESCRIBE_TRAILS),
         get_trail_status=Mock(
             side_effect=lambda **kwargs: {
-                "dummy-trail-1": resp.GET_TRAIL_STATUS_IS_LOGGING,
-                "dummy-trail-2": resp.GET_TRAIL_STATUS_IS_NOT_LOGGING,
+                "trail-1": resp.GET_TRAIL_STATUS_IS_LOGGING,
+                "trail-2": resp.GET_TRAIL_STATUS_IS_NOT_LOGGING,
             }[kwargs["Name"]]
         ),
         get_event_selectors=Mock(
             side_effect=lambda **kwargs: {
-                "dummy-trail-1": resp.GET_EVENT_SELECTORS,
-                "dummy-trail-2": resp.GET_EVENT_SELECTORS_EMPTY,
+                "trail-1": resp.GET_EVENT_SELECTORS,
+                "trail-2": resp.GET_EVENT_SELECTORS_EMPTY,
             }[kwargs["TrailName"]]
         ),
     )
