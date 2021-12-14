@@ -4,12 +4,13 @@ from unittest.mock import Mock, patch
 
 from src.aws_task_runner import AwsTaskRunner
 from src.clients.aws_client_factory import AwsClientFactory
-from src.data.aws_scanner_exceptions import UnsupportedTaskException
+from src.data.aws_scanner_exceptions import UnsupportedClientException
 from src.tasks.aws_task import AwsTask
 
 from tests.test_types_generator import (
     account,
     athena_task,
+    audit_cloudtrail_task,
     audit_iam_task,
     cost_explorer_task,
     organizations_task,
@@ -78,6 +79,13 @@ class TestAwsTaskRunner(TestCase):
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 
+    def test_run_audit_cloudtrail_task(self) -> None:
+        client = Mock()
+        client_factory = Mock(get_cloudtrail_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+        task = audit_cloudtrail_task()
+        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
     @patch("src.clients.aws_client_factory.AwsClientFactory._get_client")
     @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
     @patch("src.tasks.aws_task.AwsTask.run")
@@ -92,10 +100,26 @@ class TestAwsTaskRunner(TestCase):
         task_run.assert_called_once()
         self.assertIs(boto_client, task_run.call_args.args[0]._iam)
 
-    def test_run_unsupported_task(self) -> None:
-        class UnsupportedTask(AwsTask):
+    def test_run_unsupported_client(self) -> None:
+        class UnsupportedClientTask(AwsTask):
             def _run_task(self, client: Any) -> Dict[Any, Any]:
                 return dict()
 
-        with self.assertRaises(UnsupportedTaskException):
-            AwsTaskRunner(Mock())._run_task(UnsupportedTask("unsupported", account()))
+        with self.assertRaisesRegex(UnsupportedClientException, "Any"):
+            AwsTaskRunner(Mock())._run_task(UnsupportedClientTask("unsupported", account()))
+
+    def test_run_unspecified_client(self) -> None:
+        class UnspecifiedClientTask(AwsTask):
+            def _run_task(self, client) -> Dict[Any, Any]:  # type: ignore
+                return dict()
+
+        with self.assertRaisesRegex(UnsupportedClientException, "empty"):
+            AwsTaskRunner(Mock())._run_task(UnspecifiedClientTask("unspecified", account()))
+
+    def test_run_task_with_no_client(self) -> None:
+        class ClientlessTask(AwsTask):
+            def _run_task(self, banana: Any) -> Dict[Any, Any]:
+                return dict()
+
+        with self.assertRaisesRegex(UnsupportedClientException, "requires a client argument"):
+            AwsTaskRunner(Mock())._run_task(ClientlessTask("clientless", account()))

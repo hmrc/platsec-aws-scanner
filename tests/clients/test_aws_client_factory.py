@@ -124,6 +124,16 @@ class TestGetBotoClients(TestCase):
             role="kms_role",
         )
 
+    def test_get_cloudtrail_boto_client(self) -> None:
+        cloudtrail_account = account(identifier="644355211788", name="some_cloudtrail_account")
+        self.assert_get_client(
+            method_under_test="get_cloudtrail_boto_client",
+            method_args={"account": cloudtrail_account},
+            service="cloudtrail",
+            target_account=cloudtrail_account,
+            role="cloudtrail_role",
+        )
+
 
 @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
 class TestGetClients(TestCase):
@@ -221,6 +231,15 @@ class TestGetClients(TestCase):
         ):
             kms_client = AwsClientFactory(self.mfa, self.username).get_kms_client(account())
             self.assertEqual(kms_client._kms, kms_boto_client)
+
+    def test_get_cloudtrail_client(self, _: Mock) -> None:
+        cloudtrail_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_cloudtrail_boto_client",
+            side_effect=lambda acc: cloudtrail_boto_client if acc == account() else None,
+        ):
+            cloudtrail_client = AwsClientFactory(self.mfa, self.username).get_cloudtrail_client(account())
+            self.assertEqual(cloudtrail_client._cloudtrail, cloudtrail_boto_client)
 
 
 @patch.object(AwsClientFactory, "_get_session_token")

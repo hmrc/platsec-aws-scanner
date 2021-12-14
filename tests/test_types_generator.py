@@ -28,6 +28,7 @@ from src.data.aws_compliance_actions import (
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
+from src.data.aws_cloudtrail_types import DataResource, EventSelector, Trail
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
@@ -48,6 +49,7 @@ from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
+from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
@@ -107,6 +109,10 @@ def cloudtrail_task(
     account: Account = account(), description: str = "task", partition: AwsAthenaDataPartition = partition()
 ) -> AwsCloudTrailTask:
     return AwsCloudTrailTask(description=description, account=account, partition=partition)
+
+
+def audit_cloudtrail_task(account: Account = account()) -> AwsAuditCloudtrailTask:
+    return AwsAuditCloudtrailTask(account=account)
 
 
 def audit_iam_task(account: Account = account()) -> AwsAuditIamTask:
@@ -477,4 +483,42 @@ def password_policy(
         max_password_age=max_password_age,
         password_reuse_prevention=password_reuse_prevention,
         hard_expiry=hard_expiry,
+    )
+
+
+def trail(
+    name: str = "a_trail",
+    s3_bucket_name: str = "a_bucket",
+    is_logging: bool = False,
+    is_multiregion_trail: bool = False,
+    kms_key_id: str = "998877",
+    log_file_validation_enabled: bool = False,
+    include_global_service_events: bool = False,
+    event_selectors: Optional[Sequence[EventSelector]] = None,
+) -> Trail:
+    return Trail(
+        name=name,
+        s3_bucket_name=s3_bucket_name,
+        is_logging=is_logging,
+        is_multiregion_trail=is_multiregion_trail,
+        kms_key_id=kms_key_id,
+        log_file_validation_enabled=log_file_validation_enabled,
+        include_global_service_events=include_global_service_events,
+        event_selectors=event_selectors or [],
+    )
+
+
+def data_resource(type: str = "some_type", values: Optional[Sequence[str]] = None) -> DataResource:
+    return DataResource(type=type, values=values or [])
+
+
+def event_selector(
+    read_write_type: str = "ALL",
+    include_management_events: bool = False,
+    data_resources: Optional[Sequence[DataResource]] = None,
+) -> EventSelector:
+    return EventSelector(
+        read_write_type=read_write_type,
+        include_management_events=include_management_events,
+        data_resources=data_resources or [],
     )

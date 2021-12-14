@@ -2,7 +2,7 @@ from inspect import signature
 from logging import getLogger
 from typing import Any, Callable, Dict, Sequence, Type
 
-from src.data.aws_scanner_exceptions import UnsupportedTaskException
+from src.data.aws_scanner_exceptions import UnsupportedClientException
 from src.data.aws_task_report import AwsTaskReport
 from src.clients.aws_client_factory import AwsClientFactory
 from src.tasks.aws_task import AwsTask
@@ -14,6 +14,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 
 
@@ -33,6 +34,7 @@ class AwsTaskRunner:
 
         task_client_mapping: Dict[Type[Any], Callable[[], AwsTaskReport]] = {
             AwsAthenaClient: lambda: task.run(self._client_factory.get_athena_client()),
+            AwsCloudtrailClient: lambda: task.run(self._client_factory.get_cloudtrail_client(task.account)),
             AwsCostExplorerClient: lambda: task.run(self._client_factory.get_cost_explorer_client(task.account)),
             AwsIamClient: lambda: task.run(self._client_factory.get_iam_client(task.account)),
             AwsIamAuditClient: lambda: task.run(self._client_factory.get_iam_client_for_audit(task.account)),
@@ -42,7 +44,9 @@ class AwsTaskRunner:
             AwsVpcClient: lambda: task.run(self._client_factory.get_vpc_client(task.account)),
         }
 
-        if not client_param or client_param.annotation not in task_client_mapping:
-            raise UnsupportedTaskException(task)
+        if not client_param:
+            raise UnsupportedClientException(f"{task} requires a client argument")
+        if client_param.annotation not in task_client_mapping:
+            raise UnsupportedClientException(f"client type {client_param.annotation} is not supported")
 
         return task_client_mapping[client_param.annotation]()

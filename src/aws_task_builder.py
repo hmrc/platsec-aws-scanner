@@ -6,7 +6,9 @@ from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
 from src.clients.aws_client_factory import AwsClientFactory
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
+from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
+from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
@@ -39,22 +41,19 @@ class AwsTaskBuilder:
                 partition=self._args.partition,
             ),
             Cmd.role_usage: lambda: self._tasks(
-                AwsRoleUsageScannerTask, self._args.accounts, partition=self._args.partition, role=self._args.role
+                AwsRoleUsageScannerTask, partition=self._args.partition, role=self._args.role
             ),
             Cmd.find_principal: lambda: self._tasks(
                 AwsPrincipalByIPFinderTask,
-                self._args.accounts,
                 partition=self._args.partition,
                 source_ip=self._args.source_ip,
             ),
-            Cmd.create_table: lambda: self._tasks(
-                AwsCreateAthenaTableTask, self._args.accounts, partition=self._args.partition
-            ),
+            Cmd.create_table: lambda: self._tasks(AwsCreateAthenaTableTask, partition=self._args.partition),
             Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask),
-            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, self._args.accounts),
+            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
-            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, self._args.accounts),
-            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask, self._args.accounts),
+            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task),
+            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask),
             Cmd.cost_explorer: lambda: self._services_tasks(
                 AwsAuditCostExplorerTask,
                 self._args.accounts,
@@ -64,19 +63,20 @@ class AwsTaskBuilder:
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(
                 AwsAuditVPCFlowLogsTask,
-                self._args.accounts,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
             ),
-            Cmd.audit_password_policy: lambda: self._tasks(
-                AwsAuditPasswordPolicyTask, self._args.accounts, enforce=self._args.enforce
-            ),
+            Cmd.audit_password_policy: lambda: self._tasks(AwsAuditPasswordPolicyTask, enforce=self._args.enforce),
+            Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask),
         }
-        return task_mapping[self._args.task]()
+        try:
+            return task_mapping[self._args.task]()
+        except KeyError:
+            raise UnsupportedTaskException(f"task '{self._args.task}' is not supported") from None
 
-    def _tasks(self, task: Type[AwsTask], accounts: Optional[List[str]], **kwargs: Any) -> Sequence[AwsTask]:
-        self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
-        return [task(account=account, **kwargs) for account in self._get_target_accounts(accounts)]
+    def _tasks(self, task_type: Type[AwsTask], **kwargs: Any) -> Sequence[AwsTask]:
+        self._logger.info(f"creating {task_type.__name__} tasks with {kwargs}")
+        return [task_type(account=account, **kwargs) for account in self._get_target_accounts(self._args.accounts)]
 
     def _services_tasks(
         self,

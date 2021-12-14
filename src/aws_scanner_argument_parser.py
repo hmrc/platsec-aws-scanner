@@ -43,6 +43,7 @@ class AwsScannerCommands:
     audit_vpc_flow_logs: str = "audit_vpc_flow_logs"
     cost_explorer: str = "cost_explorer"
     audit_password_policy: str = "audit_password_policy"
+    audit_cloudtrail: str = "audit_cloudtrail"
 
 
 class AwsScannerArgumentParser:
@@ -115,6 +116,7 @@ class AwsScannerArgumentParser:
         self._add_audit_vpc_flow_logs_command(subparsers)
         self._add_audit_password_policy_command(subparsers)
         self._add_cost_explorer_command(subparsers)
+        self._add_audit_cloudtrail(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -126,6 +128,13 @@ class AwsScannerArgumentParser:
     def _add_audit_s3_command(self, subparsers: Any) -> None:
         desc = "audit S3 bucket compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_s3, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+
+    def _add_audit_cloudtrail(self, subparsers: Any) -> None:
+        desc = "audit CloudTrail compliance"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_cloudtrail, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
