@@ -1,5 +1,6 @@
+from json import loads
 from logging import getLogger
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
@@ -137,4 +138,11 @@ class AwsS3Client:
             lambda: str(self._s3.put_object(Bucket=bucket, Key=object_name, Body=object_content)["VersionId"]),
             str,
             f"unable to put object '{object_name}' in bucket '{bucket}'",
+        )
+
+    def get_bucket_policy(self, bucket: str) -> Optional[Dict[str, Any]]:
+        return boto_try(
+            lambda: dict(loads(self._s3.get_bucket_policy(Bucket=bucket)["Policy"])),
+            type(None),
+            f"unable to fetch bucket policy for bucket '{bucket}'",
         )

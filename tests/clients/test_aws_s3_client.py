@@ -607,3 +607,26 @@ def test_put_object_failure(caplog: Any) -> None:
     with caplog.at_level(logging.WARNING):
         s3_client_put_object().put_object(bucket="denied", object_name="obj", object_content="bla")
         assert "AccessDenied" in caplog.text
+
+
+def test_get_bucket_policy() -> None:
+    expected_policy = {"Statement": [{"Effect": "Allow", "Principal": "*", "Action": "s3:getObject", "Resource": "*"}]}
+    s3_client = AwsS3Client(
+        Mock(
+            get_bucket_policy=Mock(
+                side_effect=lambda **kwargs: responses.GET_BUCKET_POLICY if kwargs["Bucket"] == "some-bucket" else None
+            )
+        )
+    )
+    actual_policy = s3_client.get_bucket_policy("some-bucket")
+    assert actual_policy == expected_policy
+
+
+def test_get_bucket_policy_bucket_does_not_exist(caplog: Any) -> None:
+    s3_client = AwsS3Client(
+        Mock(get_bucket_policy=Mock(side_effect=client_error("GetBucketPolicy", "NoSuchBucket", "no")))
+    )
+    with caplog.at_level(logging.WARNING):
+        assert s3_client.get_bucket_policy("boom") is None
+        assert "NoSuchBucket" in caplog.text
+        assert "boom" in caplog.text

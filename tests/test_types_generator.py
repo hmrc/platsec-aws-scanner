@@ -209,6 +209,7 @@ def bucket(
     public_access_block: Optional[BucketPublicAccessBlock] = None,
     secure_transport: Optional[BucketSecureTransport] = None,
     versioning: Optional[BucketVersioning] = None,
+    policy: Optional[Dict[str, Any]] = None,
 ) -> Bucket:
     return Bucket(
         name=name,
@@ -223,6 +224,7 @@ def bucket(
         public_access_block=public_access_block,
         secure_transport=secure_transport,
         versioning=versioning,
+        policy=policy,
     )
 
 
