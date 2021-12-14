@@ -1,19 +1,31 @@
 from logging import getLogger
-from typing import Sequence
+from typing import Optional, Sequence
 
 from botocore.client import BaseClient
 
+from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
+from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_cloudtrail_types import EventSelector, Trail, to_event_selector, to_trail
+from src.data.aws_logs_types import LogGroup
 
 
 class AwsCloudtrailClient:
-    def __init__(self, cloudtrail: BaseClient):
+    def __init__(self, cloudtrail: BaseClient, logs: AwsLogsClient):
         self._logger = getLogger(self.__class__.__name__)
+        self._config = Config()
         self._cloudtrail = cloudtrail
+        self._logs = logs
 
     def get_trails(self) -> Sequence[Trail]:
         return [self._enrich_trail(trail) for trail in self._describe_trails()]
+
+    def get_cloudtrail_log_group(self) -> Optional[LogGroup]:
+        log_group = filter(
+            lambda g: g.name == self._config.cloudtrail_log_group_name(),
+            self._logs.describe_log_groups(self._config.cloudtrail_log_group_name()),
+        )
+        return next(log_group, None)
 
     def _enrich_trail(self, trail: Trail) -> Trail:
         trail.is_logging = self._get_trail_logging(trail)

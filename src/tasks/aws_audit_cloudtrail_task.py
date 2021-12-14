@@ -10,4 +10,4 @@ class AwsAuditCloudtrailTask(AwsTask):
         super().__init__("audit Cloudtrail trails", account)
 
     def _run_task(self, client: AwsCloudtrailClient) -> Dict[Any, Any]:
-        return {"trails": client.get_trails()}
+        return {"trails": client.get_trails(), "log_group": client.get_cloudtrail_log_group()}
