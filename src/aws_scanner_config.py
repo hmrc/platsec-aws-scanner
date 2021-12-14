@@ -36,6 +36,9 @@ class AwsScannerConfig:
     def athena_query_throttling_seconds(self) -> int:
         return self._get_int_config("athena", "query_throttling_seconds")
 
+    def cloudtrail_log_group_name(self) -> str:
+        return self._get_config("cloudtrail", "log_group_name")
+
     def cloudtrail_logs_bucket(self) -> str:
         return self._get_config("cloudtrail", "logs_bucket")
 

@@ -234,12 +234,18 @@ class TestGetClients(TestCase):
 
     def test_get_cloudtrail_client(self, _: Mock) -> None:
         cloudtrail_boto_client = Mock()
+        logs_client = Mock()
         with patch(
             f"{self.factory_path}.get_cloudtrail_boto_client",
             side_effect=lambda acc: cloudtrail_boto_client if acc == account() else None,
         ):
-            cloudtrail_client = AwsClientFactory(self.mfa, self.username).get_cloudtrail_client(account())
-            self.assertEqual(cloudtrail_client._cloudtrail, cloudtrail_boto_client)
+            with patch(
+                f"{self.factory_path}.get_logs_client",
+                side_effect=lambda acc: logs_client if acc == account() else None,
+            ):
+                cloudtrail_client = AwsClientFactory(self.mfa, self.username).get_cloudtrail_client(account())
+                self.assertEqual(cloudtrail_client._cloudtrail, cloudtrail_boto_client)
+                self.assertEqual(cloudtrail_client._logs, logs_client)
 
 
 @patch.object(AwsClientFactory, "_get_session_token")
