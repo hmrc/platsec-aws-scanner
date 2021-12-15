@@ -16,6 +16,7 @@ def test_init_config_from_file() -> None:
     assert "cost_explorer_role" == config.cost_explorer_role()
     assert "some_prefix" == config.athena_database_prefix()
     assert "query-results-bucket" == config.athena_query_results_bucket()
+    assert "74356589" == config.cloudtrail_event_key_id()
     assert "the-cloudtrail-log-group" == config.cloudtrail_log_group_name()
     assert "cloudtrail-logs-bucket" == config.cloudtrail_logs_bucket()
     assert 90 == config.cloudtrail_logs_retention_days()
@@ -75,6 +76,7 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_ATHENA_QUERY_RESULTS_POLLING_DELAY_SECONDS": "2",
         "AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "900",
         "AWS_SCANNER_ATHENA_QUERY_THROTTLING_SECONDS": "3",
+        "AWS_SCANNER_CLOUDTRAIL_EVENT_KEY_ID": "9874565",
         "AWS_SCANNER_CLOUDTRAIL_LOG_GROUP_NAME": "a_log_group_name",
         "AWS_SCANNER_CLOUDTRAIL_LOGS_BUCKET": "a-cloudtrail-logs-bucket",
         "AWS_SCANNER_CLOUDTRAIL_ROLE": "a_cloudtrail_role",
@@ -120,6 +122,7 @@ def test_init_config_from_env_vars() -> None:
     assert 2 == config.athena_query_results_polling_delay_seconds()
     assert 900 == config.athena_query_timeout_seconds()
     assert 3 == config.athena_query_throttling_seconds()
+    assert "9874565" == config.cloudtrail_event_key_id()
     assert "a_log_group_name" == config.cloudtrail_log_group_name()
     assert "a-cloudtrail-logs-bucket" == config.cloudtrail_logs_bucket()
     assert 30 == config.cloudtrail_logs_retention_days()

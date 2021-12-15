@@ -2,11 +2,11 @@ from unittest.mock import Mock
 
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 
-from tests.test_types_generator import bucket
+from tests.test_types_generator import bucket, key
 
 
-def client(s3: Mock = Mock()) -> AwsCentralLoggingClient:
-    return AwsCentralLoggingClient(s3)
+def client(s3: Mock = Mock(), kms: Mock = Mock()) -> AwsCentralLoggingClient:
+    return AwsCentralLoggingClient(s3, kms)
 
 
 def test_get_event_bucket() -> None:
@@ -21,3 +21,15 @@ def test_get_event_bucket() -> None:
 def test_get_event_bucket_does_not_exist() -> None:
     s3_client = Mock(get_bucket_policy=Mock(return_value=None))
     assert client(s3=s3_client).get_event_bucket() is None
+
+
+def test_get_event_cmk() -> None:
+    expected_key = key(id="74356589")
+    kms_client = Mock(find_key=Mock(side_effect=lambda k: expected_key if k == "74356589" else None))
+    actual_key = client(kms=kms_client).get_event_cmk()
+    assert actual_key == expected_key
+
+
+def test_get_event_cmk_not_found() -> None:
+    kms_client = Mock(find_key=Mock(return_value=None))
+    assert client(kms=kms_client).get_event_cmk() is None
