@@ -235,6 +235,19 @@ def test_parse_cli_args_for_audit_cloudtrail_task() -> None:
         assert args.accounts == ["42"]
 
 
+def test_parse_cli_args_for_audit_central_logging_task() -> None:
+    with patch("sys.argv", ". audit_central_logging -t 787878".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". audit_central_logging --token 787878".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "audit_central_logging"
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "787878"
+
+
 def test_default_log_level_is_warning() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
         args = AwsScannerArgumentParser().parse_cli_args()

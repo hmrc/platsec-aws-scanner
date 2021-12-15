@@ -14,6 +14,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 
@@ -42,6 +43,7 @@ class AwsTaskRunner:
             AwsSSMClient: lambda: task.run(self._client_factory.get_ssm_client(task.account)),
             AwsS3Client: lambda: task.run(self._client_factory.get_s3_client(task.account)),
             AwsVpcClient: lambda: task.run(self._client_factory.get_vpc_client(task.account)),
+            AwsCentralLoggingClient: lambda: task.run(self._client_factory.get_central_logging_client()),
         }
 
         if not client_param:

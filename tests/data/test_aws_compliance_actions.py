@@ -9,7 +9,7 @@ from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_scanner_exceptions import AwsScannerException
 
 from tests import _raise
-from tests.clients.test_aws_vpc_client import AwsVpcClientBuilder
+from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
 from tests.test_types_generator import (
     compliance_action_report,
     policy,

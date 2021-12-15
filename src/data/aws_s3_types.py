@@ -18,6 +18,7 @@ class Bucket:
     public_access_block: Optional[BucketPublicAccessBlock] = None
     secure_transport: Optional[BucketSecureTransport] = None
     versioning: Optional[BucketVersioning] = None
+    policy: Optional[Dict[str, Any]] = None
 
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:

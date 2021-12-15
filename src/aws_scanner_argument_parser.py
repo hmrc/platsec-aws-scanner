@@ -31,19 +31,20 @@ class AwsScannerArguments:
 
 
 class AwsScannerCommands:
-    service_usage: str = "service_usage"
-    role_usage: str = "role_usage"
-    find_principal: str = "find_principal"
-    create_table: str = "create_table"
-    list_accounts: str = "list_accounts"
-    list_ssm_parameters: str = "list_ssm_parameters"
-    drop: str = "drop"
-    audit_s3: str = "audit_s3"
-    audit_iam: str = "audit_iam"
-    audit_vpc_flow_logs: str = "audit_vpc_flow_logs"
-    cost_explorer: str = "cost_explorer"
-    audit_password_policy: str = "audit_password_policy"
-    audit_cloudtrail: str = "audit_cloudtrail"
+    service_usage = "service_usage"
+    role_usage = "role_usage"
+    find_principal = "find_principal"
+    create_table = "create_table"
+    list_accounts = "list_accounts"
+    list_ssm_parameters = "list_ssm_parameters"
+    drop = "drop"
+    audit_s3 = "audit_s3"
+    audit_iam = "audit_iam"
+    audit_vpc_flow_logs = "audit_vpc_flow_logs"
+    cost_explorer = "cost_explorer"
+    audit_password_policy = "audit_password_policy"
+    audit_cloudtrail = "audit_cloudtrail"
+    audit_central_logging = "audit_central_logging"
 
 
 class AwsScannerArgumentParser:
@@ -117,6 +118,7 @@ class AwsScannerArgumentParser:
         self._add_audit_password_policy_command(subparsers)
         self._add_cost_explorer_command(subparsers)
         self._add_audit_cloudtrail(subparsers)
+        self._add_audit_central_logging(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -214,6 +216,12 @@ class AwsScannerArgumentParser:
         self._add_auth_args(service_parser)
         self._add_athena_task_args(service_parser)
         self._add_services_arg(service_parser, "comma-separated list of service(s) to scan usage for")
+        self._add_verbosity_arg(service_parser)
+
+    def _add_audit_central_logging(self, subparsers: Any) -> None:
+        desc = "audit central AWS logging account"
+        service_parser = subparsers.add_parser(AwsScannerCommands.audit_central_logging, help=desc, description=desc)
+        self._add_auth_args(service_parser)
         self._add_verbosity_arg(service_parser)
 
     def parse_cli_args(self) -> AwsScannerArguments:
