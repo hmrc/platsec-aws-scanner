@@ -30,6 +30,18 @@ class TestAwsKmsClient(TestCase):
 
         list_resource_tags.assert_called_once_with(key_id)
 
+    def test_find_key(self) -> None:
+        key_id = "1234"
+        a_key = key(id=key_id)
+        with patch.object(AwsKmsClient, "get_key", side_effect=lambda k: a_key if k == key_id else None):
+            self.assertEqual(a_key, AwsKmsClient(Mock()).find_key("1234"))
+
+    def test_find_key_not_found(self) -> None:
+        with patch.object(AwsKmsClient, "get_key", side_effect=KmsException("boom")):
+            with self.assertLogs("AwsKmsClient", level="WARNING") as warn_log:
+                self.assertIsNone(AwsKmsClient(Mock()).find_key("1234"))
+                self.assertIn("boom", warn_log.output[0])
+
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))
         self.assertEqual(key(policy=None), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
