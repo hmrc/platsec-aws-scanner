@@ -6,27 +6,19 @@ from botocore.client import BaseClient
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
 from src.clients.aws_logs_client import AwsLogsClient
-from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_cloudtrail_types import EventSelector, Trail, to_event_selector, to_trail
-from src.data.aws_s3_types import Bucket
 from src.data.aws_logs_types import LogGroup
 
 
 class AwsCloudtrailClient:
-    def __init__(self, cloudtrail: BaseClient, logs: AwsLogsClient, s3: AwsS3Client):
+    def __init__(self, cloudtrail: BaseClient, logs: AwsLogsClient):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
-        self._s3 = s3
         self._cloudtrail = cloudtrail
         self._logs = logs
 
     def get_trails(self) -> Sequence[Trail]:
         return [self._enrich_trail(trail) for trail in self._describe_trails()]
-
-    def get_event_bucket(self) -> Optional[Bucket]:
-        bucket_name = self._config.cloudtrail_logs_bucket()
-        bucket_policy = self._s3.get_bucket_policy(bucket_name)
-        return Bucket(name=bucket_name, policy=bucket_policy) if bucket_policy else None
 
     def get_cloudtrail_log_group(self) -> Optional[LogGroup]:
         log_group = filter(

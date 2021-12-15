@@ -99,9 +99,7 @@ class AwsClientFactory:
         return AwsKmsClient(self.get_kms_boto_client(account))
 
     def get_cloudtrail_client(self, account: Account) -> AwsCloudtrailClient:
-        return AwsCloudtrailClient(
-            self.get_cloudtrail_boto_client(account), self.get_logs_client(account), self.get_s3_client(account)
-        )
+        return AwsCloudtrailClient(self.get_cloudtrail_boto_client(account), self.get_logs_client(account))
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
