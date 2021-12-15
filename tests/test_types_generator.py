@@ -527,5 +527,5 @@ def event_selector(
     )
 
 
-def aws_audit_central_logging_task() -> AwsAuditCentralLoggingTask:
-    return AwsAuditCentralLoggingTask(account())
+def audit_central_logging_task() -> AwsAuditCentralLoggingTask:
+    return AwsAuditCentralLoggingTask()

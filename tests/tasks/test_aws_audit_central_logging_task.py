@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from tests.test_types_generator import account, aws_audit_central_logging_task, bucket, key
+from tests.test_types_generator import account, audit_central_logging_task, bucket, key
 
 
 def test_run_task() -> None:
@@ -12,5 +12,5 @@ def test_run_task() -> None:
         get_event_cmk=Mock(return_value=event_key),
         get_all_accounts=Mock(return_value=org_accounts),
     )
-    task_report = aws_audit_central_logging_task()._run_task(client)
+    task_report = audit_central_logging_task()._run_task(client)
     assert task_report == {"events_bucket": event_bucket, "events_cmk": event_key, "org_accounts": org_accounts}

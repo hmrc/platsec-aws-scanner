@@ -1,13 +1,13 @@
 from typing import Any, Dict
 
+from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
-from src.data.aws_organizations_types import Account
 from src.tasks.aws_task import AwsTask
 
 
 class AwsAuditCentralLoggingTask(AwsTask):
-    def __init__(self, account: Account) -> None:
-        super().__init__("audit central logging account", account)
+    def __init__(self) -> None:
+        super().__init__("audit central logging account", Config().cloudtrail_account())
 
     def _run_task(self, client: AwsCentralLoggingClient) -> Dict[Any, Any]:
         return {

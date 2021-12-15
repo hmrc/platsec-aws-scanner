@@ -8,6 +8,7 @@ from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
+from src.tasks.aws_audit_central_logging_task import AwsAuditCentralLoggingTask
 from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
@@ -68,6 +69,7 @@ class AwsTaskBuilder:
             ),
             Cmd.audit_password_policy: lambda: self._tasks(AwsAuditPasswordPolicyTask, enforce=self._args.enforce),
             Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask),
+            Cmd.audit_central_logging: lambda: self._standalone_task(AwsAuditCentralLoggingTask),
         }
         try:
             return task_mapping[self._args.task]()
