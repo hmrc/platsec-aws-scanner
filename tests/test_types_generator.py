@@ -48,6 +48,7 @@ from src.data.aws_s3_types import (
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
 from src.tasks.aws_athena_task import AwsAthenaTask
+from src.tasks.aws_audit_central_logging_task import AwsAuditCentralLoggingTask
 from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
@@ -524,3 +525,7 @@ def event_selector(
         include_management_events=include_management_events,
         data_resources=data_resources or [],
     )
+
+
+def aws_audit_central_logging_task() -> AwsAuditCentralLoggingTask:
+    return AwsAuditCentralLoggingTask(account())
