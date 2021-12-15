@@ -247,6 +247,25 @@ class TestGetClients(TestCase):
                 self.assertEqual(cloudtrail_client._cloudtrail, cloudtrail_boto_client)
                 self.assertEqual(cloudtrail_client._logs, logs_client)
 
+    def test_get_central_logging_client(self, _: Mock) -> None:
+        cloudtrail_acc = account("111344576685", "cloudtrail")
+        s3_client = Mock()
+        kms_client = Mock()
+        org_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_s3_client",
+            side_effect=lambda acc: s3_client if acc == cloudtrail_acc else None,
+        ):
+            with patch(
+                f"{self.factory_path}.get_kms_client",
+                side_effect=lambda acc: kms_client if acc == cloudtrail_acc else None,
+            ):
+                with patch(f"{self.factory_path}.get_organizations_client", return_value=org_client):
+                    central_logging_client = AwsClientFactory(self.mfa, self.username).get_central_logging_client()
+                    self.assertEqual(central_logging_client._s3, s3_client)
+                    self.assertEqual(central_logging_client._kms, kms_client)
+                    self.assertEqual(central_logging_client._org, org_client)
+
 
 @patch.object(AwsClientFactory, "_get_session_token")
 class TestGetCompositeClients(TestCase):

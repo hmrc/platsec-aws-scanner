@@ -19,6 +19,7 @@ from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
+from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data import SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
@@ -46,6 +47,13 @@ class AwsClientFactory:
 
     def get_s3_client(self, account: Account, role: Optional[str] = None) -> AwsS3Client:
         return AwsS3Client(self.get_s3_boto_client(account, role or self._config.s3_role()))
+
+    def get_central_logging_client(self) -> AwsCentralLoggingClient:
+        return AwsCentralLoggingClient(
+            s3=self.get_s3_client(self._config.cloudtrail_account()),
+            kms=self.get_kms_client(self._config.cloudtrail_account()),
+            org=self.get_organizations_client(),
+        )
 
     def get_cost_explorer_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("ce", account, self._config.cost_explorer_role())
