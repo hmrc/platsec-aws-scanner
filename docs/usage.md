@@ -9,14 +9,14 @@ pipenv shell
 Launching subshell in virtual environment...
 
 $ ./platsec_aws_scanner.py
-usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list_accounts,create_table,drop} ...
+usage: platsec_aws_scanner.py [-h] {audit_cloudtrail,audit_central_logging,service_usage,role_usage,find_principal,list_accounts,create_table,drop} ...
 ```
 
 Alternatively, an executable shell script wraps the Python script in a container for convenience:
 
 ```sh
 ./platsec_aws_scanner.sh
-usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list_accounts,create_table,drop} ...
+usage: platsec_aws_scanner.py [-h] {audit_cloudtrail,audit_central_logging,service_usage,role_usage,find_principal,list_accounts,create_table,drop} ...
 ```
 
 ## Tasks
@@ -107,19 +107,20 @@ Invoking the tool with the `-h / --help` argument will print a helper message li
 
 ```sh
 ./platsec_aws_scanner.sh -h
-usage: platsec_aws_scanner.py [-h] {service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3} ...
+usage: platsec_aws_scanner.py [-h] {audit_cloudtrail,audit_central_logging,service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3} ...
 
 positional arguments:
-  {service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3}
-    service_usage       scan AWS service usage 
-    role_usage          scan AWS role usage
-    find_principal      find principal by source IP
-    list_accounts       list organization accounts
-    list_ssm_parameters
-                        list SSM parameters
-    create_table        create Athena table
-    drop                drop databases and tables created by tasks
-    audit_s3            audit S3 bucket compliance
+  {audit_cloudtrail,audit_central_logging,service_usage,role_usage,find_principal,list_accounts,list_ssm_parameters,create_table,drop,audit_s3}
+    audit_cloudtrail      audit cloudtrail compliance
+    audit_central_logging audit central logging account
+    service_usage         scan AWS service usage 
+    role_usage            scan AWS role usage
+    find_principal        find principal by source IP
+    list_accounts         list organization accounts
+    list_ssm_parameters   list SSM parameters
+    create_table          create Athena table
+    drop                  drop databases and tables created by tasks
+    audit_s3              audit S3 bucket compliance
 
 optional arguments:
   -h, --help            show this help message and exit
