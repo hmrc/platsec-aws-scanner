@@ -1,7 +1,7 @@
 # Audit Central Logging
 
-The `audit_cloudtrail` task produces an audit report for [AWS Cloudtrail][aws-cloudtrail] of a given account / list of accounts.
-
+The `audit_cloudtrail` task produces an audit report for [AWS Cloudtrail][aws-cloudtrail] of 
+a given account / list of accounts.
 
 ## Usage
 
