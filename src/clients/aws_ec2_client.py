@@ -29,7 +29,7 @@ class AwsEC2Client:
                     ResourceIds=[vpc_id],
                     ResourceType="VPC",
                     TrafficType="ALL",
-                    LogDestinationType="s3",
+                    LogDestinationType=self._config.ec2_flow_log_destination_type(),
                     LogDestination=bucket_arn,
                     LogFormat=self._config.ec2_flow_log_format(),
                     TagSpecifications=[

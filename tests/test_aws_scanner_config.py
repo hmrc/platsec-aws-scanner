@@ -41,15 +41,7 @@ def test_init_config_from_file() -> None:
     assert 12 == config.iam_password_policy_password_reuse_prevention()
     assert not config.iam_password_policy_hard_expiry()
     assert "kms_role" == config.kms_role()
-    assert "/vpc/flow_log" == config.logs_vpc_log_group_name()
-    assert "[version, account_id, interface_id]" == config.logs_vpc_log_group_pattern()
-    assert "arn:aws:logs:::destination:central" == config.logs_vpc_log_group_destination()
-    assert "vpc_flow_log_role" == config.logs_vpc_log_group_delivery_role()
-    assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
-    assert {
-        "Statement": [{"Action": ["logs:*"], "Effect": "Allow", "Resource": "*"}]
-    } == config.logs_vpc_log_group_delivery_role_policy_document()
-    assert 14 == config.logs_vpc_log_group_retention_policy_days()
+    assert "central_log_bucket" == config.logs_vpc_log_bucket_arn()
     assert "logs_role" == config.logs_role()
     assert Account("999888777666", "organization") == config.organization_account()
     assert "orgs_role" == config.organization_role()
@@ -90,13 +82,7 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_IAM_ROLE": "the_iam_role",
         "AWS_SCANNER_IAM_AUDIT_ROLE": "the_iam_audit_role",
         "AWS_SCANNER_KMS_ROLE": "the_kms_role",
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE": "the_flow_log_delivery_role",
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": '{"Statement": [{"Action": "s3:something"}]}',
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": '{"Statement": [{"Action": ["sts:hi"]}]}',
-        "AWS_SCANNER_LOGS_VPC_LOG_GROUP_RETENTION_POLICY_DAYS": "21",
+        "AWS_SCANNER_LOGS_VPC_LOG_BUCKET_ARN": "the_central_log_bucket",
         "AWS_SCANNER_LOGS_ROLE": "some_logs_role",
         "AWS_SCANNER_ORGANIZATION_ACCOUNT": "666777888999",
         "AWS_SCANNER_ORGANIZATION_ROLE": "the_orgs_role",
@@ -137,13 +123,7 @@ def test_init_config_from_env_vars() -> None:
     assert "the_iam_role" == config.iam_role()
     assert "the_iam_audit_role" == config.iam_audit_role()
     assert "the_kms_role" == config.kms_role()
-    assert "/vpc/central_flow_log_name" == config.logs_vpc_log_group_name()
-    assert "[version, account_id]" == config.logs_vpc_log_group_pattern()
-    assert "arn:aws:logs:::destination:some-central" == config.logs_vpc_log_group_destination()
-    assert "the_flow_log_delivery_role" == config.logs_vpc_log_group_delivery_role()
-    assert {"Statement": [{"Action": "s3:something"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
-    assert {"Statement": [{"Action": ["sts:hi"]}]} == config.logs_vpc_log_group_delivery_role_policy_document()
-    assert 21 == config.logs_vpc_log_group_retention_policy_days()
+    assert "the_central_log_bucket" == config.logs_vpc_log_bucket_arn()
     assert "some_logs_role" == config.logs_role()
     assert Account("666777888999", "organization") == config.organization_account()
     assert "the_orgs_role" == config.organization_role()
@@ -178,18 +158,6 @@ def test_config_file_is_missing(caplog: Any) -> None:
 def test_unsupported_reports_output() -> None:
     with pytest.raises(SystemExit, match="unsupported config: section 'reports', key 'output'"):
         AwsScannerConfig().reports_output()
-
-
-@patch.dict(os.environ, {"AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": "{"}, clear=True)
-def test_invalid_format_logs_vpc_log_group_delivery_role_assume_policy() -> None:
-    with pytest.raises(SystemExit, match="vpc_log_group_delivery_role_assume_policy"):
-        AwsScannerConfig().logs_vpc_log_group_delivery_role_assume_policy()
-
-
-@patch.dict(os.environ, {"AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": "}"})
-def test_invalid_format_logs_vpc_log_group_delivery_role_policy_document() -> None:
-    with pytest.raises(SystemExit, match="vpc_log_group_delivery_role_policy_document"):
-        AwsScannerConfig().logs_vpc_log_group_delivery_role_policy_document()
 
 
 @patch.dict(os.environ, {"AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "bonjour"})

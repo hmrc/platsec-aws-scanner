@@ -8,21 +8,12 @@ from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_ec2_client import AwsEC2Client
-from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
     ComplianceActionReport,
-    CreateVpcLogGroupAction,
     CreateFlowLogAction,
-    CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
-    DeleteFlowLogDeliveryRoleAction,
-    DeleteVpcLogGroupSubscriptionFilterAction,
-    PutVpcLogGroupRetentionPolicyAction,
-    PutVpcLogGroupSubscriptionFilterAction,
-    TagFlowLogDeliveryRoleAction,
-    TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
@@ -308,22 +299,18 @@ def role(
 def flow_log(
     id: str = "fl-1234",
     status: str = "ACTIVE",
-    log_group_name: Optional[str] = "/vpc/flow_log",
+    log_destination: Optional[str] = "central_log_bucket",
+    log_destination_type: Optional[str] = "s3",
     traffic_type: str = "ALL",
     log_format: str = "${srcaddr} ${dstaddr}",
-    deliver_log_role_arn: Optional[str] = ":role/vpc_flow_log_role",
-    deliver_log_role: Optional[Role] = role(name="vpc_flow_log_role"),
-    log_group: Optional[LogGroup] = None,
 ) -> FlowLog:
     return FlowLog(
         id=id,
         status=status,
-        log_group_name=log_group_name,
+        log_destination=log_destination,
+        log_destination_type=log_destination_type,
         traffic_type=traffic_type,
         log_format=log_format,
-        deliver_log_role_arn=deliver_log_role_arn,
-        deliver_log_role=deliver_log_role,
-        log_group=log_group,
     )
 
 
@@ -339,48 +326,6 @@ def delete_flow_log_action(
     ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client), flow_log_id: str = flow_log().id
 ) -> DeleteFlowLogAction:
     return DeleteFlowLogAction(ec2_client=ec2_client, flow_log_id=flow_log_id)
-
-
-def create_flow_log_delivery_role_action(
-    iam: AwsIamClient = Mock(spec=AwsIamClient),
-) -> CreateFlowLogDeliveryRoleAction:
-    return CreateFlowLogDeliveryRoleAction(iam=iam)
-
-
-def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient)) -> DeleteFlowLogDeliveryRoleAction:
-    return DeleteFlowLogDeliveryRoleAction(iam=iam)
-
-
-def create_vpc_log_group_action(logs: AwsLogsClient = Mock(spec=AwsLogsClient)) -> CreateVpcLogGroupAction:
-    return CreateVpcLogGroupAction(logs=logs)
-
-
-def put_vpc_log_group_subscription_filter_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> PutVpcLogGroupSubscriptionFilterAction:
-    return PutVpcLogGroupSubscriptionFilterAction(logs=logs)
-
-
-def delete_vpc_log_group_subscription_filter_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> DeleteVpcLogGroupSubscriptionFilterAction:
-    return DeleteVpcLogGroupSubscriptionFilterAction(logs=logs)
-
-
-def put_vpc_log_group_retention_policy_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> PutVpcLogGroupRetentionPolicyAction:
-    return PutVpcLogGroupRetentionPolicyAction(logs=logs)
-
-
-def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
-    return TagFlowLogDeliveryRoleAction(iam=iam)
-
-
-def tag_vpc_log_group_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> TagVpcLogGroupAction:
-    return TagVpcLogGroupAction(logs=logs)
 
 
 def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:
