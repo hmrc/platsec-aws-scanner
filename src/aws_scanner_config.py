@@ -63,6 +63,9 @@ class AwsScannerConfig:
     def ec2_role(self) -> str:
         return self._get_config("ec2", "role")
 
+    def ec2_flow_log_destination_type(self) -> str:
+        return self._get_config("ec2", "flow_log_destination_type")
+
     def ec2_flow_log_status(self) -> str:
         return self._get_config("ec2", "flow_log_status")
 
@@ -122,8 +125,8 @@ class AwsScannerConfig:
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
 
-    def logs_vpc_log_group_name(self) -> str:
-        return self._get_config("logs", "vpc_log_group_name")
+    def logs_vpc_log_bucket_arn(self) -> str:
+        return self._get_config("logs", "vpc_log_bucket_arn")
 
     def logs_vpc_log_group_subscription_filter_name(self) -> str:
         return f"{self.logs_vpc_log_group_name()}_sub_filter"

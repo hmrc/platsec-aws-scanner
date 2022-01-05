@@ -93,8 +93,7 @@ class CreateFlowLogAction(ComplianceAction):
     def _apply(self) -> None:
         self.ec2.create_flow_logs(
             self.vpc_id,
-            self.config.logs_vpc_log_group_name(),
-            self._get_flow_log_delivery_role_arn(self.config.logs_vpc_log_group_delivery_role()),
+            self.config.logs_vpc_log_bucket_arn()
         )
 
     def plan(self) -> ComplianceActionReport:
