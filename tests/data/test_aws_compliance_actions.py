@@ -8,7 +8,6 @@ from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_scanner_exceptions import AwsScannerException
 
 from tests import _raise
-from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
 from tests.test_types_generator import (
     compliance_action_report,
     delete_flow_log_action,
@@ -69,11 +68,9 @@ def test_plan_delete_flow_log_action() -> None:
 
 
 def test_apply_create_flow_log_action() -> None:
-    builder = AwsVpcClientBuilder()
-    builder.with_create_flow_logs()
-    client = builder.build()
-    create_flow_log_action(ec2_client=client.ec2, vpc_id="8")._apply()
-    builder.ec2.create_flow_logs.assert_called_once_with("8", "central_log_bucket")
+    client = Mock()
+    create_flow_log_action(ec2_client=client, vpc_id="8")._apply()
+    client.create_flow_logs.assert_called_once_with("8", "central_log_bucket")
 
 
 def test_plan_create_flow_log_action() -> None:
