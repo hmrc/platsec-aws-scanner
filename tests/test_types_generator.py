@@ -234,7 +234,6 @@ def aws_scanner_arguments(
     log_level: str = "ERROR",
     enforce: bool = False,
     disable_account_lookup: bool = False,
-    with_subscription_filter: bool = False,
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -250,7 +249,6 @@ def aws_scanner_arguments(
         log_level=log_level,
         enforce=enforce,
         disable_account_lookup=disable_account_lookup,
-        with_subscription_filter=with_subscription_filter,
     )
 
 

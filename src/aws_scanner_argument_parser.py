@@ -23,7 +23,6 @@ class AwsScannerArguments:
     log_level: str
     enforce: bool
     disable_account_lookup: bool
-    with_subscription_filter: bool
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
@@ -163,7 +162,6 @@ class AwsScannerArgumentParser:
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
-        audit_parser.add_argument("-w", "--with_subscription_filter", type=bool, help="create subscription filter")
         self._add_verbosity_arg(audit_parser)
 
     def _add_audit_password_policy_command(self, subparsers: Any) -> None:
@@ -251,5 +249,4 @@ class AwsScannerArgumentParser:
             log_level=str(args.get("verbosity")).upper(),
             enforce=bool(args.get("enforce")),
             disable_account_lookup=bool(args.get("disable_account_lookup")),
-            with_subscription_filter=bool(args.get("with_subscription_filter")),
         )
