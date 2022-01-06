@@ -110,12 +110,7 @@ class AwsClientFactory:
         return AwsCloudtrailClient(self.get_cloudtrail_boto_client(account), self.get_logs_client(account))
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
-        return AwsVpcClient(
-            ec2=self.get_ec2_client(account),
-            iam=self.get_iam_client(account),
-            logs=self.get_logs_client(account),
-            kms=self.get_kms_client(account),
-        )
+        return AwsVpcClient(ec2=self.get_ec2_client(account))
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:
         self._logger.info(f"getting session token for {username}")

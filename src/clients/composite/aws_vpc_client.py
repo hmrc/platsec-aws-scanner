@@ -1,13 +1,9 @@
 from itertools import chain
 from logging import getLogger
-from typing import Sequence, List, Any
+from typing import Sequence
 
-from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
-from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient
-from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
     CreateFlowLogAction,
@@ -17,12 +13,9 @@ from src.data.aws_ec2_types import FlowLog, Vpc
 
 
 class AwsVpcClient:
-    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
+    def __init__(self, ec2: AwsEC2Client):
         self._logger = getLogger(self.__class__.__name__)
         self.ec2 = ec2
-        self.iam = iam
-        self.logs = logs
-        self.kms = kms
         self.config = Config()
 
     def list_vpcs(self) -> Sequence[Vpc]:
@@ -71,7 +64,6 @@ class AwsVpcClient:
             [
                 CreateFlowLogAction(
                     ec2_client=self.ec2,
-                    iam=self.iam,
                     config=self.config,
                     vpc_id=vpc.id,
                 )

@@ -316,10 +316,9 @@ def flow_log(
 
 def create_flow_log_action(
     ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client),
-    iam: AwsIamClient = Mock(spec=AwsIamClient),
     vpc_id: str = vpc().id,
 ) -> CreateFlowLogAction:
-    return CreateFlowLogAction(ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), vpc_id=vpc_id)
+    return CreateFlowLogAction(ec2_client=ec2_client, config=AwsScannerConfig(), vpc_id=vpc_id)
 
 
 def delete_flow_log_action(
@@ -332,10 +331,8 @@ def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -
     return UpdatePasswordPolicyAction(iam=iam)
 
 
-def aws_audit_vpc_flow_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
-) -> AwsAuditVPCFlowLogsTask:
-    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
+def aws_audit_vpc_flow_logs_task(account: Account = account(), enforce: bool = False) -> AwsAuditVPCFlowLogsTask:
+    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce)
 
 
 def log_group(
