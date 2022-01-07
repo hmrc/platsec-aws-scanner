@@ -9,10 +9,10 @@ FLOW_LOGS: Dict[str, Any] = {
         {
             "FlowLogId": "fl-465fe654de123f54a",
             "FlowLogStatus": "ACTIVE",
-            "LogGroupName": "/vpc/flow_log",
+            "LogDestination": "central_log_bucket",
+            "LogDestinationType": "s3",
             "TrafficType": "ALL",
             "DeliverLogsPermissionArn": "a_role_arn",
-            "LogDestination": "arn:aws:logs:us-east-1:111222333444:log-group:/vpc/flow_log",
             "LogFormat": "${version} ${account-id} ${interface-id}",
         },
         {
@@ -28,20 +28,18 @@ EXPECTED_FLOW_LOGS: Sequence[FlowLog] = [
     flow_log(
         id="fl-465fe654de123f54a",
         status="ACTIVE",
-        log_group_name="/vpc/flow_log",
+        log_destination="central_log_bucket",
+        log_destination_type="s3",
         traffic_type="ALL",
-        deliver_log_role_arn="a_role_arn",
         log_format="${version} ${account-id} ${interface-id}",
-        deliver_log_role=None,
     ),
     flow_log(
         id="fl-4654ef654d12321cb",
         status="ACTIVE",
-        log_group_name=None,
+        log_destination="arn:aws:s3:::some-bucket",
+        log_destination_type=None,
         traffic_type="ACCEPT",
-        deliver_log_role_arn=None,
         log_format="${start} ${end} ${action} ${log-status}",
-        deliver_log_role=None,
     ),
 ]
 

@@ -90,30 +90,31 @@ class TestAwsEC2ClientCreateFlowLogs(TestCase):
     def create_flow_logs(self, **kwargs: Any) -> Any:
         self.assertEqual("VPC", kwargs["ResourceType"])
         self.assertEqual("ALL", kwargs["TrafficType"])
-        self.assertEqual("cloud-watch-logs", kwargs["LogDestinationType"])
+        self.assertEqual("a_bucket", kwargs["LogDestination"])
+        self.assertEqual("s3", kwargs["LogDestinationType"])
         self.assertEqual("${srcaddr} ${dstaddr}", kwargs["LogFormat"])
         self.assertEqual(self.EXPECTED_TAGS, kwargs["TagSpecifications"])
-        self.assertEqual(8, len(kwargs), f"expected 8 arguments passed to create_flow_logs function, got {len(kwargs)}")
+        self.assertEqual(7, len(kwargs), f"expected 7 arguments passed to create_flow_logs function, got {len(kwargs)}")
         resp_mapping: Dict[Any, Any] = {
-            ("good-vpc", "lg-1", "perm-1"): lambda: responses.CREATE_FLOW_LOGS_SUCCESS,
-            ("bad-vpc", "lg-2", "perm-2"): lambda: responses.CREATE_FLOW_LOGS_FAILURE,
-            ("except-vpc", "lg-3", "perm-3"): lambda: _raise(client_error("CreateFlowLogs", "AccessDenied", "nope")),
+            ("good-vpc", "a_bucket"): lambda: responses.CREATE_FLOW_LOGS_SUCCESS,
+            ("bad-vpc", "a_bucket"): lambda: responses.CREATE_FLOW_LOGS_FAILURE,
+            ("except-vpc", "a_bucket"): lambda: _raise(client_error("CreateFlowLogs", "AccessDenied", "nope")),
         }
-        return resp_mapping[(kwargs["ResourceIds"][0], kwargs["LogGroupName"], kwargs["DeliverLogsPermissionArn"])]()
+        return resp_mapping[(kwargs["ResourceIds"][0], kwargs["LogDestination"])]()
 
     def ec2_client(self) -> AwsEC2Client:
         return AwsEC2Client(Mock(create_flow_logs=Mock(side_effect=self.create_flow_logs)))
 
     def test_create_flow_logs(self) -> None:
-        self.ec2_client().create_flow_logs("good-vpc", "lg-1", "perm-1")
+        self.ec2_client().create_flow_logs("good-vpc", "a_bucket")
 
     def test_create_flow_logs_failure(self) -> None:
         with self.assertRaisesRegex(EC2Exception, "bad-vpc"):
-            self.ec2_client().create_flow_logs("bad-vpc", "lg-2", "perm-2")
+            self.ec2_client().create_flow_logs("bad-vpc", "a_bucket")
 
     def test_create_flow_logs_client_error(self) -> None:
         with self.assertRaisesRegex(EC2Exception, "except-vpc"):
-            self.ec2_client().create_flow_logs("except-vpc", "lg-3", "perm-3")
+            self.ec2_client().create_flow_logs("except-vpc", "a_bucket")
 
 
 def delete_flow_logs(**kwargs: Any) -> Any:
