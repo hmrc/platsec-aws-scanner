@@ -25,6 +25,8 @@ def to_vpc(vpc: Dict[Any, Any]) -> Vpc:
 class FlowLog:
     id: str
     status: str
+    log_destination: Optional[str]
+    log_destination_type: Optional[str]
     log_group_name: Optional[str]
     traffic_type: str
     log_format: str
@@ -37,6 +39,8 @@ def to_flow_log(flow_log: Dict[Any, Any]) -> FlowLog:
     return FlowLog(
         id=flow_log["FlowLogId"],
         status=flow_log["FlowLogStatus"],
+        log_destination=flow_log.get("LogDestination"),
+        log_destination_type=flow_log.get("LogDestinationType"),
         log_group_name=flow_log.get("LogGroupName"),
         traffic_type=flow_log["TrafficType"],
         log_format=flow_log["LogFormat"],

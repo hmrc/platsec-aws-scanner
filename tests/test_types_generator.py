@@ -308,6 +308,8 @@ def role(
 def flow_log(
     id: str = "fl-1234",
     status: str = "ACTIVE",
+    log_destination: Optional[str] = "arn:/vpc/flow_log",
+    log_destination_type: Optional[str] = "cloud-watch-logs",
     log_group_name: Optional[str] = "/vpc/flow_log",
     traffic_type: str = "ALL",
     log_format: str = "${srcaddr} ${dstaddr}",
@@ -318,6 +320,8 @@ def flow_log(
     return FlowLog(
         id=id,
         status=status,
+        log_destination=log_destination,
+        log_destination_type=log_destination_type,
         log_group_name=log_group_name,
         traffic_type=traffic_type,
         log_format=log_format,
