@@ -275,10 +275,13 @@ class TestGetCompositeClients(TestCase):
 
     def test_get_vpc_client(self, _: Mock) -> None:
         acc = account(identifier="1234", name="some_account")
-        ec2 = Mock(name="ec2")
+        ec2, iam, logs, kms = Mock(name="ec2"), Mock(name="iam"), Mock(name="logs"), Mock(name="kms")
         with patch.object(AwsClientFactory, "get_ec2_client", side_effect=self.mock_client(ec2, acc)):
-            vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
-        self.assertEqual([ec2], [vpc_client.ec2])
+            with patch.object(AwsClientFactory, "get_logs_client", side_effect=self.mock_client(logs, acc)):
+                with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
+                    with patch.object(AwsClientFactory, "get_kms_client", side_effect=self.mock_client(kms, acc)):
+                        vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
+        self.assertEqual([ec2, iam, logs, kms], [vpc_client.ec2, vpc_client.iam, vpc_client.logs, vpc_client.kms])
 
 
 class TestAwsClientFactory(TestCase):
