@@ -62,7 +62,11 @@ class AwsTaskBuilder:
                 year=self._args.year,
                 month=self._args.month,
             ),
-            Cmd.audit_vpc_flow_logs: lambda: self._tasks(AwsAuditVPCFlowLogsTask, enforce=self._args.enforce),
+            Cmd.audit_vpc_flow_logs: lambda: self._tasks(
+                AwsAuditVPCFlowLogsTask,
+                enforce=self._args.enforce,
+                with_subscription_filter=self._args.with_subscription_filter,
+            ),
             Cmd.audit_password_policy: lambda: self._tasks(AwsAuditPasswordPolicyTask, enforce=self._args.enforce),
             Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask),
             Cmd.audit_central_logging: lambda: self._standalone_task(AwsAuditCentralLoggingTask),

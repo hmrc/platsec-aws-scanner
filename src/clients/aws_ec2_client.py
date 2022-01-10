@@ -20,17 +20,18 @@ class AwsEC2Client:
     def list_vpcs(self) -> List[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
 
-    def create_flow_logs(self, vpc_id: str, bucket_arn: str) -> None:
+    def create_flow_logs(self, vpc_id: str, log_group_name: str, permission: str) -> None:
         self._logger.debug(f"creating flow logs for VPC {vpc_id}")
         try:
             self._is_success(
                 "create_flow_logs",
                 self._ec2.create_flow_logs(
+                    DeliverLogsPermissionArn=permission,
+                    LogGroupName=log_group_name,
                     ResourceIds=[vpc_id],
                     ResourceType="VPC",
                     TrafficType="ALL",
-                    LogDestinationType=self._config.ec2_flow_log_destination_type(),
-                    LogDestination=bucket_arn,
+                    LogDestinationType="cloud-watch-logs",
                     LogFormat=self._config.ec2_flow_log_format(),
                     TagSpecifications=[
                         {"ResourceType": "vpc-flow-log", "Tags": [tag.to_dict() for tag in PLATSEC_SCANNER_TAGS]}

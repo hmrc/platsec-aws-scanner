@@ -8,12 +8,13 @@ from src.tasks.aws_vpc_task import AwsVpcTask
 
 @dataclass
 class AwsAuditVPCFlowLogsTask(AwsVpcTask):
-    def __init__(self, account: Account, enforce: bool) -> None:
+    def __init__(self, account: Account, enforce: bool, with_subscription_filter: bool) -> None:
         super().__init__("audit VPC flow logs compliance", account, enforce)
+        self.with_subscription_filter = with_subscription_filter
 
     def _run_task(self, client: AwsVpcClient) -> Dict[Any, Any]:
         vpcs = client.list_vpcs()
-        actions = client.enforcement_actions(vpcs)
+        actions = client.enforcement_actions(vpcs, self.with_subscription_filter)
         if self.enforce:
             apply = [a.apply() for a in actions]
             return {"vpcs": vpcs, "enforcement_actions": apply}
