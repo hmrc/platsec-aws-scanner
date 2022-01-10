@@ -150,7 +150,10 @@ def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
 
 
 def test_plan_put_central_vpc_log_group_subscription_filter_action() -> None:
-    expected = compliance_action_report(description="Put central VPC log group subscription filter")
+    expected = compliance_action_report(
+        description="Put central VPC log group subscription filter",
+        details=dict(log_group_name="/vpc/flow_log", destination_arn="arn:aws:logs:::destination:central"),
+    )
     assert expected == put_vpc_log_group_subscription_filter_action().plan()
 
 

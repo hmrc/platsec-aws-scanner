@@ -182,6 +182,15 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
         super().__init__("Put central VPC log group subscription filter")
         self.logs = logs
 
+    def plan(self) -> ComplianceActionReport:
+        config = Config()
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(
+                log_group_name=config.logs_vpc_log_group_name(), destination_arn=config.logs_vpc_log_group_destination()
+            ),
+        )
+
     def _apply(self) -> None:
         config = Config()
         self.logs.put_subscription_filter(
