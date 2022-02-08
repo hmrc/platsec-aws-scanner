@@ -1,7 +1,10 @@
 from tests.test_types_generator import log_group, subscription_filter, tag
 
 DESCRIBE_LOG_GROUPS = {
-    "logGroups": [{"logGroupName": "lg_1", "retentionInDays": 3}, {"logGroupName": "lg_2", "kmsKeyId": "9"}]
+    "logGroups": [
+        {"logGroupName": "lg_1", "retentionInDays": 3},
+        {"logGroupName": "lg_2", "kmsKeyId": "9", "storedBytes": 1234},
+    ]
 }
 
 DESCRIBE_SUBSCRIPTION_FILTERS = [
@@ -55,6 +58,7 @@ EXPECTED_LOG_GROUPS = [
         name="lg_2",
         kms_key_id="9",
         retention_days=None,
+        stored_bytes=1234,
         subscription_filters=[
             subscription_filter(
                 filter_name="SecondFilter",

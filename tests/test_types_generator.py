@@ -402,6 +402,7 @@ def log_group(
     kms_key_id: Optional[str] = None,
     kms_key: Optional[Key] = None,
     retention_days: Optional[int] = 14,
+    stored_bytes: Optional[int] = None,
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
     tags: Optional[Sequence[Tag]] = PLATSEC_SCANNER_TAGS,
     default_kms_key: bool = False,
@@ -414,6 +415,7 @@ def log_group(
         kms_key_id=kms_key_id,
         kms_key=kms_key,
         retention_days=retention_days,
+        stored_bytes=stored_bytes,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
         tags=tags,
     )
