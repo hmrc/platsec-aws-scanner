@@ -345,6 +345,11 @@ class TestAwsEnforcementActions(TestCase):
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=False),
         )
 
+    def test_no_enforcement_actions_required_when_no_vpc_exists(self) -> None:
+        client = AwsVpcClientBuilder()
+        self.assertEqual([], client.build().enforcement_actions(vpcs=[], with_subscription_filter=False))
+        self.assertEqual([], client.build().enforcement_actions(vpcs=[], with_subscription_filter=True))
+
 
 class TestLogGroupCompliance(TestCase):
     def test_central_vpc_log_group(self) -> None:
