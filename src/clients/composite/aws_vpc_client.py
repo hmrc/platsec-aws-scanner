@@ -76,6 +76,8 @@ class AwsVpcClient:
         )
 
     def enforcement_actions(self, vpcs: Sequence[Vpc], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
+        if not vpcs:
+            return list()
         log_group_actions = self._vpc_log_group_enforcement_actions(with_subscription_filter)
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]

@@ -12,6 +12,7 @@ class LogGroup:
     kms_key_id: Optional[str]
     kms_key: Optional[Key]
     retention_days: Optional[int]
+    size: int  # TODO implement me
     subscription_filters: Sequence[SubscriptionFilter]
     tags: Sequence[Tag]
 
