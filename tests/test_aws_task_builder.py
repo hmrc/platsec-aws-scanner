@@ -33,13 +33,13 @@ acct4 = account("4")
 class TestAwsTaskBuilder(TestCase):
     def test_account_id_as_name_when_account_lookup_disabled(self) -> None:
         factory = Mock()
-        accounts = AwsTaskBuilder(factory, args(disable_account_lookup=True))._get_target_accounts(["1234"])
+        accounts = AwsTaskBuilder(factory, args(accounts=["1234"], disable_account_lookup=True))._get_target_accounts()
         factory.assert_not_called()
         assert [account("1234", "1234")] == accounts
 
     def test_exit_when_account_lookup_disabled_and_no_target_account_provided(self) -> None:
         with raises(SystemExit, match="account lookup is disabled and no target accounts were provided"):
-            AwsTaskBuilder(Mock(), args(disable_account_lookup=True))._get_target_accounts([])
+            AwsTaskBuilder(Mock(), args(accounts=[], disable_account_lookup=True))._get_target_accounts()
 
     def test_principal_by_ip_finder_tasks(self) -> None:
         self.assert_tasks_equal(

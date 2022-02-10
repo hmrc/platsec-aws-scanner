@@ -244,6 +244,7 @@ def aws_scanner_arguments(
     enforce: bool = False,
     disable_account_lookup: bool = False,
     with_subscription_filter: bool = False,
+    parent: str = "Parent OU",
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -260,6 +261,7 @@ def aws_scanner_arguments(
         enforce=enforce,
         disable_account_lookup=disable_account_lookup,
         with_subscription_filter=with_subscription_filter,
+        parent=parent,
     )
 
 

@@ -54,6 +54,10 @@ Arguments also have abbreviations:
     the task will be run against all accounts that live in and under the [parent organizational unit specified in the
     configuration file](configuration.md#organization))
 
+-   `-p / --parent` (optional): organization unit parent to be targeted by the task being run (when omitted, the task
+    will be run against all accounts that live in and under the [parent organizational unit specified in the
+    configuration file](configuration.md#organization))
+
 -   `-v / --verbosity` (optional): log level configuration; one of \["error" (default), "warning", "info", "debug"\]
 
 ### Task report
@@ -147,6 +151,8 @@ optional arguments:
                         region for AWS Athena data partition
   -a ACCOUNTS, --accounts ACCOUNTS
                         comma-separated list of target accounts
+  -p PARENT, --parent PARENT
+                        organization unit parent
   -s SERVICES, --services SERVICES
                         comma-separated list of service(s) to scan usage for
   -v {error,warning,info,debug}, --verbosity {error,warning,info,debug}

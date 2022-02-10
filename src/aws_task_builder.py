@@ -37,7 +37,6 @@ class AwsTaskBuilder:
         task_mapping: Dict[str, Callable[[], Sequence[AwsTask]]] = {
             Cmd.service_usage: lambda: self._services_tasks(
                 AwsServiceUsageScannerTask,
-                self._args.accounts,
                 services=self._args.services,
                 partition=self._args.partition,
             ),
@@ -57,7 +56,6 @@ class AwsTaskBuilder:
             Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask),
             Cmd.cost_explorer: lambda: self._services_tasks(
                 AwsAuditCostExplorerTask,
-                self._args.accounts,
                 services=self._args.services,
                 year=self._args.year,
                 month=self._args.month,
@@ -78,19 +76,18 @@ class AwsTaskBuilder:
 
     def _tasks(self, task_type: Type[AwsTask], **kwargs: Any) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task_type.__name__} tasks with {kwargs}")
-        return [task_type(account=account, **kwargs) for account in self._get_target_accounts(self._args.accounts)]
+        return [task_type(account=account, **kwargs) for account in self._get_target_accounts()]
 
     def _services_tasks(
         self,
         task: Type[Union[AwsAuditCostExplorerTask, AwsServiceUsageScannerTask]],
-        accounts: Optional[List[str]],
         services: List[str],
         **kwargs: Any,
     ) -> Sequence[AwsTask]:
         self._logger.info(f"creating {task.__name__} tasks with {kwargs}")
         return [
             task(account=account, service=service, **kwargs)
-            for account in self._get_target_accounts(accounts)
+            for account in self._get_target_accounts()
             for service in services
         ]
 
@@ -98,9 +95,13 @@ class AwsTaskBuilder:
         self._logger.info(f"creating {task.__name__}")
         return [task(**kwargs)]
 
-    def _get_target_accounts(self, accounts: Optional[List[str]]) -> Sequence[Account]:
+    def _get_target_accounts(self) -> Sequence[Account]:
         if not self._orgs:
-            if not accounts:
+            if not self._args.accounts:
                 raise SystemExit("account lookup is disabled and no target accounts were provided")
-            return [Account(acc, acc) for acc in accounts]
-        return self._orgs.find_account_by_ids(accounts) if accounts else self._orgs.get_target_accounts()
+            return [Account(acc, acc) for acc in self._args.accounts]
+        return (
+            self._orgs.find_account_by_ids(self._args.accounts)
+            if self._args.accounts
+            else self._orgs.get_target_accounts(self._args.parent)
+        )
