@@ -2,7 +2,7 @@ ARG PYTHON_VERSION
 ARG FUNCTION_DIR="/platsec-aws-scanner"
 
 FROM python:${PYTHON_VERSION}-slim as build-image
-RUN apt-get update \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && apt-get install -y \
     g++ \
     make \
