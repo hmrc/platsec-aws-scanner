@@ -34,12 +34,10 @@ class AwsOrganizationsClient:
             for account in org_unit.accounts
         ]
 
-    def get_target_accounts(self) -> List[Account]:
+    def get_target_accounts(self, parent: str) -> List[Account]:
         target_accounts = [
             account
-            for org_unit in self._flatten_org_units(
-                self._filter_by_name(self.get_organization_tree(), Config().organization_parent())
-            )
+            for org_unit in self._flatten_org_units(self._filter_by_name(self.get_organization_tree(), parent))
             for account in org_unit.accounts
         ]
         if Config().organization_include_root_accounts():

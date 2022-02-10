@@ -24,6 +24,7 @@ class AwsScannerArguments:
     enforce: bool
     disable_account_lookup: bool
     with_subscription_filter: bool
+    parent: str
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
@@ -57,6 +58,7 @@ class AwsScannerArgumentParser:
     def _add_accounts_args(parser: ArgumentParser) -> None:
         parser.add_argument("-a", "--accounts", type=str, help="comma-separated list of target accounts")
         parser.add_argument("-d", "--disable_account_lookup", type=bool, help="disable account lookup")
+        parser.add_argument("-p", "--parent", type=str, help="organization unit parent")
 
     @staticmethod
     def _add_enforce_arg(parser: ArgumentParser, cmd_help: str) -> None:
@@ -252,4 +254,5 @@ class AwsScannerArgumentParser:
             enforce=bool(args.get("enforce")),
             disable_account_lookup=bool(args.get("disable_account_lookup")),
             with_subscription_filter=bool(args.get("with_subscription_filter")),
+            parent=args.get("parent") or Config().organization_parent(),
         )

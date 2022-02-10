@@ -154,10 +154,10 @@ def test_parse_cli_args_for_drop_task() -> None:
 
 
 def test_parse_cli_args_for_audit_s3_task() -> None:
-    with patch("sys.argv", ". audit_s3 -t 446468 -a 1,2 -v error".split()):
+    with patch("sys.argv", ". audit_s3 -t 446468 -a 1,2 -p prod -v error".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
-    with patch("sys.argv", ". audit_s3 --token 446468 --accounts 1,2 --verbosity error".split()):
+    with patch("sys.argv", ". audit_s3 --token 446468 --accounts 1,2 --parent prod --verbosity error".split()):
         long_args = AwsScannerArgumentParser().parse_cli_args()
 
     for args in [short_args, long_args]:
@@ -167,6 +167,7 @@ def test_parse_cli_args_for_audit_s3_task() -> None:
         assert args.accounts == ["1", "2"]
         assert args.log_level == "ERROR"
         assert args.disable_account_lookup is False
+        assert args.parent == "prod"
 
 
 def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
@@ -187,6 +188,7 @@ def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
         assert args.enforce is True
         assert args.disable_account_lookup is True
         assert args.with_subscription_filter is False
+        assert args.parent == "Parent OU"
 
 
 def test_parse_cli_args_for_enforce_false() -> None:
