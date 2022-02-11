@@ -1,4 +1,3 @@
-import logging
 from unittest.mock import patch
 import pytest
 from typing import Any
@@ -257,28 +256,26 @@ def test_default_log_level_is_warning() -> None:
         assert args.log_level == "WARNING"
 
 
-def test_invalid_log_level_logs_and_exits(caplog: Any) -> None:
+def test_invalid_log_level_logs_and_exits(capsys: Any) -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 -v banana".split()):
-        with caplog.at_level(logging.ERROR):
-            with pytest.raises(SystemExit):
-                AwsScannerArgumentParser().parse_cli_args()
-                assert "banana" in caplog.text
-                assert "verbosity" in caplog.text
-
-
-def test_cli_task_is_mandatory(caplog: Any) -> None:
-    with patch("sys.argv", ".".split()):
-        with caplog.at_level(logging.ERROR):
-            with pytest.raises(SystemExit):
-                AwsScannerArgumentParser().parse_cli_args()
-                assert "required: task" in caplog.text
-
-
-def test_lambda_task_is_mandatory(caplog: Any) -> None:
-    with caplog.at_level(logging.ERROR):
         with pytest.raises(SystemExit):
-            AwsScannerArgumentParser().parse_lambda_args({})
-            assert "error: argument task" in caplog.text
+            AwsScannerArgumentParser().parse_cli_args()
+    error_logs = capsys.readouterr().err
+    assert "banana" in error_logs
+    assert "verbosity" in error_logs
+
+
+def test_cli_task_is_mandatory(capsys: Any) -> None:
+    with patch("sys.argv", ".".split()):
+        with pytest.raises(SystemExit):
+            AwsScannerArgumentParser().parse_cli_args()
+    assert "required: task" in capsys.readouterr().err
+
+
+def test_lambda_task_is_mandatory(capsys: Any) -> None:
+    with pytest.raises(SystemExit):
+        AwsScannerArgumentParser().parse_lambda_args({})
+    assert "error: argument task" in capsys.readouterr().err
 
 
 def test_parse_lambda_args_for_service_usage_task() -> None:
