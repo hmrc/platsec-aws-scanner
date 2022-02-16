@@ -175,7 +175,9 @@ GET_BUCKET_VERSIONING_SUSPENDED = {"Status": "Suspended", "MFADelete": "whatever
 GET_BUCKET_VERSIONING_UNSET = {"MFADelete": "whatever"}
 
 GET_BUCKET_LIFECYCLE_CONFIGURATION_SINGLE_RULE = {
-    "Rules": [{"Expiration": {"Days": 15}, "Status": "Enabled", "NoncurrentVersionExpiration": {"NoncurrentDays": 30}}]
+    "Rules": [
+        {"Expiration": {"Date": 0}, "Status": "Enabled", "NoncurrentVersionExpiration": {"NewerNoncurrentVersions": 1}}
+    ]
 }
 GET_BUCKET_LIFECYCLE_CONFIGURATION_MULTIPLE_RULES = {
     "Rules": [

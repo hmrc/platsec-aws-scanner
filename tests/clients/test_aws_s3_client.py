@@ -401,7 +401,7 @@ def s3_client_lifecycle() -> AwsS3Client:
 
 
 def test_get_bucket_lifecycle_single_rule() -> None:
-    lifecycle = bucket_lifecycle(current_version_expiry=15, previous_version_deletion=30)
+    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
     assert lifecycle == s3_client_lifecycle().get_bucket_lifecycle("single-rule")
 
 
