@@ -122,8 +122,11 @@ class BucketLifecycle:
 
 def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
     enabled_rules = list(filter(lambda rule: rule.get("Status") == "Enabled", lifecycle_config["Rules"]))
-    current_version_rules = filter(lambda rule: "Expiration" in rule, enabled_rules)
-    previous_version_rules = filter(lambda rule: "NoncurrentVersionExpiration" in rule, enabled_rules)
+    current_version_rules = filter(lambda rule: "Expiration" in rule and "Days" in rule["Expiration"], enabled_rules)
+    previous_version_rules = filter(
+        lambda rule: "NoncurrentVersionExpiration" in rule and "NoncurrentDays" in rule["NoncurrentVersionExpiration"],
+        enabled_rules,
+    )
     return BucketLifecycle(
         current_version_expiry=min(
             map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
