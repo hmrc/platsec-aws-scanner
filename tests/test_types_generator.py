@@ -80,8 +80,10 @@ def aws_task(account: Account = account(), description: str = "task") -> AwsTask
     return AwsTask(description=description, account=account)
 
 
-def athena_task(account: Account = account(), description: str = "athena_task") -> AwsAthenaTask:
-    return AwsAthenaTask(description=description, account=account)
+def athena_task(
+    account: Account = account(), description: str = "athena_task", partition: AwsAthenaDataPartition = partition()
+) -> AwsAthenaTask:
+    return AwsAthenaTask(description=description, account=account, partition=partition)
 
 
 def vpc_task(account: Account = account(), description: str = "vpc_task", enforce: bool = True) -> AwsVpcTask:
