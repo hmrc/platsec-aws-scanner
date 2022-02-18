@@ -6,7 +6,7 @@ from typing import Any, Dict, Type
 from src.data import aws_scanner_exceptions as exceptions
 from src.clients.aws_athena_client import AwsAthenaClient
 
-from tests.test_types_generator import account, partition
+from tests.test_types_generator import account
 
 
 class TestWaitFor(TestCase):
@@ -115,8 +115,9 @@ class TestQueries(TestCase):
             method_under_test="add_partition",
             method_args={
                 "database": "some_db",
-                "account": account(),
-                "partition": partition(2020, 8),
+                "table": account().identifier,
+                "query_template": "ALTER TABLE `$table` ADD PARTITION (region='$region', year='$year', month='$month')",
+                "query_attributes": {"table": "a_table", "region": "us", "year": "2022", "month": "02"},
             },
             timeout_seconds=1200,
             raise_on_failure=exceptions.AddPartitionException,

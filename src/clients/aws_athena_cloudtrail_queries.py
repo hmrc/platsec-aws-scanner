@@ -32,3 +32,8 @@ CREATE_TABLE = (
     "LOCATION 's3://$cloudtrail_logs_bucket/AWSLogs/$account/CloudTrail/' "
     "TBLPROPERTIES ('classification'='cloudtrail')"
 )
+
+ADD_PARTITION_YEAR_MONTH = (
+    "ALTER TABLE `$account` ADD PARTITION (region='$region', year='$year', month='$month') LOCATION "
+    "'s3://$cloudtrail_logs_bucket/AWSLogs/$account/CloudTrail/$region/$year/$month'"
+)

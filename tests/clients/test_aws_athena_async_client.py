@@ -13,7 +13,6 @@ from tests.clients import (
     test_aws_athena_system_queries as queries,
     test_aws_athena_system_queries_results as queries_results,
 )
-from tests.test_types_generator import account, partition
 
 
 def assert_query_run(
@@ -104,10 +103,11 @@ class TestQueries(TestCase):
             method_under_test="add_partition",
             method_args={
                 "database": "some_database",
-                "account": account("908173625490", "some_account"),
-                "partition": partition(2020, 9, "eu"),
+                "table": "908173625490",
+                "query_template": "ALTER TABLE `$table` ADD PARTITION (region='$region', year='$year', month='$month')",
+                "query_attributes": {"table": "a_table", "region": "us", "year": "2022", "month": "02"},
             },
-            query=queries.ADD_PARTITION_YEAR_MONTH,
+            query="ALTER TABLE `a_table` ADD PARTITION (region='us', year='2022', month='02')",
             raise_on_failure=exception.AddPartitionException,
         )
 
