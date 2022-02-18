@@ -35,12 +35,10 @@ class AwsAthenaAsyncClient:
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
-    def create_table(self, database: str, account: Account) -> str:
-        self._logger.info(f"creating table {account.identifier} in database {database}")
+    def create_table(self, database: str, table: str, query_template: str, query_attributes: Dict[str, str]) -> str:
+        self._logger.info(f"creating table {table} in database {database}")
         return self.run_query(
-            query=Template(queries.CREATE_TABLE).substitute(
-                account=account.identifier, cloudtrail_logs_bucket=self._config.cloudtrail_logs_bucket()
-            ),
+            query=Template(query_template).substitute(**query_attributes),
             database=database,
             raise_on_failure=exceptions.CreateTableException,
         )

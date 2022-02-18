@@ -79,8 +79,13 @@ class TestQueries(TestCase):
         assert_query_run(
             test=self,
             method_under_test="create_table",
-            method_args={"database": "some_database", "account": account("908173625490", "some_account")},
-            query=queries.CREATE_TABLE,
+            method_args={
+                "database": "some_database",
+                "table": "908173625490",
+                "query_template": "CREATE EXTERNAL TABLE `$account` (`eventversion` string)",
+                "query_attributes": {"account": "908173625490"},
+            },
+            query="CREATE EXTERNAL TABLE `908173625490` (`eventversion` string)",
             raise_on_failure=exception.CreateTableException,
         )
 

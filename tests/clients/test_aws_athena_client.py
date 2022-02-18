@@ -90,7 +90,12 @@ class TestQueries(TestCase):
         self.assert_wait_for_success(
             mock_wait_for_success=mock_wait_for_success,
             method_under_test="create_table",
-            method_args={"database": "some_db", "account": account()},
+            method_args={
+                "database": "some_db",
+                "table": account().identifier,
+                "query_template": "CREATE EXTERNAL TABLE `$account` (`eventversion` string)",
+                "query_attributes": {"account": account().identifier},
+            },
             timeout_seconds=1200,
             raise_on_failure=exceptions.CreateTableException,
         )

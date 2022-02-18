@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import Mock, call, patch
 
 from src.data.aws_scanner_exceptions import AwsScannerException
+from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 
 from tests.test_types_generator import account, athena_task, cloudtrail_task, partition, task_report
@@ -30,14 +31,17 @@ class TestAwsAthenaTask(TestCase):
         self.assertTrue(task_1._database != task_2._database)
 
     def test_setup(self) -> None:
-        mock_athena = Mock()
-        t = cloudtrail_task()
-        t._setup(mock_athena)
-        mock_athena.assert_has_calls(
+        mock_create_table, mock_create_partition, mock_athena = Mock(), Mock(), Mock()
+        parent_mock = Mock(athena=mock_athena, create_partition=mock_create_partition, create_table=mock_create_table)
+        with patch.object(AwsAthenaTask, "_create_table", mock_create_table):
+            with patch.object(AwsAthenaTask, "_create_partition", mock_create_partition):
+                task = athena_task()
+                task._setup(mock_athena)
+        parent_mock.assert_has_calls(
             [
-                call.create_database(t._database),
-                call.create_table(t._database, account()),
-                call.add_partition(t._database, account(), partition()),
+                call.athena.create_database(task._database),
+                call.create_table(mock_athena),
+                call.create_partition(mock_athena),
             ]
         )
 

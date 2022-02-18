@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Any, List, Type
+from typing import Any, Dict, List, Type
 
 from botocore.client import BaseClient
 
@@ -29,9 +29,11 @@ class AwsAthenaClient:
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
-    def create_table(self, database: str, account: Account) -> None:
+    def create_table(self, database: str, table: str, query_template: str, query_attributes: Dict[str, str]) -> None:
         self._wait_for_success(
-            query_id=self._athena_async.create_table(database=database, account=account),
+            query_id=self._athena_async.create_table(
+                database=database, table=table, query_template=query_template, query_attributes=query_attributes
+            ),
             timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.CreateTableException,
         )
