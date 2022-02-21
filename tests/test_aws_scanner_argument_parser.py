@@ -170,7 +170,7 @@ def test_parse_cli_args_for_audit_s3_task() -> None:
 
 
 def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
-    with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -d true -e true -v debug".split()):
+    with patch("sys.argv", ". audit_vpc_flow_logs -t 223344 -a 5,9 -di true -e true -v debug".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
     with patch(
@@ -247,6 +247,38 @@ def test_parse_cli_args_for_audit_central_logging_task() -> None:
         assert args.task == "audit_central_logging"
         assert args.username == "joe.bloggs"
         assert args.mfa_token == "787878"
+
+
+def test_parse_cli_args_for_create_flow_logs_table_year_month_day_task() -> None:
+    with patch("sys.argv", ". create_flow_logs_table -y 2020 -m 9 -d 8 -t 466455".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". create_flow_logs_table --year 2020 --month 9 --day 8 --token 466455".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "create_flow_logs_table"
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "466455"
+        assert args.partition.year == "2020"
+        assert args.partition.month == "09"
+        assert args.partition.day == "08"
+
+
+def test_parse_cli_args_for_create_flow_logs_table_year_month_task() -> None:
+    with patch("sys.argv", ". create_flow_logs_table -y 2020 -m 10 -t 788998".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". create_flow_logs_table --year 2020 --month 10 --token 788998".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "create_flow_logs_table"
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "788998"
+        assert args.partition.year == "2020"
+        assert args.partition.month == "10"
+        assert args.partition.day is None
 
 
 def test_default_log_level_is_warning() -> None:

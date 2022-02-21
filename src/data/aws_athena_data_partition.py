@@ -10,9 +10,9 @@ from src.data.aws_scanner_exceptions import InvalidDataPartitionException, Inval
 
 @dataclass
 class AwsAthenaDataPartition:
+    region: str
     year: str
     month: str
-    region: str
     day: Optional[str]
 
     def __init__(self, region: str, year: int, month: int, day: Optional[int] = None):
