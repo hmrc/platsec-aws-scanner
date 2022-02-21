@@ -62,8 +62,10 @@ from src.tasks.aws_task import AwsTask
 from src.tasks.aws_vpc_task import AwsVpcTask
 
 
-def partition(year: int = 2020, month: int = 11, region: str = "eu") -> AwsAthenaDataPartition:
-    return AwsAthenaDataPartition(year, month, region)
+def partition(
+    year: int = 2020, month: int = 11, region: str = "eu", day: Optional[int] = None
+) -> AwsAthenaDataPartition:
+    return AwsAthenaDataPartition(region, year, month, day)
 
 
 def account(identifier: str = "account_id", name: str = "account_name") -> Account:

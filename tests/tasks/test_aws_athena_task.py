@@ -104,9 +104,6 @@ class TestAwsAthenaTask(TestCase):
 
     def test_str(self) -> None:
         self.assertEqual(
-            (
-                "task 'task' for 'account_name (account_id)' with "
-                "AwsAthenaDataPartition(year='2020', month='09', region='eu')"
-            ),
+            f"task 'task' for 'account_name (account_id)' with {partition(2020, 9)}",
             str(cloudtrail_task(partition=partition(2020, 9))),
         )

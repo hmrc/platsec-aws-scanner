@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Any, Iterable, Optional
 
 
 class AwsScannerException(Exception):
@@ -46,9 +46,12 @@ class CostExplorerException(AwsScannerException):
 
 
 class InvalidDataPartitionException(AwsScannerException):
-    def __init__(self, year: int, month: int, partitions: Iterable[Tuple[int, int]], retention: int):
+    def __init__(self, partitions: Iterable[Any], retention: int, year: int, month: int, day: Optional[int] = None):
         super().__init__(
-            f"invalid partition ({year}, {month}). Should be one of {partitions}. Retention {retention} days."
+            (
+                f"invalid partition ({year}, {month}{', ' + str(day) if day else ''}). Should be one of "
+                f"{sorted(partitions, reverse=True)}. Retention {retention} days."
+            )
         )
 
 

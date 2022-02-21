@@ -48,7 +48,7 @@ class TestAwsParallelTaskRunner(TestCase):
         )
 
         expected_error_msg = (
-            "ERROR:AwsParallelTaskRunner:task 'boom' for 'wrong account (5678)' with AwsAthenaDataPartition(year='2020'"
-            ", month='11', region='eu') failed with: 'AwsScannerException: oops'"
+            f"ERROR:AwsParallelTaskRunner:task 'boom' for 'wrong account (5678)' with {partition()} failed with: "
+            "'AwsScannerException: oops'"
         )
         self.assertEqual([expected_error_msg], error_log.output)
