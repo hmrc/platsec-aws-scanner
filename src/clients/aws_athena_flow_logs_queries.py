@@ -41,3 +41,15 @@ CREATE_TABLE_WITH_YEAR_MONTH_DAY_PARTITION = (
     "FIELDS TERMINATED BY ' ' "
     "LOCATION 's3://$flow_logs_bucket/'"
 )
+
+ADD_PARTITION_YEAR_MONTH = (
+    "ALTER TABLE `$table_name` "
+    "ADD PARTITION (year='$year', month='$month') "
+    "LOCATION 's3://$flow_logs_bucket/$year/$month'"
+)
+
+ADD_PARTITION_YEAR_MONTH_DAY = (
+    "ALTER TABLE `$table_name` "
+    "ADD PARTITION (date='$year-$month-$day') "
+    "LOCATION 's3://$flow_logs_bucket/$year/$month/$day'"
+)
