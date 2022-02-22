@@ -66,3 +66,8 @@ class TestAwsCreateFlowLogsTableTask(TestCase):
                 "flow_logs_bucket": "the-flow-logs-bucket",
             },
         )
+
+    def test_does_not_teardown(self) -> None:
+        client = Mock()
+        create_flow_logs_table_task()._teardown(client)
+        assert not client.mock_calls

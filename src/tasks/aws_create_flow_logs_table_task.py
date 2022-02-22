@@ -47,6 +47,9 @@ class AwsCreateFlowLogsTableTask(AwsAthenaTask):
     def _run_task(self, client: AwsAthenaClient) -> Dict[Any, Any]:
         """"""
 
+    def _teardown(self, client: AwsAthenaClient) -> None:
+        pass
+
     def _generate_table_name(self) -> str:
         day_suffix = f"_{self._partition.day}" if self._partition.day else ""
         return f"flow_logs_{self._partition.year}_{self._partition.month}{day_suffix}"
