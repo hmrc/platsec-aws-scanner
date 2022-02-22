@@ -45,7 +45,7 @@ class AwsCreateFlowLogsTableTask(AwsAthenaTask):
         )
 
     def _run_task(self, client: AwsAthenaClient) -> Dict[Any, Any]:
-        """"""
+        return {"database": self._database, "table": self._generate_table_name()}
 
     def _teardown(self, client: AwsAthenaClient) -> None:
         pass

@@ -71,3 +71,9 @@ class TestAwsCreateFlowLogsTableTask(TestCase):
         client = Mock()
         create_flow_logs_table_task()._teardown(client)
         assert not client.mock_calls
+
+    def test_run_task_returns_athena_metadata(self) -> None:
+        client = Mock()
+        task = create_flow_logs_table_task(partition(year=2020, month=10))
+        assert {"database": task._database, "table": "flow_logs_2020_10"} == task._run_task(client)
+        assert not client.mock_calls
