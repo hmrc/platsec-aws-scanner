@@ -27,6 +27,9 @@ class AwsScannerConfig:
     def athena_query_results_bucket(self) -> str:
         return self._get_config("athena", "query_results_bucket")
 
+    def athena_flow_logs_bucket(self) -> str:
+        return self._get_config("athena", "flow_logs_bucket")
+
     def athena_query_timeout_seconds(self) -> int:
         return self._get_int_config("athena", "query_timeout_seconds")
 

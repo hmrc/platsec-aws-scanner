@@ -55,6 +55,7 @@ from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
+from src.tasks.aws_create_flow_logs_table_task import AwsCreateFlowLogsTableTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -543,3 +544,7 @@ def event_selector(
 
 def audit_central_logging_task() -> AwsAuditCentralLoggingTask:
     return AwsAuditCentralLoggingTask()
+
+
+def create_flow_logs_table_task(partition: AwsAthenaDataPartition = partition()) -> AwsCreateFlowLogsTableTask:
+    return AwsCreateFlowLogsTableTask(partition=partition)
