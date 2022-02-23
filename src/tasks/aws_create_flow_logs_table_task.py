@@ -18,14 +18,15 @@ class AwsCreateFlowLogsTableTask(AwsAthenaTask):
         super().__init__(
             "create Athena table for flow logs and load data partition", self._config.athena_account(), partition
         )
+        self._table_name = self._generate_table_name()
 
     def _create_table(self, client: AwsAthenaClient) -> None:
         client.create_table(
             database=self._database,
-            table=self._generate_table_name(),
+            table=self._table_name,
             query_template=YEAR_MONTH_DAY_TABLE if self._partition.day else YEAR_MONTH_TABLE,
             query_attributes={
-                "table_name": self._generate_table_name(),
+                "table_name": self._table_name,
                 "flow_logs_bucket": self._config.athena_flow_logs_bucket(),
             },
         )
@@ -33,10 +34,10 @@ class AwsCreateFlowLogsTableTask(AwsAthenaTask):
     def _create_partition(self, client: AwsAthenaClient) -> None:
         client.add_partition(
             database=self._database,
-            table=self._generate_table_name(),
+            table=self._table_name,
             query_template=YEAR_MONTH_DAY_PARTITION if self._partition.day else YEAR_MONTH_PARTITION,
             query_attributes={
-                "table_name": self._generate_table_name(),
+                "table_name": self._table_name,
                 "year": self._partition.year,
                 "month": self._partition.month,
                 "flow_logs_bucket": Config().athena_flow_logs_bucket(),
@@ -45,7 +46,7 @@ class AwsCreateFlowLogsTableTask(AwsAthenaTask):
         )
 
     def _run_task(self, client: AwsAthenaClient) -> Dict[Any, Any]:
-        return {"database": self._database, "table": self._generate_table_name()}
+        return {"database": self._database, "table": self._table_name}
 
     def _teardown(self, client: AwsAthenaClient) -> None:
         pass
