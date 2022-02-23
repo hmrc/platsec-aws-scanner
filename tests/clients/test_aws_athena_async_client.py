@@ -74,20 +74,6 @@ class TestQueries(TestCase):
             raise_on_failure=exception.DropDatabaseException,
         )
 
-    def test_create_table(self) -> None:
-        assert_query_run(
-            test=self,
-            method_under_test="create_table",
-            method_args={
-                "database": "some_database",
-                "table": "908173625490",
-                "query_template": "CREATE EXTERNAL TABLE `$account` (`eventversion` string)",
-                "query_attributes": {"account": "908173625490"},
-            },
-            query="CREATE EXTERNAL TABLE `908173625490` (`eventversion` string)",
-            raise_on_failure=exception.CreateTableException,
-        )
-
     def test_drop_table(self) -> None:
         assert_query_run(
             test=self,
@@ -95,20 +81,6 @@ class TestQueries(TestCase):
             method_args={"database": "some_database", "table": "908173625490"},
             query=queries.DROP_TABLE,
             raise_on_failure=exception.DropTableException,
-        )
-
-    def test_add_partition(self) -> None:
-        assert_query_run(
-            test=self,
-            method_under_test="add_partition",
-            method_args={
-                "database": "some_database",
-                "table": "908173625490",
-                "query_template": "ALTER TABLE `$table` ADD PARTITION (region='$region', year='$year', month='$month')",
-                "query_attributes": {"table": "a_table", "region": "us", "year": "2022", "month": "02"},
-            },
-            query="ALTER TABLE `a_table` ADD PARTITION (region='us', year='2022', month='02')",
-            raise_on_failure=exception.AddPartitionException,
         )
 
 

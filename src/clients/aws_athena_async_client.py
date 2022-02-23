@@ -33,28 +33,12 @@ class AwsAthenaAsyncClient:
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
-    def create_table(self, database: str, table: str, query_template: str, query_attributes: Dict[str, str]) -> str:
-        self._logger.info(f"creating table {table} in database {database}")
-        return self.run_query(
-            query=Template(query_template).substitute(**query_attributes),
-            database=database,
-            raise_on_failure=exceptions.CreateTableException,
-        )
-
     def drop_table(self, database: str, table: str) -> str:
         self._logger.info(f"dropping table {table} in database {database}")
         return self.run_query(
             query=Template(queries.DROP_TABLE).substitute(table=table),
             database=database,
             raise_on_failure=exceptions.DropTableException,
-        )
-
-    def add_partition(self, database: str, table: str, query_template: str, query_attributes: Dict[str, str]) -> str:
-        self._logger.info(f"loading partition {query_attributes} for table {table} in database {database}")
-        return self.run_query(
-            query=Template(query_template).substitute(**query_attributes),
-            database=database,
-            raise_on_failure=exceptions.AddPartitionException,
         )
 
     def has_query_completed(self, query_id: str) -> bool:
