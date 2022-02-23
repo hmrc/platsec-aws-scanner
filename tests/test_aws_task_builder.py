@@ -8,8 +8,10 @@ from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd, AwsScanne
 from src.aws_task_builder import AwsTaskBuilder
 from src.data.aws_scanner_exceptions import UnsupportedTaskException
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
-from src.tasks.aws_audit_s3_task import AwsAuditS3Task
+from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
+from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
+from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -17,11 +19,15 @@ from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
-from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
-from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_task import AwsTask
 
-from tests.test_types_generator import account, partition, audit_cloudtrail_task, audit_central_logging_task
+from tests.test_types_generator import (
+    account,
+    audit_cloudtrail_task,
+    audit_central_logging_task,
+    create_flow_logs_table_task,
+    partition,
+)
 from tests.test_types_generator import aws_scanner_arguments as args
 
 acct1 = account("999888777666")
@@ -133,6 +139,12 @@ class TestAwsTaskBuilder(TestCase):
             [audit_central_logging_task()], task_builder(args(task=Cmd.audit_central_logging)).build_tasks()
         )
 
+    def test_create_flow_logs_table_task(self) -> None:
+        self.assert_tasks_equal(
+            [create_flow_logs_table_task(partition=partition(year=2020, month=11, day=1))],
+            task_builder(args(task=Cmd.create_flow_logs_table, year=2020, month=11, day=1)).build_tasks(),
+        )
+
     def test_unsupported_task(self) -> None:
         with self.assertRaisesRegex(UnsupportedTaskException, "banana"):
             task_builder(args(task="banana")).build_tasks()
@@ -155,4 +167,4 @@ def task_builder(args: AwsScannerArguments) -> AwsTaskBuilder:
 
 
 def to_dict(task: AwsTask) -> Dict[str, Any]:
-    return {**vars(task), "__type": type(task), "_database": None, "_logger": None}
+    return {**vars(task), "__type": type(task), "_database": None, "_logger": None, "_config": None}
