@@ -8,9 +8,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from src.data import aws_scanner_exceptions as exceptions
 from src.clients import aws_athena_system_queries as queries
-from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.clients.aws_athena_query_states import COMPLETED_STATES, SUCCESS_STATES
-from src.data.aws_organizations_types import Account
 from src.aws_scanner_config import AwsScannerConfig as Config
 
 
@@ -35,36 +33,12 @@ class AwsAthenaAsyncClient:
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
-    def create_table(self, database: str, account: Account) -> str:
-        self._logger.info(f"creating table {account.identifier} in database {database}")
-        return self.run_query(
-            query=Template(queries.CREATE_TABLE).substitute(
-                account=account.identifier, cloudtrail_logs_bucket=self._config.cloudtrail_logs_bucket()
-            ),
-            database=database,
-            raise_on_failure=exceptions.CreateTableException,
-        )
-
     def drop_table(self, database: str, table: str) -> str:
         self._logger.info(f"dropping table {table} in database {database}")
         return self.run_query(
             query=Template(queries.DROP_TABLE).substitute(table=table),
             database=database,
             raise_on_failure=exceptions.DropTableException,
-        )
-
-    def add_partition(self, database: str, account: Account, partition: AwsAthenaDataPartition) -> str:
-        self._logger.info(f"loading {partition} for table {account.identifier} in database {database}")
-        return self.run_query(
-            query=Template(queries.ADD_PARTITION_YEAR_MONTH).substitute(
-                account=account.identifier,
-                cloudtrail_logs_bucket=self._config.cloudtrail_logs_bucket(),
-                region=partition.region,
-                year=partition.year,
-                month=partition.month,
-            ),
-            database=database,
-            raise_on_failure=exceptions.AddPartitionException,
         )
 
     def has_query_completed(self, query_id: str) -> bool:

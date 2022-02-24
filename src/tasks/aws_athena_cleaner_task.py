@@ -2,12 +2,12 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from src.clients.aws_athena_client import AwsAthenaClient
-from src.tasks.aws_athena_task import AwsAthenaTask
+from src.tasks.aws_task import AwsTask
 from src.aws_scanner_config import AwsScannerConfig as Config
 
 
 @dataclass
-class AwsAthenaCleanerTask(AwsAthenaTask):
+class AwsAthenaCleanerTask(AwsTask):
     def __init__(self) -> None:
         super().__init__("clean scanner leftovers", Config().athena_account())
 

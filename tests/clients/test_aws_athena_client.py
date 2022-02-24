@@ -6,8 +6,6 @@ from typing import Any, Dict, Type
 from src.data import aws_scanner_exceptions as exceptions
 from src.clients.aws_athena_client import AwsAthenaClient
 
-from tests.test_types_generator import account, partition
-
 
 class TestWaitFor(TestCase):
     def test_wait_for_completion(self) -> None:
@@ -86,15 +84,6 @@ class TestQueries(TestCase):
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
-    def test_create_table(self, mock_wait_for_success: Mock) -> None:
-        self.assert_wait_for_success(
-            mock_wait_for_success=mock_wait_for_success,
-            method_under_test="create_table",
-            method_args={"database": "some_db", "account": account()},
-            timeout_seconds=1200,
-            raise_on_failure=exceptions.CreateTableException,
-        )
-
     def test_drop_table(self, mock_wait_for_success: Mock) -> None:
         self.assert_wait_for_success(
             mock_wait_for_success=mock_wait_for_success,
@@ -102,19 +91,6 @@ class TestQueries(TestCase):
             method_args={"database": "some_db", "table": "some_account_id"},
             timeout_seconds=1200,
             raise_on_failure=exceptions.DropTableException,
-        )
-
-    def test_add_partition(self, mock_wait_for_success: Mock) -> None:
-        self.assert_wait_for_success(
-            mock_wait_for_success=mock_wait_for_success,
-            method_under_test="add_partition",
-            method_args={
-                "database": "some_db",
-                "account": account(),
-                "partition": partition(2020, 8),
-            },
-            timeout_seconds=1200,
-            raise_on_failure=exceptions.AddPartitionException,
         )
 
     def test_run_query(self, mock_wait_for_success: Mock) -> None:

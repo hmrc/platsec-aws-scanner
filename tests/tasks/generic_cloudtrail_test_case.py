@@ -9,6 +9,8 @@ class GenericCloudTrailTestCase(TestCase):
     def __build_task_under_test(task_type, task_args):  # type: ignore
         task = task_type(account=account(), partition=partition(), **task_args)
         task._database = "some_db"
+        task._setup = Mock()
+        task._teardown = Mock()
         return task
 
     def _assert_task_run(self, task_type, task_args, query, query_results, results) -> None:  # type: ignore

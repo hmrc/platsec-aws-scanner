@@ -12,10 +12,11 @@ from src.aws_scanner_config import AwsScannerConfig
 def test_init_config_from_file() -> None:
     config = AwsScannerConfig()
     assert Account("555666777888", "athena") == config.athena_account()
-    assert "athena_role" == config.athena_role()
-    assert "cost_explorer_role" == config.cost_explorer_role()
     assert "some_prefix" == config.athena_database_prefix()
+    assert "the-flow-logs-bucket" == config.athena_flow_logs_bucket()
+    assert "cost_explorer_role" == config.cost_explorer_role()
     assert "query-results-bucket" == config.athena_query_results_bucket()
+    assert "athena_role" == config.athena_role()
     assert Account("111344576685", "cloudtrail") == config.cloudtrail_account()
     assert "74356589" == config.cloudtrail_event_key_id()
     assert "the-cloudtrail-log-group" == config.cloudtrail_log_group_name()
@@ -71,12 +72,13 @@ def test_init_config_from_file() -> None:
     os.environ,
     {
         "AWS_SCANNER_ATHENA_ACCOUNT": "888777666555",
-        "AWS_SCANNER_ATHENA_ROLE": "the_athena_role",
         "AWS_SCANNER_ATHENA_DATABASE_PREFIX": "a_db_prefix",
+        "AWS_SCANNER_ATHENA_FLOW_LOGS_BUCKET": "a-flow-logs-bucket",
         "AWS_SCANNER_ATHENA_QUERY_RESULTS_BUCKET": "a-query-results-bucket",
         "AWS_SCANNER_ATHENA_QUERY_RESULTS_POLLING_DELAY_SECONDS": "2",
         "AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "900",
         "AWS_SCANNER_ATHENA_QUERY_THROTTLING_SECONDS": "3",
+        "AWS_SCANNER_ATHENA_ROLE": "the_athena_role",
         "AWS_SCANNER_CLOUDTRAIL_ACCOUNT": "464878555331",
         "AWS_SCANNER_CLOUDTRAIL_EVENT_KEY_ID": "9874565",
         "AWS_SCANNER_CLOUDTRAIL_LOG_GROUP_NAME": "a_log_group_name",
@@ -118,12 +120,13 @@ def test_init_config_from_file() -> None:
 def test_init_config_from_env_vars() -> None:
     config = AwsScannerConfig()
     assert Account("888777666555", "athena") == config.athena_account()
-    assert "the_athena_role" == config.athena_role()
     assert "a_db_prefix" == config.athena_database_prefix()
+    assert "a-flow-logs-bucket" == config.athena_flow_logs_bucket()
     assert "a-query-results-bucket" == config.athena_query_results_bucket()
     assert 2 == config.athena_query_results_polling_delay_seconds()
     assert 900 == config.athena_query_timeout_seconds()
     assert 3 == config.athena_query_throttling_seconds()
+    assert "the_athena_role" == config.athena_role()
     assert Account("464878555331", "cloudtrail") == config.cloudtrail_account()
     assert "9874565" == config.cloudtrail_event_key_id()
     assert "a_log_group_name" == config.cloudtrail_log_group_name()

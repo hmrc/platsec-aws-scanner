@@ -15,6 +15,7 @@ class AwsScannerArguments:
     task: str
     year: int
     month: int
+    day: Optional[int]
     region: str
     accounts: Optional[List[str]]
     services: List[str]
@@ -28,7 +29,7 @@ class AwsScannerArguments:
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
-        return AwsAthenaDataPartition(year=self.year, month=self.month, region=self.region)
+        return AwsAthenaDataPartition(region=self.region, year=self.year, month=self.month, day=self.day)
 
 
 class AwsScannerCommands:
@@ -46,6 +47,7 @@ class AwsScannerCommands:
     audit_password_policy = "audit_password_policy"
     audit_cloudtrail = "audit_cloudtrail"
     audit_central_logging = "audit_central_logging"
+    create_flow_logs_table = "create_flow_logs_table"
 
 
 class AwsScannerArgumentParser:
@@ -57,7 +59,7 @@ class AwsScannerArgumentParser:
     @staticmethod
     def _add_accounts_args(parser: ArgumentParser) -> None:
         parser.add_argument("-a", "--accounts", type=str, help="comma-separated list of target accounts")
-        parser.add_argument("-d", "--disable_account_lookup", type=bool, help="disable account lookup")
+        parser.add_argument("-di", "--disable_account_lookup", type=bool, help="disable account lookup")
         parser.add_argument("-p", "--parent", type=str, help="organization unit parent")
 
     @staticmethod
@@ -67,28 +69,28 @@ class AwsScannerArgumentParser:
         )
 
     @staticmethod
-    def _add_athena_task_args(parser: ArgumentParser) -> None:
-        parser.add_argument("-y", "--year", type=int, required=True, help="year for AWS Athena data partition")
-        parser.add_argument("-m", "--month", type=int, required=True, help="month for AWS Athena data partition")
+    def _add_athena_cloudtrail_task_args(parser: ArgumentParser) -> None:
         parser.add_argument("-re", "--region", type=str, help="region for AWS Athena data partition")
+        AwsScannerArgumentParser._add_year_arg(parser, "year for AWS Athena data partition")
+        AwsScannerArgumentParser._add_month_arg(parser, "month for AWS Athena data partition")
         AwsScannerArgumentParser._add_accounts_args(parser)
 
     @staticmethod
+    def _add_year_arg(parser: ArgumentParser, cmd_help: str) -> None:
+        parser.add_argument("-y", "--year", type=int, required=True, help=cmd_help)
+
+    @staticmethod
+    def _add_month_arg(parser: ArgumentParser, cmd_help: str) -> None:
+        parser.add_argument("-m", "--month", type=int, required=True, help=cmd_help)
+
+    @staticmethod
+    def _add_day_arg(parser: ArgumentParser, cmd_help: str) -> None:
+        parser.add_argument("-d", "--day", type=int, help=cmd_help)
+
+    @staticmethod
     def _add_cost_explorer_task_args(parser: ArgumentParser) -> None:
-        parser.add_argument(
-            "-y",
-            "--year",
-            type=int,
-            required=True,
-            help="start date year for cost usage. End date will be today",
-        )
-        parser.add_argument(
-            "-m",
-            "--month",
-            type=int,
-            required=True,
-            help="start date month for cost usage. End date will be today",
-        )
+        AwsScannerArgumentParser._add_year_arg(parser, "start date year for cost usage. End date will be today")
+        AwsScannerArgumentParser._add_month_arg(parser, "start date month for cost usage. End date will be today")
 
     @staticmethod
     def _add_verbosity_arg(parser: ArgumentParser) -> None:
@@ -121,6 +123,7 @@ class AwsScannerArgumentParser:
         self._add_cost_explorer_command(subparsers)
         self._add_audit_cloudtrail(subparsers)
         self._add_audit_central_logging(subparsers)
+        self._add_create_flow_logs_table_command(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -180,7 +183,7 @@ class AwsScannerArgumentParser:
         desc = "create Athena table"
         table_parser = subparsers.add_parser(AwsScannerCommands.create_table, help=desc, description=desc)
         self._add_auth_args(table_parser)
-        self._add_athena_task_args(table_parser)
+        self._add_athena_cloudtrail_task_args(table_parser)
         self._add_verbosity_arg(table_parser)
 
     def _add_list_accounts_command(self, subparsers: Any) -> None:
@@ -200,7 +203,7 @@ class AwsScannerArgumentParser:
         desc = "find principal by source IP"
         principal_parser = subparsers.add_parser(AwsScannerCommands.find_principal, help=desc, description=desc)
         self._add_auth_args(principal_parser)
-        self._add_athena_task_args(principal_parser)
+        self._add_athena_cloudtrail_task_args(principal_parser)
         principal_parser.add_argument("-i", "--ip", type=str, required=True, help="source IP of principal to find")
         self._add_verbosity_arg(principal_parser)
 
@@ -208,7 +211,7 @@ class AwsScannerArgumentParser:
         desc = "scan AWS role usage"
         role_parser = subparsers.add_parser(AwsScannerCommands.role_usage, help=desc, description=desc)
         self._add_auth_args(role_parser)
-        self._add_athena_task_args(role_parser)
+        self._add_athena_cloudtrail_task_args(role_parser)
         role_parser.add_argument("-r", "--role", type=str, required=True, help="which role to scan usage for")
         self._add_verbosity_arg(role_parser)
 
@@ -216,7 +219,7 @@ class AwsScannerArgumentParser:
         desc = "scan AWS service usage"
         service_parser = subparsers.add_parser(AwsScannerCommands.service_usage, help=desc, description=desc)
         self._add_auth_args(service_parser)
-        self._add_athena_task_args(service_parser)
+        self._add_athena_cloudtrail_task_args(service_parser)
         self._add_services_arg(service_parser, "comma-separated list of service(s) to scan usage for")
         self._add_verbosity_arg(service_parser)
 
@@ -225,6 +228,15 @@ class AwsScannerArgumentParser:
         service_parser = subparsers.add_parser(AwsScannerCommands.audit_central_logging, help=desc, description=desc)
         self._add_auth_args(service_parser)
         self._add_verbosity_arg(service_parser)
+
+    def _add_create_flow_logs_table_command(self, subparsers: Any) -> None:
+        desc = "create Athena table for flow logs querying"
+        create_parser = subparsers.add_parser(AwsScannerCommands.create_flow_logs_table, help=desc, description=desc)
+        self._add_auth_args(create_parser)
+        self._add_verbosity_arg(create_parser)
+        self._add_year_arg(create_parser, "year for AWS Athena data partition")
+        self._add_month_arg(create_parser, "month for AWS Athena data partition")
+        self._add_day_arg(create_parser, "day for AWS Athena data partition")
 
     def parse_cli_args(self) -> AwsScannerArguments:
         return self._parse_args()
@@ -255,4 +267,5 @@ class AwsScannerArgumentParser:
             disable_account_lookup=bool(args.get("disable_account_lookup")),
             with_subscription_filter=bool(args.get("with_subscription_filter")),
             parent=args.get("parent") or Config().organization_parent(),
+            day=int(args["day"]) if args.get("day") else None,
         )

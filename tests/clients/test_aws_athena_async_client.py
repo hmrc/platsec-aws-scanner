@@ -13,7 +13,6 @@ from tests.clients import (
     test_aws_athena_system_queries as queries,
     test_aws_athena_system_queries_results as queries_results,
 )
-from tests.test_types_generator import account, partition
 
 
 def assert_query_run(
@@ -75,15 +74,6 @@ class TestQueries(TestCase):
             raise_on_failure=exception.DropDatabaseException,
         )
 
-    def test_create_table(self) -> None:
-        assert_query_run(
-            test=self,
-            method_under_test="create_table",
-            method_args={"database": "some_database", "account": account("908173625490", "some_account")},
-            query=queries.CREATE_TABLE,
-            raise_on_failure=exception.CreateTableException,
-        )
-
     def test_drop_table(self) -> None:
         assert_query_run(
             test=self,
@@ -91,19 +81,6 @@ class TestQueries(TestCase):
             method_args={"database": "some_database", "table": "908173625490"},
             query=queries.DROP_TABLE,
             raise_on_failure=exception.DropTableException,
-        )
-
-    def test_add_partition(self) -> None:
-        assert_query_run(
-            test=self,
-            method_under_test="add_partition",
-            method_args={
-                "database": "some_database",
-                "account": account("908173625490", "some_account"),
-                "partition": partition(2020, 9, "eu"),
-            },
-            query=queries.ADD_PARTITION_YEAR_MONTH,
-            raise_on_failure=exception.AddPartitionException,
         )
 
 

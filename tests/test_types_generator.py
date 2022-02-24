@@ -55,6 +55,7 @@ from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
+from src.tasks.aws_create_flow_logs_table_task import AwsCreateFlowLogsTableTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
@@ -62,8 +63,10 @@ from src.tasks.aws_task import AwsTask
 from src.tasks.aws_vpc_task import AwsVpcTask
 
 
-def partition(year: int = 2020, month: int = 11, region: str = "eu") -> AwsAthenaDataPartition:
-    return AwsAthenaDataPartition(year, month, region)
+def partition(
+    year: int = 2020, month: int = 11, region: str = "eu", day: Optional[int] = None
+) -> AwsAthenaDataPartition:
+    return AwsAthenaDataPartition(region, year, month, day)
 
 
 def account(identifier: str = "account_id", name: str = "account_name") -> Account:
@@ -80,8 +83,10 @@ def aws_task(account: Account = account(), description: str = "task") -> AwsTask
     return AwsTask(description=description, account=account)
 
 
-def athena_task(account: Account = account(), description: str = "athena_task") -> AwsAthenaTask:
-    return AwsAthenaTask(description=description, account=account)
+def athena_task(
+    account: Account = account(), description: str = "athena_task", partition: AwsAthenaDataPartition = partition()
+) -> AwsAthenaTask:
+    return AwsAthenaTask(description=description, account=account, partition=partition)
 
 
 def vpc_task(account: Account = account(), description: str = "vpc_task", enforce: bool = True) -> AwsVpcTask:
@@ -245,6 +250,7 @@ def aws_scanner_arguments(
     disable_account_lookup: bool = False,
     with_subscription_filter: bool = False,
     parent: str = "Parent OU",
+    day: Optional[int] = None,
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -262,6 +268,7 @@ def aws_scanner_arguments(
         disable_account_lookup=disable_account_lookup,
         with_subscription_filter=with_subscription_filter,
         parent=parent,
+        day=day,
     )
 
 
@@ -537,3 +544,7 @@ def event_selector(
 
 def audit_central_logging_task() -> AwsAuditCentralLoggingTask:
     return AwsAuditCentralLoggingTask()
+
+
+def create_flow_logs_table_task(partition: AwsAthenaDataPartition = partition()) -> AwsCreateFlowLogsTableTask:
+    return AwsCreateFlowLogsTableTask(partition=partition)

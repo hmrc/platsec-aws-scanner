@@ -1,13 +1,11 @@
 from time import sleep
-from typing import Any, List, Type
+from typing import Any, List, Optional, Type
 
 from botocore.client import BaseClient
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.data import aws_scanner_exceptions as exceptions
 from src.clients.aws_athena_async_client import AwsAthenaAsyncClient
-from src.data.aws_athena_data_partition import AwsAthenaDataPartition
-from src.data.aws_organizations_types import Account
 
 
 class AwsAthenaClient:
@@ -29,25 +27,11 @@ class AwsAthenaClient:
             raise_on_failure=exceptions.DropDatabaseException,
         )
 
-    def create_table(self, database: str, account: Account) -> None:
-        self._wait_for_success(
-            query_id=self._athena_async.create_table(database=database, account=account),
-            timeout_seconds=self._config.athena_query_timeout_seconds(),
-            raise_on_failure=exceptions.CreateTableException,
-        )
-
     def drop_table(self, database: str, table: str) -> None:
         self._wait_for_success(
             query_id=self._athena_async.drop_table(database=database, table=table),
             timeout_seconds=self._config.athena_query_timeout_seconds(),
             raise_on_failure=exceptions.DropTableException,
-        )
-
-    def add_partition(self, database: str, account: Account, partition: AwsAthenaDataPartition) -> None:
-        self._wait_for_success(
-            query_id=self._athena_async.add_partition(database=database, account=account, partition=partition),
-            timeout_seconds=self._config.athena_query_timeout_seconds(),
-            raise_on_failure=exceptions.AddPartitionException,
         )
 
     def list_databases(self) -> List[str]:
@@ -56,11 +40,11 @@ class AwsAthenaClient:
     def list_tables(self, database: str) -> List[str]:
         return self._athena_async.list_tables(database)
 
-    def run_query(self, database: str, query: str) -> List[Any]:
+    def run_query(self, database: str, query: str, raise_on_failure: Optional[Type[Exception]] = None) -> List[Any]:
         return self._wait_for_success(
             query_id=self._athena_async.run_query(query=query, database=database),
             timeout_seconds=self._config.athena_query_timeout_seconds(),
-            raise_on_failure=exceptions.RunQueryException,
+            raise_on_failure=raise_on_failure or exceptions.RunQueryException,
         )
 
     def _wait_for_completion(self, query_id: str, timeout_seconds: int) -> None:
