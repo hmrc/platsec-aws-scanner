@@ -1,5 +1,8 @@
 from json import dumps
+from io import BytesIO
 from typing import Dict, Any
+
+from botocore.response import StreamingBody
 
 LIST_BUCKETS: Dict[str, Any] = {
     "Buckets": [
@@ -202,3 +205,5 @@ GET_BUCKET_ACL_AUTHENTICATED_USERS_GRANT = {
 }
 
 PUT_OBJECT = {"VersionId": "some id"}
+
+GET_OBJECT = {"Body": StreamingBody(BytesIO("banana".encode("utf-8")), len("banana".encode("utf-8")))}

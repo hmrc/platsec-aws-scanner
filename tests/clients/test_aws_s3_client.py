@@ -630,3 +630,17 @@ def test_get_bucket_policy_bucket_does_not_exist(caplog: Any) -> None:
         assert s3_client.get_bucket_policy("boom") is None
         assert "NoSuchBucket" in caplog.text
         assert "boom" in caplog.text
+
+
+def test_get_object() -> None:
+    s3_client = AwsS3Client(
+        Mock(
+            get_object=Mock(
+                side_effect=lambda **kwargs: responses.GET_OBJECT
+                if kwargs["Bucket"] == "buck" and kwargs["Key"] == "fruit"
+                else None
+            )
+        )
+    )
+    actual_object = s3_client.get_object("buck", "fruit")
+    assert actual_object == "banana"
