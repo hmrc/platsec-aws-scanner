@@ -1,13 +1,17 @@
+import boto3
 import os
 import sys
 
 from configparser import ConfigParser
 from json import JSONDecodeError, loads
 from logging import getLogger
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_iam_types import PasswordPolicy
 from src.data.aws_organizations_types import Account
+
+CONFIG_FILE = "aws_scanner_config.ini"
 
 
 class AwsScannerConfig:
@@ -59,6 +63,10 @@ class AwsScannerConfig:
 
     def cloudtrail_role(self) -> str:
         return self._get_config("cloudtrail", "role")
+
+    @staticmethod
+    def config_bucket() -> Optional[str]:
+        return os.environ.get("AWS_SCANNER_CONFIG_BUCKET")
 
     def cost_explorer_role(self) -> str:
         return self._get_config("cost_explorer", "role")
@@ -225,10 +233,18 @@ class AwsScannerConfig:
         return self._to_json(self._get_config(section, key), section, key)
 
     def _load_config(self) -> ConfigParser:
+        return self._load_config_from_s3() if self.config_bucket() else self._load_config_from_file()
+
+    def _load_config_from_file(self) -> ConfigParser:
         config = ConfigParser()
-        file_name = os.environ.get("AWS_SCANNER_CONFIG_FILE_NAME", "aws_scanner_config.ini")
+        file_name = os.environ.get("AWS_SCANNER_CONFIG_FILE_NAME", CONFIG_FILE)
         if not config.read(file_name):
-            self._logger.debug("Config file 'aws_scanner_config.ini' not found, using environment variables instead")
+            self._logger.debug(f"Config file '{file_name}' not found, using environment variables instead")
+        return config
+
+    def _load_config_from_s3(self) -> ConfigParser:
+        config = ConfigParser()
+        config.read_string(AwsS3Client(boto3.client("s3")).get_object(str(self.config_bucket()), CONFIG_FILE))
         return config
 
     @staticmethod

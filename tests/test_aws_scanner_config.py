@@ -5,8 +5,9 @@ from typing import Any
 
 import os
 
-from src.data.aws_organizations_types import Account
 from src.aws_scanner_config import AwsScannerConfig
+from src.clients.aws_s3_client import AwsS3Client
+from src.data.aws_organizations_types import Account
 
 
 def test_init_config_from_file() -> None:
@@ -174,7 +175,7 @@ def test_config_file_is_missing(caplog: Any) -> None:
     with patch("configparser.ConfigParser.read", return_value=[]):
         with caplog.at_level(logging.DEBUG):
             AwsScannerConfig()
-    assert "Config file 'aws_scanner_config.ini' not found" in caplog.text
+    assert "Config file 'aws_scanner_test_config.ini' not found" in caplog.text
 
 
 @patch.dict(os.environ, {"AWS_SCANNER_REPORTS_OUTPUT": "wat"}, clear=True)
@@ -199,3 +200,14 @@ def test_invalid_format_logs_vpc_log_group_delivery_role_policy_document() -> No
 def test_invalid_type_for_int_config_item() -> None:
     with pytest.raises(SystemExit):
         AwsScannerConfig().athena_query_timeout_seconds()
+
+
+@patch.dict(os.environ, {"AWS_SCANNER_CONFIG_BUCKET": "conf-buck"})
+def test_load_config_from_s3() -> None:
+    conf = "[iam]\nrole = TheIamRole"
+    with patch.object(
+        AwsS3Client,
+        "get_object",
+        side_effect=lambda b, k: conf if b == "conf-buck" and k == "aws_scanner_config.ini" else None,
+    ):
+        assert AwsScannerConfig().iam_role() == "TheIamRole"
