@@ -146,3 +146,10 @@ class AwsS3Client:
             type(None),
             f"unable to fetch bucket policy for bucket '{bucket}'",
         )
+
+    def get_object(self, bucket: str, key: str) -> str:
+        return boto_try(
+            lambda: str(self._s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode("utf-8")),
+            str,
+            f"unable to get object '{key}' from bucket '{bucket}'",
+        )
