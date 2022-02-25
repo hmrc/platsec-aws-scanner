@@ -43,9 +43,11 @@ Arguments also have abbreviations:
 
 -   `-t / --token` (required): MFA token for the above user
 
--   `-y / --year` (required): year for partitioning the CloudTrail data in Athena
+-   `-y / --year` (required): year for partitioning data in Athena
 
--   `-m / --month` (required): month for partitioning the CloudTrail data in Athena
+-   `-m / --month` (required): month for partitioning data in Athena
+
+-   `-d / --day` (optional): day for partitioning data in Athena
 
 -   `-re / --region` (optional): AWS region for partitioning the CloudTrail data in Athena; supersedes `region` in [the
     configuration file](configuration.md#cloudtrail) when present
