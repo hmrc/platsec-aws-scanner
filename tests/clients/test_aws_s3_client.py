@@ -191,6 +191,7 @@ def get_bucket_expiry_tagging(**kwargs: Dict[str, str]) -> Any:
         "expiry-1-year": responses.GET_BUCKET_TAGGING_EXPIRY_1_YEAR,
         "expiry-7-years": responses.GET_BUCKET_TAGGING_EXPIRY_7_YEARS,
         "expiry-10-years": responses.GET_BUCKET_TAGGING_EXPIRY_10_YEARS,
+        "expiry-forever-config-only": responses.GET_BUCKET_TAGGING_EXPIRY_FOREVER_CONFIG_ONLY,
         "expiry-unknown": responses.GET_BUCKET_TAGGING_EXPIRY_UNKNOWN,
         "no-expiry": responses.GET_BUCKET_TAGGING_NO_EXPIRY,
     }
@@ -234,6 +235,11 @@ def test_get_bucket_data_tagging_expiry_7_years() -> None:
 def test_get_bucket_data_tagging_expiry_10_years() -> None:
     tagging = bucket_data_tagging(expiry="10-years")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-10-years")
+
+
+def test_get_bucket_data_tagging_expiry_forever_config_only() -> None:
+    tagging = bucket_data_tagging(expiry="forever-config-only")
+    assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-forever-config-only")
 
 
 def test_get_bucket_data_tagging_expiry_unknown() -> None:

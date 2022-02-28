@@ -112,6 +112,7 @@ GET_BUCKET_TAGGING_EXPIRY_6_MONTHS = {"TagSet": [{"Key": "data_expiry", "Value":
 GET_BUCKET_TAGGING_EXPIRY_1_YEAR = {"TagSet": [{"Key": "data_expiry", "Value": "1-year"}]}
 GET_BUCKET_TAGGING_EXPIRY_7_YEARS = {"TagSet": [{"Key": "data_expiry", "Value": "7-years"}]}
 GET_BUCKET_TAGGING_EXPIRY_10_YEARS = {"TagSet": [{"Key": "data_expiry", "Value": "10-years"}]}
+GET_BUCKET_TAGGING_EXPIRY_FOREVER_CONFIG_ONLY = {"TagSet": [{"Key": "data_expiry", "Value": "forever-config-only"}]}
 GET_BUCKET_TAGGING_EXPIRY_UNKNOWN = {"TagSet": [{"Key": "data_expiry", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_EXPIRY = {"TagSet": [{"Key": "some_other_tag", "Value": "some_other_value"}]}
 
