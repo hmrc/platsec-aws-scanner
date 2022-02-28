@@ -10,3 +10,4 @@ These are the different tasks that are offered in PlatSec AWS Scanner:
 1. [Create Athena databases and tables](create-table.md)
 1. [Drop Athena databases and tables](drop.md)
 1. [Audit S3](audit-s3.md)
+1. [Create flow logs table](create-flow-logs-table.md)
