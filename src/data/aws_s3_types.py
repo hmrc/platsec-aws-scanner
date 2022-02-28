@@ -89,7 +89,8 @@ def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> Buc
     sensitivity = tags.get("data_sensitivity")
     return BucketDataTagging(
         expiry=expiry
-        if expiry in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years"]
+        if expiry
+        in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years", "forever-config-only"]
         else "unset",
         sensitivity=sensitivity if sensitivity in ["low", "high"] else "unset",
     )
