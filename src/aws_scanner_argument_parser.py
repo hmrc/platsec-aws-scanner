@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from dataclasses import dataclass
+from datetime import date
 from functools import reduce
 from typing import Any, Dict, List, Optional
 
@@ -77,11 +78,11 @@ class AwsScannerArgumentParser:
 
     @staticmethod
     def _add_year_arg(parser: ArgumentParser, cmd_help: str) -> None:
-        parser.add_argument("-y", "--year", type=int, required=True, help=cmd_help)
+        parser.add_argument("-y", "--year", type=int, help=f"{cmd_help} (current year if unspecified)")
 
     @staticmethod
     def _add_month_arg(parser: ArgumentParser, cmd_help: str) -> None:
-        parser.add_argument("-m", "--month", type=int, required=True, help=cmd_help)
+        parser.add_argument("-m", "--month", type=int, help=f"{cmd_help} (current month if unspecified)")
 
     @staticmethod
     def _add_day_arg(parser: ArgumentParser, cmd_help: str) -> None:
@@ -255,8 +256,8 @@ class AwsScannerArgumentParser:
             username=args.get("username") or Config().user_name(),
             mfa_token=str(args.get("token")),
             task=str(args.get("task")),
-            year=int(args.get("year", -1)),
-            month=int(args.get("month", -1)),
+            year=args.get("year") or date.today().year,
+            month=args.get("month") or date.today().month,
             region=args.get("region") or Config().cloudtrail_region(),
             accounts=args.get("accounts", "").split(",") if args.get("accounts") else None,
             services=args.get("services", "").split(",") if args.get("services") else [],
