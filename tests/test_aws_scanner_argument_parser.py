@@ -281,6 +281,22 @@ def test_parse_cli_args_for_create_flow_logs_table_year_month_task() -> None:
         assert args.partition.day is None
 
 
+def test_parse_cli_args_for_create_flow_logs_table_with_unspecified_partition_task() -> None:
+    with patch("sys.argv", ". create_flow_logs_table -t 464546".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". create_flow_logs_table --token 464546".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "create_flow_logs_table"
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "464546"
+        assert args.partition.year == "2020"
+        assert args.partition.month == "11"
+        assert args.partition.day is None
+
+
 def test_default_log_level_is_warning() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
         args = AwsScannerArgumentParser().parse_cli_args()

@@ -43,9 +43,9 @@ Arguments also have abbreviations:
 
 -   `-t / --token` (required): MFA token for the above user
 
--   `-y / --year` (required): year for partitioning data in Athena
+-   `-y / --year` (optional): year for partitioning data in Athena (current year if unspecified)
 
--   `-m / --month` (required): month for partitioning data in Athena
+-   `-m / --month` (optional): month for partitioning data in Athena (current month if unspecified)
 
 -   `-d / --day` (optional): day for partitioning data in Athena
 
