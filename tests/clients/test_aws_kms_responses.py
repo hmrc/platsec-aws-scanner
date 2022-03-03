@@ -19,3 +19,8 @@ LIST_RESOURCE_TAGS = {
 
 
 GET_KEY_POLICY = {"Policy": '{\n  "Statement" : [ {\n    "Effect" : "Allow"}\n    \n  ]\n}'}
+
+
+GET_KEY_ROTATION_STATUS = {
+    "KeyRotationEnabled": True,
+}

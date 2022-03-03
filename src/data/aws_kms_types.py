@@ -14,6 +14,7 @@ class Key:
     arn: str
     description: str
     state: str
+    rotation_enabled: bool = None
     policy: Optional[Dict[str, Any]] = None
     tags: Optional[Sequence[Tag]] = None
 

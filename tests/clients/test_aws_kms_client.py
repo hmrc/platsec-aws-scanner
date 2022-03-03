@@ -9,6 +9,7 @@ from tests import test_types_generator as generator
 
 from tests.clients.test_aws_kms_responses import (
     DESCRIBE_KEY,
+    GET_KEY_ROTATION_STATUS,
     GET_KEY_POLICY,
     LIST_RESOURCE_TAGS,
 )
@@ -18,15 +19,24 @@ from tests.test_types_generator import client_error, key
 class TestAwsKmsClient(TestCase):
     def test_get_key(self) -> None:
         key_id = "1234"
+        rotation_enabled = True
         a_key, a_policy = key(id=key_id), {"something": "some value"}
         with patch.object(AwsKmsClient, "_describe_key", side_effect=lambda k: a_key if k == key_id else None):
-            with patch.object(AwsKmsClient, "_get_key_policy", side_effect=lambda k: a_policy if k == key_id else None):
+            with patch.object(
+                AwsKmsClient,
+                "_get_key_rotation_status",
+                side_effect=lambda k: rotation_enabled if k == key_id else None,
+            ):
                 with patch.object(
-                    AwsKmsClient, "_list_resource_tags", side_effect=lambda k: a_key.tags if k == key_id else None
-                ) as list_resource_tags:
-                    self.assertEqual(
-                        key(id=key_id, policy=a_policy, tags=key().tags), AwsKmsClient(Mock()).get_key(key_id)
-                    )
+                    AwsKmsClient, "_get_key_policy", side_effect=lambda k: a_policy if k == key_id else None
+                ):
+                    with patch.object(
+                        AwsKmsClient, "_list_resource_tags", side_effect=lambda k: a_key.tags if k == key_id else None
+                    ) as list_resource_tags:
+                        self.assertEqual(
+                            key(id=key_id, rotation_enabled=True, policy=a_policy, tags=key().tags),
+                            AwsKmsClient(Mock()).get_key(key_id),
+                        )
 
         list_resource_tags.assert_called_once_with(key_id)
 
@@ -44,7 +54,7 @@ class TestAwsKmsClient(TestCase):
 
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))
-        self.assertEqual(key(policy=None), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
+        self.assertEqual(key(rotation_enabled=None, policy=None), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
         boto_kms.describe_key.assert_called_with(KeyId="1234abcd")
 
     def test_describe_key_failure(self) -> None:
@@ -61,6 +71,18 @@ class TestAwsKmsClient(TestCase):
         boto_kms = Mock(get_key_policy=Mock(side_effect=client_error("GetKeyPolicy", "NotFoundException", "no")))
         with self.assertRaisesRegex(KmsException, "ghost-key"):
             AwsKmsClient(boto_kms)._get_key_policy("ghost-key")
+
+    def test_get_key_rotation_status(self) -> None:
+        boto_kms = Mock(get_key_rotation_status=Mock(return_value=GET_KEY_ROTATION_STATUS))
+        self.assertEqual(True, AwsKmsClient(boto_kms)._get_key_rotation_status("1234abcd"))
+        boto_kms.get_key_rotation_status.assert_called_with(KeyId="1234abcd")
+
+    def test_get_key_rotation_status_failure(self) -> None:
+        boto_kms = Mock(
+            get_key_rotation_status=Mock(side_effect=client_error("GetKeyRotationStatus", "NotFoundException", "no"))
+        )
+        with self.assertRaisesRegex(KmsException, "ghost-key"):
+            AwsKmsClient(boto_kms)._get_key_rotation_status("ghost-key")
 
     def test_list_resource_tags(self) -> None:
         key = generator.key()

@@ -451,6 +451,7 @@ def key(
     arn: str = "arn:aws:kms:us-east-1:112233445566:key/1234abcd",
     description: str = "some key desc",
     state: str = "Enabled",
+    rotation_enabled: bool = True,
     policy: Optional[Dict[str, Any]] = None,
     with_default_tags: bool = False,
     tags: Optional[Sequence[Tag]] = None,
@@ -463,6 +464,7 @@ def key(
         arn=arn,
         description=description,
         state=state,
+        rotation_enabled=rotation_enabled,
         policy=policy,
         tags=tags,
     )
