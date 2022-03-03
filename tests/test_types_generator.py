@@ -170,8 +170,8 @@ def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> Bu
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
 
-def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> BucketEncryption:
-    return BucketEncryption(enabled=enabled, type=type)
+def bucket_encryption(enabled: bool = False, key: Optional[str] = None, type: Optional[str] = None) -> BucketEncryption:
+    return BucketEncryption(enabled=enabled, key=key, type=type)
 
 
 def bucket_lifecycle(

@@ -54,7 +54,7 @@ class TestAwsKmsClient(TestCase):
 
     def test_describe_key(self) -> None:
         boto_kms = Mock(describe_key=Mock(return_value=DESCRIBE_KEY))
-        self.assertEqual(key(rotation_enabled=None, policy=None), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
+        self.assertEqual(key(rotation_enabled=False, policy=None), AwsKmsClient(boto_kms)._describe_key("1234abcd"))
         boto_kms.describe_key.assert_called_with(KeyId="1234abcd")
 
     def test_describe_key_failure(self) -> None:

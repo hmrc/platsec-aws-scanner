@@ -39,9 +39,9 @@ class AwsKmsClient:
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to describe kms key with id '{key_id}': {err}") from None
 
-    def _get_key_rotation_status(self, key_id: str) -> Key:
+    def _get_key_rotation_status(self, key_id: str) -> bool:
         try:
-            return self._kms.get_key_rotation_status(KeyId=key_id)["KeyRotationEnabled"]
+            return bool(self._kms.get_key_rotation_status(KeyId=key_id)["KeyRotationEnabled"])
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to get key rotation status with id '{key_id}': {err}") from None
 
