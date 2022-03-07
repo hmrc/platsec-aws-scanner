@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from json import loads
 from typing import Any, Dict, List, Optional, Union
+from src.data.aws_kms_types import Key
 
 
 @dataclass
@@ -12,7 +13,7 @@ class Bucket:
     cors: Optional[BucketCORS] = None
     data_tagging: Optional[BucketDataTagging] = None
     encryption: Optional[BucketEncryption] = None
-    kms_key: Optional[BucketKey] = None
+    kms_key: Optional[Key] = None
     lifecycle: Optional[BucketLifecycle] = None
     logging: Optional[BucketLogging] = None
     mfa_delete: Optional[BucketMFADelete] = None
@@ -100,7 +101,7 @@ def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> Buc
 @dataclass
 class BucketEncryption:
     enabled: bool = False
-    key: Optional[str] = None
+    key: str = None
     type: Optional[str] = None
 
 
@@ -189,8 +190,3 @@ class BucketVersioning:
 
 def to_bucket_versioning(versioning_dict: Dict[Any, Any]) -> BucketVersioning:
     return BucketVersioning(enabled=versioning_dict.get("Status") == "Enabled")
-
-
-@dataclass
-class BucketKey:
-    rotation_enabled: bool = False

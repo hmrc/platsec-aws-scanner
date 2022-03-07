@@ -174,6 +174,10 @@ def bucket_encryption(enabled: bool = False, key: Optional[str] = None, type: Op
     return BucketEncryption(enabled=enabled, key=key, type=type)
 
 
+def bucket_kms_key(id: str = None, rotation_enabled: bool = False) -> Key:
+    return key(id=id, rotation_enabled=rotation_enabled)
+
+
 def bucket_lifecycle(
     current_version_expiry: Union[int, str] = "unset", previous_version_deletion: Union[int, str] = "unset"
 ) -> BucketLifecycle:
@@ -209,6 +213,7 @@ def bucket(
     cors: Optional[BucketCORS] = None,
     data_tagging: Optional[BucketDataTagging] = None,
     encryption: Optional[BucketEncryption] = None,
+    kms_key: Optional[Key] = None,
     lifecycle: Optional[BucketLifecycle] = None,
     logging: Optional[BucketLogging] = None,
     mfa_delete: Optional[BucketMFADelete] = None,
@@ -224,6 +229,7 @@ def bucket(
         cors=cors,
         data_tagging=data_tagging,
         encryption=encryption,
+        kms_key=kms_key,
         lifecycle=lifecycle,
         logging=logging,
         mfa_delete=mfa_delete,

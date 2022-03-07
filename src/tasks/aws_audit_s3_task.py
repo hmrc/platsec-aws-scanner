@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from src.clients.aws_s3_client import AwsS3Client
+from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
 from src.data.aws_organizations_types import Account
-# from src.data.aws_s3_types import Bucket
 from src.tasks.aws_s3_task import AwsS3Task
 
 
@@ -12,5 +11,5 @@ class AwsAuditS3Task(AwsS3Task):
     def __init__(self, account: Account) -> None:
         super().__init__("audit S3 bucket compliance", account)
 
-    def _run_task(self, client: AwsS3Client) -> Dict[Any, Any]:
-        return {"buckets": list(map(lambda bucket: client.enrich_bucket(client, bucket), client.list_buckets()))}
+    def _run_task(self, client: AwsS3KmsClient) -> Dict[Any, Any]:
+        return {"buckets": list(map(lambda bucket: client.enrich_bucket(bucket), client.list_buckets()))}

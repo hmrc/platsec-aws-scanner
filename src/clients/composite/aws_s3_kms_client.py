@@ -6,6 +6,8 @@ from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_s3_types import Bucket
 
+from typing import List
+
 
 class AwsS3KmsClient:
     def __init__(self, s3: AwsS3Client, kms: AwsKmsClient):
@@ -13,6 +15,9 @@ class AwsS3KmsClient:
         self._config = Config()
         self._s3 = s3
         self._kms = kms
+
+    def list_buckets(self) -> List[Bucket]:
+        return self._s3.list_buckets()
 
     def enrich_bucket(self, bucket: Bucket) -> Bucket:
         bucket.acl = self._s3.get_bucket_acl(bucket.name)
@@ -26,6 +31,6 @@ class AwsS3KmsClient:
         bucket.public_access_block = self._s3.get_bucket_public_access_block(bucket.name)
         bucket.secure_transport = self._s3.get_bucket_secure_transport(bucket.name)
         bucket.versioning = self._s3.get_bucket_versioning(bucket.name)
-        bucket.kms_key = self._kms.get_key(bucket.encryption.key)
+        bucket.kms_key = self._kms.find_key(bucket.encryption.key)
 
         return bucket
