@@ -266,6 +266,21 @@ class TestGetClients(TestCase):
                     self.assertEqual(central_logging_client._kms, kms_client)
                     self.assertEqual(central_logging_client._org, org_client)
 
+    def test_get_s3_kms_client(self, _: Mock) -> None:
+        s3_client = Mock()
+        kms_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_s3_client",
+            side_effect=lambda acc, role: s3_client if acc == account() and role == "s3_role" else None,
+        ):
+            with patch(
+                f"{self.factory_path}.get_kms_client",
+                side_effect=lambda acc: kms_client if acc == account() else None,
+            ):
+                s3_kms_client = AwsClientFactory(self.mfa, self.username).get_s3_kms_client(account())
+                self.assertEqual(s3_kms_client._s3, s3_client)
+                self.assertEqual(s3_kms_client._kms, kms_client)
+
 
 @patch.object(AwsClientFactory, "_get_session_token")
 class TestGetCompositeClients(TestCase):

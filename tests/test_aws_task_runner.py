@@ -68,7 +68,7 @@ class TestAwsTaskRunner(TestCase):
 
     def test_run_s3_task(self) -> None:
         client = Mock()
-        client_factory = Mock(get_s3_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+        client_factory = Mock(get_s3_kms_client=Mock(side_effect=lambda acc: client if acc == account() else None))
         task = s3_task()
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))

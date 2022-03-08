@@ -1,7 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from json import loads
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
+from src.data.aws_kms_types import Key
 
 
 @dataclass
@@ -12,6 +13,7 @@ class Bucket:
     cors: Optional[BucketCORS] = None
     data_tagging: Optional[BucketDataTagging] = None
     encryption: Optional[BucketEncryption] = None
+    kms_key: Optional[Key] = None
     lifecycle: Optional[BucketLifecycle] = None
     logging: Optional[BucketLogging] = None
     mfa_delete: Optional[BucketMFADelete] = None
@@ -99,6 +101,7 @@ def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> Buc
 @dataclass
 class BucketEncryption:
     enabled: bool = False
+    key_id: Optional[str] = None
     type: Optional[str] = None
 
 
@@ -107,12 +110,11 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     algorithm = sse_config.get("SSEAlgorithm")
     key = sse_config.get("KMSMasterKeyID")
 
-    algo_mapping: Dict[str, Callable[[], BucketEncryption]] = {
-        "AES256": lambda: BucketEncryption(enabled=True, type="aes"),
-        "aws:kms": lambda: BucketEncryption(enabled=True, type="aws" if not key or "alias/aws/" in key else "cmk"),
-    }
-
-    return algo_mapping[algorithm]()
+    return BucketEncryption(
+        enabled=True,
+        type="aes" if algorithm == "AES256" else "aws" if not key or "alias/aws/" in key else "cmk",
+        key_id=key,
+    )
 
 
 @dataclass

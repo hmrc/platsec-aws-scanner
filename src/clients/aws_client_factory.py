@@ -21,6 +21,7 @@ from src.clients.aws_s3_client import AwsS3Client
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
+from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
 from src.data import SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
@@ -47,6 +48,12 @@ class AwsClientFactory:
 
     def get_s3_client(self, account: Account, role: Optional[str] = None) -> AwsS3Client:
         return AwsS3Client(self.get_s3_boto_client(account, role or self._config.s3_role()))
+
+    def get_s3_kms_client(self, account: Account, role: Optional[str] = None) -> AwsS3KmsClient:
+        return AwsS3KmsClient(
+            s3=self.get_s3_client(account, role or self._config.s3_role()),
+            kms=self.get_kms_client(account),
+        )
 
     def get_central_logging_client(self) -> AwsCentralLoggingClient:
         return AwsCentralLoggingClient(

@@ -42,6 +42,7 @@ GET_BUCKET_ENCRYPTION_AES: Dict[str, Any] = {
             {
                 "ApplyServerSideEncryptionByDefault": {
                     "SSEAlgorithm": "AES256",
+                    "KMSMasterKeyID": "",
                 }
             }
         ]

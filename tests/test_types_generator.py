@@ -170,8 +170,10 @@ def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> Bu
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
 
-def bucket_encryption(enabled: bool = False, type: Optional[str] = None) -> BucketEncryption:
-    return BucketEncryption(enabled=enabled, type=type)
+def bucket_encryption(
+    enabled: bool = False, key_id: Optional[str] = None, type: Optional[str] = None
+) -> BucketEncryption:
+    return BucketEncryption(enabled=enabled, key_id=key_id, type=type)
 
 
 def bucket_lifecycle(
@@ -209,6 +211,7 @@ def bucket(
     cors: Optional[BucketCORS] = None,
     data_tagging: Optional[BucketDataTagging] = None,
     encryption: Optional[BucketEncryption] = None,
+    kms_key: Optional[Key] = None,
     lifecycle: Optional[BucketLifecycle] = None,
     logging: Optional[BucketLogging] = None,
     mfa_delete: Optional[BucketMFADelete] = None,
@@ -224,6 +227,7 @@ def bucket(
         cors=cors,
         data_tagging=data_tagging,
         encryption=encryption,
+        kms_key=kms_key,
         lifecycle=lifecycle,
         logging=logging,
         mfa_delete=mfa_delete,
@@ -451,6 +455,7 @@ def key(
     arn: str = "arn:aws:kms:us-east-1:112233445566:key/1234abcd",
     description: str = "some key desc",
     state: str = "Enabled",
+    rotation_enabled: bool = True,
     policy: Optional[Dict[str, Any]] = None,
     with_default_tags: bool = False,
     tags: Optional[Sequence[Tag]] = None,
@@ -463,6 +468,7 @@ def key(
         arn=arn,
         description=description,
         state=state,
+        rotation_enabled=rotation_enabled,
         policy=policy,
         tags=tags,
     )

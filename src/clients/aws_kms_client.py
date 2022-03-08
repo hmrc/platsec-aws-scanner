@@ -28,6 +28,7 @@ class AwsKmsClient:
             return None
 
     def _enrich_key(self, key: Key) -> Key:
+        key.rotation_enabled = self._get_key_rotation_status(key.id)
         key.policy = self._get_key_policy(key.id)
         key.tags = self._list_resource_tags(key.id)
         return key
@@ -37,6 +38,12 @@ class AwsKmsClient:
             return to_key(self._kms.describe_key(KeyId=key_id)["KeyMetadata"])
         except (BotoCoreError, ClientError) as err:
             raise KmsException(f"unable to describe kms key with id '{key_id}': {err}") from None
+
+    def _get_key_rotation_status(self, key_id: str) -> bool:
+        try:
+            return bool(self._kms.get_key_rotation_status(KeyId=key_id)["KeyRotationEnabled"])
+        except (BotoCoreError, ClientError) as err:
+            raise KmsException(f"unable to get key rotation status with id '{key_id}': {err}") from None
 
     def _get_key_policy(self, key_id: str) -> Dict[str, Any]:
         try:
