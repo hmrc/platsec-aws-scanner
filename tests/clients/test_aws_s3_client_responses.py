@@ -42,6 +42,7 @@ GET_BUCKET_ENCRYPTION_AES: Dict[str, Any] = {
             {
                 "ApplyServerSideEncryptionByDefault": {
                     "SSEAlgorithm": "AES256",
+                    "KMSMasterKeyID": "",
                 }
             }
         ]
@@ -49,7 +50,7 @@ GET_BUCKET_ENCRYPTION_AES: Dict[str, Any] = {
 }
 GET_BUCKET_ENCRYPTION_KEYLESS: Dict[str, Any] = {
     "ServerSideEncryptionConfiguration": {
-        "Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms"}}]
+        "Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms", "KMSMasterKeyID": ""}}]
     }
 }
 

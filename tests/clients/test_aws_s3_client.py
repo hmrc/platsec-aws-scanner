@@ -338,12 +338,12 @@ def test_get_bucket_encryption_aws_managed() -> None:
 
 
 def test_get_bucket_encryption_aes() -> None:
-    encryption = bucket_encryption(enabled=True, type="aes")
+    encryption = bucket_encryption(enabled=True, key="", type="aes")
     assert encryption == s3_client_encryption().get_bucket_encryption("aes-bucket")
 
 
 def test_get_bucket_encryption_keyless() -> None:
-    encryption = bucket_encryption(enabled=True, type="aws")
+    encryption = bucket_encryption(enabled=True, key="", type="aws")
     assert encryption == s3_client_encryption().get_bucket_encryption("keyless-bucket")
 
 

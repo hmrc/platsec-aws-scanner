@@ -170,11 +170,11 @@ def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> Bu
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
 
-def bucket_encryption(enabled: bool = False, key: Optional[str] = None, type: Optional[str] = None) -> BucketEncryption:
+def bucket_encryption(enabled: bool = False, key: str = "", type: Optional[str] = None) -> BucketEncryption:
     return BucketEncryption(enabled=enabled, key=key, type=type)
 
 
-def bucket_kms_key(id: str = None, rotation_enabled: bool = False) -> Key:
+def bucket_kms_key(id: str = "", rotation_enabled: bool = False) -> Key:
     return key(id=id, rotation_enabled=rotation_enabled)
 
 

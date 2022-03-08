@@ -101,7 +101,7 @@ def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> Buc
 @dataclass
 class BucketEncryption:
     enabled: bool = False
-    key: str = None
+    key: str = ""
     type: Optional[str] = None
 
 
