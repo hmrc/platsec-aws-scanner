@@ -328,22 +328,22 @@ def s3_client_encryption() -> AwsS3Client:
 
 
 def test_get_bucket_encryption_cmk() -> None:
-    encryption = bucket_encryption(enabled=True, key="65465465-ab56-423f-ec22-c45623212123", type="cmk")
+    encryption = bucket_encryption(enabled=True, key_id="65465465-ab56-423f-ec22-c45623212123", type="cmk")
     assert encryption == s3_client_encryption().get_bucket_encryption("cmk-bucket")
 
 
 def test_get_bucket_encryption_aws_managed() -> None:
-    encryption = bucket_encryption(enabled=True, key="arn:aws:kms:some-region:455687898753:alias/aws/s3", type="aws")
+    encryption = bucket_encryption(enabled=True, key_id="arn:aws:kms:some-region:455687898753:alias/aws/s3", type="aws")
     assert encryption == s3_client_encryption().get_bucket_encryption("managed-bucket")
 
 
 def test_get_bucket_encryption_aes() -> None:
-    encryption = bucket_encryption(enabled=True, key="", type="aes")
+    encryption = bucket_encryption(enabled=True, key_id="", type="aes")
     assert encryption == s3_client_encryption().get_bucket_encryption("aes-bucket")
 
 
 def test_get_bucket_encryption_keyless() -> None:
-    encryption = bucket_encryption(enabled=True, key="", type="aws")
+    encryption = bucket_encryption(enabled=True, type="aws")
     assert encryption == s3_client_encryption().get_bucket_encryption("keyless-bucket")
 
 

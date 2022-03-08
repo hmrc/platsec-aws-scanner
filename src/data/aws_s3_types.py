@@ -101,7 +101,7 @@ def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> Buc
 @dataclass
 class BucketEncryption:
     enabled: bool = False
-    key: str = ""
+    key_id: Optional[str] = None
     type: Optional[str] = None
 
 
@@ -113,7 +113,7 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     return BucketEncryption(
         enabled=True,
         type="aes" if algorithm == "AES256" else "aws" if not key or "alias/aws/" in key else "cmk",
-        key=key,
+        key_id=key,
     )
 
 
