@@ -34,6 +34,7 @@ from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
     BucketACL,
+    BucketCompliancy,
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
@@ -154,18 +155,15 @@ def client_error(op_name: str, code: str, msg: str) -> ClientError:
     return ClientError(operation_name=op_name, error_response={"Error": {"Code": code, "Message": msg}})
 
 
-def bucket_acl(
-    all_users_enabled: bool = True, authenticated_users_enabled: bool = True, compliant: Optional[bool] = None
-) -> BucketACL:
+def bucket_acl(all_users_enabled: bool = True, authenticated_users_enabled: bool = True) -> BucketACL:
     return BucketACL(
         all_users_enabled=all_users_enabled,
         authenticated_users_enabled=authenticated_users_enabled,
-        compliant=compliant,
     )
 
 
-def bucket_content_deny(enabled: bool = False, compliant: bool = None) -> BucketContentDeny:
-    return BucketContentDeny(enabled=enabled, compliant=compliant)
+def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
+    return BucketContentDeny(enabled=enabled)
 
 
 def bucket_cors(enabled: bool = True, compliant: bool = None) -> BucketCORS:
@@ -216,6 +214,7 @@ def bucket_versioning(enabled: bool = False, compliant: bool = None) -> BucketVe
 
 def bucket(
     name: str = "a_bucket",
+    compliancy: BucketCompliancy = None,
     acl: Optional[BucketACL] = None,
     content_deny: Optional[BucketContentDeny] = None,
     cors: Optional[BucketCORS] = None,
@@ -232,6 +231,7 @@ def bucket(
 ) -> Bucket:
     return Bucket(
         name=name,
+        compliancy=compliancy,
         acl=acl,
         content_deny=content_deny,
         cors=cors,

@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
 from src.data.aws_organizations_types import Account
-from src.data.aws_s3_types import Bucket
+from src.data.aws_s3_types import Bucket, BucketCompliancy, ComplianceCheck
 from src.tasks.aws_s3_task import AwsS3Task
 
 
@@ -19,7 +19,25 @@ class AwsAuditS3Task(AwsS3Task):
             )
         }
 
+    def _is_acl_compliant(self, bucket: Bucket) -> ComplianceCheck:
+        return ComplianceCheck(
+            compliant=(not bucket.acl.all_users_enabled and bucket.acl.authenticated_users_enabled),
+            message="bucket should not have ACL set"
+        )
+
+    def _is_content_deny_compliant(self, bucket: Bucket) -> ComplianceCheck:
+        return ComplianceCheck(
+            compliant=bucket.content_deny.enabled,
+            message="bucket should have a resource policy with a default deny action"
+        )
+
+
     def _set_compliance(self, bucket: Bucket) -> Bucket:
+        bucket.compliancy = BucketCompliancy(
+            content_deny=self._is_content_deny_compliant(bucket),
+            acl=self._is_acl_compliant(bucket),
+            
+        )
         # we want these enabled
         """ if bucket.content_deny:
             bucket.content_deny.compliant = bucket.content_deny.enabled

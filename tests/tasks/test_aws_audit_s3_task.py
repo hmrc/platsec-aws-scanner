@@ -111,7 +111,8 @@ class TestAwsAuditS3Task(TestCase):
 
         assert task_report["buckets"][0] == bucket(
             name=bucket_1,
-            acl=bucket_acl(all_users_enabled=True, authenticated_users_enabled=False, compliant=False),
+            compliancy=None,
+            acl=bucket_acl(all_users_enabled=True, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=False),
             cors=bucket_cors(enabled=True),
             data_tagging=bucket_data_tagging(expiry="6-months", sensitivity="low"),
@@ -127,7 +128,7 @@ class TestAwsAuditS3Task(TestCase):
 
         assert task_report["buckets"][1] == bucket(
             name=bucket_2,
-            acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=True, compliant=False),
+            acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=True),
             content_deny=bucket_content_deny(enabled=True),
             cors=bucket_cors(enabled=False),
             data_tagging=bucket_data_tagging(expiry="1-month", sensitivity="high"),
@@ -143,7 +144,7 @@ class TestAwsAuditS3Task(TestCase):
 
         assert task_report["buckets"][2] == bucket(
             name=bucket_3,
-            acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False, compliant=True),
+            acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=True),
             cors=bucket_cors(enabled=False),
             data_tagging=bucket_data_tagging(expiry="1-week", sensitivity="high"),

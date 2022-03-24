@@ -56,17 +56,17 @@ def test_get_bucket_acl_no_grant() -> None:
 
 
 def test_get_bucket_acl_owner_grant() -> None:
-    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=False, compliant=True)
+    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=False)
     assert acl == s3_client_acl().get_bucket_acl("owner-grant")
 
 
 def test_get_bucket_acl_all_users_grant() -> None:
-    acl = bucket_acl(all_users_enabled=True, authenticated_users_enabled=False, compliant=False)
+    acl = bucket_acl(all_users_enabled=True, authenticated_users_enabled=False)
     assert acl == s3_client_acl().get_bucket_acl("all-users-grant")
 
 
 def test_get_bucket_acl_authenticated_users_grant() -> None:
-    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=True, compliant=False)
+    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=True)
     assert acl == s3_client_acl().get_bucket_acl("authenticated-users-grant")
 
 
@@ -100,47 +100,47 @@ def s3_client_bucket_content() -> AwsS3Client:
 
 
 def test_get_bucket_content_deny_single() -> None:
-    content_deny = bucket_content_deny(enabled=True, compliant=True)
+    content_deny = bucket_content_deny(enabled=True)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-single")
 
 
 def test_get_bucket_content_deny_separate() -> None:
-    content_deny = bucket_content_deny(enabled=True, compliant=True)
+    content_deny = bucket_content_deny(enabled=True)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-separate")
 
 
 def test_get_bucket_content_deny_mixed() -> None:
-    content_deny = bucket_content_deny(enabled=True, compliant=True)
+    content_deny = bucket_content_deny(enabled=True)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-mixed")
 
 
 def test_get_bucket_content_deny_incomplete() -> None:
-    content_deny = bucket_content_deny(enabled=False, compliant=False)
+    content_deny = bucket_content_deny(enabled=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-incomplete")
 
 
 def test_get_bucket_content_deny_incomplete_separate() -> None:
-    content_deny = bucket_content_deny(enabled=False, compliant=False)
+    content_deny = bucket_content_deny(enabled=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-incomplete-separate")
 
 
 def test_get_bucket_content_deny_incomplete_mixed() -> None:
-    content_deny = bucket_content_deny(enabled=False, compliant=False)
+    content_deny = bucket_content_deny(enabled=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-incomplete-mixed")
 
 
 def test_get_bucket_content_deny_allow_mixed() -> None:
-    content_deny = bucket_content_deny(enabled=False, compliant=False)
+    content_deny = bucket_content_deny(enabled=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("allow-mixed")
 
 
 def test_get_bucket_content_deny_other() -> None:
-    content_deny = bucket_content_deny(enabled=False, compliant=False)
+    content_deny = bucket_content_deny(enabled=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-other")
 
 
 def test_get_bucket_content_deny_failure(caplog: Any) -> None:
-    content_deny = bucket_content_deny(enabled=False, compliant=None)
+    content_deny = bucket_content_deny(enabled=False)
     with caplog.at_level(logging.WARNING):
         assert content_deny == s3_client_bucket_content().get_bucket_content_deny("access-denied")
     assert "AccessDenied" in caplog.text

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from json import loads
+import string
 from typing import Any, Dict, List, Optional, Union
 from src.data.aws_kms_types import Key
 
@@ -8,6 +9,7 @@ from src.data.aws_kms_types import Key
 @dataclass
 class Bucket:
     name: str
+    compliancy: Optional[BucketCompliancy] = None
     acl: Optional[BucketACL] = None
     content_deny: Optional[BucketContentDeny] = None
     cors: Optional[BucketCORS] = None
@@ -22,6 +24,16 @@ class Bucket:
     versioning: Optional[BucketVersioning] = None
     policy: Optional[Dict[str, Any]] = None
 
+@dataclass
+class BucketCompliancy:
+    content_deny: ComplianceCheck
+    acl: ComplianceCheck
+
+@dataclass
+class ComplianceCheck:
+    compliant: bool = False
+    message: string = None
+
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
     return Bucket(name=bucket_dict["Name"])
@@ -32,31 +44,25 @@ class BucketACL:
     # assume both enabled by default so that the audit report never brings false negatives back
     all_users_enabled: bool = True
     authenticated_users_enabled: bool = True
-    compliant: Optional[bool] = None
 
 
 def to_bucket_acl(acl: Dict[Any, Any]) -> BucketACL:
     grantees = [grant["Grantee"] for grant in acl["Grants"]]
-    all_users_enabled=any(map(lambda grantee: "AllUsers" in grantee.get("URI", ""), grantees))
-    authenticated_users_enabled=any(map(lambda grantee: "AuthenticatedUsers" in grantee.get("URI", ""), grantees))
     return BucketACL(
-        all_users_enabled=all_users_enabled,
-        authenticated_users_enabled=authenticated_users_enabled,
-        compliant=(not all_users_enabled and not authenticated_users_enabled)
+        all_users_enabled=any(map(lambda grantee: "AllUsers" in grantee.get("URI", ""), grantees)),
+        authenticated_users_enabled=any(map(lambda grantee: "AuthenticatedUsers" in grantee.get("URI", ""), grantees)),
     )
 
 
 @dataclass
 class BucketContentDeny:
     enabled: bool = False
-    compliant: Optional[bool] = None
 
 
 def to_bucket_content_deny(bucket_policy_dict: Dict[Any, Any]) -> BucketContentDeny:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
     deny_actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-    enabled=all(map(lambda action: _has_denied_action(statements, action), deny_actions))
-    return BucketContentDeny(enabled=enabled, compliant=enabled)
+    return BucketContentDeny(enabled=all(map(lambda action: _has_denied_action(statements, action), deny_actions)))
 
 
 def _has_denied_action(statements: List[Dict[Any, Any]], action: str) -> bool:
