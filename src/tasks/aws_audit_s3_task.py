@@ -21,49 +21,49 @@ class AwsAuditS3Task(AwsS3Task):
 
     def _set_compliance(self, bucket: Bucket) -> Bucket:
         # we want these enabled
-        if bucket.content_deny:
+        """ if bucket.content_deny:
             bucket.content_deny.compliant = bucket.content_deny.enabled
+        """
+        """  if bucket.encryption:
+            bucket.encryption.compliant = bucket.encryption.enabled """
 
-        if bucket.encryption:
-            bucket.encryption.compliant = bucket.encryption.enabled
-
-        if bucket.logging:
+        """ if bucket.logging:
             bucket.logging.compliant = bucket.logging.enabled
 
         if bucket.public_access_block:
             bucket.public_access_block.compliant = bucket.public_access_block.enabled
 
         if bucket.secure_transport:
-            bucket.secure_transport.compliant = bucket.secure_transport.enabled
+            bucket.secure_transport.compliant = bucket.secure_transport.enabled """
 
-        if bucket.versioning:
-            bucket.versioning.compliant = bucket.versioning.enabled
+        """  if bucket.versioning:
+            bucket.versioning.compliant = bucket.versioning.enabled """
 
         # these just default to being compliant, status disregarded in policy
-        if bucket.mfa_delete:
-            bucket.mfa_delete.compliant = True
+        """ if bucket.mfa_delete:
+            bucket.mfa_delete.compliant = True """
 
-        if bucket.kms_key:
-            bucket.kms_key.compliant = bucket.kms_key.rotation_enabled
+        """ if bucket.kms_key:
+            bucket.kms_key.compliant = bucket.kms_key.rotation_enabled """
 
-        if bucket.data_tagging:
+        """ if bucket.data_tagging:
             bucket.data_tagging.compliant = (
                 bucket.data_tagging.expiry != "unset" and bucket.data_tagging.sensitivity != "unset"
-            )
+            ) """
 
-        if bucket.lifecycle:
+        """ if bucket.lifecycle:
             bucket.lifecycle.compliant = (
                 bucket.lifecycle.current_version_expiry != "unset"
                 and bucket.lifecycle.previous_version_deletion != "unset"
             )
-
+ """
         # we want these disabled
-        if bucket.acl:
+        """ if bucket.acl:
             bucket.acl.compliant = (
                 bucket.acl.authenticated_users_enabled is False and bucket.acl.all_users_enabled is False
-            )
+            ) """
 
-        if bucket.cors:
-            bucket.cors.compliant = not bucket.cors.enabled
+        """ if bucket.cors:
+            bucket.cors.compliant = not bucket.cors.enabled """
 
         return bucket

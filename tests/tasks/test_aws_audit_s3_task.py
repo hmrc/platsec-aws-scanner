@@ -69,9 +69,9 @@ class TestAwsAuditS3Task(TestCase):
             bucket_3: bucket_logging(enabled=True, compliant=True),
         }
         mfa_delete_mapping = {
-            bucket_1: bucket_mfa_delete(enabled=True, compliant=True),
-            bucket_2: bucket_mfa_delete(enabled=False, compliant=True),  # We don't check for mfa-delete so default true
-            bucket_3: bucket_mfa_delete(enabled=True, compliant=True),
+            bucket_1: bucket_mfa_delete(enabled=True),
+            bucket_2: bucket_mfa_delete(enabled=False),  # We don't check for mfa-delete so default true
+            bucket_3: bucket_mfa_delete(enabled=True),
         }
         public_access_block_mapping = {
             bucket_1: bucket_public_access_block(enabled=False, compliant=False),
@@ -84,9 +84,9 @@ class TestAwsAuditS3Task(TestCase):
             bucket_3: bucket_secure_transport(enabled=False, compliant=False),
         }
         versioning_mapping = {
-            bucket_1: bucket_versioning(enabled=True, compliant=True),
-            bucket_2: bucket_versioning(enabled=True, compliant=True),
-            bucket_3: bucket_versioning(enabled=False, compliant=False),
+            bucket_1: bucket_versioning(enabled=True),
+            bucket_2: bucket_versioning(enabled=True),
+            bucket_3: bucket_versioning(enabled=False),
         }
 
         s3_client = Mock(
@@ -112,47 +112,47 @@ class TestAwsAuditS3Task(TestCase):
         assert task_report["buckets"][0] == bucket(
             name=bucket_1,
             acl=bucket_acl(all_users_enabled=True, authenticated_users_enabled=False, compliant=False),
-            content_deny=bucket_content_deny(enabled=False, compliant=False),
-            cors=bucket_cors(enabled=True, compliant=False),
-            data_tagging=bucket_data_tagging(expiry="6-months", sensitivity="low", compliant=True),
-            encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-1", compliant=True),
-            kms_key=key(id="key-1", rotation_enabled=True, compliant=True),
+            content_deny=bucket_content_deny(enabled=False),
+            cors=bucket_cors(enabled=True),
+            data_tagging=bucket_data_tagging(expiry="6-months", sensitivity="low"),
+            encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-1"),
+            kms_key=key(id="key-1", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14, compliant=True),
             logging=bucket_logging(enabled=False, compliant=False),
-            mfa_delete=bucket_mfa_delete(enabled=True, compliant=True),
+            mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=False, compliant=False),
             secure_transport=bucket_secure_transport(enabled=True, compliant=True),
-            versioning=bucket_versioning(enabled=True, compliant=True),
+            versioning=bucket_versioning(enabled=True),
         )
 
         assert task_report["buckets"][1] == bucket(
             name=bucket_2,
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=True, compliant=False),
-            content_deny=bucket_content_deny(enabled=True, compliant=True),
-            cors=bucket_cors(enabled=False, compliant=True),
-            data_tagging=bucket_data_tagging(expiry="1-month", sensitivity="high", compliant=True),
-            encryption=bucket_encryption(enabled=False, compliant=False),
+            content_deny=bucket_content_deny(enabled=True),
+            cors=bucket_cors(enabled=False),
+            data_tagging=bucket_data_tagging(expiry="1-month", sensitivity="high"),
+            encryption=bucket_encryption(enabled=False),
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset", compliant=False),
             logging=bucket_logging(enabled=False, compliant=False),
-            mfa_delete=bucket_mfa_delete(enabled=False, compliant=True),
+            mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True, compliant=True),
             secure_transport=bucket_secure_transport(enabled=True, compliant=True),
-            versioning=bucket_versioning(enabled=True, compliant=True),
+            versioning=bucket_versioning(enabled=True),
         )
 
         assert task_report["buckets"][2] == bucket(
             name=bucket_3,
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False, compliant=True),
-            content_deny=bucket_content_deny(enabled=True, compliant=True),
-            cors=bucket_cors(enabled=False, compliant=True),
-            data_tagging=bucket_data_tagging(expiry="1-week", sensitivity="high", compliant=True),
-            encryption=bucket_encryption(enabled=True, type="aws", key_id="key-3", compliant=True),
+            content_deny=bucket_content_deny(enabled=True),
+            cors=bucket_cors(enabled=False),
+            data_tagging=bucket_data_tagging(expiry="1-week", sensitivity="high"),
+            encryption=bucket_encryption(enabled=True, type="aws", key_id="key-3"),
             kms_key=key(id="key-3", rotation_enabled=False, compliant=False),
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366, compliant=False),
             logging=bucket_logging(enabled=True, compliant=True),
-            mfa_delete=bucket_mfa_delete(enabled=True, compliant=True),
+            mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=True, compliant=True),
             secure_transport=bucket_secure_transport(enabled=False, compliant=False),
-            versioning=bucket_versioning(enabled=False, compliant=False),
+            versioning=bucket_versioning(enabled=False),
         )

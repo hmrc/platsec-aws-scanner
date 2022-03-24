@@ -37,9 +37,12 @@ class BucketACL:
 
 def to_bucket_acl(acl: Dict[Any, Any]) -> BucketACL:
     grantees = [grant["Grantee"] for grant in acl["Grants"]]
+    all_users_enabled=any(map(lambda grantee: "AllUsers" in grantee.get("URI", ""), grantees))
+    authenticated_users_enabled=any(map(lambda grantee: "AuthenticatedUsers" in grantee.get("URI", ""), grantees))
     return BucketACL(
-        all_users_enabled=any(map(lambda grantee: "AllUsers" in grantee.get("URI", ""), grantees)),
-        authenticated_users_enabled=any(map(lambda grantee: "AuthenticatedUsers" in grantee.get("URI", ""), grantees)),
+        all_users_enabled=all_users_enabled,
+        authenticated_users_enabled=authenticated_users_enabled,
+        compliant=(not all_users_enabled and not authenticated_users_enabled)
     )
 
 
@@ -52,7 +55,8 @@ class BucketContentDeny:
 def to_bucket_content_deny(bucket_policy_dict: Dict[Any, Any]) -> BucketContentDeny:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
     deny_actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-    return BucketContentDeny(enabled=all(map(lambda action: _has_denied_action(statements, action), deny_actions)))
+    enabled=all(map(lambda action: _has_denied_action(statements, action), deny_actions))
+    return BucketContentDeny(enabled=enabled, compliant=enabled)
 
 
 def _has_denied_action(statements: List[Dict[Any, Any]], action: str) -> bool:
@@ -79,7 +83,8 @@ class BucketCORS:
 
 
 def to_bucket_cors(cors_config: Dict[Any, Any]) -> BucketCORS:
-    return BucketCORS(enabled="CORSRules" in cors_config)
+    enabled="CORSRules" in cors_config
+    return BucketCORS(enabled=enabled, compliant=not enabled)
 
 
 @dataclass
@@ -91,14 +96,15 @@ class BucketDataTagging:
 
 def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> BucketDataTagging:
     tags = {tag["Key"]: tag["Value"] for tag in tag_response["TagSet"]}
-    expiry = tags.get("data_expiry")
-    sensitivity = tags.get("data_sensitivity")
+    expiry_tag = tags.get("data_expiry")
+    expiry=expiry_tag if expiry_tag in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years", "forever-config-only"] else "unset"
+    sensitivity_tag = tags.get("data_sensitivity")
+    sensitivity=sensitivity_tag if sensitivity_tag in ["low", "high"] else "unset"
+    
     return BucketDataTagging(
-        expiry=expiry
-        if expiry
-        in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years", "forever-config-only"]
-        else "unset",
-        sensitivity=sensitivity if sensitivity in ["low", "high"] else "unset",
+        expiry=expiry,
+        sensitivity=sensitivity,
+        compliant=expiry != "unset" and sensitivity != "unset",
     )
 
 
@@ -119,6 +125,7 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
         enabled=True,
         type="aes" if algorithm == "AES256" else "aws" if not key or "alias/aws/" in key else "cmk",
         key_id=key,
+        compliant=True,
     )
 
 
@@ -136,14 +143,17 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
         lambda rule: "NoncurrentVersionExpiration" in rule and "NoncurrentDays" in rule["NoncurrentVersionExpiration"],
         enabled_rules,
     )
-    return BucketLifecycle(
-        current_version_expiry=min(
+    current_version_expiry=min(
             map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
-        ),
-        previous_version_deletion=min(
-            map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
-            default="unset",
-        ),
+    )
+    previous_version_deletion=min(
+        map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
+        default="unset",
+    )
+    return BucketLifecycle(
+        current_version_expiry=current_version_expiry,
+        previous_version_deletion=previous_version_deletion,
+        compliant=current_version_expiry != "unset" and previous_version_deletion != "unset",
     )
 
 
@@ -154,7 +164,8 @@ class BucketLogging:
 
 
 def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
-    return BucketLogging(enabled="LoggingEnabled" in logging_dict)
+    enabled="LoggingEnabled" in logging_dict
+    return BucketLogging(enabled=enabled, compliant=enabled)
 
 
 @dataclass
@@ -164,7 +175,7 @@ class BucketMFADelete:
 
 
 def to_bucket_mfa_delete(versioning_dict: Dict[Any, Any]) -> BucketMFADelete:
-    return BucketMFADelete(enabled=versioning_dict.get("MFADelete") == "Enabled")
+    return BucketMFADelete(enabled=versioning_dict.get("MFADelete") == "Enabled", compliant=True)
 
 
 @dataclass
@@ -175,7 +186,8 @@ class BucketPublicAccessBlock:
 
 def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
     config = public_access_block_dict["PublicAccessBlockConfiguration"]
-    return BucketPublicAccessBlock(enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"])
+    enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"]
+    return BucketPublicAccessBlock(enabled=enabled, compliant=enabled)
 
 
 @dataclass
@@ -186,7 +198,8 @@ class BucketSecureTransport:
 
 def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecureTransport:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
-    return BucketSecureTransport(enabled=bool(list(filter(_has_secure_transport, statements))))
+    enabled=bool(list(filter(_has_secure_transport, statements)))
+    return BucketSecureTransport(enabled=enabled, compliant=enabled)
 
 
 def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
@@ -200,4 +213,5 @@ class BucketVersioning:
 
 
 def to_bucket_versioning(versioning_dict: Dict[Any, Any]) -> BucketVersioning:
-    return BucketVersioning(enabled=versioning_dict.get("Status") == "Enabled")
+    enabled=versioning_dict.get("Status") == "Enabled"
+    return BucketVersioning(enabled=enabled, compliant=enabled)

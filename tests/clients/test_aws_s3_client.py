@@ -56,17 +56,17 @@ def test_get_bucket_acl_no_grant() -> None:
 
 
 def test_get_bucket_acl_owner_grant() -> None:
-    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=False)
+    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=False, compliant=True)
     assert acl == s3_client_acl().get_bucket_acl("owner-grant")
 
 
 def test_get_bucket_acl_all_users_grant() -> None:
-    acl = bucket_acl(all_users_enabled=True, authenticated_users_enabled=False)
+    acl = bucket_acl(all_users_enabled=True, authenticated_users_enabled=False, compliant=False)
     assert acl == s3_client_acl().get_bucket_acl("all-users-grant")
 
 
 def test_get_bucket_acl_authenticated_users_grant() -> None:
-    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=True)
+    acl = bucket_acl(all_users_enabled=False, authenticated_users_enabled=True, compliant=False)
     assert acl == s3_client_acl().get_bucket_acl("authenticated-users-grant")
 
 
@@ -100,47 +100,47 @@ def s3_client_bucket_content() -> AwsS3Client:
 
 
 def test_get_bucket_content_deny_single() -> None:
-    content_deny = bucket_content_deny(enabled=True)
+    content_deny = bucket_content_deny(enabled=True, compliant=True)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-single")
 
 
 def test_get_bucket_content_deny_separate() -> None:
-    content_deny = bucket_content_deny(enabled=True)
+    content_deny = bucket_content_deny(enabled=True, compliant=True)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-separate")
 
 
 def test_get_bucket_content_deny_mixed() -> None:
-    content_deny = bucket_content_deny(enabled=True)
+    content_deny = bucket_content_deny(enabled=True, compliant=True)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-mixed")
 
 
 def test_get_bucket_content_deny_incomplete() -> None:
-    content_deny = bucket_content_deny(enabled=False)
+    content_deny = bucket_content_deny(enabled=False, compliant=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-incomplete")
 
 
 def test_get_bucket_content_deny_incomplete_separate() -> None:
-    content_deny = bucket_content_deny(enabled=False)
+    content_deny = bucket_content_deny(enabled=False, compliant=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-incomplete-separate")
 
 
 def test_get_bucket_content_deny_incomplete_mixed() -> None:
-    content_deny = bucket_content_deny(enabled=False)
+    content_deny = bucket_content_deny(enabled=False, compliant=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-incomplete-mixed")
 
 
 def test_get_bucket_content_deny_allow_mixed() -> None:
-    content_deny = bucket_content_deny(enabled=False)
+    content_deny = bucket_content_deny(enabled=False, compliant=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("allow-mixed")
 
 
 def test_get_bucket_content_deny_other() -> None:
-    content_deny = bucket_content_deny(enabled=False)
+    content_deny = bucket_content_deny(enabled=False, compliant=False)
     assert content_deny == s3_client_bucket_content().get_bucket_content_deny("deny-other")
 
 
 def test_get_bucket_content_deny_failure(caplog: Any) -> None:
-    content_deny = bucket_content_deny(enabled=False)
+    content_deny = bucket_content_deny(enabled=False, compliant=None)
     with caplog.at_level(logging.WARNING):
         assert content_deny == s3_client_bucket_content().get_bucket_content_deny("access-denied")
     assert "AccessDenied" in caplog.text
@@ -162,7 +162,7 @@ def s3_client_cors() -> AwsS3Client:
 
 
 def test_get_bucket_cors_enabled() -> None:
-    cors = bucket_cors(enabled=True)
+    cors = bucket_cors(enabled=True, compliant=False)
     assert cors == s3_client_cors().get_bucket_cors("cors-enabled")
 
 
@@ -203,52 +203,52 @@ def s3_client_expiry_tagging() -> AwsS3Client:
 
 
 def test_get_bucket_data_tagging_expiry_1_week() -> None:
-    tagging = bucket_data_tagging(expiry="1-week")
+    tagging = bucket_data_tagging(expiry="1-week", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-week")
 
 
 def test_get_bucket_data_tagging_expiry_1_month() -> None:
-    tagging = bucket_data_tagging(expiry="1-month")
+    tagging = bucket_data_tagging(expiry="1-month", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-month")
 
 
 def test_get_bucket_data_tagging_expiry_90_days() -> None:
-    tagging = bucket_data_tagging(expiry="90-days")
+    tagging = bucket_data_tagging(expiry="90-days", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-90-days")
 
 
 def test_get_bucket_data_tagging_expiry_6_months() -> None:
-    tagging = bucket_data_tagging(expiry="6-months")
+    tagging = bucket_data_tagging(expiry="6-months", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-6-months")
 
 
 def test_get_bucket_data_tagging_expiry_1_year() -> None:
-    tagging = bucket_data_tagging(expiry="1-year")
+    tagging = bucket_data_tagging(expiry="1-year", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-year")
 
 
 def test_get_bucket_data_tagging_expiry_7_years() -> None:
-    tagging = bucket_data_tagging(expiry="7-years")
+    tagging = bucket_data_tagging(expiry="7-years", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-7-years")
 
 
 def test_get_bucket_data_tagging_expiry_10_years() -> None:
-    tagging = bucket_data_tagging(expiry="10-years")
+    tagging = bucket_data_tagging(expiry="10-years", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-10-years")
 
 
 def test_get_bucket_data_tagging_expiry_forever_config_only() -> None:
-    tagging = bucket_data_tagging(expiry="forever-config-only")
+    tagging = bucket_data_tagging(expiry="forever-config-only", sensitivity="low", compliant=True)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-forever-config-only")
 
 
 def test_get_bucket_data_tagging_expiry_unknown() -> None:
-    tagging = bucket_data_tagging(expiry="unset")
+    tagging = bucket_data_tagging(expiry="unset", compliant=False)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-unknown")
 
 
 def test_get_bucket_data_tagging_no_expiry() -> None:
-    tagging = bucket_data_tagging(expiry="unset")
+    tagging = bucket_data_tagging(expiry="unset", compliant=False)
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("no-expiry")
 
 
@@ -278,22 +278,22 @@ def s3_client_sensitivity_tagging() -> AwsS3Client:
 
 
 def test_get_bucket_data_sensitivity_tagging_low() -> None:
-    tagging = bucket_data_tagging(sensitivity="low")
+    tagging = bucket_data_tagging(expiry="1-week", sensitivity="low", compliant=True)
     assert tagging == s3_client_sensitivity_tagging().get_bucket_data_tagging("low-sensitivity")
 
 
 def test_get_bucket_data_sensitivity_tagging_high() -> None:
-    tagging = bucket_data_tagging(sensitivity="high")
+    tagging = bucket_data_tagging(expiry="1-week", sensitivity="high", compliant=True)
     assert tagging == s3_client_sensitivity_tagging().get_bucket_data_tagging("high-sensitivity")
 
 
 def test_get_bucket_data_sensitivity_tagging_unknown() -> None:
-    tagging = bucket_data_tagging(sensitivity="unset")
+    tagging = bucket_data_tagging(sensitivity="unset", compliant=False)
     assert tagging, s3_client_sensitivity_tagging().get_bucket_data_tagging("unknown-sensitivity")
 
 
 def test_get_bucket_data_sensitivity_no_sensitivity() -> None:
-    tagging = bucket_data_tagging(sensitivity="unset")
+    tagging = bucket_data_tagging(sensitivity="unset", compliant=False)
     assert tagging == s3_client_sensitivity_tagging().get_bucket_data_tagging("no-sensitivity")
 
 
@@ -328,22 +328,22 @@ def s3_client_encryption() -> AwsS3Client:
 
 
 def test_get_bucket_encryption_cmk() -> None:
-    encryption = bucket_encryption(enabled=True, key_id="65465465-ab56-423f-ec22-c45623212123", type="cmk")
+    encryption = bucket_encryption(enabled=True, key_id="65465465-ab56-423f-ec22-c45623212123", type="cmk", compliant=True)
     assert encryption == s3_client_encryption().get_bucket_encryption("cmk-bucket")
 
 
 def test_get_bucket_encryption_aws_managed() -> None:
-    encryption = bucket_encryption(enabled=True, key_id="arn:aws:kms:some-region:455687898753:alias/aws/s3", type="aws")
+    encryption = bucket_encryption(enabled=True, key_id="arn:aws:kms:some-region:455687898753:alias/aws/s3", type="aws", compliant=True)
     assert encryption == s3_client_encryption().get_bucket_encryption("managed-bucket")
 
 
 def test_get_bucket_encryption_aes() -> None:
-    encryption = bucket_encryption(enabled=True, key_id="", type="aes")
+    encryption = bucket_encryption(enabled=True, key_id="", type="aes", compliant=True)
     assert encryption == s3_client_encryption().get_bucket_encryption("aes-bucket")
 
 
 def test_get_bucket_encryption_keyless() -> None:
-    encryption = bucket_encryption(enabled=True, type="aws")
+    encryption = bucket_encryption(enabled=True, type="aws", compliant=True)
     assert encryption == s3_client_encryption().get_bucket_encryption("keyless-bucket")
 
 
@@ -372,11 +372,11 @@ def s3_client_logging() -> AwsS3Client:
 
 
 def test_get_bucket_logging_enabled() -> None:
-    assert bucket_logging(enabled=True) == s3_client_logging().get_bucket_logging("logging-enabled-bucket")
+    assert bucket_logging(enabled=True, compliant=True) == s3_client_logging().get_bucket_logging("logging-enabled-bucket")
 
 
 def test_get_bucket_logging_disabled() -> None:
-    assert bucket_logging(enabled=False) == s3_client_logging().get_bucket_logging("logging-disabled-bucket")
+    assert bucket_logging(enabled=False, compliant=False) == s3_client_logging().get_bucket_logging("logging-disabled-bucket")
 
 
 def test_get_bucket_logging_failure(caplog: Any) -> None:
@@ -407,22 +407,22 @@ def s3_client_lifecycle() -> AwsS3Client:
 
 
 def test_get_bucket_lifecycle_single_rule() -> None:
-    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
+    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset", compliant=False)
     assert lifecycle == s3_client_lifecycle().get_bucket_lifecycle("single-rule")
 
 
 def test_get_bucket_lifecycle_multiple_rules() -> None:
-    lifecycle = bucket_lifecycle(current_version_expiry=5, previous_version_deletion=10)
+    lifecycle = bucket_lifecycle(current_version_expiry=5, previous_version_deletion=10, compliant=True)
     assert lifecycle == s3_client_lifecycle().get_bucket_lifecycle("multiple-rules")
 
 
 def test_get_bucket_lifecycle_disabled() -> None:
-    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
+    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset", compliant=False)
     assert lifecycle == s3_client_lifecycle().get_bucket_lifecycle("disabled")
 
 
 def test_get_bucket_lifecycle_no_expiry() -> None:
-    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset")
+    lifecycle = bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset", compliant=False)
     assert lifecycle == s3_client_lifecycle().get_bucket_lifecycle("no-expiry")
 
 
@@ -451,17 +451,17 @@ def s3_client_mfa() -> AwsS3Client:
 
 
 def test_get_bucket_mfa_delete_enabled() -> None:
-    mfa_delete = bucket_mfa_delete(enabled=True)
+    mfa_delete = bucket_mfa_delete(enabled=True, compliant=True)
     assert mfa_delete == s3_client_mfa().get_bucket_mfa_delete("mfa-delete-enabled")
 
 
 def test_get_bucket_mfa_delete_disabled() -> None:
-    mfa_delete = bucket_mfa_delete(enabled=False)
+    mfa_delete = bucket_mfa_delete(enabled=False, compliant=True)
     assert mfa_delete == s3_client_mfa().get_bucket_mfa_delete("mfa-delete-disabled")
 
 
 def test_get_bucket_mfa_delete_unset() -> None:
-    mfa_delete = bucket_mfa_delete(enabled=False)
+    mfa_delete = bucket_mfa_delete(enabled=False, compliant=True)
     assert mfa_delete == s3_client_mfa().get_bucket_mfa_delete("mfa-delete-unset")
 
 
@@ -485,8 +485,8 @@ def s3_client_pab(public_access_block_response: Dict[str, Any]) -> AwsS3Client:
 
 
 def test_get_bucket_public_access_block() -> None:
-    blocked = bucket_public_access_block(enabled=True)
-    not_blocked = bucket_public_access_block(enabled=False)
+    blocked = bucket_public_access_block(enabled=True, compliant=True)
+    not_blocked = bucket_public_access_block(enabled=False, compliant=False)
 
     scenarios: Sequence[Dict[str, Any]] = [
         {"response": responses.public_access_block(False, False, False, False), "state": not_blocked},
@@ -535,12 +535,12 @@ def s3_client_secure_transport() -> AwsS3Client:
 
 
 def test_get_bucket_secure_transport_disabled() -> None:
-    secure_transport = bucket_secure_transport(enabled=False)
+    secure_transport = bucket_secure_transport(enabled=False, compliant=False)
     assert secure_transport == s3_client_secure_transport().get_bucket_secure_transport("bucket")
 
 
 def test_get_bucket_secure_transport_enabled() -> None:
-    secure_transport = bucket_secure_transport(enabled=True)
+    secure_transport = bucket_secure_transport(enabled=True, compliant=True)
     assert secure_transport == s3_client_secure_transport().get_bucket_secure_transport("secure-bucket")
 
 
@@ -569,17 +569,17 @@ def s3_client_versioning() -> AwsS3Client:
 
 
 def test_get_bucket_versioning_enabled() -> None:
-    versioning = bucket_versioning(enabled=True)
+    versioning = bucket_versioning(enabled=True, compliant=True)
     assert versioning == s3_client_versioning().get_bucket_versioning("versioning-enabled")
 
 
 def test_get_bucket_versioning_suspended() -> None:
-    versioning = bucket_versioning(enabled=False)
+    versioning = bucket_versioning(enabled=False, compliant=False)
     assert versioning == s3_client_versioning().get_bucket_versioning("versioning-suspended")
 
 
 def test_get_bucket_versioning_unset() -> None:
-    versioning = bucket_versioning(enabled=False)
+    versioning = bucket_versioning(enabled=False, compliant=False)
     assert versioning == s3_client_versioning().get_bucket_versioning("versioning-unset")
 
 

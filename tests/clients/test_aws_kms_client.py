@@ -34,7 +34,7 @@ class TestAwsKmsClient(TestCase):
                         AwsKmsClient, "_list_resource_tags", side_effect=lambda k: a_key.tags if k == key_id else None
                     ) as list_resource_tags:
                         self.assertEqual(
-                            key(id=key_id, rotation_enabled=True, policy=a_policy, tags=key().tags),
+                            key(id=key_id, rotation_enabled=True, policy=a_policy, tags=key().tags, compliant=True),
                             AwsKmsClient(Mock()).get_key(key_id),
                         )
 
