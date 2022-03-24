@@ -32,6 +32,7 @@ class BucketACL:
     # assume both enabled by default so that the audit report never brings false negatives back
     all_users_enabled: bool = True
     authenticated_users_enabled: bool = True
+    compliant: Optional[bool] = None
 
 
 def to_bucket_acl(acl: Dict[Any, Any]) -> BucketACL:
@@ -45,6 +46,7 @@ def to_bucket_acl(acl: Dict[Any, Any]) -> BucketACL:
 @dataclass
 class BucketContentDeny:
     enabled: bool = False
+    compliant: Optional[bool] = None
 
 
 def to_bucket_content_deny(bucket_policy_dict: Dict[Any, Any]) -> BucketContentDeny:
@@ -73,6 +75,7 @@ def _has_action(actions: Any, expected: str) -> bool:
 @dataclass
 class BucketCORS:
     enabled: bool = True  # assume CORS is enabled by default so that the audit report never brings false negatives back
+    compliant: Optional[bool] = None
 
 
 def to_bucket_cors(cors_config: Dict[Any, Any]) -> BucketCORS:
@@ -83,6 +86,7 @@ def to_bucket_cors(cors_config: Dict[Any, Any]) -> BucketCORS:
 class BucketDataTagging:
     expiry: str = "unset"
     sensitivity: str = "unset"
+    compliant: Optional[bool] = None
 
 
 def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> BucketDataTagging:
@@ -103,6 +107,7 @@ class BucketEncryption:
     enabled: bool = False
     key_id: Optional[str] = None
     type: Optional[str] = None
+    compliant: Optional[bool] = None
 
 
 def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
@@ -121,6 +126,7 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
 class BucketLifecycle:
     current_version_expiry: Union[int, str] = "unset"
     previous_version_deletion: Union[int, str] = "unset"
+    compliant: Optional[bool] = None
 
 
 def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
@@ -144,6 +150,7 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
 @dataclass
 class BucketLogging:
     enabled: bool = False
+    compliant: Optional[bool] = None
 
 
 def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
@@ -153,6 +160,7 @@ def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
 @dataclass
 class BucketMFADelete:
     enabled: bool = False
+    compliant: Optional[bool] = None
 
 
 def to_bucket_mfa_delete(versioning_dict: Dict[Any, Any]) -> BucketMFADelete:
@@ -162,6 +170,7 @@ def to_bucket_mfa_delete(versioning_dict: Dict[Any, Any]) -> BucketMFADelete:
 @dataclass
 class BucketPublicAccessBlock:
     enabled: bool = False
+    compliant: Optional[bool] = None
 
 
 def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
@@ -172,6 +181,7 @@ def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, 
 @dataclass
 class BucketSecureTransport:
     enabled: bool = False
+    compliant: Optional[bool] = None
 
 
 def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecureTransport:
@@ -186,6 +196,7 @@ def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
 @dataclass
 class BucketVersioning:
     enabled: bool = False
+    compliant: Optional[bool] = None
 
 
 def to_bucket_versioning(versioning_dict: Dict[Any, Any]) -> BucketVersioning:

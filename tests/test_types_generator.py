@@ -154,54 +154,64 @@ def client_error(op_name: str, code: str, msg: str) -> ClientError:
     return ClientError(operation_name=op_name, error_response={"Error": {"Code": code, "Message": msg}})
 
 
-def bucket_acl(all_users_enabled: bool = True, authenticated_users_enabled: bool = True) -> BucketACL:
-    return BucketACL(all_users_enabled=all_users_enabled, authenticated_users_enabled=authenticated_users_enabled)
-
-
-def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
-    return BucketContentDeny(enabled=enabled)
-
-
-def bucket_cors(enabled: bool = True) -> BucketCORS:
-    return BucketCORS(enabled=enabled)
-
-
-def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> BucketDataTagging:
-    return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
-
-
-def bucket_encryption(
-    enabled: bool = False, key_id: Optional[str] = None, type: Optional[str] = None
-) -> BucketEncryption:
-    return BucketEncryption(enabled=enabled, key_id=key_id, type=type)
-
-
-def bucket_lifecycle(
-    current_version_expiry: Union[int, str] = "unset", previous_version_deletion: Union[int, str] = "unset"
-) -> BucketLifecycle:
-    return BucketLifecycle(
-        current_version_expiry=current_version_expiry, previous_version_deletion=previous_version_deletion
+def bucket_acl(
+    all_users_enabled: bool = True, authenticated_users_enabled: bool = True, compliant: Optional[bool] = None
+) -> BucketACL:
+    return BucketACL(
+        all_users_enabled=all_users_enabled,
+        authenticated_users_enabled=authenticated_users_enabled,
+        compliant=compliant,
     )
 
 
-def bucket_logging(enabled: bool = False) -> BucketLogging:
-    return BucketLogging(enabled=enabled)
+def bucket_content_deny(enabled: bool = False, compliant: bool = None) -> BucketContentDeny:
+    return BucketContentDeny(enabled=enabled, compliant=compliant)
 
 
-def bucket_mfa_delete(enabled: bool = False) -> BucketMFADelete:
-    return BucketMFADelete(enabled=enabled)
+def bucket_cors(enabled: bool = True, compliant: bool = None) -> BucketCORS:
+    return BucketCORS(enabled=enabled, compliant=compliant)
 
 
-def bucket_public_access_block(enabled: bool = False) -> BucketPublicAccessBlock:
-    return BucketPublicAccessBlock(enabled=enabled)
+def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset", compliant: bool = None) -> BucketDataTagging:
+    return BucketDataTagging(expiry=expiry, sensitivity=sensitivity, compliant=compliant)
 
 
-def bucket_secure_transport(enabled: bool = False) -> BucketSecureTransport:
-    return BucketSecureTransport(enabled=enabled)
+def bucket_encryption(
+    enabled: bool = False, key_id: Optional[str] = None, type: Optional[str] = None, compliant: bool = None
+) -> BucketEncryption:
+    return BucketEncryption(enabled=enabled, key_id=key_id, type=type, compliant=compliant)
 
 
-def bucket_versioning(enabled: bool = False) -> BucketVersioning:
-    return BucketVersioning(enabled=enabled)
+def bucket_lifecycle(
+    current_version_expiry: Union[int, str] = "unset",
+    previous_version_deletion: Union[int, str] = "unset",
+    compliant: bool = None,
+) -> BucketLifecycle:
+    return BucketLifecycle(
+        current_version_expiry=current_version_expiry,
+        previous_version_deletion=previous_version_deletion,
+        compliant=compliant,
+    )
+
+
+def bucket_logging(enabled: bool = False, compliant: bool = None) -> BucketLogging:
+    return BucketLogging(enabled=enabled, compliant=compliant)
+
+
+def bucket_mfa_delete(enabled: bool = False, compliant: bool = None) -> BucketMFADelete:
+    return BucketMFADelete(enabled=enabled, compliant=compliant)
+
+
+def bucket_public_access_block(enabled: bool = False, compliant: bool = None) -> BucketPublicAccessBlock:
+    return BucketPublicAccessBlock(enabled=enabled, compliant=compliant)
+
+
+def bucket_secure_transport(enabled: bool = False, compliant: bool = None) -> BucketSecureTransport:
+    return BucketSecureTransport(enabled=enabled, compliant=compliant)
+
+
+def bucket_versioning(enabled: bool = False, compliant: bool = None) -> BucketVersioning:
+    return BucketVersioning(enabled=enabled, compliant=compliant)
 
 
 def bucket(
@@ -459,6 +469,7 @@ def key(
     policy: Optional[Dict[str, Any]] = None,
     with_default_tags: bool = False,
     tags: Optional[Sequence[Tag]] = None,
+    compliant: bool = False,
 ) -> Key:
     tags = PLATSEC_SCANNER_TAGS if with_default_tags else tags
     return Key(
@@ -471,6 +482,7 @@ def key(
         rotation_enabled=rotation_enabled,
         policy=policy,
         tags=tags,
+        compliant=compliant,
     )
 
 
