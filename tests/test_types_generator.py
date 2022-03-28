@@ -1,4 +1,3 @@
-from email import message
 from typing import Any, Dict, List, Optional, Sequence, Union
 from unittest.mock import Mock
 
@@ -163,17 +162,40 @@ def bucket_acl(all_users_enabled: bool = True, authenticated_users_enabled: bool
         authenticated_users_enabled=authenticated_users_enabled,
     )
 
+
 def bucket_compliancy(
     content_deny: bool = False,
     acl: bool = False,
     encryption: bool = False,
     logging: bool = False,
+    public_access_block: bool = False,
+    secure_transport: bool = False,
+    versioning: bool = False,
+    mfa_delete: bool = False,
+    kms_key: bool = False,
+    tagging: bool = False,
+    lifecycle: bool = False,
+    cors: bool = False,
 ) -> BucketCompliancy:
     return BucketCompliancy(
-        content_deny=ComplianceCheck(compliant=content_deny,message="bucket should have a resource policy with a default deny action"),
-        acl=ComplianceCheck(compliant=acl,message="bucket should not have ACL set"),
-        encryption=ComplianceCheck(compliant=encryption,message="bucket should be encrypted"),
-        logging=ComplianceCheck(compliant=logging,message="bucket should have logging enabled"),
+        content_deny=ComplianceCheck(
+            compliant=content_deny, message="bucket should have a resource policy with a default deny action"
+        ),
+        acl=ComplianceCheck(compliant=acl, message="bucket should not have ACL set"),
+        encryption=ComplianceCheck(compliant=encryption, message="bucket should be encrypted"),
+        logging=ComplianceCheck(compliant=logging, message="bucket should have logging enabled"),
+        public_access_block=ComplianceCheck(
+            compliant=public_access_block, message="bucket should not allow public access"
+        ),
+        secure_transport=ComplianceCheck(
+            compliant=secure_transport, message="bucket should have a resource policy with secure transport enforced"
+        ),
+        versioning=ComplianceCheck(compliant=versioning, message="bucket should have versioning enabled"),
+        mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),
+        kms_key=ComplianceCheck(compliant=kms_key, message="bucket kms key should have rotation enabled"),
+        tagging=ComplianceCheck(compliant=tagging, message="bucket should tags for expiry and sensitivity"),
+        lifecycle=ComplianceCheck(compliant=lifecycle, message="bucket should have a lifecycle configuration set"),
+        cors=ComplianceCheck(compliant=cors, message="bucket should not have CORS set"),
     )
 
 
@@ -181,12 +203,12 @@ def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
     return BucketContentDeny(enabled=enabled)
 
 
-def bucket_cors(enabled: bool = True, compliant: bool = None) -> BucketCORS:
-    return BucketCORS(enabled=enabled, compliant=compliant)
+def bucket_cors(enabled: bool = True) -> BucketCORS:
+    return BucketCORS(enabled=enabled)
 
 
-def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset", compliant: bool = None) -> BucketDataTagging:
-    return BucketDataTagging(expiry=expiry, sensitivity=sensitivity, compliant=compliant)
+def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> BucketDataTagging:
+    return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
 
 def bucket_encryption(
@@ -198,12 +220,10 @@ def bucket_encryption(
 def bucket_lifecycle(
     current_version_expiry: Union[int, str] = "unset",
     previous_version_deletion: Union[int, str] = "unset",
-    compliant: bool = None,
 ) -> BucketLifecycle:
     return BucketLifecycle(
         current_version_expiry=current_version_expiry,
         previous_version_deletion=previous_version_deletion,
-        compliant=compliant,
     )
 
 
@@ -211,25 +231,25 @@ def bucket_logging(enabled: bool = False) -> BucketLogging:
     return BucketLogging(enabled=enabled)
 
 
-def bucket_mfa_delete(enabled: bool = False, compliant: bool = None) -> BucketMFADelete:
-    return BucketMFADelete(enabled=enabled, compliant=compliant)
+def bucket_mfa_delete(enabled: bool = False) -> BucketMFADelete:
+    return BucketMFADelete(enabled=enabled)
 
 
-def bucket_public_access_block(enabled: bool = False, compliant: bool = None) -> BucketPublicAccessBlock:
-    return BucketPublicAccessBlock(enabled=enabled, compliant=compliant)
+def bucket_public_access_block(enabled: bool = False) -> BucketPublicAccessBlock:
+    return BucketPublicAccessBlock(enabled=enabled)
 
 
-def bucket_secure_transport(enabled: bool = False, compliant: bool = None) -> BucketSecureTransport:
-    return BucketSecureTransport(enabled=enabled, compliant=compliant)
+def bucket_secure_transport(enabled: bool = False) -> BucketSecureTransport:
+    return BucketSecureTransport(enabled=enabled)
 
 
-def bucket_versioning(enabled: bool = False, compliant: bool = None) -> BucketVersioning:
-    return BucketVersioning(enabled=enabled, compliant=compliant)
+def bucket_versioning(enabled: bool = False) -> BucketVersioning:
+    return BucketVersioning(enabled=enabled)
 
 
 def bucket(
     name: str = "a_bucket",
-    compliancy: BucketCompliancy = None,
+    compliancy: Optional[BucketCompliancy] = None,
     acl: Optional[BucketACL] = None,
     content_deny: Optional[BucketContentDeny] = None,
     cors: Optional[BucketCORS] = None,
@@ -484,7 +504,6 @@ def key(
     policy: Optional[Dict[str, Any]] = None,
     with_default_tags: bool = False,
     tags: Optional[Sequence[Tag]] = None,
-    compliant: bool = False,
 ) -> Key:
     tags = PLATSEC_SCANNER_TAGS if with_default_tags else tags
     return Key(
@@ -497,7 +516,6 @@ def key(
         rotation_enabled=rotation_enabled,
         policy=policy,
         tags=tags,
-        compliant=compliant,
     )
 
 

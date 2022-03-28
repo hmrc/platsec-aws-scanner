@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from json import loads
-import string
 from typing import Any, Dict, List, Optional, Union
 from src.data.aws_kms_types import Key
 
@@ -24,17 +23,27 @@ class Bucket:
     versioning: Optional[BucketVersioning] = None
     policy: Optional[Dict[str, Any]] = None
 
+
 @dataclass
 class BucketCompliancy:
     content_deny: ComplianceCheck
     acl: ComplianceCheck
     encryption: ComplianceCheck
     logging: ComplianceCheck
+    public_access_block: ComplianceCheck
+    secure_transport: ComplianceCheck
+    versioning: ComplianceCheck
+    mfa_delete: ComplianceCheck
+    kms_key: ComplianceCheck
+    tagging: ComplianceCheck
+    lifecycle: ComplianceCheck
+    cors: ComplianceCheck
+
 
 @dataclass
 class ComplianceCheck:
-    compliant: bool = False
-    message: string = None
+    compliant: bool
+    message: str
 
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
@@ -87,32 +96,33 @@ def _has_action(actions: Any, expected: str) -> bool:
 @dataclass
 class BucketCORS:
     enabled: bool = True  # assume CORS is enabled by default so that the audit report never brings false negatives back
-    compliant: Optional[bool] = None
 
 
 def to_bucket_cors(cors_config: Dict[Any, Any]) -> BucketCORS:
-    enabled="CORSRules" in cors_config
-    return BucketCORS(enabled=enabled, compliant=not enabled)
+    return BucketCORS(enabled="CORSRules" in cors_config)
 
 
 @dataclass
 class BucketDataTagging:
     expiry: str = "unset"
     sensitivity: str = "unset"
-    compliant: Optional[bool] = None
 
 
 def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> BucketDataTagging:
     tags = {tag["Key"]: tag["Value"] for tag in tag_response["TagSet"]}
     expiry_tag = tags.get("data_expiry")
-    expiry=expiry_tag if expiry_tag in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years", "forever-config-only"] else "unset"
+    expiry = (
+        expiry_tag
+        if expiry_tag
+        in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years", "forever-config-only"]
+        else "unset"
+    )
     sensitivity_tag = tags.get("data_sensitivity")
-    sensitivity=sensitivity_tag if sensitivity_tag in ["low", "high"] else "unset"
-    
+    sensitivity = sensitivity_tag if sensitivity_tag in ["low", "high"] else "unset"
+
     return BucketDataTagging(
         expiry=expiry,
         sensitivity=sensitivity,
-        compliant=expiry != "unset" and sensitivity != "unset",
     )
 
 
@@ -131,7 +141,7 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     return BucketEncryption(
         enabled=True,
         type="aes" if algorithm == "AES256" else "aws" if not key or "alias/aws/" in key else "cmk",
-        key_id=key
+        key_id=key,
     )
 
 
@@ -139,7 +149,6 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
 class BucketLifecycle:
     current_version_expiry: Union[int, str] = "unset"
     previous_version_deletion: Union[int, str] = "unset"
-    compliant: Optional[bool] = None
 
 
 def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
@@ -149,17 +158,16 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
         lambda rule: "NoncurrentVersionExpiration" in rule and "NoncurrentDays" in rule["NoncurrentVersionExpiration"],
         enabled_rules,
     )
-    current_version_expiry=min(
-            map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
+    current_version_expiry = min(
+        map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
     )
-    previous_version_deletion=min(
+    previous_version_deletion = min(
         map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
         default="unset",
     )
     return BucketLifecycle(
         current_version_expiry=current_version_expiry,
         previous_version_deletion=previous_version_deletion,
-        compliant=current_version_expiry != "unset" and previous_version_deletion != "unset",
     )
 
 
@@ -175,35 +183,31 @@ def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
 @dataclass
 class BucketMFADelete:
     enabled: bool = False
-    compliant: Optional[bool] = None
 
 
 def to_bucket_mfa_delete(versioning_dict: Dict[Any, Any]) -> BucketMFADelete:
-    return BucketMFADelete(enabled=versioning_dict.get("MFADelete") == "Enabled", compliant=True)
+    return BucketMFADelete(enabled=versioning_dict.get("MFADelete") == "Enabled")
 
 
 @dataclass
 class BucketPublicAccessBlock:
     enabled: bool = False
-    compliant: Optional[bool] = None
 
 
 def to_bucket_public_access_block(public_access_block_dict: Dict[str, Dict[str, bool]]) -> BucketPublicAccessBlock:
     config = public_access_block_dict["PublicAccessBlockConfiguration"]
-    enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"]
-    return BucketPublicAccessBlock(enabled=enabled, compliant=enabled)
+    return BucketPublicAccessBlock(enabled=config["IgnorePublicAcls"] and config["RestrictPublicBuckets"])
 
 
 @dataclass
 class BucketSecureTransport:
     enabled: bool = False
-    compliant: Optional[bool] = None
 
 
 def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecureTransport:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
-    enabled=bool(list(filter(_has_secure_transport, statements)))
-    return BucketSecureTransport(enabled=enabled, compliant=enabled)
+    enabled = bool(list(filter(_has_secure_transport, statements)))
+    return BucketSecureTransport(enabled=enabled)
 
 
 def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
@@ -213,9 +217,10 @@ def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
 @dataclass
 class BucketVersioning:
     enabled: bool = False
-    compliant: Optional[bool] = None
 
 
 def to_bucket_versioning(versioning_dict: Dict[Any, Any]) -> BucketVersioning:
-    enabled=versioning_dict.get("Status") == "Enabled"
-    return BucketVersioning(enabled=enabled, compliant=enabled)
+    enabled = versioning_dict.get("Status") == "Enabled"
+    return BucketVersioning(
+        enabled=enabled,
+    )

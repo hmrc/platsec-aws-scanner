@@ -31,7 +31,6 @@ class AwsKmsClient:
         key.rotation_enabled = self._get_key_rotation_status(key.id)
         key.policy = self._get_key_policy(key.id)
         key.tags = self._list_resource_tags(key.id)
-        key.compliant = key.rotation_enabled
         return key
 
     def _describe_key(self, key_id: str) -> Key:
