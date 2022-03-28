@@ -8,6 +8,7 @@ from src.data.aws_kms_types import Key
 @dataclass
 class Bucket:
     name: str
+    compliancy: Optional[BucketCompliancy] = None
     acl: Optional[BucketACL] = None
     content_deny: Optional[BucketContentDeny] = None
     cors: Optional[BucketCORS] = None
@@ -21,6 +22,28 @@ class Bucket:
     secure_transport: Optional[BucketSecureTransport] = None
     versioning: Optional[BucketVersioning] = None
     policy: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class BucketCompliancy:
+    content_deny: ComplianceCheck
+    acl: ComplianceCheck
+    encryption: ComplianceCheck
+    logging: ComplianceCheck
+    public_access_block: ComplianceCheck
+    secure_transport: ComplianceCheck
+    versioning: ComplianceCheck
+    mfa_delete: ComplianceCheck
+    kms_key: ComplianceCheck
+    tagging: ComplianceCheck
+    lifecycle: ComplianceCheck
+    cors: ComplianceCheck
+
+
+@dataclass
+class ComplianceCheck:
+    compliant: bool
+    message: str
 
 
 def to_bucket(bucket_dict: Dict[Any, Any]) -> Bucket:
@@ -87,14 +110,19 @@ class BucketDataTagging:
 
 def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> BucketDataTagging:
     tags = {tag["Key"]: tag["Value"] for tag in tag_response["TagSet"]}
-    expiry = tags.get("data_expiry")
-    sensitivity = tags.get("data_sensitivity")
-    return BucketDataTagging(
-        expiry=expiry
-        if expiry
+    expiry_tag = tags.get("data_expiry")
+    expiry = (
+        expiry_tag
+        if expiry_tag
         in ["1-week", "1-month", "90-days", "6-months", "1-year", "7-years", "10-years", "forever-config-only"]
-        else "unset",
-        sensitivity=sensitivity if sensitivity in ["low", "high"] else "unset",
+        else "unset"
+    )
+    sensitivity_tag = tags.get("data_sensitivity")
+    sensitivity = sensitivity_tag if sensitivity_tag in ["low", "high"] else "unset"
+
+    return BucketDataTagging(
+        expiry=expiry,
+        sensitivity=sensitivity,
     )
 
 
@@ -130,14 +158,16 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
         lambda rule: "NoncurrentVersionExpiration" in rule and "NoncurrentDays" in rule["NoncurrentVersionExpiration"],
         enabled_rules,
     )
+    current_version_expiry = min(
+        map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
+    )
+    previous_version_deletion = min(
+        map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
+        default="unset",
+    )
     return BucketLifecycle(
-        current_version_expiry=min(
-            map(lambda rule: int(rule["Expiration"]["Days"]), current_version_rules), default="unset"
-        ),
-        previous_version_deletion=min(
-            map(lambda rule: int(rule["NoncurrentVersionExpiration"]["NoncurrentDays"]), previous_version_rules),
-            default="unset",
-        ),
+        current_version_expiry=current_version_expiry,
+        previous_version_deletion=previous_version_deletion,
     )
 
 
@@ -176,7 +206,8 @@ class BucketSecureTransport:
 
 def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecureTransport:
     statements = loads(str(bucket_policy_dict.get("Policy"))).get("Statement")
-    return BucketSecureTransport(enabled=bool(list(filter(_has_secure_transport, statements))))
+    enabled = bool(list(filter(_has_secure_transport, statements)))
+    return BucketSecureTransport(enabled=enabled)
 
 
 def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
@@ -189,4 +220,7 @@ class BucketVersioning:
 
 
 def to_bucket_versioning(versioning_dict: Dict[Any, Any]) -> BucketVersioning:
-    return BucketVersioning(enabled=versioning_dict.get("Status") == "Enabled")
+    enabled = versioning_dict.get("Status") == "Enabled"
+    return BucketVersioning(
+        enabled=enabled,
+    )

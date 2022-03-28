@@ -203,42 +203,42 @@ def s3_client_expiry_tagging() -> AwsS3Client:
 
 
 def test_get_bucket_data_tagging_expiry_1_week() -> None:
-    tagging = bucket_data_tagging(expiry="1-week")
+    tagging = bucket_data_tagging(expiry="1-week", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-week")
 
 
 def test_get_bucket_data_tagging_expiry_1_month() -> None:
-    tagging = bucket_data_tagging(expiry="1-month")
+    tagging = bucket_data_tagging(expiry="1-month", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-month")
 
 
 def test_get_bucket_data_tagging_expiry_90_days() -> None:
-    tagging = bucket_data_tagging(expiry="90-days")
+    tagging = bucket_data_tagging(expiry="90-days", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-90-days")
 
 
 def test_get_bucket_data_tagging_expiry_6_months() -> None:
-    tagging = bucket_data_tagging(expiry="6-months")
+    tagging = bucket_data_tagging(expiry="6-months", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-6-months")
 
 
 def test_get_bucket_data_tagging_expiry_1_year() -> None:
-    tagging = bucket_data_tagging(expiry="1-year")
+    tagging = bucket_data_tagging(expiry="1-year", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-year")
 
 
 def test_get_bucket_data_tagging_expiry_7_years() -> None:
-    tagging = bucket_data_tagging(expiry="7-years")
+    tagging = bucket_data_tagging(expiry="7-years", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-7-years")
 
 
 def test_get_bucket_data_tagging_expiry_10_years() -> None:
-    tagging = bucket_data_tagging(expiry="10-years")
+    tagging = bucket_data_tagging(expiry="10-years", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-10-years")
 
 
 def test_get_bucket_data_tagging_expiry_forever_config_only() -> None:
-    tagging = bucket_data_tagging(expiry="forever-config-only")
+    tagging = bucket_data_tagging(expiry="forever-config-only", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-forever-config-only")
 
 
@@ -278,12 +278,12 @@ def s3_client_sensitivity_tagging() -> AwsS3Client:
 
 
 def test_get_bucket_data_sensitivity_tagging_low() -> None:
-    tagging = bucket_data_tagging(sensitivity="low")
+    tagging = bucket_data_tagging(expiry="1-week", sensitivity="low")
     assert tagging == s3_client_sensitivity_tagging().get_bucket_data_tagging("low-sensitivity")
 
 
 def test_get_bucket_data_sensitivity_tagging_high() -> None:
-    tagging = bucket_data_tagging(sensitivity="high")
+    tagging = bucket_data_tagging(expiry="1-week", sensitivity="high")
     assert tagging == s3_client_sensitivity_tagging().get_bucket_data_tagging("high-sensitivity")
 
 

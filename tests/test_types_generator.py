@@ -34,6 +34,7 @@ from src.data.aws_organizations_types import Account, OrganizationalUnit
 from src.data.aws_s3_types import (
     Bucket,
     BucketACL,
+    BucketCompliancy,
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
@@ -44,6 +45,7 @@ from src.data.aws_s3_types import (
     BucketPublicAccessBlock,
     BucketSecureTransport,
     BucketVersioning,
+    ComplianceCheck,
 )
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
@@ -155,7 +157,46 @@ def client_error(op_name: str, code: str, msg: str) -> ClientError:
 
 
 def bucket_acl(all_users_enabled: bool = True, authenticated_users_enabled: bool = True) -> BucketACL:
-    return BucketACL(all_users_enabled=all_users_enabled, authenticated_users_enabled=authenticated_users_enabled)
+    return BucketACL(
+        all_users_enabled=all_users_enabled,
+        authenticated_users_enabled=authenticated_users_enabled,
+    )
+
+
+def bucket_compliancy(
+    content_deny: bool = False,
+    acl: bool = False,
+    encryption: bool = False,
+    logging: bool = False,
+    public_access_block: bool = False,
+    secure_transport: bool = False,
+    versioning: bool = False,
+    mfa_delete: bool = False,
+    kms_key: bool = False,
+    tagging: bool = False,
+    lifecycle: bool = False,
+    cors: bool = False,
+) -> BucketCompliancy:
+    return BucketCompliancy(
+        content_deny=ComplianceCheck(
+            compliant=content_deny, message="bucket should have a resource policy with a default deny action"
+        ),
+        acl=ComplianceCheck(compliant=acl, message="bucket should not have ACL set"),
+        encryption=ComplianceCheck(compliant=encryption, message="bucket should be encrypted"),
+        logging=ComplianceCheck(compliant=logging, message="bucket should have logging enabled"),
+        public_access_block=ComplianceCheck(
+            compliant=public_access_block, message="bucket should not allow public access"
+        ),
+        secure_transport=ComplianceCheck(
+            compliant=secure_transport, message="bucket should have a resource policy with secure transport enforced"
+        ),
+        versioning=ComplianceCheck(compliant=versioning, message="bucket should have versioning enabled"),
+        mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),
+        kms_key=ComplianceCheck(compliant=kms_key, message="bucket kms key should have rotation enabled"),
+        tagging=ComplianceCheck(compliant=tagging, message="bucket should tags for expiry and sensitivity"),
+        lifecycle=ComplianceCheck(compliant=lifecycle, message="bucket should have a lifecycle configuration set"),
+        cors=ComplianceCheck(compliant=cors, message="bucket should not have CORS set"),
+    )
 
 
 def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
@@ -177,10 +218,12 @@ def bucket_encryption(
 
 
 def bucket_lifecycle(
-    current_version_expiry: Union[int, str] = "unset", previous_version_deletion: Union[int, str] = "unset"
+    current_version_expiry: Union[int, str] = "unset",
+    previous_version_deletion: Union[int, str] = "unset",
 ) -> BucketLifecycle:
     return BucketLifecycle(
-        current_version_expiry=current_version_expiry, previous_version_deletion=previous_version_deletion
+        current_version_expiry=current_version_expiry,
+        previous_version_deletion=previous_version_deletion,
     )
 
 
@@ -206,6 +249,7 @@ def bucket_versioning(enabled: bool = False) -> BucketVersioning:
 
 def bucket(
     name: str = "a_bucket",
+    compliancy: Optional[BucketCompliancy] = None,
     acl: Optional[BucketACL] = None,
     content_deny: Optional[BucketContentDeny] = None,
     cors: Optional[BucketCORS] = None,
@@ -222,6 +266,7 @@ def bucket(
 ) -> Bucket:
     return Bucket(
         name=name,
+        compliancy=compliancy,
         acl=acl,
         content_deny=content_deny,
         cors=cors,

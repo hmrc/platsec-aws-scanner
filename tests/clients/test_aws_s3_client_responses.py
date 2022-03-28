@@ -101,19 +101,39 @@ def public_access_block(
     }
 
 
-GET_BUCKET_TAGGING_HIGH_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "high"}]}
-GET_BUCKET_TAGGING_LOW_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "low"}]}
+GET_BUCKET_TAGGING_HIGH_SENSITIVITY = {
+    "TagSet": [{"Key": "data_sensitivity", "Value": "high"}, {"Key": "data_expiry", "Value": "1-week"}]
+}
+GET_BUCKET_TAGGING_LOW_SENSITIVITY = {
+    "TagSet": [{"Key": "data_sensitivity", "Value": "low"}, {"Key": "data_expiry", "Value": "1-week"}]
+}
 GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_SENSITIVITY = {"TagSet": [{"Key": "some_tag", "Value": "some_value"}]}
 
-GET_BUCKET_TAGGING_EXPIRY_1_WEEK = {"TagSet": [{"Key": "data_expiry", "Value": "1-week"}]}
-GET_BUCKET_TAGGING_EXPIRY_1_MONTH = {"TagSet": [{"Key": "data_expiry", "Value": "1-month"}]}
-GET_BUCKET_TAGGING_EXPIRY_90_DAYS = {"TagSet": [{"Key": "data_expiry", "Value": "90-days"}]}
-GET_BUCKET_TAGGING_EXPIRY_6_MONTHS = {"TagSet": [{"Key": "data_expiry", "Value": "6-months"}]}
-GET_BUCKET_TAGGING_EXPIRY_1_YEAR = {"TagSet": [{"Key": "data_expiry", "Value": "1-year"}]}
-GET_BUCKET_TAGGING_EXPIRY_7_YEARS = {"TagSet": [{"Key": "data_expiry", "Value": "7-years"}]}
-GET_BUCKET_TAGGING_EXPIRY_10_YEARS = {"TagSet": [{"Key": "data_expiry", "Value": "10-years"}]}
-GET_BUCKET_TAGGING_EXPIRY_FOREVER_CONFIG_ONLY = {"TagSet": [{"Key": "data_expiry", "Value": "forever-config-only"}]}
+GET_BUCKET_TAGGING_EXPIRY_1_WEEK = {
+    "TagSet": [{"Key": "data_expiry", "Value": "1-week"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_1_MONTH = {
+    "TagSet": [{"Key": "data_expiry", "Value": "1-month"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_90_DAYS = {
+    "TagSet": [{"Key": "data_expiry", "Value": "90-days"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_6_MONTHS = {
+    "TagSet": [{"Key": "data_expiry", "Value": "6-months"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_1_YEAR = {
+    "TagSet": [{"Key": "data_expiry", "Value": "1-year"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_7_YEARS = {
+    "TagSet": [{"Key": "data_expiry", "Value": "7-years"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_10_YEARS = {
+    "TagSet": [{"Key": "data_expiry", "Value": "10-years"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
+GET_BUCKET_TAGGING_EXPIRY_FOREVER_CONFIG_ONLY = {
+    "TagSet": [{"Key": "data_expiry", "Value": "forever-config-only"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
 GET_BUCKET_TAGGING_EXPIRY_UNKNOWN = {"TagSet": [{"Key": "data_expiry", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_EXPIRY = {"TagSet": [{"Key": "some_other_tag", "Value": "some_other_value"}]}
 
