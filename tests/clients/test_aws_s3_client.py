@@ -328,22 +328,22 @@ def s3_client_encryption() -> AwsS3Client:
 
 
 def test_get_bucket_encryption_cmk() -> None:
-    encryption = bucket_encryption(enabled=True, key_id="65465465-ab56-423f-ec22-c45623212123", type="cmk", compliant=True)
+    encryption = bucket_encryption(enabled=True, key_id="65465465-ab56-423f-ec22-c45623212123", type="cmk")
     assert encryption == s3_client_encryption().get_bucket_encryption("cmk-bucket")
 
 
 def test_get_bucket_encryption_aws_managed() -> None:
-    encryption = bucket_encryption(enabled=True, key_id="arn:aws:kms:some-region:455687898753:alias/aws/s3", type="aws", compliant=True)
+    encryption = bucket_encryption(enabled=True, key_id="arn:aws:kms:some-region:455687898753:alias/aws/s3", type="aws")
     assert encryption == s3_client_encryption().get_bucket_encryption("managed-bucket")
 
 
 def test_get_bucket_encryption_aes() -> None:
-    encryption = bucket_encryption(enabled=True, key_id="", type="aes", compliant=True)
+    encryption = bucket_encryption(enabled=True, key_id="", type="aes")
     assert encryption == s3_client_encryption().get_bucket_encryption("aes-bucket")
 
 
 def test_get_bucket_encryption_keyless() -> None:
-    encryption = bucket_encryption(enabled=True, type="aws", compliant=True)
+    encryption = bucket_encryption(enabled=True, type="aws")
     assert encryption == s3_client_encryption().get_bucket_encryption("keyless-bucket")
 
 
@@ -372,11 +372,11 @@ def s3_client_logging() -> AwsS3Client:
 
 
 def test_get_bucket_logging_enabled() -> None:
-    assert bucket_logging(enabled=True, compliant=True) == s3_client_logging().get_bucket_logging("logging-enabled-bucket")
+    assert bucket_logging(enabled=True) == s3_client_logging().get_bucket_logging("logging-enabled-bucket")
 
 
 def test_get_bucket_logging_disabled() -> None:
-    assert bucket_logging(enabled=False, compliant=False) == s3_client_logging().get_bucket_logging("logging-disabled-bucket")
+    assert bucket_logging(enabled=False) == s3_client_logging().get_bucket_logging("logging-disabled-bucket")
 
 
 def test_get_bucket_logging_failure(caplog: Any) -> None:

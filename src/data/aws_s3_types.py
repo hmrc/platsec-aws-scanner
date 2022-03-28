@@ -28,6 +28,8 @@ class Bucket:
 class BucketCompliancy:
     content_deny: ComplianceCheck
     acl: ComplianceCheck
+    encryption: ComplianceCheck
+    logging: ComplianceCheck
 
 @dataclass
 class ComplianceCheck:
@@ -119,7 +121,6 @@ class BucketEncryption:
     enabled: bool = False
     key_id: Optional[str] = None
     type: Optional[str] = None
-    compliant: Optional[bool] = None
 
 
 def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
@@ -130,8 +131,7 @@ def to_bucket_encryption(encryption_dict: Dict[Any, Any]) -> BucketEncryption:
     return BucketEncryption(
         enabled=True,
         type="aes" if algorithm == "AES256" else "aws" if not key or "alias/aws/" in key else "cmk",
-        key_id=key,
-        compliant=True,
+        key_id=key
     )
 
 
@@ -166,12 +166,10 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
 @dataclass
 class BucketLogging:
     enabled: bool = False
-    compliant: Optional[bool] = None
 
 
 def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
-    enabled="LoggingEnabled" in logging_dict
-    return BucketLogging(enabled=enabled, compliant=enabled)
+    return BucketLogging(enabled="LoggingEnabled" in logging_dict)
 
 
 @dataclass

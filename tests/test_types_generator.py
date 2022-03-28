@@ -1,3 +1,4 @@
+from email import message
 from typing import Any, Dict, List, Optional, Sequence, Union
 from unittest.mock import Mock
 
@@ -45,6 +46,7 @@ from src.data.aws_s3_types import (
     BucketPublicAccessBlock,
     BucketSecureTransport,
     BucketVersioning,
+    ComplianceCheck,
 )
 from src.data.aws_ssm_types import Parameter
 from src.data.aws_task_report import AwsTaskReport
@@ -161,6 +163,19 @@ def bucket_acl(all_users_enabled: bool = True, authenticated_users_enabled: bool
         authenticated_users_enabled=authenticated_users_enabled,
     )
 
+def bucket_compliancy(
+    content_deny: bool = False,
+    acl: bool = False,
+    encryption: bool = False,
+    logging: bool = False,
+) -> BucketCompliancy:
+    return BucketCompliancy(
+        content_deny=ComplianceCheck(compliant=content_deny,message="bucket should have a resource policy with a default deny action"),
+        acl=ComplianceCheck(compliant=acl,message="bucket should not have ACL set"),
+        encryption=ComplianceCheck(compliant=encryption,message="bucket should be encrypted"),
+        logging=ComplianceCheck(compliant=logging,message="bucket should have logging enabled"),
+    )
+
 
 def bucket_content_deny(enabled: bool = False) -> BucketContentDeny:
     return BucketContentDeny(enabled=enabled)
@@ -175,9 +190,9 @@ def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset", compl
 
 
 def bucket_encryption(
-    enabled: bool = False, key_id: Optional[str] = None, type: Optional[str] = None, compliant: bool = None
+    enabled: bool = False, key_id: Optional[str] = None, type: Optional[str] = None
 ) -> BucketEncryption:
-    return BucketEncryption(enabled=enabled, key_id=key_id, type=type, compliant=compliant)
+    return BucketEncryption(enabled=enabled, key_id=key_id, type=type)
 
 
 def bucket_lifecycle(
@@ -192,8 +207,8 @@ def bucket_lifecycle(
     )
 
 
-def bucket_logging(enabled: bool = False, compliant: bool = None) -> BucketLogging:
-    return BucketLogging(enabled=enabled, compliant=compliant)
+def bucket_logging(enabled: bool = False) -> BucketLogging:
+    return BucketLogging(enabled=enabled)
 
 
 def bucket_mfa_delete(enabled: bool = False, compliant: bool = None) -> BucketMFADelete:

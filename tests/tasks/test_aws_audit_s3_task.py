@@ -2,12 +2,14 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
+from src.data.aws_s3_types import BucketCompliancy, ComplianceCheck
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 
 from tests.test_types_generator import (
     account,
     bucket,
     bucket_acl,
+    bucket_compliancy,
     bucket_content_deny,
     bucket_cors,
     bucket_data_tagging,
@@ -64,9 +66,9 @@ class TestAwsAuditS3Task(TestCase):
             bucket_3: bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366, compliant=False),
         }
         logging_mapping = {
-            bucket_1: bucket_logging(enabled=False, compliant=False),
-            bucket_2: bucket_logging(enabled=False, compliant=False),
-            bucket_3: bucket_logging(enabled=True, compliant=True),
+            bucket_1: bucket_logging(enabled=False),
+            bucket_2: bucket_logging(enabled=False),
+            bucket_3: bucket_logging(enabled=True),
         }
         mfa_delete_mapping = {
             bucket_1: bucket_mfa_delete(enabled=True),
@@ -111,7 +113,7 @@ class TestAwsAuditS3Task(TestCase):
 
         assert task_report["buckets"][0] == bucket(
             name=bucket_1,
-            compliancy=None,
+            compliancy=bucket_compliancy(content_deny=False, acl=False, encryption=True, logging=False),
             acl=bucket_acl(all_users_enabled=True, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=False),
             cors=bucket_cors(enabled=True),
@@ -119,7 +121,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-1"),
             kms_key=key(id="key-1", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14, compliant=True),
-            logging=bucket_logging(enabled=False, compliant=False),
+            logging=bucket_logging(enabled=False),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=False, compliant=False),
             secure_transport=bucket_secure_transport(enabled=True, compliant=True),
@@ -128,6 +130,7 @@ class TestAwsAuditS3Task(TestCase):
 
         assert task_report["buckets"][1] == bucket(
             name=bucket_2,
+            compliancy=bucket_compliancy(content_deny=True, acl=False, encryption=False, logging=False),
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=True),
             content_deny=bucket_content_deny(enabled=True),
             cors=bucket_cors(enabled=False),
@@ -135,7 +138,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=False),
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset", compliant=False),
-            logging=bucket_logging(enabled=False, compliant=False),
+            logging=bucket_logging(enabled=False),
             mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True, compliant=True),
             secure_transport=bucket_secure_transport(enabled=True, compliant=True),
@@ -144,6 +147,7 @@ class TestAwsAuditS3Task(TestCase):
 
         assert task_report["buckets"][2] == bucket(
             name=bucket_3,
+            compliancy=bucket_compliancy(content_deny=True, acl=True, encryption=True, logging=True),
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=True),
             cors=bucket_cors(enabled=False),
@@ -151,7 +155,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="aws", key_id="key-3"),
             kms_key=key(id="key-3", rotation_enabled=False, compliant=False),
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366, compliant=False),
-            logging=bucket_logging(enabled=True, compliant=True),
+            logging=bucket_logging(enabled=True),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=True, compliant=True),
             secure_transport=bucket_secure_transport(enabled=False, compliant=False),

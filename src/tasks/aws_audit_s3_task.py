@@ -21,7 +21,7 @@ class AwsAuditS3Task(AwsS3Task):
 
     def _is_acl_compliant(self, bucket: Bucket) -> ComplianceCheck:
         return ComplianceCheck(
-            compliant=(not bucket.acl.all_users_enabled and bucket.acl.authenticated_users_enabled),
+            compliant=(not bucket.acl.all_users_enabled and not bucket.acl.authenticated_users_enabled),
             message="bucket should not have ACL set"
         )
 
@@ -31,17 +31,28 @@ class AwsAuditS3Task(AwsS3Task):
             message="bucket should have a resource policy with a default deny action"
         )
 
+    def _is_encryption_compliant(self, bucket: Bucket) -> ComplianceCheck:
+        return ComplianceCheck(
+            compliant=bucket.encryption.enabled,
+            message="bucket should be encrypted"
+        )
+
+    def _is_logging_compliant(self, bucket: Bucket) -> ComplianceCheck:
+        return ComplianceCheck(
+            compliant=bucket.logging.enabled,
+            message="bucket should have logging enabled"
+        )
+
 
     def _set_compliance(self, bucket: Bucket) -> Bucket:
         bucket.compliancy = BucketCompliancy(
             content_deny=self._is_content_deny_compliant(bucket),
             acl=self._is_acl_compliant(bucket),
-            
+            encryption=self._is_encryption_compliant(bucket),
+            logging=self._is_logging_compliant(bucket),
         )
         # we want these enabled
-        """ if bucket.content_deny:
-            bucket.content_deny.compliant = bucket.content_deny.enabled
-        """
+      
         """  if bucket.encryption:
             bucket.encryption.compliant = bucket.encryption.enabled """
 
@@ -75,11 +86,6 @@ class AwsAuditS3Task(AwsS3Task):
                 and bucket.lifecycle.previous_version_deletion != "unset"
             )
  """
-        # we want these disabled
-        """ if bucket.acl:
-            bucket.acl.compliant = (
-                bucket.acl.authenticated_users_enabled is False and bucket.acl.all_users_enabled is False
-            ) """
 
         """ if bucket.cors:
             bucket.cors.compliant = not bucket.cors.enabled """
