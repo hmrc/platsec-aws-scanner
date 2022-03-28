@@ -17,7 +17,6 @@ class Key:
     rotation_enabled: bool = False
     policy: Optional[Dict[str, Any]] = None
     tags: Optional[Sequence[Tag]] = None
-    compliant: bool = False
 
 
 def to_key(key: Dict[Any, Any]) -> Key:
