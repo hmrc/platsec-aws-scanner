@@ -46,3 +46,24 @@ def to_flow_log(flow_log: Dict[Any, Any]) -> FlowLog:
         log_format=flow_log["LogFormat"],
         deliver_log_role_arn=flow_log.get("DeliverLogsPermissionArn"),
     )
+
+
+@dataclass
+class VpcPeeringConnection:
+    id: str
+    accepter_owner_id: str
+    accepter_vpc_id: str
+    requester_owner_id: str
+    requester_vpc_id: str
+    status: str
+
+
+def to_vpc_peering_connection(pcx: Dict[str, Any]) -> VpcPeeringConnection:
+    return VpcPeeringConnection(
+        id=pcx["VpcPeeringConnectionId"],
+        accepter_owner_id=pcx["AccepterVpcInfo"]["OwnerId"],
+        accepter_vpc_id=pcx["AccepterVpcInfo"]["VpcId"],
+        requester_owner_id=pcx["RequesterVpcInfo"]["OwnerId"],
+        requester_vpc_id=pcx["RequesterVpcInfo"]["VpcId"],
+        status=pcx["Status"]["Code"],
+    )

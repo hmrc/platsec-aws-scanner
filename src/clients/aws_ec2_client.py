@@ -7,7 +7,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
-from src.data.aws_ec2_types import FlowLog, Vpc, to_flow_log, to_vpc
+from src.data.aws_ec2_types import FlowLog, Vpc, VpcPeeringConnection, to_flow_log, to_vpc, to_vpc_peering_connection
 from src.data.aws_scanner_exceptions import EC2Exception
 
 
@@ -70,3 +70,10 @@ class AwsEC2Client:
         errors = resp["Unsuccessful"]
         if errors:
             raise EC2Exception(f"unable to perform {operation}: {errors}")
+
+    def describe_vpc_peering_connections(self) -> List[VpcPeeringConnection]:
+        try:
+            paginator = self._ec2.get_paginator("describe_vpc_peering_connections")
+            return [to_vpc_peering_connection(pcx) for p in paginator.paginate() for pcx in p["VpcPeeringConnections"]]
+        except (BotoCoreError, ClientError) as err:
+            raise EC2Exception(f"unable to describe VPC peering connections: {err}")

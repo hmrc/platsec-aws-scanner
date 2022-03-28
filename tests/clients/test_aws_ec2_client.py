@@ -137,3 +137,16 @@ def test_delete_flow_logs_not_found() -> None:
 def test_delete_flow_logs_failure() -> None:
     with pytest.raises(EC2Exception, match="bad-fl"):
         ec2_client().delete_flow_logs(flow_log_id="bad-fl")
+
+
+def test_describe_vpc_peering_connections() -> None:
+    paginator_mock = Mock(paginate=Mock(side_effect=lambda **k: iter(responses.DESCRIBE_VPC_PEERING_CONNECTIONS_PAGES)))
+    boto_mock = Mock(get_paginator=Mock(return_value=paginator_mock))
+    assert responses.EXPECTED_VPC_PEERING_CONNECTIONS == AwsEC2Client(boto_mock).describe_vpc_peering_connections()
+    boto_mock.get_paginator.assert_called_once_with("describe_vpc_peering_connections")
+
+
+def test_describe_vpc_peering_connections_failure() -> None:
+    boto_mock = Mock(get_paginator=Mock(side_effect=client_error("GetPaginator", "AccessDenied", "boom!")))
+    with pytest.raises(EC2Exception, match="boom"):
+        AwsEC2Client(boto_mock).describe_vpc_peering_connections()

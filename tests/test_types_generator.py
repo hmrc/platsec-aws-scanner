@@ -25,7 +25,7 @@ from src.data.aws_compliance_actions import (
     TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
 )
-from src.data.aws_ec2_types import FlowLog, Vpc
+from src.data.aws_ec2_types import FlowLog, Vpc, VpcPeeringConnection
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
 from src.data.aws_cloudtrail_types import DataResource, EventSelector, Trail
@@ -601,3 +601,21 @@ def audit_central_logging_task() -> AwsAuditCentralLoggingTask:
 
 def create_flow_logs_table_task(partition: AwsAthenaDataPartition = partition()) -> AwsCreateFlowLogsTableTask:
     return AwsCreateFlowLogsTableTask(partition=partition)
+
+
+def vpc_peering_connection(
+    id: str = "pcx-1234",
+    accepter_owner_id: str = "1234",
+    accepter_vpc_id: str = "vpc-1",
+    requester_owner_id: str = "5678",
+    requester_vpc_id: str = "vpc-2",
+    status: str = "active",
+) -> VpcPeeringConnection:
+    return VpcPeeringConnection(
+        id=id,
+        accepter_owner_id=accepter_owner_id,
+        accepter_vpc_id=accepter_vpc_id,
+        requester_owner_id=requester_owner_id,
+        requester_vpc_id=requester_vpc_id,
+        status=status,
+    )
