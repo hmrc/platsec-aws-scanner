@@ -9,7 +9,7 @@ from src.json_serializer import to_json
 
 class TestJsonSerializer(TestCase):
     def test_serialize_exclude_callable_and_none_properties(self) -> None:
-        self.assertEqual('{"greetings": "Bonjour!"}', to_json(TestJsonSerializer.TestObject()))
+        self.assertEqual('{"greetings": "Bonjour!", "boolcheck": false}', to_json(TestJsonSerializer.TestObject()))
 
     @dataclass
     class TestObject:
@@ -17,6 +17,7 @@ class TestJsonSerializer(TestCase):
         greetings: str = "Bonjour!"
         empty: Optional[str] = None
         func: Callable[[], str] = lambda: "hello"
+        boolcheck: bool = False
 
     def test_serialize_datetime(self) -> None:
         self.assertEqual(
