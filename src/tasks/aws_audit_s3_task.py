@@ -79,7 +79,7 @@ class AwsAuditS3Task(AwsS3Task):
             compliant = bucket.data_tagging.expiry != "unset" and bucket.data_tagging.sensitivity != "unset"
         return ComplianceCheck(
             compliant=compliant,
-            message="bucket should tags for expiry and sensitivity",
+            message="bucket should have tags for expiry and sensitivity",
         )
 
     def _is_lifecycle_compliant(self, bucket: Bucket) -> ComplianceCheck:
