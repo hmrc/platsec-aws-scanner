@@ -610,6 +610,8 @@ def vpc_peering_connection(
     requester_owner_id: str = "5678",
     requester_vpc_id: str = "vpc-2",
     status: str = "active",
+    accepter_account: Optional[Account] = None,
+    requester_account: Optional[Account] = None,
 ) -> VpcPeeringConnection:
     return VpcPeeringConnection(
         id=id,
@@ -618,4 +620,6 @@ def vpc_peering_connection(
         requester_owner_id=requester_owner_id,
         requester_vpc_id=requester_vpc_id,
         status=status,
+        accepter_account=accepter_account,
+        requester_account=requester_account,
     )

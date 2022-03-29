@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from src.data.aws_iam_types import Role
 from src.data.aws_logs_types import LogGroup
+from src.data.aws_organizations_types import Account
 
 
 @dataclass
@@ -56,6 +57,8 @@ class VpcPeeringConnection:
     requester_owner_id: str
     requester_vpc_id: str
     status: str
+    accepter_account: Optional[Account] = None
+    requester_account: Optional[Account] = None
 
 
 def to_vpc_peering_connection(pcx: Dict[str, Any]) -> VpcPeeringConnection:
