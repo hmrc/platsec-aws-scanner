@@ -7,7 +7,7 @@ def to_json(obj: Any) -> str:
     return dumps(
         obj,
         default=lambda o: {
-            k: _datetime_to_string(v) for k, v in vars(o).items() if _is_public(k) and v and not callable(v)
+            k: _datetime_to_string(v) for k, v in vars(o).items() if _is_public(k) and v is not None and not callable(v)
         },
     )
 
