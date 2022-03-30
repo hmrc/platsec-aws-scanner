@@ -8,6 +8,7 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
+from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
     CreateVpcLogGroupAction,
@@ -27,12 +28,15 @@ from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 
 
 class AwsVpcClient:
-    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
+    def __init__(
+        self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient, org: AwsOrganizationsClient
+    ):
         self._logger = getLogger(self.__class__.__name__)
         self.ec2 = ec2
         self.iam = iam
         self.logs = logs
         self.kms = kms
+        self.org = org
         self.config = Config()
 
     def list_vpcs(self) -> Sequence[Vpc]:

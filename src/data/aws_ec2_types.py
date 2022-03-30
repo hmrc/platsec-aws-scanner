@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from src.data.aws_iam_types import Role
 from src.data.aws_logs_types import LogGroup
+from src.data.aws_organizations_types import Account
 
 
 @dataclass
@@ -45,4 +46,27 @@ def to_flow_log(flow_log: Dict[Any, Any]) -> FlowLog:
         traffic_type=flow_log["TrafficType"],
         log_format=flow_log["LogFormat"],
         deliver_log_role_arn=flow_log.get("DeliverLogsPermissionArn"),
+    )
+
+
+@dataclass
+class VpcPeeringConnection:
+    id: str
+    accepter_owner_id: str
+    accepter_vpc_id: str
+    requester_owner_id: str
+    requester_vpc_id: str
+    status: str
+    accepter_account: Optional[Account] = None
+    requester_account: Optional[Account] = None
+
+
+def to_vpc_peering_connection(pcx: Dict[str, Any]) -> VpcPeeringConnection:
+    return VpcPeeringConnection(
+        id=pcx["VpcPeeringConnectionId"],
+        accepter_owner_id=pcx["AccepterVpcInfo"]["OwnerId"],
+        accepter_vpc_id=pcx["AccepterVpcInfo"]["VpcId"],
+        requester_owner_id=pcx["RequesterVpcInfo"]["OwnerId"],
+        requester_vpc_id=pcx["RequesterVpcInfo"]["VpcId"],
+        status=pcx["Status"]["Code"],
     )

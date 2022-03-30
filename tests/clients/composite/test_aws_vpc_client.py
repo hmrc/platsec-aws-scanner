@@ -12,6 +12,7 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
+from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
@@ -392,6 +393,7 @@ class AwsVpcClientBuilder(TestCase):
         self.iam = Mock(spec=AwsIamClient, wraps=AwsIamClient(Mock()))
         self.logs = Mock(spec=AwsLogsClient, wraps=AwsLogsClient(Mock()))
         self.kms = Mock(spec=AwsKmsClient, wraps=AwsKmsClient(Mock()))
+        self.org = Mock(spec=AwsOrganizationsClient, wraps=AwsOrganizationsClient(Mock()))
 
     def with_default_vpc(self) -> AwsVpcClientBuilder:
         vpcs = [
@@ -448,7 +450,7 @@ class AwsVpcClientBuilder(TestCase):
         return self
 
     def build(self) -> AwsVpcClient:
-        return AwsVpcClient(self.ec2, self.iam, self.logs, self.kms)
+        return AwsVpcClient(self.ec2, self.iam, self.logs, self.kms, self.org)
 
     def with_create_role(self, expected_role: Role) -> AwsVpcClientBuilder:
         def create_role(name: str, assume_policy: Dict[str, Any]) -> Role:

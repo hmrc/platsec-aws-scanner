@@ -1,7 +1,7 @@
 from typing import Dict, Any, Sequence
 
 from src.data.aws_ec2_types import FlowLog
-from tests.test_types_generator import flow_log
+from tests.test_types_generator import flow_log, vpc_peering_connection
 
 EMPTY_FLOW_LOGS: Dict[str, Any] = {"FlowLogs": []}
 FLOW_LOGS: Dict[str, Any] = {
@@ -78,3 +78,58 @@ CREATE_FLOW_LOGS_FAILURE: Dict[str, Any] = {
         },
     ]
 }
+
+DESCRIBE_VPC_PEERING_CONNECTIONS_PAGES = [
+    {
+        "VpcPeeringConnections": [
+            {
+                "AccepterVpcInfo": {"OwnerId": "222333444555", "VpcId": "vpc-a1b2c3d4"},
+                "RequesterVpcInfo": {"OwnerId": "121212121212", "VpcId": "vpc-48d45821"},
+                "Status": {"Code": "active", "Message": "Active"},
+                "VpcPeeringConnectionId": "pcx-1a1a1a1a",
+            },
+            {
+                "AccepterVpcInfo": {"OwnerId": "787878787878", "VpcId": "vpc-f1f1f1f1f1f1f1f1f"},
+                "RequesterVpcInfo": {"OwnerId": "33566455788", "VpcId": "vpc-c9d8e7f4"},
+                "Status": {"Code": "active", "Message": "Active"},
+                "VpcPeeringConnectionId": "pcx-2b2b2b2b",
+            },
+        ]
+    },
+    {
+        "VpcPeeringConnections": [
+            {
+                "AccepterVpcInfo": {"OwnerId": "999888777666", "VpcId": "vpc-c3c3c3c3"},
+                "RequesterVpcInfo": {"OwnerId": "466455466455", "VpcId": "vpc-d4d4d4d4"},
+                "Status": {"Code": "expired", "Message": "Expired"},
+                "VpcPeeringConnectionId": "pcx-d8d8d8d8",
+            },
+        ]
+    },
+]
+EXPECTED_VPC_PEERING_CONNECTIONS = [
+    vpc_peering_connection(
+        id="pcx-1a1a1a1a",
+        accepter_owner_id="222333444555",
+        accepter_vpc_id="vpc-a1b2c3d4",
+        requester_owner_id="121212121212",
+        requester_vpc_id="vpc-48d45821",
+        status="active",
+    ),
+    vpc_peering_connection(
+        id="pcx-2b2b2b2b",
+        accepter_owner_id="787878787878",
+        accepter_vpc_id="vpc-f1f1f1f1f1f1f1f1f",
+        requester_owner_id="33566455788",
+        requester_vpc_id="vpc-c9d8e7f4",
+        status="active",
+    ),
+    vpc_peering_connection(
+        id="pcx-d8d8d8d8",
+        accepter_owner_id="999888777666",
+        accepter_vpc_id="vpc-c3c3c3c3",
+        requester_owner_id="466455466455",
+        requester_vpc_id="vpc-d4d4d4d4",
+        status="expired",
+    ),
+]

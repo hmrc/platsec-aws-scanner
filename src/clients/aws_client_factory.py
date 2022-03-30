@@ -122,6 +122,7 @@ class AwsClientFactory:
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account),
             kms=self.get_kms_client(account),
+            org=self.get_organizations_client(),
         )
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:
