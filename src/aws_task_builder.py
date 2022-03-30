@@ -15,6 +15,7 @@ from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
+from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_create_flow_logs_table_task import AwsCreateFlowLogsTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
@@ -72,6 +73,7 @@ class AwsTaskBuilder:
             Cmd.create_flow_logs_table: lambda: self._standalone_task(
                 AwsCreateFlowLogsTableTask, partition=self._args.partition
             ),
+            Cmd.audit_vpc_peering: lambda: self._tasks(AwsAuditVpcPeeringTask),
         }
         try:
             return task_mapping[self._args.task]()

@@ -56,6 +56,7 @@ from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
+from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
 from src.tasks.aws_create_flow_logs_table_task import AwsCreateFlowLogsTableTask
 from src.tasks.aws_organizations_task import AwsOrganizationsTask
@@ -623,3 +624,7 @@ def vpc_peering_connection(
         accepter_account=accepter_account,
         requester_account=requester_account,
     )
+
+
+def audit_vpc_peering_task(account: Account = account()) -> AwsAuditVpcPeeringTask:
+    return AwsAuditVpcPeeringTask(account)

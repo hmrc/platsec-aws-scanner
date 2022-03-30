@@ -1,8 +1,6 @@
 from unittest.mock import Mock
 
-from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
-
-from tests.test_types_generator import account, vpc_peering_connection
+from tests.test_types_generator import account, audit_vpc_peering_task, vpc_peering_connection
 
 
 def test_run_task() -> None:
@@ -32,7 +30,7 @@ def test_run_task() -> None:
         org=Mock(get_all_accounts=Mock(return_value=[acc_a, acc_b])),
     )
 
-    outcome = AwsAuditVpcPeeringTask(account())._run_task(vpc_client)
+    outcome = audit_vpc_peering_task()._run_task(vpc_client)
 
     assert outcome == {"vpc_peering_connections": peering_connections}
     assert peering_connections[0].accepter_account == acc_a
