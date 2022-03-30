@@ -125,7 +125,7 @@ class TestAwsAuditS3Task(TestCase):
         assert task_report["buckets"][0] == bucket(
             name=bucket_1,
             compliancy=bucket_compliancy(
-                content_deny=False,
+                content_deny=True,
                 acl=False,
                 encryption=True,
                 logging=False,

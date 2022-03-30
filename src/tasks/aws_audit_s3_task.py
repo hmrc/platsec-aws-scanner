@@ -28,8 +28,12 @@ class AwsAuditS3Task(AwsS3Task):
         )
 
     def _is_content_deny_compliant(self, bucket: Bucket) -> ComplianceCheck:
+        compliant = bucket.content_deny.enabled if bucket.content_deny else False
+        if bucket.data_tagging:
+            if bucket.data_tagging.sensitivity == "low":
+                compliant = True
         return ComplianceCheck(
-            compliant=bucket.content_deny.enabled if bucket.content_deny else False,
+            compliant=compliant,
             message="bucket should have a resource policy with a default deny action",
         )
 
