@@ -89,9 +89,12 @@ class AwsAuditS3Task(AwsS3Task):
                 bucket.lifecycle.current_version_expiry != "unset"
                 and bucket.lifecycle.previous_version_deletion != "unset"
             )
+        if bucket.data_tagging:
+            if bucket.data_tagging.expiry == "forever-config-only":
+                compliant = True
         return ComplianceCheck(
             compliant=compliant,
-            message="bucket should have a lifecycle configuration set",
+            message="bucket should have a lifecycle configuration set for current/previous version",
         )
 
     def _is_cors_compliant(self, bucket: Bucket) -> ComplianceCheck:

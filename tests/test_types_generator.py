@@ -194,7 +194,9 @@ def bucket_compliancy(
         mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),
         kms_key=ComplianceCheck(compliant=kms_key, message="bucket kms key should have rotation enabled"),
         tagging=ComplianceCheck(compliant=tagging, message="bucket should have tags for expiry and sensitivity"),
-        lifecycle=ComplianceCheck(compliant=lifecycle, message="bucket should have a lifecycle configuration set"),
+        lifecycle=ComplianceCheck(
+            compliant=lifecycle, message="bucket should have a lifecycle configuration set for current/previous version"
+        ),
         cors=ComplianceCheck(compliant=cors, message="bucket should not have CORS set"),
     )
 
