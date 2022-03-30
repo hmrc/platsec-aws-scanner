@@ -63,7 +63,6 @@ from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
-from src.tasks.aws_vpc_task import AwsVpcTask
 
 
 def partition(
@@ -92,8 +91,10 @@ def athena_task(
     return AwsAthenaTask(description=description, account=account, partition=partition)
 
 
-def vpc_task(account: Account = account(), description: str = "vpc_task", enforce: bool = True) -> AwsVpcTask:
-    return AwsVpcTask(description=description, account=account, enforce=enforce)
+def vpc_flow_logs_task(
+    account: Account = account(), enforce: bool = True, with_subscription_filter: bool = False
+) -> AwsAuditVPCFlowLogsTask:
+    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
 
 
 def s3_task(account: Account = account(), description: str = "s3_task") -> AwsS3Task:
@@ -611,8 +612,8 @@ def vpc_peering_connection(
     requester_owner_id: str = "5678",
     requester_vpc_id: str = "vpc-2",
     status: str = "active",
-    accepter_account: Optional[Account] = None,
-    requester_account: Optional[Account] = None,
+    accepter: Optional[Account] = None,
+    requester: Optional[Account] = None,
 ) -> VpcPeeringConnection:
     return VpcPeeringConnection(
         id=id,
@@ -621,8 +622,8 @@ def vpc_peering_connection(
         requester_owner_id=requester_owner_id,
         requester_vpc_id=requester_vpc_id,
         status=status,
-        accepter_account=accepter_account,
-        requester_account=requester_account,
+        accepter=accepter,
+        requester=requester,
     )
 
 

@@ -13,12 +13,13 @@ from tests.test_types_generator import (
     audit_central_logging_task,
     audit_cloudtrail_task,
     audit_iam_task,
+    audit_vpc_peering_task,
     cost_explorer_task,
     organizations_task,
     s3_task,
     ssm_task,
     task_report,
-    vpc_task,
+    vpc_flow_logs_task,
 )
 
 
@@ -73,10 +74,17 @@ class TestAwsTaskRunner(TestCase):
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 
-    def test_run_vpc_task(self) -> None:
+    def test_run_vpc_flow_logs_task(self) -> None:
         client = Mock()
         client_factory = Mock(get_vpc_client=Mock(side_effect=lambda acc: client if acc == account() else None))
-        task = vpc_task()
+        task = vpc_flow_logs_task()
+        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
+    def test_run_vpc_peering_task(self) -> None:
+        client = Mock()
+        client_factory = Mock(get_vpc_peering_client=Mock(side_effect=lambda acc: client if acc == account() else None))
+        task = audit_vpc_peering_task()
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 

@@ -207,6 +207,9 @@ class AwsScannerConfig:
     def user_name(self) -> str:
         return self._get_config("user", "name")
 
+    def vpc_peering_role(self) -> str:
+        return self._get_config("vpc_peering", "role")
+
     def _get_config(self, section: str, key: str) -> str:
         try:
             return os.environ.get(f"AWS_SCANNER_{section.upper()}_{key.upper()}") or self._config[section][key]
