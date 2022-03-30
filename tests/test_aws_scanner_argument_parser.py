@@ -297,6 +297,20 @@ def test_parse_cli_args_for_create_flow_logs_table_with_unspecified_partition_ta
         assert args.partition.day is None
 
 
+def test_parse_cli_args_for_audit_vpc_peering() -> None:
+    with patch("sys.argv", ". audit_vpc_peering -a 8,9 -t 799788".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". audit_vpc_peering --accounts 8,9 --token 799788".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "audit_vpc_peering"
+        assert args.accounts == ["8", "9"]
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "799788"
+
+
 def test_default_log_level_is_warning() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
         args = AwsScannerArgumentParser().parse_cli_args()
