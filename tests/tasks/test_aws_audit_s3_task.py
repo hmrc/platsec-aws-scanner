@@ -25,69 +25,81 @@ from tests.test_types_generator import (
 
 class TestAwsAuditS3Task(TestCase):
     def test_run_task(self) -> None:
-        bucket_1, bucket_2, bucket_3 = "bucket-1", "bucket-2", "another_bucket"
-        buckets = [bucket(bucket_1), bucket(bucket_2), bucket(bucket_3)]
-        key_1, key_2, key_3 = "key-1", "key-2", "key-3"
+        bucket_1, bucket_2, bucket_3, bucket_4 = "bucket-1", "bucket-2", "another_bucket", "forever-config-bucket"
+        buckets = [bucket(bucket_1), bucket(bucket_2), bucket(bucket_3), bucket(bucket_4)]
+        key_1, key_2, key_3, key_4 = "key-1", "key-2", "key-3", "key-4"
 
         acl_mapping = {
             bucket_1: bucket_acl(all_users_enabled=True, authenticated_users_enabled=False),
             bucket_2: bucket_acl(all_users_enabled=False, authenticated_users_enabled=True),
             bucket_3: bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
+            bucket_4: bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
         }
         content_deny_mapping = {
             bucket_1: bucket_content_deny(enabled=False),
             bucket_2: bucket_content_deny(enabled=True),
             bucket_3: bucket_content_deny(enabled=True),
+            bucket_4: bucket_content_deny(enabled=True),
         }
         cors_mapping = {
             bucket_1: bucket_cors(enabled=True),
             bucket_2: bucket_cors(enabled=False),
             bucket_3: bucket_cors(enabled=False),
+            bucket_4: bucket_cors(enabled=False),
         }
         data_tagging = {
             bucket_1: bucket_data_tagging(expiry="6-months", sensitivity="low"),
             bucket_2: bucket_data_tagging(expiry="1-month", sensitivity="high"),
             bucket_3: bucket_data_tagging(expiry="1-week", sensitivity="high"),
+            bucket_4: bucket_data_tagging(expiry="forever-config-only", sensitivity="low"),
         }
         encryption_mapping = {
             bucket_1: bucket_encryption(enabled=True, type="cmk", key_id="key-1"),
             bucket_2: bucket_encryption(enabled=False),
             bucket_3: bucket_encryption(enabled=True, type="aes", key_id=None),
+            bucket_4: bucket_encryption(enabled=True, type="cmk", key_id="key-4"),
         }
         kms_key_mapping = {
             key_1: key(id="key-1", rotation_enabled=True),
             key_2: None,
             key_3: None,
+            key_4: key(id="key-4", rotation_enabled=True),
         }
         lifecycle_mapping = {
             bucket_1: bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
             bucket_2: bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
             bucket_3: bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
+            bucket_4: bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset"),
         }
         logging_mapping = {
             bucket_1: bucket_logging(enabled=False),
             bucket_2: bucket_logging(enabled=False),
             bucket_3: bucket_logging(enabled=True),
+            bucket_4: bucket_logging(enabled=True),
         }
         mfa_delete_mapping = {
             bucket_1: bucket_mfa_delete(enabled=True),
             bucket_2: bucket_mfa_delete(enabled=False),  # We don't check for mfa-delete so default true
             bucket_3: bucket_mfa_delete(enabled=True),
+            bucket_4: bucket_mfa_delete(enabled=False),
         }
         public_access_block_mapping = {
             bucket_1: bucket_public_access_block(enabled=False),
             bucket_2: bucket_public_access_block(enabled=True),
             bucket_3: bucket_public_access_block(enabled=True),
+            bucket_4: bucket_public_access_block(enabled=True),
         }
         secure_transport_mapping = {
             bucket_1: bucket_secure_transport(enabled=True),
             bucket_2: bucket_secure_transport(enabled=True),
             bucket_3: bucket_secure_transport(enabled=False),
+            bucket_4: bucket_secure_transport(enabled=True),
         }
         versioning_mapping = {
             bucket_1: bucket_versioning(enabled=True),
             bucket_2: bucket_versioning(enabled=True),
             bucket_3: bucket_versioning(enabled=False),
+            bucket_4: bucket_versioning(enabled=False),
         }
 
         s3_client = Mock(
@@ -197,5 +209,35 @@ class TestAwsAuditS3Task(TestCase):
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=True),
             secure_transport=bucket_secure_transport(enabled=False),
+            versioning=bucket_versioning(enabled=False),
+        )
+
+        assert task_report["buckets"][3] == bucket(
+            name=bucket_4,
+            compliancy=bucket_compliancy(
+                content_deny=True,
+                acl=True,
+                encryption=True,
+                logging=True,
+                public_access_block=True,
+                secure_transport=True,
+                versioning=False,
+                mfa_delete=True,
+                kms_key=True,
+                tagging=True,
+                lifecycle=True,
+                cors=True,
+            ),
+            acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
+            content_deny=bucket_content_deny(enabled=True),
+            cors=bucket_cors(enabled=False),
+            data_tagging=bucket_data_tagging(expiry="forever-config-only", sensitivity="low"),
+            encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-4"),
+            kms_key=key(id="key-4", rotation_enabled=True),
+            lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset"),
+            logging=bucket_logging(enabled=True),
+            mfa_delete=bucket_mfa_delete(enabled=False),
+            public_access_block=bucket_public_access_block(enabled=True),
+            secure_transport=bucket_secure_transport(enabled=True),
             versioning=bucket_versioning(enabled=False),
         )
