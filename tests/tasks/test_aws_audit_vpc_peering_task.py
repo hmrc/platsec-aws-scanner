@@ -27,7 +27,9 @@ def test_run_task() -> None:
 
     vpc_client = Mock(
         ec2=Mock(describe_vpc_peering_connections=Mock(return_value=peering_connections)),
-        org=Mock(get_all_accounts=Mock(return_value=[acc_a, acc_b])),
+        org=Mock(
+            find_account_by_id=Mock(side_effect=lambda id: {acc_a.identifier: acc_a, acc_b.identifier: acc_b}.get(id))
+        ),
     )
 
     outcome = audit_vpc_peering_task()._run_task(vpc_client)
