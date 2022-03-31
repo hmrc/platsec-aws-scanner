@@ -21,6 +21,7 @@ from src.clients.aws_s3_client import AwsS3Client
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
+from src.clients.composite.aws_vpc_peering_client import AwsVpcPeeringClient
 from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
 from src.data import SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
@@ -89,11 +90,11 @@ class AwsClientFactory:
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
 
-    def get_ec2_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("ec2", account, self._config.ec2_role())
+    def get_ec2_boto_client(self, account: Account, role: str) -> BaseClient:
+        return self._get_client("ec2", account, role)
 
-    def get_ec2_client(self, account: Account) -> AwsEC2Client:
-        return AwsEC2Client(self.get_ec2_boto_client(account))
+    def get_ec2_client(self, account: Account, role: str) -> AwsEC2Client:
+        return AwsEC2Client(self.get_ec2_boto_client(account, role))
 
     def get_organizations_client(self) -> AwsOrganizationsClient:
         return AwsOrganizationsClient(self.get_organizations_boto_client())
@@ -118,11 +119,15 @@ class AwsClientFactory:
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
-            ec2=self.get_ec2_client(account),
+            ec2=self.get_ec2_client(account, self._config.ec2_role()),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account),
             kms=self.get_kms_client(account),
-            org=self.get_organizations_client(),
+        )
+
+    def get_vpc_peering_client(self, account: Account) -> AwsVpcPeeringClient:
+        return AwsVpcPeeringClient(
+            ec2=self.get_ec2_client(account, self._config.vpc_peering_role()), org=self.get_organizations_client()
         )
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:

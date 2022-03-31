@@ -17,6 +17,7 @@ from src.clients.aws_s3_client import AwsS3Client
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
+from src.clients.composite.aws_vpc_peering_client import AwsVpcPeeringClient
 from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
 
 
@@ -36,6 +37,7 @@ class AwsTaskRunner:
 
         task_client_mapping: Dict[Type[Any], Callable[[], AwsTaskReport]] = {
             AwsAthenaClient: lambda: task.run(self._client_factory.get_athena_client()),
+            AwsCentralLoggingClient: lambda: task.run(self._client_factory.get_central_logging_client()),
             AwsCloudtrailClient: lambda: task.run(self._client_factory.get_cloudtrail_client(task.account)),
             AwsCostExplorerClient: lambda: task.run(self._client_factory.get_cost_explorer_client(task.account)),
             AwsIamClient: lambda: task.run(self._client_factory.get_iam_client(task.account)),
@@ -45,7 +47,7 @@ class AwsTaskRunner:
             AwsS3Client: lambda: task.run(self._client_factory.get_s3_client(task.account)),
             AwsS3KmsClient: lambda: task.run(self._client_factory.get_s3_kms_client(task.account)),
             AwsVpcClient: lambda: task.run(self._client_factory.get_vpc_client(task.account)),
-            AwsCentralLoggingClient: lambda: task.run(self._client_factory.get_central_logging_client()),
+            AwsVpcPeeringClient: lambda: task.run(self._client_factory.get_vpc_peering_client(task.account)),
         }
 
         if not client_param:

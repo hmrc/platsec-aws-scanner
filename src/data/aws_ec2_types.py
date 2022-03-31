@@ -57,8 +57,8 @@ class VpcPeeringConnection:
     requester_owner_id: str
     requester_vpc_id: str
     status: str
-    accepter_account: Optional[Account] = None
-    requester_account: Optional[Account] = None
+    accepter: Optional[Account] = None
+    requester: Optional[Account] = None
 
 
 def to_vpc_peering_connection(pcx: Dict[str, Any]) -> VpcPeeringConnection:
