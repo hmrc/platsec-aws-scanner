@@ -311,6 +311,20 @@ def test_parse_cli_args_for_audit_vpc_peering() -> None:
         assert args.mfa_token == "799788"
 
 
+def test_parse_cli_args_for_audit_ec2_instances() -> None:
+    with patch("sys.argv", ". audit_ec2_instances -a 15,43 -t 465132".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". audit_ec2_instances --accounts 15,43 --token 465132".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "audit_ec2_instances"
+        assert args.accounts == ["15", "43"]
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "465132"
+
+
 def test_default_log_level_is_warning() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
         args = AwsScannerArgumentParser().parse_cli_args()

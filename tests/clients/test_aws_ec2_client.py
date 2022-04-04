@@ -150,3 +150,17 @@ def test_describe_vpc_peering_connections_failure() -> None:
     boto_mock = Mock(get_paginator=Mock(side_effect=client_error("GetPaginator", "AccessDenied", "boom!")))
     with pytest.raises(EC2Exception, match="boom"):
         AwsEC2Client(boto_mock).describe_vpc_peering_connections()
+
+
+def test_list_instances() -> None:
+    paginator_mock = Mock(paginate=Mock(side_effect=lambda **k: iter(responses.DESCRIBE_INSTANCES)))
+    boto_mock = Mock(
+        get_paginator=Mock(side_effect=lambda func: paginator_mock if func == "describe_instances" else None),
+        describe_images=Mock(
+            side_effect=lambda **kwargs: {
+                "ami-1234": responses.DESCRIBE_IMAGE_1234,
+                "ami-5678": responses.DESCRIBE_IMAGE_5678,
+            }[kwargs["ImageIds"][0]]
+        ),
+    )
+    assert AwsEC2Client(boto_mock).list_instances() == responses.EXPECTED_INSTANCES

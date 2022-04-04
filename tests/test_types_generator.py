@@ -25,7 +25,7 @@ from src.data.aws_compliance_actions import (
     TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
 )
-from src.data.aws_ec2_types import FlowLog, Vpc, VpcPeeringConnection
+from src.data.aws_ec2_types import FlowLog, Instance, Vpc, VpcPeeringConnection
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
 from src.data.aws_cloudtrail_types import DataResource, EventSelector, Trail
@@ -53,6 +53,7 @@ from src.tasks.aws_athena_task import AwsAthenaTask
 from src.tasks.aws_audit_central_logging_task import AwsAuditCentralLoggingTask
 from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
+from src.tasks.aws_audit_ec2_instances_task import AwsAuditEc2InstancesTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
@@ -629,3 +630,25 @@ def vpc_peering_connection(
 
 def audit_vpc_peering_task(account: Account = account()) -> AwsAuditVpcPeeringTask:
     return AwsAuditVpcPeeringTask(account)
+
+
+def audit_ec2_instances_task(account: Account = account()) -> AwsAuditEc2InstancesTask:
+    return AwsAuditEc2InstancesTask(account)
+
+
+def instance(
+    id: str = "instance-1234",
+    component: str = "some-component",
+    image_id: str = "image-5678",
+    image_creation_date: str = "2020-03-23T09:01:26.000Z",
+    launch_time: str = "2020-03-25T09:06:07+00:00",
+    metadata_options_http_tokens: str = "required",
+) -> Instance:
+    return Instance(
+        id=id,
+        component=component,
+        image_id=image_id,
+        image_creation_date=image_creation_date,
+        launch_time=launch_time,
+        metadata_options_http_tokens=metadata_options_http_tokens,
+    )

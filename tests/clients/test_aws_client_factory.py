@@ -158,9 +158,9 @@ class TestGetClients(TestCase):
         ec2_boto_client = Mock()
         with patch(
             f"{self.factory_path}.get_ec2_boto_client",
-            side_effect=lambda acc, role: ec2_boto_client if acc == account() and role == "ec2-role" else None,
+            side_effect=lambda acc, role: ec2_boto_client if acc == account() and role == "ec2_role" else None,
         ):
-            ec2_client = AwsClientFactory(self.mfa, self.username).get_ec2_client(account(), "ec2-role")
+            ec2_client = AwsClientFactory(self.mfa, self.username).get_ec2_client(account())
             self.assertEqual(ec2_client._ec2, ec2_boto_client)
 
     def test_get_organizations_client(self, _: Mock) -> None:
@@ -297,7 +297,7 @@ class TestGetCompositeClients(TestCase):
     def test_get_vpc_client(self, _: Mock) -> None:
         acc = account(identifier="1234", name="some_account")
         ec2, iam, logs, kms = (Mock(name="ec2"), Mock(name="iam"), Mock(name="logs"), Mock(name="kms"))
-        with patch.object(AwsClientFactory, "get_ec2_client", side_effect=self.mock_client_role(ec2, acc, "ec2_role")):
+        with patch.object(AwsClientFactory, "get_ec2_client", side_effect=self.mock_client(ec2, acc)):
             with patch.object(AwsClientFactory, "get_logs_client", side_effect=self.mock_client(logs, acc)):
                 with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
                     with patch.object(AwsClientFactory, "get_kms_client", side_effect=self.mock_client(kms, acc)):

@@ -25,6 +25,7 @@ from tests.test_types_generator import (
     account,
     audit_cloudtrail_task,
     audit_central_logging_task,
+    audit_ec2_instances_task,
     audit_vpc_peering_task,
     create_flow_logs_table_task,
     partition,
@@ -150,6 +151,12 @@ class TestAwsTaskBuilder(TestCase):
         self.assert_tasks_equal(
             [audit_vpc_peering_task(acct1), audit_vpc_peering_task(acct2)],
             task_builder(args(task=Cmd.audit_vpc_peering)).build_tasks(),
+        )
+
+    def test_audit_ec2_instances_task(self) -> None:
+        self.assert_tasks_equal(
+            [audit_ec2_instances_task(acct1), audit_ec2_instances_task(acct2)],
+            task_builder(args(task=Cmd.audit_ec2_instances)).build_tasks(),
         )
 
     def test_unsupported_task(self) -> None:

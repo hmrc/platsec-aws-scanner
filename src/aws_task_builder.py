@@ -23,6 +23,7 @@ from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
+from src.tasks.aws_audit_ec2_instances_task import AwsAuditEc2InstancesTask
 from src.tasks.aws_task import AwsTask
 
 
@@ -74,6 +75,7 @@ class AwsTaskBuilder:
                 AwsCreateFlowLogsTableTask, partition=self._args.partition
             ),
             Cmd.audit_vpc_peering: lambda: self._tasks(AwsAuditVpcPeeringTask),
+            Cmd.audit_ec2_instances: lambda: self._tasks(AwsAuditEc2InstancesTask),
         }
         try:
             return task_mapping[self._args.task]()

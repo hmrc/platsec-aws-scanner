@@ -12,6 +12,7 @@ from tests.test_types_generator import (
     athena_task,
     audit_central_logging_task,
     audit_cloudtrail_task,
+    audit_ec2_instances_task,
     audit_iam_task,
     audit_vpc_peering_task,
     cost_explorer_task,
@@ -99,6 +100,13 @@ class TestAwsTaskRunner(TestCase):
         client = Mock()
         client_factory = Mock(get_central_logging_client=Mock(return_value=client))
         task = audit_central_logging_task()
+        task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
+        self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
+
+    def test_run_audit_ec2_instances_task(self) -> None:
+        client = Mock()
+        client_factory = Mock(get_ec2_client=Mock(return_value=client))
+        task = audit_ec2_instances_task()
         task.run = Mock(side_effect=lambda c: task_report() if c == client else None)  # type: ignore
         self.assertEqual(task_report(), AwsTaskRunner(client_factory)._run_task(task))
 
