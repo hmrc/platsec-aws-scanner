@@ -93,8 +93,8 @@ class AwsClientFactory:
     def get_ec2_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("ec2", account, role)
 
-    def get_ec2_client(self, account: Account, role: str) -> AwsEC2Client:
-        return AwsEC2Client(self.get_ec2_boto_client(account, role))
+    def get_ec2_client(self, account: Account, role: Optional[str] = None) -> AwsEC2Client:
+        return AwsEC2Client(self.get_ec2_boto_client(account, role or self._config.ec2_role()))
 
     def get_organizations_client(self) -> AwsOrganizationsClient:
         return AwsOrganizationsClient(self.get_organizations_boto_client())
@@ -119,7 +119,7 @@ class AwsClientFactory:
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
-            ec2=self.get_ec2_client(account, self._config.ec2_role()),
+            ec2=self.get_ec2_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account),
             kms=self.get_kms_client(account),

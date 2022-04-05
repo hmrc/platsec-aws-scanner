@@ -70,3 +70,32 @@ def to_vpc_peering_connection(pcx: Dict[str, Any]) -> VpcPeeringConnection:
         requester_vpc_id=pcx["RequesterVpcInfo"]["VpcId"],
         status=pcx["Status"]["Code"],
     )
+
+
+@dataclass
+class Instance:
+    id: str
+    component: str
+    image_id: str
+    image_creation_date: Optional[str]
+    launch_time: str
+    metadata_options_http_tokens: str
+
+    def with_image_creation_date(self, creation_date: str) -> Instance:
+        self.image_creation_date = creation_date
+        return self
+
+
+def to_instance(instance: Dict[Any, Any]) -> Instance:
+    return Instance(
+        id=instance["InstanceId"],
+        component=_find_tag("Name", instance["Tags"]),
+        image_id=instance["ImageId"],
+        image_creation_date=None,
+        launch_time=instance["LaunchTime"],
+        metadata_options_http_tokens=instance["MetadataOptions"]["HttpTokens"],
+    )
+
+
+def _find_tag(tag_name: str, tags: List[Dict[str, Any]]) -> str:
+    return next(filter(lambda t: t["Key"] == tag_name, tags), {"Value": "unknown"})["Value"]

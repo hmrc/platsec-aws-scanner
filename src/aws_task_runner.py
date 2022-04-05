@@ -9,6 +9,7 @@ from src.tasks.aws_task import AwsTask
 
 from src.clients.aws_athena_client import AwsAthenaClient
 from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
+from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_audit_client import AwsIamAuditClient
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
@@ -40,6 +41,7 @@ class AwsTaskRunner:
             AwsCentralLoggingClient: lambda: task.run(self._client_factory.get_central_logging_client()),
             AwsCloudtrailClient: lambda: task.run(self._client_factory.get_cloudtrail_client(task.account)),
             AwsCostExplorerClient: lambda: task.run(self._client_factory.get_cost_explorer_client(task.account)),
+            AwsEC2Client: lambda: task.run(self._client_factory.get_ec2_client(task.account)),
             AwsIamClient: lambda: task.run(self._client_factory.get_iam_client(task.account)),
             AwsIamAuditClient: lambda: task.run(self._client_factory.get_iam_client_for_audit(task.account)),
             AwsOrganizationsClient: lambda: task.run(self._client_factory.get_organizations_client()),

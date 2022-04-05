@@ -7,7 +7,16 @@ from botocore.exceptions import BotoCoreError, ClientError
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients import boto_try
-from src.data.aws_ec2_types import FlowLog, Vpc, VpcPeeringConnection, to_flow_log, to_vpc, to_vpc_peering_connection
+from src.data.aws_ec2_types import (
+    FlowLog,
+    Instance,
+    Vpc,
+    VpcPeeringConnection,
+    to_flow_log,
+    to_instance,
+    to_vpc,
+    to_vpc_peering_connection,
+)
 from src.data.aws_scanner_exceptions import EC2Exception
 
 
@@ -77,3 +86,34 @@ class AwsEC2Client:
             return [to_vpc_peering_connection(pcx) for p in paginator.paginate() for pcx in p["VpcPeeringConnections"]]
         except (BotoCoreError, ClientError) as err:
             raise EC2Exception(f"unable to describe VPC peering connections: {err}")
+
+    def list_instances(self) -> List[Instance]:
+        return [
+            instance.with_image_creation_date(
+                self._get_image_metadata(self._describe_images(instance.image_id), "CreationDate")
+            )
+            for instance in self._describe_instances()
+        ]
+
+    def _describe_instances(self) -> List[Instance]:
+        return boto_try(
+            lambda: [
+                to_instance(instance)
+                for page in self._ec2.get_paginator("describe_instances").paginate()
+                for reservation in page["Reservations"]
+                for instance in reservation["Instances"]
+            ],
+            list,
+            "unable to describe EC2 instances",
+        )
+
+    def _describe_images(self, image_id: str) -> List[Dict[str, Any]]:
+        return boto_try(
+            lambda: list(self._ec2.describe_images(ImageIds=[image_id])["Images"]),
+            list,
+            f"unable to fetch metadata for image with id {image_id}",
+        )
+
+    @staticmethod
+    def _get_image_metadata(images: List[Dict[str, Any]], metadata_key: str) -> str:
+        return next(iter(images), {metadata_key: "unknown"})[metadata_key]
