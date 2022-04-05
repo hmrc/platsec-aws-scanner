@@ -183,6 +183,11 @@ class AwsScannerConfig:
     def reports_account(self) -> Account:
         return Account(self._get_config("reports", "account"), "reports")
 
+    def reports_format(self) -> str:
+        format = self._get_config("reports", "format").lower()
+        supported = ["json", "csv"]
+        return format if format in supported else sys.exit(self._unsupported("reports", "format", supported))
+
     def reports_role(self) -> str:
         return self._get_config("reports", "role")
 

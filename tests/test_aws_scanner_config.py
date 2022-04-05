@@ -184,6 +184,12 @@ def test_unsupported_reports_output() -> None:
         AwsScannerConfig().reports_output()
 
 
+@patch.dict(os.environ, {"AWS_SCANNER_REPORTS_FORMAT": "banana"}, clear=True)
+def test_unsupported_reports_format() -> None:
+    with pytest.raises(SystemExit, match="unsupported config: section 'reports', key 'format'"):
+        AwsScannerConfig().reports_format()
+
+
 @patch.dict(os.environ, {"AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": "{"}, clear=True)
 def test_invalid_format_logs_vpc_log_group_delivery_role_assume_policy() -> None:
     with pytest.raises(SystemExit, match="vpc_log_group_delivery_role_assume_policy"):

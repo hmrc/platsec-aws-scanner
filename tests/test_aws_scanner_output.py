@@ -15,7 +15,7 @@ EXPECTED_JSON_REPORT = (
 
 
 @patch.dict(os.environ, {"AWS_SCANNER_REPORTS_OUTPUT": "stdout"})
-def test_stdout_output(capsys: Any) -> None:
+def test_stdout_json_output(capsys: Any) -> None:
     AwsScannerOutput(Mock()).write("some_task", [task_report(partition=partition())])
     captured = capsys.readouterr()
     assert EXPECTED_JSON_REPORT in captured.out
