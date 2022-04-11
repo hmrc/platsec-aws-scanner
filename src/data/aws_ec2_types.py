@@ -89,7 +89,7 @@ class Instance:
 def to_instance(instance: Dict[Any, Any]) -> Instance:
     return Instance(
         id=instance["InstanceId"],
-        component=_find_tag("Name", instance["Tags"]),
+        component="Unknown" if "Tags" not in instance else _find_tag("Name", instance["Tags"]),
         image_id=instance["ImageId"],
         image_creation_date=None,
         launch_time=instance["LaunchTime"],
@@ -98,4 +98,4 @@ def to_instance(instance: Dict[Any, Any]) -> Instance:
 
 
 def _find_tag(tag_name: str, tags: List[Dict[str, Any]]) -> str:
-    return next(filter(lambda t: t["Key"] == tag_name, tags), {"Value": "unknown"})["Value"]
+    return next(filter(lambda t: t["Key"] == tag_name, tags), {"Value": "Unknown"})["Value"]
