@@ -89,7 +89,7 @@ class Instance:
 def to_instance(instance: Dict[Any, Any]) -> Instance:
     return Instance(
         id=instance["InstanceId"],
-        component="Unknown" if "Tags" not in instance else _find_tag("Name", instance["Tags"]),
+        component=_find_tag("Name", instance.get("Tags", {})),
         image_id=instance["ImageId"],
         image_creation_date=None,
         launch_time=instance["LaunchTime"],

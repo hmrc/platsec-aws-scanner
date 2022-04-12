@@ -161,7 +161,6 @@ DESCRIBE_INSTANCES = [
                         "ImageId": "ami-5678",
                         "InstanceId": "i-d4e5f6",
                         "LaunchTime": "2022-02-27T17:32:24.000Z",
-                        "Tags": [{"Key": "Name", "Value": "another-component"}],
                         "MetadataOptions": {"HttpTokens": "optional"},
                     }
                 ]
@@ -181,7 +180,7 @@ EXPECTED_INSTANCES = [
     ),
     instance(
         id="i-d4e5f6",
-        component="another-component",
+        component="Unknown",
         image_id="ami-5678",
         image_creation_date="2022-02-21T14:05:14.000Z",
         launch_time="2022-02-27T17:32:24.000Z",
