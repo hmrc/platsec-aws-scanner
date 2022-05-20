@@ -1,5 +1,6 @@
 from logging import getLogger
 from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
+from datetime import date
 
 from src.aws_scanner_argument_parser import AwsScannerArguments
 from src.aws_scanner_argument_parser import AwsScannerCommands as Cmd
@@ -57,11 +58,9 @@ class AwsTaskBuilder:
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task),
             Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask),
-            Cmd.cost_explorer: lambda: self._services_tasks(
+            Cmd.cost_explorer: lambda: self._tasks(
                 AwsAuditCostExplorerTask,
-                services=self._args.services,
-                year=self._args.year,
-                month=self._args.month,
+                today=date.today(),
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(
                 AwsAuditVPCFlowLogsTask,
@@ -88,7 +87,7 @@ class AwsTaskBuilder:
 
     def _services_tasks(
         self,
-        task: Type[Union[AwsAuditCostExplorerTask, AwsServiceUsageScannerTask]],
+        task: Type[Union[AwsServiceUsageScannerTask]],
         services: List[str],
         **kwargs: Any,
     ) -> Sequence[AwsTask]:

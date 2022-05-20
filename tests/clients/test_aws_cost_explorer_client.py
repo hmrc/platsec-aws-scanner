@@ -1,5 +1,6 @@
-from unittest import TestCase
 from unittest.mock import Mock
+from datetime import date
+import pytest
 
 from src.clients.aws_cost_explorer_client import AwsCostExplorerClient
 from src.data.aws_scanner_exceptions import CostExplorerException
@@ -7,42 +8,68 @@ from botocore.exceptions import BotoCoreError
 from tests.clients.test_aws_cost_explorer_responses import GET_USAGE_COST_SUCCESS
 
 
-class TestAwsCostExplorerClient(TestCase):
-    def test_get_aws_cost_explorer_empty_response(self) -> None:
-        boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value={}))
-        client = AwsCostExplorerClient(boto_cost_explorer)
+def test_get_aws_cost_explorer_empty_response() -> None:
+    boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value={}))
+    client = AwsCostExplorerClient(boto_cost_explorer)
 
-        service = "lambda"
-        with self.assertRaisesRegex(CostExplorerException, f"unable to get cost usage data for {service}"):
-            client.get_aws_cost_explorer(service, 2021, 8)
+    with pytest.raises(CostExplorerException, match=r".*unable to get cost usage.*"):
+        client.get_aws_cost_explorer(start_date=date(2020, 2, 1), end_date=date(2020, 11, 2))
 
-    def test_get_aws_cost_explorer_success(self) -> None:
-        boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value=GET_USAGE_COST_SUCCESS))
-        client = AwsCostExplorerClient(boto_cost_explorer)
 
-        expected = {
-            "service": "a_service",
+def test_get_aws_cost_explorer_success() -> None:
+    boto_cost_explorer = Mock(get_cost_and_usage=Mock(return_value=GET_USAGE_COST_SUCCESS))
+    client = AwsCostExplorerClient(boto_cost_explorer)
+
+    expected = [
+        {
+            "service": "AWS CloudTrail",
+            "region": "ap-northeast-1",
             "dateRange": {
                 "start": "2020-02-01",
-                "end": f"2020-{'%02d' % 11}-{'%02d' % 2}",
+                "end": "2020-11-02",
             },
-            "totalCost:": "USD 251",
-            "totalUsage": "11800948",
-        }
+            "totalCost:": "USD 1",
+            "totalUsage": "389",
+        },
+        {
+            "service": "AWS CloudTrail",
+            "region": "eu-west-2",
+            "dateRange": {
+                "start": "2020-02-01",
+                "end": "2020-11-02",
+            },
+            "totalCost:": "USD 1",
+            "totalUsage": "389",
+        },
+        {
+            "service": "Amazon DynamoDB",
+            "region": "eu-west-2",
+            "dateRange": {
+                "start": "2020-02-01",
+                "end": "2020-11-02",
+            },
+            "totalCost:": "USD 2",
+            "totalUsage": "778",
+        },
+    ]
 
-        self.assertEqual(expected, client.get_aws_cost_explorer("a_service", 2020, 2))
+    assert expected == client.get_aws_cost_explorer(start_date=date(2020, 2, 1), end_date=date(2020, 11, 2))
 
-        boto_cost_explorer.get_cost_and_usage.assert_called_once_with(
-            TimePeriod={"Start": "2020-02-01", "End": "2020-11-02"},
-            Filter={"Dimensions": {"Key": "SERVICE", "Values": ["a_service"], "MatchOptions": ["EQUALS"]}},
-            Granularity="MONTHLY",
-            Metrics=["UsageQuantity", "AmortizedCost"],
-        )
+    boto_cost_explorer.get_cost_and_usage.assert_called_once_with(
+        TimePeriod={"Start": "2020-02-01", "End": "2020-11-02"},
+        GroupBy=[
+            {"Type": "DIMENSION", "Key": "Region"},
+            {"Type": "DIMENSION", "Key": "SERVICE"},
+        ],
+        Granularity="MONTHLY",
+        Metrics=["UsageQuantity", "AmortizedCost"],
+    )
 
-    def test_get_aws_cost_explorer_failure(self) -> None:
-        boto_cost_explorer = Mock(get_cost_and_usage=Mock(side_effect=BotoCoreError))
-        client = AwsCostExplorerClient(boto_cost_explorer)
 
-        service = "lambda"
-        with self.assertRaisesRegex(CostExplorerException, f"unable to get cost usage data for {service}:"):
-            client.get_aws_cost_explorer(service, 2022, 20)
+def test_get_aws_cost_explorer_failure() -> None:
+    boto_cost_explorer = Mock(get_cost_and_usage=Mock(side_effect=BotoCoreError))
+    client = AwsCostExplorerClient(boto_cost_explorer)
+
+    with pytest.raises(CostExplorerException):
+        # todo fix f"unable to get cost usage data for {service}:")
+        client.get_aws_cost_explorer(start_date=date(2020, 2, 1), end_date=date(2020, 11, 2))

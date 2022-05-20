@@ -1,6 +1,7 @@
 ARG PYTHON_VERSION
 
 FROM python:${PYTHON_VERSION}-alpine AS linter-base
+
 RUN apk add --no-cache shadow
 # UID of current user who runs the build
 ARG user_id
@@ -39,5 +40,5 @@ USER builder
 ARG workdir
 WORKDIR ${workdir}
 COPY --chown=builder:union Pipfile Pipfile.lock ./
-RUN pipenv install --ignore-pipfile --dev
+RUN pipenv install --dev
 

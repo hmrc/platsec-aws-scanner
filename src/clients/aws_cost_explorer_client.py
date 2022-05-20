@@ -1,10 +1,11 @@
 from logging import getLogger
-from typing import Dict, Any
+from typing import Dict, Any, List
 from datetime import date
 import math
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
+from collections import defaultdict
 
 from src.data.aws_scanner_exceptions import CostExplorerException
 
@@ -14,48 +15,54 @@ class AwsCostExplorerClient:
         self._logger = getLogger(self.__class__.__name__)
         self._cost_explorer = boto_cost_explorer
 
-    def get_aws_cost_explorer(self, service: str, year: int, month: int) -> Dict[str, Any]:
+    def format_date(self, date: date) -> str:
+        return f"{date.year}-{'%02d' % date.month}-{'%02d' % date.day}"
 
-        today = date.today()
-
+    def get_aws_cost_explorer(self, start_date: date, end_date: date) -> List[Dict[str, Any]]:
         time_period = {
-            "Start": f"{year}-{'%02d' % month}-01",
-            "End": f"{today.year}-{'%02d' % today.month}-{'%02d' % today.day}",
+            "Start": self.format_date(start_date),
+            "End": self.format_date(end_date),
         }
 
         try:
             result = self._cost_explorer.get_cost_and_usage(
                 TimePeriod=time_period,
-                Filter={
-                    "Dimensions": {
-                        "Key": "SERVICE",
-                        "Values": [
-                            service,
-                        ],
-                        "MatchOptions": ["EQUALS"],
-                    }
-                },
                 Granularity="MONTHLY",
                 Metrics=["UsageQuantity", "AmortizedCost"],
+                GroupBy=[
+                    {"Type": "DIMENSION", "Key": "Region"},
+                    {"Type": "DIMENSION", "Key": "SERVICE"},
+                ],
             )
-
         except (BotoCoreError, ClientError) as err:
-            raise CostExplorerException(f"unable to get cost usage data for {service}: {err}")
+            raise CostExplorerException(f"unable to get cost usage : {err}")
 
-        total_usage = total_cost = 0.00
+        total_usage: defaultdict[tuple[str, str], float] = defaultdict(int)
+        total_cost: defaultdict[tuple[str, str], float] = defaultdict(int)
 
         if "ResultsByTime" not in result:
-            raise CostExplorerException(f"unable to get cost usage data for {service}")
+            raise CostExplorerException("unable to get cost usage")
         else:
-            for item in result["ResultsByTime"]:
-                total_usage = total_usage + float(item["Total"]["UsageQuantity"]["Amount"])
-                total_cost = total_cost + float(item["Total"]["AmortizedCost"]["Amount"])
+            for item in result["ResultsByTime"][0]["Groups"]:
+                service = item["Keys"][0]
+                region = item["Keys"][1]
+                total_usage[(service, region)] = total_usage[(service, region)] + float(
+                    item["Metrics"]["UsageQuantity"]["Amount"]
+                )
+                total_cost[(service, region)] = total_cost[(service, region)] + float(
+                    item["Metrics"]["AmortizedCost"]["Amount"]
+                )
 
-        total_str = f'{result["ResultsByTime"][0]["Total"]["AmortizedCost"]["Unit"]} {"%d" % math.ceil(total_cost)}'
+        report = []
+        for key, value in total_usage.items():
+            report.append(
+                {
+                    "service": key[0],
+                    "region": key[1],
+                    "dateRange": {"start": self.format_date(start_date), "end": self.format_date(end_date)},
+                    "totalCost:": f'USD {"%d" % math.ceil(total_cost[key])}',
+                    "totalUsage": str(math.ceil(value)),
+                }
+            )
 
-        return {
-            "service": service,
-            "dateRange": {"start": time_period["Start"], "end": time_period["End"]},
-            "totalCost:": total_str,
-            "totalUsage": str(math.ceil(total_usage)),
-        }
+        return report
