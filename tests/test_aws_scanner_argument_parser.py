@@ -7,13 +7,12 @@ from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
 
 
 def test_parse_cli_args_for_cost_usage_task() -> None:
-    with patch("sys.argv", ". cost_explorer -u bob -a 3,2,1 -t 666666 -y 2021 -m 8 -s lambda".split()):
+    with patch("sys.argv", ". cost_explorer -u bob -a 3,2,1 -t 666666".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
     with patch(
         "sys.argv",
-        ". cost_explorer --username bob --account 3,2,1 --token 666666 --year 2021 --month 8 \
-            --services lambda".split(),
+        ". cost_explorer --username bob --account 3,2,1 --token 666666".split(),
     ):
         long_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -21,10 +20,7 @@ def test_parse_cli_args_for_cost_usage_task() -> None:
         assert args.task == "cost_explorer"
         assert args.username == "bob"
         assert args.mfa_token == "666666"
-        assert args.year == 2021
-        assert args.month == 8
         assert args.accounts == ["3", "2", "1"]
-        assert args.services == ["lambda"]
 
 
 def test_parse_cli_args_for_service_usage_task() -> None:

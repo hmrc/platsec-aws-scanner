@@ -91,11 +91,6 @@ class AwsScannerArgumentParser:
         parser.add_argument("-d", "--day", type=int, help=cmd_help)
 
     @staticmethod
-    def _add_cost_explorer_task_args(parser: ArgumentParser) -> None:
-        AwsScannerArgumentParser._add_year_arg(parser, "start date year for cost usage. End date will be today")
-        AwsScannerArgumentParser._add_month_arg(parser, "start date month for cost usage. End date will be today")
-
-    @staticmethod
     def _add_verbosity_arg(parser: ArgumentParser) -> None:
         parser.add_argument(
             "-v",
@@ -159,12 +154,10 @@ class AwsScannerArgumentParser:
         self._add_verbosity_arg(audit_parser)
 
     def _add_cost_explorer_command(self, subparsers: Any) -> None:
-        desc = "audit service cost usage"
+        desc = "audit cost usage data acrosss serivces and regions for last 12 months"
         audit_parser = subparsers.add_parser(AwsScannerCommands.cost_explorer, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_services_arg(audit_parser, "comma-separated list of service(s) to scan cost usage for")
-        self._add_cost_explorer_task_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:

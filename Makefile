@@ -55,6 +55,7 @@ python-test:
 		--no-cov-on-fail \
 		--cov-report "term-missing:skip-covered" \
 		--no-header \
+		-vvv \
 		tests
 
 md-check:

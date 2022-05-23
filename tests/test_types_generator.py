@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Sequence, Union
 from unittest.mock import Mock
+from datetime import date
 
 from botocore.exceptions import ClientError
 
@@ -110,10 +111,8 @@ def organizations_task(account: Account = account(), description: str = "org_tas
     return AwsOrganizationsTask(description=description, account=account)
 
 
-def cost_explorer_task(
-    account: Account = account(), service: str = "bla", year: int = 2021, month: int = 4
-) -> AwsAuditCostExplorerTask:
-    return AwsAuditCostExplorerTask(account=account, service=service, year=year, month=month)
+def cost_explorer_task(account: Account = account(), year: int = 2021, month: int = 4) -> AwsAuditCostExplorerTask:
+    return AwsAuditCostExplorerTask(account=account, today=date(year, month, 2))
 
 
 def cloudtrail_task(

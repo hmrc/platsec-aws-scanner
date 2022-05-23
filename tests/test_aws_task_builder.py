@@ -1,3 +1,4 @@
+from datetime import date
 from pytest import raises
 from unittest import TestCase
 from unittest.mock import Mock
@@ -70,12 +71,14 @@ class TestAwsTaskBuilder(TestCase):
         )
 
     def test_cost_explorer_scanner_tasks(self) -> None:
+        tasks = task_builder(args(task=Cmd.cost_explorer)).build_tasks()
+
         self.assert_tasks_equal(
             [
-                AwsAuditCostExplorerTask(acct1, "a_service", 2021, 8),
-                AwsAuditCostExplorerTask(acct2, "a_service", 2021, 8),
+                AwsAuditCostExplorerTask(acct1, date(2020, 11, 2)),
+                AwsAuditCostExplorerTask(acct2, date(2020, 11, 2)),
             ],
-            task_builder(args(task=Cmd.cost_explorer, services=["a_service"], year=2021, month=8)).build_tasks(),
+            tasks,
         )
 
     def test_role_usage_scanner_tasks(self) -> None:

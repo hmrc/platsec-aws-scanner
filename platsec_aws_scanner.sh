@@ -19,7 +19,6 @@ docker build \
   --build-arg CONFIG_FILE="$CONFIG_FILE" \
   -f local.Dockerfile \
   . \
-  > /dev/null
 
 rm -f "$CONFIG_FILE"
 
