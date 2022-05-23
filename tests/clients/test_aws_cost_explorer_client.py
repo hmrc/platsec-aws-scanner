@@ -70,6 +70,5 @@ def test_get_aws_cost_explorer_failure() -> None:
     boto_cost_explorer = Mock(get_cost_and_usage=Mock(side_effect=BotoCoreError))
     client = AwsCostExplorerClient(boto_cost_explorer)
 
-    with pytest.raises(CostExplorerException):
-        # todo fix f"unable to get cost usage data for {service}:")
+    with pytest.raises(CostExplorerException, match=r".*unable to get cost usage data.*"):
         client.get_aws_cost_explorer(start_date=date(2020, 2, 1), end_date=date(2020, 11, 2))

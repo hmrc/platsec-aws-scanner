@@ -35,13 +35,13 @@ class AwsCostExplorerClient:
                 ],
             )
         except (BotoCoreError, ClientError) as err:
-            raise CostExplorerException(f"unable to get cost usage : {err}")
+            raise CostExplorerException(f"unable to get cost usage data: {err}")
 
         total_usage: defaultdict[tuple[str, str], float] = defaultdict(int)
         total_cost: defaultdict[tuple[str, str], float] = defaultdict(int)
 
         if "ResultsByTime" not in result:
-            raise CostExplorerException("unable to get cost usage")
+            raise CostExplorerException("unable to get cost usage, return has empty results")
         else:
             for month in result["ResultsByTime"]:
                 for item in month["Groups"]:
