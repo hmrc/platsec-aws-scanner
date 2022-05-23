@@ -25,12 +25,13 @@ class AwsCostExplorerClient:
         }
 
         try:
+            print(time_period)
             result = self._cost_explorer.get_cost_and_usage(
                 TimePeriod=time_period,
                 Granularity="MONTHLY",
                 Metrics=["UsageQuantity", "AmortizedCost"],
                 GroupBy=[
-                    {"Type": "DIMENSION", "Key": "Region"},
+                    {"Type": "DIMENSION", "Key": "REGION"},
                     {"Type": "DIMENSION", "Key": "SERVICE"},
                 ],
             )
@@ -43,15 +44,17 @@ class AwsCostExplorerClient:
         if "ResultsByTime" not in result:
             raise CostExplorerException("unable to get cost usage")
         else:
-            for item in result["ResultsByTime"][0]["Groups"]:
-                service = item["Keys"][0]
-                region = item["Keys"][1]
-                total_usage[(service, region)] = total_usage[(service, region)] + float(
-                    item["Metrics"]["UsageQuantity"]["Amount"]
-                )
-                total_cost[(service, region)] = total_cost[(service, region)] + float(
-                    item["Metrics"]["AmortizedCost"]["Amount"]
-                )
+            for month in result["ResultsByTime"]:
+                for item in month["Groups"]:
+                    region = item["Keys"][0]
+                    service = item["Keys"][1]
+                    total_usage[(service, region)] = total_usage[(service, region)] + float(
+                        item["Metrics"]["UsageQuantity"]["Amount"]
+                    )
+                    print(f"{region}-{service} = {item['Metrics']['AmortizedCost']['Amount']}")
+                    total_cost[(service, region)] = total_cost[(service, region)] + float(
+                        item["Metrics"]["AmortizedCost"]["Amount"]
+                    )
 
         report = []
         for key, value in total_usage.items():

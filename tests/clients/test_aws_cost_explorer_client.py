@@ -58,7 +58,7 @@ def test_get_aws_cost_explorer_success() -> None:
     boto_cost_explorer.get_cost_and_usage.assert_called_once_with(
         TimePeriod={"Start": "2020-02-01", "End": "2020-11-02"},
         GroupBy=[
-            {"Type": "DIMENSION", "Key": "Region"},
+            {"Type": "DIMENSION", "Key": "REGION"},
             {"Type": "DIMENSION", "Key": "SERVICE"},
         ],
         Granularity="MONTHLY",
