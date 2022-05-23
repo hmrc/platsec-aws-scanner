@@ -25,7 +25,6 @@ class AwsCostExplorerClient:
         }
 
         try:
-            print(time_period)
             result = self._cost_explorer.get_cost_and_usage(
                 TimePeriod=time_period,
                 Granularity="MONTHLY",
@@ -51,7 +50,6 @@ class AwsCostExplorerClient:
                     total_usage[(service, region)] = total_usage[(service, region)] + float(
                         item["Metrics"]["UsageQuantity"]["Amount"]
                     )
-                    print(f"{region}-{service} = {item['Metrics']['AmortizedCost']['Amount']}")
                     total_cost[(service, region)] = total_cost[(service, region)] + float(
                         item["Metrics"]["AmortizedCost"]["Amount"]
                     )
