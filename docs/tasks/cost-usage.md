@@ -1,37 +1,20 @@
 # Cost Usage
 
-The `cost_explorer` task outputs data showing the usage & cost of a specified service in a given account / list of
-accounts.
-
-The service being queried needs to be specified using its full name, example:
-
-- Amazon Api Gateway
-- Amazon Cloudfront
-- Amazon DynamoDB
-- Amazon Simple Storage Service
-- Amazon Virtual Private Cloud
-- AWS CodePipeline
-- AWS CodeBuild
-- AWS CodeArtifact
-- AWS Lambda
-- AWS X-Ray
-
-You can see a list of full names of services by clicking on the service [here](https://docs.aws.amazon.com/index.html),
-then you'll see the full name on the next page, i.e "**Amazon Simple Storage Service** Documentation".
+The `cost_explorer` task outputs data showing the usage & cost 
+of services in a given region and account / list of accounts 
+for the last 12 months.
 
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh cost_explorer -m 07 -y 2021 -s "AWS Lambda" -u freda.bloggs -t 123456 -a 999888777666
+./platsec_aws_scanner.sh cost_explorer -u freda.bloggs -t 123456 -a 999888777666
 ```
 
 ### Arguments
 
-- `-m / --month`: represents the month to start the search from. Must be in *n* or *nn* format without the leading zero
-- `-y / --year`: represents the year to start the search from. Must be in *nnnn* format
-- `-s / --services`: comma-separated list of service(s) to scan usage for
+- None
 
-The scanner will check for costs and usage from the 1st day of the month and year specified
+The scanner will check for costs and usage from the 1st day of the month one year ago
 in the command, ending on the current date. However, [AWS Cost Explorer documentation][aws-cost-explorer] states that
 the end
 date is exclusive, meaning that AWS will check cost usage up to the date *proceeding* the requested end date.
