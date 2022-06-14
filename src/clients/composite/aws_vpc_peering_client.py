@@ -4,12 +4,14 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.data.aws_ec2_types import VpcPeeringConnection
 from src.data.aws_organizations_types import Account
+from typing import Dict, Optional
 
 
 class AwsVpcPeeringClient:
     def __init__(self, ec2: AwsEC2Client, org: AwsOrganizationsClient):
         self.ec2 = ec2
         self.org = org
+        self.account_ids: Dict[str, Optional[Account]] = {}
 
     def list_vpc_peering_connections(self) -> List[VpcPeeringConnection]:
         return [self._enrich_pcx(pcx) for pcx in self.ec2.describe_vpc_peering_connections()]
@@ -20,4 +22,7 @@ class AwsVpcPeeringClient:
         return pcx
 
     def _find_account_by_id(self, account_id: str) -> Account:
-        return self.org.find_account_by_id(account_id) or Account(account_id, "unknown")
+        if account_id not in self.account_ids:
+            self.account_ids[account_id] = self.org.find_account_by_id(account_id)
+
+        return self.account_ids[account_id] or Account(account_id, "unknown")
