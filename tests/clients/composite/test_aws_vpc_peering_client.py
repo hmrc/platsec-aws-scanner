@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import call, Mock
 
 from typing import Optional
 
@@ -31,3 +31,25 @@ def test_list_vpc_peering_connections() -> None:
     assert peering_connections[0].requester == account(identifier="3", name="unknown")
     assert peering_connections[1].accepter == account(identifier="4", name="unknown")
     assert peering_connections[1].requester == acc_2
+
+
+def test_list_vpc_peering_connections_with_dupe_account_ids() -> None:
+    peering_connections = [
+        vpc_peering_connection(id="cx-1", accepter_owner_id="1", requester_owner_id="2", accepter=None, requester=None),
+        vpc_peering_connection(id="cx-2", accepter_owner_id="1", requester_owner_id="2", accepter=None, requester=None),
+    ]
+
+    mock_org = Mock(find_account_by_id=Mock(side_effect=mock_find_account_by_id))
+
+    client = AwsVpcPeeringClient(
+        ec2=Mock(describe_vpc_peering_connections=Mock(return_value=peering_connections)),
+        org=mock_org,
+    )
+
+    assert client.list_vpc_peering_connections() == peering_connections
+    assert peering_connections[0].accepter == acc_1
+    assert peering_connections[0].requester == acc_2
+    assert peering_connections[1].accepter == acc_1
+    assert peering_connections[1].requester == acc_2
+    assert mock_org.find_account_by_id.call_count == 2
+    mock_org.find_account_by_id.assert_has_calls([call("1"), call("2")])
