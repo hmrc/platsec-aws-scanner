@@ -65,9 +65,7 @@ from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
-from src.data.aws_route53_types import (
-    QueryLog,
-)
+
 
 def partition(
     year: int = 2020, month: int = 11, region: str = "eu", day: Optional[int] = None
@@ -652,29 +650,4 @@ def instance(
         image_creation_date=image_creation_date,
         launch_time=launch_time,
         metadata_options_http_tokens=metadata_options_http_tokens,
-    )
-
-def query_log(
-    id: str = "ql-1234",
-    status: str = "ACTIVE",
-    log_destination: Optional[str] = "arn:/route53/flow_log",
-    log_destination_type: Optional[str] = "cloud-watch-logs",
-    log_group_name: Optional[str] = "/route53/flow_log",
-    traffic_type: str = "ALL",
-    log_format: str = "${srcaddr} ${dstaddr}",
-    deliver_log_role_arn: Optional[str] = ":role/route53_flow_log_role",
-    deliver_log_role: Optional[Role] = role(name="route53_flow_log_role"),
-    log_group: Optional[LogGroup] = None,
-) -> QueryLog:
-    return QueryLog(
-        id=id,
-        status=status,
-        log_destination=log_destination,
-        log_destination_type=log_destination_type,
-        log_group_name=log_group_name,
-        traffic_type=traffic_type,
-        log_format=log_format,
-        deliver_log_role_arn=deliver_log_role_arn,
-        deliver_log_role=deliver_log_role,
-        log_group=log_group,
     )
