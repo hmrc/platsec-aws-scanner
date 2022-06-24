@@ -93,6 +93,9 @@ class AwsClientFactory:
     def get_ec2_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("ec2", account, role)
 
+    def get_route53_boto_client(self, account: Account, role: str) -> BaseClient:
+        return self._get_client("route53", account, role)
+
     def get_ec2_client(self, account: Account, role: Optional[str] = None) -> AwsEC2Client:
         return AwsEC2Client(self.get_ec2_boto_client(account, role or self._config.ec2_role()))
 

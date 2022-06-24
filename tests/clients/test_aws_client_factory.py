@@ -66,6 +66,16 @@ class TestGetBotoClients(TestCase):
             role="ec2_role",
         )
 
+    def test_get_route53_boto_client(self) -> None:
+        route53_account = account(identifier="999888777666", name="some_route53_account")
+        self.assert_get_client(
+            method_under_test="get_route53_boto_client",
+            method_args={"account": route53_account, "role": "route53_role"},
+            service="route53",
+            target_account=route53_account,
+            role="route53_role",
+        )
+
     def test_get_s3_boto_client(self) -> None:
         s3_account = account(identifier="122344566788", name="some_s3_account")
         self.assert_get_client(
