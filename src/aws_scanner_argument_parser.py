@@ -51,7 +51,7 @@ class AwsScannerCommands:
     create_flow_logs_table = "create_flow_logs_table"
     audit_vpc_peering = "audit_vpc_peering"
     audit_ec2_instances = "audit_ec2_instances"
-    audit_route53 = "audit_route53"
+    audit_route53 = "list_public_zones"
 
 
 class AwsScannerArgumentParser:
@@ -125,6 +125,7 @@ class AwsScannerArgumentParser:
         self._add_create_flow_logs_table_command(subparsers)
         self._add_audit_vpc_peering_command(subparsers)
         self._add_audit_ec2_instances_command(subparsers)
+        self._add_audit_route53_command(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -231,6 +232,13 @@ class AwsScannerArgumentParser:
     def _add_audit_ec2_instances_command(self, subparsers: Any) -> None:
         desc = "audit EC2 instances"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_ec2_instances, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+
+    def _add_audit_route53_command(self, subparsers: Any) -> None:
+        desc = "list public zones"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
