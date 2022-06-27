@@ -14,7 +14,8 @@ class Route53Zone:
 
 def to_route53Zone(key: Dict[Any, Any]) -> Route53Zone:
     return Route53Zone(
-        id=key["zoneId"],
-        name=key["name"],
-        privateZone = key["privateZone"],
+        id=key["Id"],
+        name=key["Name"],
+        privateZone = key["Config"]["PrivateZone"],
     )
+    

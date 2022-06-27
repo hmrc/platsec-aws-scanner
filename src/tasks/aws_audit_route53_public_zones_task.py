@@ -1,3 +1,4 @@
+from audioop import add
 from dataclasses import dataclass
 from typing import Any, Dict
 
@@ -12,10 +13,13 @@ class AwsAuditRoute53PublicZonesTask(AwsTask):
         super().__init__("audit Route53 public zones", account)
 
     def _run_task(self, client: AwsRoute53Client) -> list[route53Type.Route53Zone]:
-        zonedict = {
-            "zoneId": "/hostedzone/AAAABBBBCCCCDD",
-            "name": "name1",
-            "privateZone": False
-        }
-        public_zones = [route53Type.to_route53Zone(zonedict)]
-        return  public_zones
+        
+         public_zones : list[route53Type.Route53Zone] =[]
+        
+         hostedzones = client.list_hosted_zones()["HostedZones"]
+         for host in hostedzones:
+             zone= route53Type.to_route53Zone(host)
+             if(not zone.privateZone):
+                 public_zones.append(zone)
+        
+         return  public_zones
