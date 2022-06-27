@@ -637,6 +637,7 @@ def audit_vpc_peering_task(account: Account = account()) -> AwsAuditVpcPeeringTa
 def audit_ec2_instances_task(account: Account = account()) -> AwsAuditEc2InstancesTask:
     return AwsAuditEc2InstancesTask(account)
 
+
 def audit_route53_public_zones_task(account: Account = account()) -> AwsAuditRoute53PublicZonesTask:
     return AwsAuditRoute53PublicZonesTask(account)
 
@@ -658,13 +659,10 @@ def instance(
         metadata_options_http_tokens=metadata_options_http_tokens,
     )
 
+
 def route53Zone(
     id: str = "1234",
-    name: str ="zone name",
+    name: str = "zone name",
     privateZone: bool = True,
 ) -> Route53Zone:
-    return Route53Zone(
-        id=id,
-        name= name,
-        privateZone= privateZone
-    )
+    return Route53Zone(id=id, name=name, privateZone=privateZone)
