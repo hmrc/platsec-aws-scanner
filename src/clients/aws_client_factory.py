@@ -23,6 +23,7 @@ from src.clients.composite.aws_central_logging_client import AwsCentralLoggingCl
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.clients.composite.aws_vpc_peering_client import AwsVpcPeeringClient
 from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
+from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.data import SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
@@ -93,11 +94,14 @@ class AwsClientFactory:
     def get_ec2_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("ec2", account, role)
 
+    def get_ec2_client(self, account: Account, role: Optional[str] = None) -> AwsEC2Client:
+        return AwsEC2Client(self.get_ec2_boto_client(account, role or self._config.ec2_role()))
+
     def get_route53_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("route53", account, role)
 
-    def get_ec2_client(self, account: Account, role: Optional[str] = None) -> AwsEC2Client:
-        return AwsEC2Client(self.get_ec2_boto_client(account, role or self._config.ec2_role()))
+    def get_route53_client(self, account: Account, role: Optional[str] = None) -> AwsRoute53Client:
+        return AwsRoute53Client(self.get_route53_boto_client(account, role or self._config.route53_role()))
 
     def get_organizations_client(self) -> AwsOrganizationsClient:
         return AwsOrganizationsClient(self.get_organizations_boto_client())

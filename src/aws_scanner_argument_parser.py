@@ -51,6 +51,7 @@ class AwsScannerCommands:
     create_flow_logs_table = "create_flow_logs_table"
     audit_vpc_peering = "audit_vpc_peering"
     audit_ec2_instances = "audit_ec2_instances"
+    audit_route53 = "audit_route53"
 
 
 class AwsScannerArgumentParser:

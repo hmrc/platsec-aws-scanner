@@ -20,6 +20,7 @@ from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.clients.composite.aws_vpc_peering_client import AwsVpcPeeringClient
 from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
+from src.clients.composite.aws_route53_client import AwsRoute53Client
 
 
 class AwsTaskRunner:
@@ -50,6 +51,7 @@ class AwsTaskRunner:
             AwsS3KmsClient: lambda: task.run(self._client_factory.get_s3_kms_client(task.account)),
             AwsVpcClient: lambda: task.run(self._client_factory.get_vpc_client(task.account)),
             AwsVpcPeeringClient: lambda: task.run(self._client_factory.get_vpc_peering_client(task.account)),
+            AwsRoute53Client: lambda: task.run(self._client_factory.get_route53_client(task.account)),
         }
 
         if not client_param:

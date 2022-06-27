@@ -173,6 +173,15 @@ class TestGetClients(TestCase):
             ec2_client = AwsClientFactory(self.mfa, self.username).get_ec2_client(account())
             self.assertEqual(ec2_client._ec2, ec2_boto_client)
 
+    def test_get_route53_client(self, _: Mock) -> None:
+        route53_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_route53_boto_client",
+            side_effect=lambda acc, role: route53_boto_client if acc == account() and role == "route53_role" else None,
+        ):
+            route53_client = AwsClientFactory(self.mfa, self.username).get_route53_client(account())
+            self.assertEqual(route53_client._route53, route53_boto_client)
+
     def test_get_organizations_client(self, _: Mock) -> None:
         with patch(f"{self.factory_path}.get_organizations_boto_client") as boto_client:
             orgs_client = AwsClientFactory(self.mfa, self.username).get_organizations_client()
