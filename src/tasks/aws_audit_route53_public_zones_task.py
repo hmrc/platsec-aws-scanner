@@ -13,12 +13,13 @@ class AwsAuditRoute53PublicZonesTask(AwsTask):
         super().__init__("audit Route53 public zones", account)
 
     def _run_task(self, client: AwsRoute53Client) -> Dict[Any, Any]:
-
         public_zones: Dict[Any, Any] = {}
         hostedzones = client.list_hosted_zones()["HostedZones"]
         for host in hostedzones:
             zone = route53Type.to_route53Zone(host)
             if not zone.privateZone:
+                zone.queryLog = client.list_query_logging_configs(zone.id.replace("/hostedzone/",""))
                 public_zones[zone.id] = zone
 
         return public_zones
+

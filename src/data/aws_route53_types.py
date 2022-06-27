@@ -9,6 +9,7 @@ class Route53Zone:
     id: str
     name: str
     privateZone: bool
+    queryLog: str
 
 
 def to_route53Zone(key: Dict[Any, Any]) -> Route53Zone:
@@ -16,4 +17,5 @@ def to_route53Zone(key: Dict[Any, Any]) -> Route53Zone:
         id=key["Id"],
         name=key["Name"],
         privateZone=key["Config"]["PrivateZone"],
+        queryLog =""
     )

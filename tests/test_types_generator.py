@@ -664,5 +664,6 @@ def route53Zone(
     id: str = "1234",
     name: str = "zone name",
     privateZone: bool = True,
+
 ) -> Route53Zone:
-    return Route53Zone(id=id, name=name, privateZone=privateZone)
+    return Route53Zone(id=id, name=name, privateZone=privateZone, queryLog="")

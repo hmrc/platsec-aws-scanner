@@ -6,7 +6,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from src.aws_scanner_config import AwsScannerConfig as Config
 
-from src.data.aws_scanner_exceptions import HostedZonesException
+from src.data.aws_scanner_exceptions import HostedZonesException, QueryLogException
 
 
 class AwsRoute53Client:
@@ -20,3 +20,9 @@ class AwsRoute53Client:
             return self._route53.list_hosted_zones()
         except (BotoCoreError, ClientError) as err:
             raise HostedZonesException(f"unable to get the list of hosted zones: {err}")
+
+    def list_query_logging_configs(self, id: str) -> Any:
+        try:
+            return self._route53.list_query_logging_configs(id)
+        except (BotoCoreError, ClientError) as err:
+            raise QueryLogException(f"unable to get the query log config: {err}")
