@@ -53,15 +53,14 @@ class TestRout53(TestCase):
 
     def test_list_query_logging_configs(self) -> None:
         expected_query_log = {
-            "expected_query_log": [
+            "QueryLoggingConfigs": [
                 {
-                    "QueryLoggingConfigs": {
-                        "Id": "abcdefgh-1234-5678-90ab-ijklmnopqrst",
-                        "HostedZoneId": "AAAABBBBCCCCDD",
-                        "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/route53/public.aws.scanner.gov.uk.",
-                    },
-                },
-            ],
+                    "Id": "abcdefgh-1234-5678-90ab-ijklmnopqrst",
+                    "HostedZoneId": "AAAABBBBCCCCDD",
+                    "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:123456789012:\
+log-group:/aws/route53/public.aws.scanner.gov.uk.",
+                }
+            ]
         }
 
         boto_mock = Mock(list_query_logging_configs=Mock(return_value=expected_query_log))

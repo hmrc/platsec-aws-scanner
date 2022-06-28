@@ -23,15 +23,14 @@ EXPECTED_LIST_HOSTED_ZONES: Dict[str, Any] = {
 }
 
 EXPECTED_QUERY_LOG: Dict[str, Any] = {
-    "expected_query_log": [
+    "QueryLoggingConfigs": [
         {
-            "QueryLoggingConfigs": {
-                "Id": "abcdefgh-1234-5678-90ab-ijklmnopqrst",
-                "HostedZoneId": "AAAABBBBCCCCDD",
-                "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/route53/public.aws.scanner.gov.uk.",
-            },
-        },
-    ],
+            "Id": "abcdefgh-1234-5678-90ab-ijklmnopqrst",
+            "HostedZoneId": "AAAABBBBCCCCDD",
+            "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:123456789012:\
+log-group:/aws/route53/public.aws.scanner.gov.uk.",
+        }
+    ]
 }
 
 EXPECTED_QUERY_LOG_GROUP: str = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/route53/public.aws.scanner.gov.uk."
