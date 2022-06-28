@@ -31,6 +31,14 @@ class TestRout53(TestCase):
                     "ResourceRecordSetCount": 123,
                     "LinkedService": {"ServicePrincipal": "string", "Description": "string"},
                 },
+                {
+                    "Id": "/hostedzone/IIIIIIILLLLLLL",
+                    "Name": "public.aws.scanner.gov.uk.",
+                    "CallerReference": "string",
+                    "Config": {"Comment": "string", "PrivateZone": False},
+                    "ResourceRecordSetCount": 123,
+                    "LinkedService": {"ServicePrincipal": "string", "Description": "string"},
+                },
             ],
         }
 
