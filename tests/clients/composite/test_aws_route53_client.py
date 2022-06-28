@@ -65,9 +65,11 @@ log-group:/aws/route53/public.aws.scanner.gov.uk.",
 
         boto_mock = Mock(list_query_logging_configs=Mock(return_value=expected_query_log))
 
+        arg = {"HostedZoneId": "AAAABBBBCCCCDD"}
+
         assert responses.EXPECTED_QUERY_LOG == AwsRoute53Client(boto_mock).list_query_logging_configs("AAAABBBBCCCCDD")
 
-        boto_mock.list_query_logging_configs.assert_called_once_with("AAAABBBBCCCCDD")
+        boto_mock.list_query_logging_configs.assert_called_once_with(arg)
 
     def test_list_query_logging_configs_failure(self) -> None:
         boto_mock = Mock(

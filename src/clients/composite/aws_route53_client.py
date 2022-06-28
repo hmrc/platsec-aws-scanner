@@ -23,6 +23,7 @@ class AwsRoute53Client:
 
     def list_query_logging_configs(self, id: str) -> Any:
         try:
-            return self._route53.list_query_logging_configs(id)
+            arg = {"HostedZoneId": id}
+            return self._route53.list_query_logging_configs(arg)
         except (BotoCoreError, ClientError) as err:
             raise QueryLogException(f"unable to get the query log config: {err}")
