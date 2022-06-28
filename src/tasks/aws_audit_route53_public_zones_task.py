@@ -18,7 +18,7 @@ class AwsAuditRoute53PublicZonesTask(AwsTask):
         for host in hostedzones:
             zone = route53Type.to_route53Zone(host)
             if not zone.privateZone:
-                zone.queryLog = client.list_query_logging_configs(zone.id.replace("/hostedzone/", ""))[
+                zone.queryLog = client.list_query_logging_configs(HostedZoneId=zone.id.replace("/hostedzone/", ""))[
                     "QueryLoggingConfigs"
                 ][0]["CloudWatchLogsLogGroupArn"]
                 public_zones[zone.id] = zone
