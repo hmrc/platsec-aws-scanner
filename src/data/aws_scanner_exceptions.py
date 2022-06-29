@@ -45,6 +45,14 @@ class CostExplorerException(AwsScannerException):
     pass
 
 
+class HostedZonesException(AwsScannerException):
+    pass
+
+
+class QueryLogException(AwsScannerException):
+    pass
+
+
 class InvalidDataPartitionException(AwsScannerException):
     def __init__(self, partitions: Iterable[Any], retention: int, year: int, month: int, day: Optional[int] = None):
         super().__init__(

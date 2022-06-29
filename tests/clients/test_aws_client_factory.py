@@ -66,6 +66,16 @@ class TestGetBotoClients(TestCase):
             role="ec2_role",
         )
 
+    def test_get_route53_boto_client(self) -> None:
+        route53_account = account(identifier="999888777666", name="some_route53_account")
+        self.assert_get_client(
+            method_under_test="get_route53_boto_client",
+            method_args={"account": route53_account, "role": "route53_role"},
+            service="route53",
+            target_account=route53_account,
+            role="route53_role",
+        )
+
     def test_get_s3_boto_client(self) -> None:
         s3_account = account(identifier="122344566788", name="some_s3_account")
         self.assert_get_client(
@@ -162,6 +172,15 @@ class TestGetClients(TestCase):
         ):
             ec2_client = AwsClientFactory(self.mfa, self.username).get_ec2_client(account())
             self.assertEqual(ec2_client._ec2, ec2_boto_client)
+
+    def test_get_route53_client(self, _: Mock) -> None:
+        route53_boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_route53_boto_client",
+            side_effect=lambda acc, role: route53_boto_client if acc == account() and role == "route53_role" else None,
+        ):
+            route53_client = AwsClientFactory(self.mfa, self.username).get_route53_client(account())
+            self.assertEqual(route53_client._route53, route53_boto_client)
 
     def test_get_organizations_client(self, _: Mock) -> None:
         with patch(f"{self.factory_path}.get_organizations_boto_client") as boto_client:

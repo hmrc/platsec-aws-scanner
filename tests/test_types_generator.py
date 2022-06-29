@@ -26,6 +26,8 @@ from src.data.aws_compliance_actions import (
     TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
 )
+
+from src.data.aws_route53_types import Route53Zone
 from src.data.aws_ec2_types import FlowLog, Instance, Vpc, VpcPeeringConnection
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
@@ -65,6 +67,7 @@ from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
+from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
 
 
 def partition(
@@ -635,6 +638,10 @@ def audit_ec2_instances_task(account: Account = account()) -> AwsAuditEc2Instanc
     return AwsAuditEc2InstancesTask(account)
 
 
+def audit_route53_public_zones_task(account: Account = account()) -> AwsAuditRoute53PublicZonesTask:
+    return AwsAuditRoute53PublicZonesTask(account)
+
+
 def instance(
     id: str = "instance-1234",
     component: str = "some-component",
@@ -651,3 +658,11 @@ def instance(
         launch_time=launch_time,
         metadata_options_http_tokens=metadata_options_http_tokens,
     )
+
+
+def route53Zone(
+    id: str = "1234",
+    name: str = "zone name",
+    privateZone: bool = True,
+) -> Route53Zone:
+    return Route53Zone(id=id, name=name, privateZone=privateZone, queryLog="")
