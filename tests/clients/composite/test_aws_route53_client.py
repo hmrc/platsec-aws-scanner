@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.data.aws_scanner_exceptions import HostedZonesException, QueryLogException
@@ -88,3 +88,20 @@ log-group:/aws/route53/public.aws.scanner.gov.uk.",
 
         with self.assertRaisesRegex(QueryLogException, "unable to get the query log config"):
             AwsRoute53Client(boto_mock).list_query_logging_configs("AAAABBBBCCCCDD")
+
+    def test_create_query_log_config(self) -> None:
+
+        route53_client = Mock(create_query_logging_config=Mock(return_value="expected_query_log"))
+        AwsRoute53Client(route53_client).create_query_logging_config(
+            "AAAABBBBCCCCDD", "arn:aws:logs:us-east-1:123456789012:log-group:/aws/route53/public.aws.scanner.gov.uk."
+        )
+        assert route53_client.create_query_logging_config.call_count == 1
+        route53_client.create_query_logging_config.assert_has_calls(
+            [
+                call(
+                    HostedZoneId="AAAABBBBCCCCDD",
+                    CloudWatchLogsLogGroupArn="arn:aws:logs:us-east-1:123456789012:log-group:\
+/aws/route53/public.aws.scanner.gov.uk.",
+                )
+            ]
+        )

@@ -68,6 +68,7 @@ from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
+from src.tasks.aws_create_route53_public_zones_logging import AwsCreateRoute53PublicZonesLogsTask
 
 
 def partition(
@@ -640,6 +641,10 @@ def audit_ec2_instances_task(account: Account = account()) -> AwsAuditEc2Instanc
 
 def audit_route53_public_zones_task(account: Account = account()) -> AwsAuditRoute53PublicZonesTask:
     return AwsAuditRoute53PublicZonesTask(account)
+
+
+def create_route53_public_zones_logs_task(account: Account = account()) -> AwsCreateRoute53PublicZonesLogsTask:
+    return AwsCreateRoute53PublicZonesLogsTask(account)
 
 
 def instance(

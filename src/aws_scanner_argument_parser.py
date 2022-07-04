@@ -52,6 +52,7 @@ class AwsScannerCommands:
     audit_vpc_peering = "audit_vpc_peering"
     audit_ec2_instances = "audit_ec2_instances"
     audit_route53 = "list_public_zones"
+    enable_route53_logging = "enable_route53_logging"
 
 
 class AwsScannerArgumentParser:
