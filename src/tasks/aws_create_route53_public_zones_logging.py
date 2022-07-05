@@ -20,7 +20,6 @@ class AwsCreateRoute53PublicZonesLogsTask(AwsTask):
         hostedzones = hostedzonesTask._run_task(client)
         for zone in hostedzones.values():
             if zone.queryLog == "":
-                print("---------------------------------------------------------------- 3", zone.id)
-                client.create_query_logging_config(zone.id, "/aws/route53/" + zone.name + ".")
+                client.create_query_logging_config(zone.id, "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:/aws/route53/" + zone.name + ".")
 
         return public_zones
