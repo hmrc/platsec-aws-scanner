@@ -13,13 +13,12 @@ class AwsCreateRoute53PublicZonesLogsTask(AwsTask):
         super().__init__("Create Route53 public zones logs", account)
 
     def _run_task(self, client: AwsRoute53Client) -> Dict[Any, Any]:
-
-        public_zones: Dict[Any, Any] = {}
         hostedzonesTask = AwsAuditRoute53PublicZonesTask(self._account)
 
         hostedzones = hostedzonesTask._run_task(client)
         for zone in hostedzones.values():
             if zone.queryLog == "":
-                client.create_query_logging_config(zone.id, "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:/aws/route53/" + zone.name + ".")
+                zone.queryLog = "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:/aws/route53/" + zone.name
+                client.create_query_logging_config(zone.id, zone.queryLog)
 
-        return public_zones
+        return hostedzones
