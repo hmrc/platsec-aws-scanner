@@ -2,11 +2,6 @@ from logging import getLogger
 from typing import Any, Dict, Sequence, List, Optional
 from itertools import chain
 from src import PLATSEC_SCANNER_TAGS
-from src.data.aws_compliance_actions import (
-    ComplianceAction
-)
-from botocore.client import BaseClient
-from botocore.exceptions import BotoCoreError, ClientError
 
 import  src.data.aws_route53_types as route53Type
 from src.aws_scanner_config import AwsScannerConfig as Config
@@ -14,6 +9,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
+from src.clients.aws_hostedZones_client import AwsHostedZonesClient
 
 from src.data.aws_compliance_actions import (
     ComplianceAction,
@@ -29,12 +25,11 @@ from src.data.aws_compliance_actions import (
     CreateQueryLogAction
 )
 
-from src.data.aws_scanner_exceptions import HostedZonesException, QueryLogException
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 
 
 class AwsRoute53Client:
-    def __init__(self, boto_route53: BaseClient, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
+    def __init__(self, boto_route53: AwsHostedZonesClient, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._route53 = boto_route53
@@ -44,31 +39,14 @@ class AwsRoute53Client:
         self.config = Config()
 
     def list_hosted_zones(self) -> Dict[Any, Any]:
-        public_zones: Dict[Any, Any] = {}
-        hostedzones = self._route53.list_hosted_zones()["HostedZones"]
-        for host in hostedzones:
-            zone = route53Type.to_route53Zone(host)
-            if not zone.privateZone:
-                queryLogConfig = self._route53.list_query_logging_configs(zone.id.replace("/hostedzone/", ""))
-                if len(queryLogConfig) > 0 and len(queryLogConfig["QueryLoggingConfigs"]) > 0:
-                    zone.queryLog = queryLogConfig["QueryLoggingConfigs"][0]["CloudWatchLogsLogGroupArn"]
-                public_zones[zone.id] = zone
-
-        return public_zones
-       
-   
-       
+        return self._route53.list_hosted_zones()
 
     def list_query_logging_configs(self, id: str) -> Any:
-        try:
-            return self._route53.list_query_logging_configs(HostedZoneId=id)
-        except (BotoCoreError, ClientError) as err:
-            raise QueryLogException(f"unable to get the query log config: {err}")
+        return self._route53.list_query_logging_configs(id)
 
     def create_query_logging_config(self, hosted_zone_id: str, cloudwatch_logs_loggrouparn: str) -> Any:
-        return self._route53.create_query_logging_config(
-            HostedZoneId=hosted_zone_id, CloudWatchLogsLogGroupArn=cloudwatch_logs_loggrouparn
-        )
+        return self._route53.create_query_logging_config(hosted_zone_id, cloudwatch_logs_loggrouparn)
+  
         
     def enforcement_actions(self, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         if not hostedZones:

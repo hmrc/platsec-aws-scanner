@@ -18,6 +18,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.aws_hostedZones_client import AwsHostedZonesClient
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
@@ -101,7 +102,15 @@ class AwsClientFactory:
         return self._get_client("route53", account, role)
 
     def get_route53_client(self, account: Account, role: Optional[str] = None) -> AwsRoute53Client:
-        return AwsRoute53Client(self.get_route53_boto_client(account, role or self._config.route53_role()))
+        return AwsRoute53Client(
+            boto_route53= self.get_hosted_zones_client(account),
+            iam=self.get_iam_client(account),
+            logs=self.get_logs_client(account),
+            kms=self.get_kms_client(account),
+        )
+
+    def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:
+        return AwsHostedZonesClient(self.get_route53_boto_client(account, role or self._config.route53_role()))
 
     def get_organizations_client(self) -> AwsOrganizationsClient:
         return AwsOrganizationsClient(self.get_organizations_boto_client())

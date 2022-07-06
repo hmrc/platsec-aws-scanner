@@ -34,7 +34,7 @@ class ComplianceActionReport:
         self.status = f"failed: {reason}"
         return self
 
-
+@dataclass
 class ComplianceAction:
     description: str
     logger: Logger
@@ -79,16 +79,16 @@ class DeleteFlowLogAction(ComplianceAction):
 class DeleteQueryLogAction(ComplianceAction):
     query_log_id: str
 
-    def __init__(self, route53_client: AwsRoute53Client, query_log_id: str):
-        super().__init__("Delete Route53 query log")
-        self.query_log_id = query_log_id
-        self.logs = route53_client
+    # def __init__(self, route53_client: AwsRoute53Client, query_log_id: str):
+    #     super().__init__("Delete Route53 query log")
+    #     self.query_log_id = query_log_id
+    #     self.logs = route53_client
 
-    def _apply(self) -> None:
-        self.logs.delete_query_logs(self.query_log_id)
+    # def _apply(self) -> None:
+    #     self.logs.delete_query_logs(self.query_log_id)
 
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description, details=dict(query_log_id=self.query_log_id))
+    # def plan(self) -> ComplianceActionReport:
+    #     return ComplianceActionReport(description=self.description, details=dict(query_log_id=self.query_log_id))
 
 
 @dataclass
