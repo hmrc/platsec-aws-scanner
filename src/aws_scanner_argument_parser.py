@@ -53,6 +53,7 @@ class AwsScannerCommands:
     audit_ec2_instances = "audit_ec2_instances"
     audit_route53 = "list_public_zones"
     enable_route53_logging = "enable_route53_logging"
+    audit_route53_query_logs = "audit_route53_query_logs"
 
 
 class AwsScannerArgumentParser:
