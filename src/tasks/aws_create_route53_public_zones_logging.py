@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from botocore.exceptions import BotoCoreError, ClientError
-
 from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
 from src.data.aws_organizations_types import Account
@@ -20,10 +18,12 @@ class AwsCreateRoute53PublicZonesLogsTask(AwsTask):
         hostedzones = hostedzonesTask._run_task(client)
         for zone in hostedzones.values():
             if zone.queryLog == "":
-                query_log_arn = "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:/aws/route53/" + zone.name
+                query_log_arn = (
+                    "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:/aws/route53/" + zone.name
+                )
                 client.create_query_logging_config(zone.id, query_log_arn)
                 zone.queryLog = query_log_arn
-                                
+
                 # try:
                 #     client.create_query_logging_config(zone.id, query_log_arn)
                 #     zone.queryLog = query_log_arn
