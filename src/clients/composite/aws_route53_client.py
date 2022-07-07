@@ -64,7 +64,7 @@ class AwsRoute53Client:
             or query_log.traffic_type != self.config.ec2_query_log_traffic_type()
             or query_log.log_format != self.config.ec2_query_log_format()
             or query_log.deliver_log_role_arn is None
-            or not query_log.deliver_log_role_arn.endswith(f":role/{self.config.logs_vpc_log_group_delivery_role()}")
+            or not query_log.deliver_log_role_arn.endswith(f":role/{self.config.logs_route53_log_group_delivery_role()}")
         )
 
 
@@ -80,33 +80,35 @@ class AwsRoute53Client:
         
     def _create_query_log_actions(self, hostedZones: Sequence[route53Type.Route53Zone]) -> Sequence[ComplianceAction]:
         queryLogActionList = []
+       # print(hostedZones)
         for zone in hostedZones:
-            if zone.queryLog == "":
-                 queryLogActionList.append(CreateQueryLogAction(self._route53, self._iam, self._config, zone.id ))
+            route53zone = hostedZones[zone]
+            if route53zone.queryLog == "":
+                 queryLogActionList.append(CreateQueryLogAction(self._route53, self._iam, self._config, route53zone.id ))
         return  queryLogActionList
         
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]: 
-        log_group = self._find_log_group(self.config.logs_route53_log_group_name())
+        # log_group = self._find_log_group(self.config.logs_route53_log_group_name())
         actions: List[Any] = []
-        if log_group:
-            if self._is_central_route53_log_group(log_group) and not with_subscription_filter:
-                actions.append(DeleteRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
-            if not self._is_central_route53_log_group(log_group) and with_subscription_filter:
-                actions.append(PutRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
-            if log_group.retention_days != self.config.logs_route53_log_group_retention_policy_days():
-                actions.append(PutRoute53LogGroupRetentionPolicyAction(logs=self._logs))
-            if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
-                actions.append(TagRoute53LogGroupAction(logs=self._logs))
-        else:
-            actions.extend(
-                [
-                    CreateRoute53LogGroupAction(logs=self._logs),
-                    PutRoute53LogGroupRetentionPolicyAction(logs=self._logs),
-                    TagRoute53LogGroupAction(logs=self._logs),
-                ]
-            )
-            if with_subscription_filter:
-                actions.append(PutRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
+        # if log_group:
+        #     if self._is_central_route53_log_group(log_group) and not with_subscription_filter:
+        #         actions.append(DeleteRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
+        #     if not self._is_central_route53_log_group(log_group) and with_subscription_filter:
+        #         actions.append(PutRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
+        #     if log_group.retention_days != self.config.logs_route53_log_group_retention_policy_days():
+        #         actions.append(PutRoute53LogGroupRetentionPolicyAction(logs=self._logs))
+        #     if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
+        #         actions.append(TagRoute53LogGroupAction(logs=self._logs))
+        # else:
+        actions.extend(
+            [
+                CreateRoute53LogGroupAction(logs=self._logs),
+                # PutRoute53LogGroupRetentionPolicyAction(logs=self._logs),
+                # TagRoute53LogGroupAction(logs=self._logs),
+            ]
+        )
+            # if with_subscription_filter:
+            #     actions.append(PutRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
 
         return actions
     

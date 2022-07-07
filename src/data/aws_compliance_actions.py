@@ -130,6 +130,7 @@ class CreateQueryLogAction(ComplianceAction):
         self.iam = iam
         self.zone_id = zone_id
         self.config = config
+        print("***********************", self.zone_id, self.config.logs_route53_log_group_name())
 
     def _get_query_log_delivery_role_arn(self, logs_route53_log_group_delivery_role: str) -> str:
         return self.iam.get_role(logs_route53_log_group_delivery_role).arn
@@ -177,7 +178,7 @@ class CreateQueryLogDeliveryRoleAction(ComplianceAction):
         config = Config()
         self.iam.attach_role_policy(
             self.iam.create_role(
-                config.logs_route53_log_group_delivery_role(),
+                config.logs_route53_log_group_delivery_role(),     
                 config.logs_route53_log_group_delivery_role_assume_policy(),
             ),
             str(self.iam.find_policy_arn(config.logs_route53_log_group_delivery_role_policy())),
@@ -185,7 +186,7 @@ class CreateQueryLogDeliveryRoleAction(ComplianceAction):
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
-            description=self.description, details=dict(role_name=Config().logs_vpc_log_group_delivery_role())
+            description=self.description, details=dict(role_name=Config().logs_route53_log_group_delivery_role())
         )
 
 @dataclass
@@ -210,7 +211,7 @@ class DeleteQueryLogDeliveryRoleAction(ComplianceAction):
 
     def _apply(self) -> None:
         config = Config()
-        self.iam.delete_role(config.logs_vroute53_log_group_delivery_role())
+        self.iam.delete_role(config.logs_route53_log_group_delivery_role())
         
 @dataclass
 class TagFlowLogDeliveryRoleAction(ComplianceAction):
@@ -417,8 +418,8 @@ class PutRoute53LogGroupRetentionPolicyAction(ComplianceAction):
     def _apply(self) -> None:
         config = Config()
         self.logs.put_retention_policy(
-            log_group_name=config.logs_Route53_log_group_name(),
-            retention_days=config.logs_Route53_log_group_retention_policy_days(),
+            log_group_name=config.logs_route53_log_group_name(),
+            retention_days=config.logs_route53_log_group_retention_policy_days(),
         )
 
     def plan(self) -> ComplianceActionReport:
@@ -426,8 +427,8 @@ class PutRoute53LogGroupRetentionPolicyAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_Route53_log_group_name(),
-                retention_days=config.logs_Route53_log_group_retention_policy_days(),
+                log_group_name=config.logs_route53_log_group_name(),
+                retention_days=config.logs_route53_log_group_retention_policy_days(),
             ),
         )
 

@@ -22,7 +22,7 @@ class AwsHostedZonesClient:
         for host in hostedzones:
             zone = route53Type.to_route53Zone(host)
             if not zone.privateZone:
-                queryLogConfig = self._route53.list_query_logging_configs(zone.id.replace("/hostedzone/", ""))
+                queryLogConfig = self._route53.list_query_logging_configs(HostedZoneId= zone.id.replace("/hostedzone/", ""))
                 if len(queryLogConfig) > 0 and len(queryLogConfig["QueryLoggingConfigs"]) > 0:
                     zone.queryLog = queryLogConfig["QueryLoggingConfigs"][0]["CloudWatchLogsLogGroupArn"]
                 public_zones[zone.id] = zone

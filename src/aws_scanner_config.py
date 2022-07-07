@@ -164,7 +164,7 @@ class AwsScannerConfig:
         return self._get_config("logs", "vpc_log_group_delivery_role")
     
     def logs_route53_log_group_delivery_role(self) -> str:
-        return self._get_config("logs", "vroute53_log_group_delivery_role")
+        return self._get_config("logs", "route53_log_group_delivery_role")
 
     def logs_vpc_log_group_delivery_role_policy(self) -> str:
         return self._get_config("logs", "vpc_log_group_delivery_role_policy")
