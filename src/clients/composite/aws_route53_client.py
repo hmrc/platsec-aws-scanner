@@ -11,6 +11,7 @@ from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_hostedZones_client import AwsHostedZonesClient
 from src.data.aws_iam_types import Role
+from src.data.aws_organizations_types import Account
 
 from src.data.aws_compliance_actions import (
     ComplianceAction,
@@ -40,21 +41,21 @@ class AwsRoute53Client:
         self.config = Config()
   
         
-    def enforcement_actions(self, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
+    def enforcement_actions(self, account: Account, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
         log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
         delivery_role_actions = self._delivery_role_enforcement_actions()
-        route53_actions = [action for zone in hostedZones for action in self._route53_enforcement_actions(hostedZones)]
+        route53_actions = [action for zone in hostedZones for action in self._route53_enforcement_actions(account, hostedZones[zone])]
         return list(chain(log_group_actions, delivery_role_actions, route53_actions))
 
 
-    def _route53_enforcement_actions(self, hostedZones: Sequence[route53Type.Route53Zone]) -> Sequence[ComplianceAction]:
+    def _route53_enforcement_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
         return list(
             chain(
-                # self._delete_misconfigured_query_log_actions(hostedZones),
+                self._delete_misconfigured_query_log_actions(account, hostedZone),
                 # self._delete_redundant_flow_log_actions(hostedZones),
-                self._create_query_log_actions(hostedZones),
+                #self._create_query_log_actions(account, hostedZone),
             )
         )
 
@@ -68,23 +69,20 @@ class AwsRoute53Client:
         )
 
 
-    # def _delete_misconfigured_query_log_actions(self, hostedZones: Sequence[route53Type.Route53Zone]) -> Sequence[ComplianceAction]:
-    #     return [
-    #         for zone in hostedZones:
-
-
-    #             DeleteQueryLogAction(route53_client=self._route53, query_log_id=query_log.id)
-    #             for query_log in self._find_misconfigured_flow_logs(hostedZones.flow_logs)
-    #     ]
-
-        
-    def _create_query_log_actions(self, hostedZones: Sequence[route53Type.Route53Zone]) -> Sequence[ComplianceAction]:
+    def _delete_misconfigured_query_log_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
+        query_log_arn = "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self.config.logs_route53_log_group_name()
         queryLogActionList = []
-       # print(hostedZones)
-        for zone in hostedZones:
-            route53zone = hostedZones[zone]
-            if route53zone.queryLog == "":
-                 queryLogActionList.append(CreateQueryLogAction(self._route53, self._iam, self._config, route53zone.id ))
+        print(">>>>>>>>>>>>>>>>",  query_log_arn)
+        if  hostedZone.queryLog != query_log_arn:
+            queryLogActionList.append(DeleteQueryLogAction(hosted_zone_id= hostedZone.id, route53_client=self._route53))
+
+        return  queryLogActionList
+  
+
+    def _create_query_log_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
+        queryLogActionList = []
+        if hostedZone.queryLog == "":
+                 queryLogActionList.append(CreateQueryLogAction(account, self._route53, self._iam, self._config, hostedZone.id ))
         return  queryLogActionList
         
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]: 

@@ -11,6 +11,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import AwsScannerException
 from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.data.aws_organizations_types import Account
 
 @dataclass
 class ComplianceActionReport:
@@ -77,18 +78,17 @@ class DeleteFlowLogAction(ComplianceAction):
 
 @dataclass
 class DeleteQueryLogAction(ComplianceAction):
-    query_log_id: str
 
-    # def __init__(self, route53_client: AwsRoute53Client, query_log_id: str):
-    #     super().__init__("Delete Route53 query log")
-    #     self.query_log_id = query_log_id
-    #     self.logs = route53_client
+    def __init__(self, route53_client: AwsHostedZonesClient, hosted_zone_id: str):
+        super().__init__("Delete Route53 query logging config")
+        self.hosted_zone_id = hosted_zone_id
+        self.logs = route53_client
 
-    # def _apply(self) -> None:
-    #     self.logs.delete_query_logs(self.query_log_id)
+    def _apply(self) -> None:
+        self.logs.delete_query_logging_config(self.hosted_zone_id)
 
-    # def plan(self) -> ComplianceActionReport:
-    #     return ComplianceActionReport(description=self.description, details=dict(query_log_id=self.query_log_id))
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(description=self.description, details=dict(hosted_zone_id=self.hosted_zone_id))
 
 
 @dataclass
@@ -124,13 +124,14 @@ class CreateQueryLogAction(ComplianceAction):
     zone_id: str
     config: Config = field(compare=False, hash=False, repr=False)
 
-    def __init__(self, route53_client: AwsHostedZonesClient, iam: AwsIamClient, config: Config, zone_id: str):
+    def __init__(self, account: Account, route53_client: AwsHostedZonesClient, iam: AwsIamClient, config: Config, zone_id: str):
         super().__init__("Create hosted zone query log")
         self.route53_client = route53_client
         self.iam = iam
         self.zone_id = zone_id
         self.config = config
-        print("***********************", self.zone_id, self.config.logs_route53_log_group_name())
+        self.account = account
+        self.query_log_arn = "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:" + self.config.logs_route53_log_group_name()
 
     def _get_query_log_delivery_role_arn(self, logs_route53_log_group_delivery_role: str) -> str:
         return self.iam.get_role(logs_route53_log_group_delivery_role).arn
@@ -138,10 +139,11 @@ class CreateQueryLogAction(ComplianceAction):
     def _apply(self) -> None:
         self.route53_client.create_query_logging_config(
             self.zone_id,
-            self.config.logs_route53_log_group_name(),
+            self.config.query_log_arn(),
         )
 
     def plan(self) -> ComplianceActionReport:
+
         return ComplianceActionReport(
             description=self.description,
             details=dict(zone_id=self.zone_id, log_group_name=self.config.logs_route53_log_group_name()),

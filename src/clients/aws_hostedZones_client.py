@@ -40,3 +40,12 @@ class AwsHostedZonesClient:
             HostedZoneId=hosted_zone_id, CloudWatchLogsLogGroupArn=cloudwatch_logs_loggrouparn
         )
         
+
+    def delete_query_logging_config(self, hosted_zone_id: str) -> Any:
+
+        queryLoggingConfig = self._route53.list_query_logging_configs(HostedZoneId =hosted_zone_id) 
+        if len(queryLoggingConfig["QueryLoggingConfigs"]) > 0:
+             queryLoggingConfigId = queryLoggingConfig["QueryLoggingConfigs"][0]["Id"]
+             self._route53.delete_query_logging_config(Id =queryLoggingConfigId) 
+
+        return hosted_zone_id
