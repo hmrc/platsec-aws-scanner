@@ -10,7 +10,7 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import AwsScannerException
-from src.clients.composite.aws_route53_client import AwsRoute53Client
+from src.clients.aws_hostedZones_client import AwsHostedZonesClient
 
 @dataclass
 class ComplianceActionReport:
@@ -124,7 +124,7 @@ class CreateQueryLogAction(ComplianceAction):
     zone_id: str
     config: Config = field(compare=False, hash=False, repr=False)
 
-    def __init__(self, route53_client: AwsRoute53Client, iam: AwsIamClient, config: Config, zone_id: str):
+    def __init__(self, route53_client: AwsHostedZonesClient, iam: AwsIamClient, config: Config, zone_id: str):
         super().__init__("Create hosted zone query log")
         self.route53_client = route53_client
         self.iam = iam

@@ -3,13 +3,14 @@ from typing import Any, Dict, Sequence, List, Optional
 from itertools import chain
 from src import PLATSEC_SCANNER_TAGS
 
-import  src.data.aws_route53_types as route53Type
+import  src.data.aws_route53_types as route53Type 
 from src.aws_scanner_config import AwsScannerConfig as Config
  
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.data.aws_iam_types import Role
 
 from src.data.aws_compliance_actions import (
     ComplianceAction,
@@ -37,15 +38,6 @@ class AwsRoute53Client:
         self._logs = logs
         self.kms = kms
         self.config = Config()
-
-    def list_hosted_zones(self) -> Dict[Any, Any]:
-        return self._route53.list_hosted_zones()
-
-    def list_query_logging_configs(self, id: str) -> Any:
-        return self._route53.list_query_logging_configs(id)
-
-    def create_query_logging_config(self, hosted_zone_id: str, cloudwatch_logs_loggrouparn: str) -> Any:
-        return self._route53.create_query_logging_config(hosted_zone_id, cloudwatch_logs_loggrouparn)
   
         
     def enforcement_actions(self, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
@@ -57,7 +49,7 @@ class AwsRoute53Client:
         return list(chain(log_group_actions, delivery_role_actions, route53_actions))
 
 
-    def _route53_enforcement_actions(self, hostedZones: hostedZones) -> Sequence[ComplianceAction]:
+    def _route53_enforcement_actions(self, hostedZones: Sequence[route53Type.Route53Zone]) -> Sequence[ComplianceAction]:
         return list(
             chain(
                 # self._delete_misconfigured_query_log_actions(hostedZones),
@@ -66,7 +58,7 @@ class AwsRoute53Client:
             )
         )
 
-    def _is_query_log_misconfigured(self, query_log: QueryLog) -> bool:
+    def _is_query_log_misconfigured(self, query_log: route53Type.QueryLog) -> bool:
         return self._is_query_log_centralised(query_log) and (
             query_log.status != self.config.ec2_query_log_status()
             or query_log.traffic_type != self.config.ec2_query_log_traffic_type()
