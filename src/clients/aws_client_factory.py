@@ -77,8 +77,8 @@ class AwsClientFactory:
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("ssm", account, self._config.ssm_role())
 
-    def get_logs_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("logs", account, self._config.logs_role())
+    def get_logs_boto_client(self, account: Account, region: Optional[str] = None) -> BaseClient:
+        return self._get_client("logs", account, self._config.logs_role(), region)
 
     def get_iam_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("iam", account, role)
@@ -105,7 +105,7 @@ class AwsClientFactory:
         return AwsRoute53Client(
             boto_route53= self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
-            logs=self.get_logs_client(account),
+            logs=self.get_logs_client(account, region="us-east-1"),
             kms=self.get_kms_client(account),
         )
 
@@ -118,8 +118,8 @@ class AwsClientFactory:
     def get_ssm_client(self, account: Account) -> AwsSSMClient:
         return AwsSSMClient(self.get_ssm_boto_client(account))
 
-    def get_logs_client(self, account: Account) -> AwsLogsClient:
-        return AwsLogsClient(self.get_logs_boto_client(account))
+    def get_logs_client(self, account: Account, region: Optional[str] = None) -> AwsLogsClient:
+        return AwsLogsClient(self.get_logs_boto_client(account, region))
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account, self._config.iam_role()))
@@ -173,9 +173,17 @@ class AwsClientFactory:
             sessionToken=credentials_dict["Credentials"]["SessionToken"],
         )
 
-    def _get_client(self, service_name: str, account: Account, role: str) -> BaseClient:
+    def _get_client(self, service_name: str, account: Account, role: str, region: Optional[str] = None) -> BaseClient:
         assumed_role = self._assume_role(account, role)
         self._logger.info(f"creating {service_name} client for {role} in {account}")
+        if region != None:
+            return boto3.client(
+                service_name=service_name,
+                aws_access_key_id=assumed_role.accessKeyId,
+                aws_secret_access_key=assumed_role.secretAccessKey,
+                aws_session_token=assumed_role.sessionToken,
+                region_name=region,
+            )
         return boto3.client(
             service_name=service_name,
             aws_access_key_id=assumed_role.accessKeyId,

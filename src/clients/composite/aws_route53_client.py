@@ -44,10 +44,10 @@ class AwsRoute53Client:
     def enforcement_actions(self, account: Account, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
-        #log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
-        # delivery_role_actions = self._delivery_role_enforcement_actions()
+        log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
+        #delivery_role_actions = self._delivery_role_enforcement_actions()
         route53_actions = [action for zone in hostedZones for action in self._route53_enforcement_actions(account, hostedZones[zone])]
-        return list(chain(route53_actions))
+        return list(chain(log_group_actions, route53_actions))
 
 
     def _route53_enforcement_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
@@ -86,7 +86,9 @@ class AwsRoute53Client:
         return  queryLogActionList
         
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]: 
-        # log_group = self._find_log_group(self.config.logs_route53_log_group_name())
+        log_group = self._find_log_group(self.config.logs_route53_log_group_name())
+        if log_group != None:
+             return [PutRoute53LogGroupRetentionPolicyAction(logs=self._logs), TagRoute53LogGroupAction(logs=self._logs)]
         actions: List[Any] = []
         # if log_group:
         #     if self._is_central_route53_log_group(log_group) and not with_subscription_filter:
@@ -101,13 +103,12 @@ class AwsRoute53Client:
         actions.extend(
             [
                 CreateRoute53LogGroupAction(logs=self._logs),
-                # PutRoute53LogGroupRetentionPolicyAction(logs=self._logs),
-                # TagRoute53LogGroupAction(logs=self._logs),
+                PutRoute53LogGroupRetentionPolicyAction(logs=self._logs),
+                TagRoute53LogGroupAction(logs=self._logs),
             ]
         )
             # if with_subscription_filter:
             #     actions.append(PutRoute53LogGroupSubscriptionFilterAction(logs=self._logs))
-
         return actions
     
     def _find_log_group(self, name: str) -> Optional[LogGroup]:
@@ -115,9 +116,9 @@ class AwsRoute53Client:
         kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
         return log_group.with_kms_key(kms_key) if log_group else None
     
-    def _delivery_role_enforcement_actions(self) -> Sequence[ComplianceAction]:
-        recreate_role_actions = list(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
-        return recreate_role_actions or self._tag_delivery_role_action()
+    # def _delivery_role_enforcement_actions(self) -> Sequence[ComplianceAction]:
+    #     recreate_role_actions = list(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
+    #     return recreate_role_actions or self._tag_delivery_role_action()
     
     def _is_central_route53_log_group(self, log_group: LogGroup) -> bool:
         return log_group.name == self.config.logs_route53_log_group_name() and any(

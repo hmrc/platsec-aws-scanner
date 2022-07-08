@@ -189,7 +189,7 @@ class AwsScannerConfig:
     
     def logs_route53_log_group_retention_policy_days(self) -> int:
         return self._get_int_config("logs", "route53_log_group_retention_policy_days")
-
+    
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
 

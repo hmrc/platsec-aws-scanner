@@ -27,8 +27,8 @@ from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
 from src.tasks.aws_audit_ec2_instances_task import AwsAuditEc2InstancesTask
 from src.tasks.aws_task import AwsTask
-from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
-from src.tasks.aws_create_route53_public_zones_logging import AwsCreateRoute53PublicZonesLogsTask
+# from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
+# from src.tasks.aws_create_route53_public_zones_logging import AwsCreateRoute53PublicZonesLogsTask
 
 
 class AwsTaskBuilder:
@@ -78,8 +78,8 @@ class AwsTaskBuilder:
             ),
             Cmd.audit_vpc_peering: lambda: self._tasks(AwsAuditVpcPeeringTask),
             Cmd.audit_ec2_instances: lambda: self._tasks(AwsAuditEc2InstancesTask),
-            Cmd.audit_route53: lambda: self._tasks(AwsAuditRoute53PublicZonesTask),
-            Cmd.enable_route53_logging: lambda: self._tasks(AwsCreateRoute53PublicZonesLogsTask),
+            # Cmd.audit_route53: lambda: self._tasks(AwsAuditRoute53PublicZonesTask),
+            # Cmd.enable_route53_logging: lambda: self._tasks(AwsCreateRoute53PublicZonesLogsTask),
             Cmd.audit_route53_query_logs: lambda: self._tasks(
                 AwsAuditRoute53QueryLogsTask,
                 enforce=self._args.enforce,
