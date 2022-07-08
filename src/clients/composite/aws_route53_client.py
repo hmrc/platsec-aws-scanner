@@ -44,10 +44,10 @@ class AwsRoute53Client:
     def enforcement_actions(self, account: Account, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
-        log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
-        delivery_role_actions = self._delivery_role_enforcement_actions()
+        #log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
+        # delivery_role_actions = self._delivery_role_enforcement_actions()
         route53_actions = [action for zone in hostedZones for action in self._route53_enforcement_actions(account, hostedZones[zone])]
-        return list(chain(log_group_actions, delivery_role_actions, route53_actions))
+        return list(chain(route53_actions))
 
 
     def _route53_enforcement_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
@@ -55,7 +55,7 @@ class AwsRoute53Client:
             chain(
                 self._delete_misconfigured_query_log_actions(account, hostedZone),
                 # self._delete_redundant_flow_log_actions(hostedZones),
-                #self._create_query_log_actions(account, hostedZone),
+                self._create_query_log_actions(account, hostedZone),
             )
         )
 
@@ -70,19 +70,19 @@ class AwsRoute53Client:
 
 
     def _delete_misconfigured_query_log_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
-        query_log_arn = "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self.config.logs_route53_log_group_name()
-        queryLogActionList = []
-        print(">>>>>>>>>>>>>>>>",  query_log_arn)
-        if  hostedZone.queryLog != query_log_arn:
+    
+       query_log_arn = "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self.config.logs_route53_log_group_name()
+       queryLogActionList = []
+
+       if  hostedZone.queryLog != query_log_arn:
             queryLogActionList.append(DeleteQueryLogAction(hosted_zone_id= hostedZone.id, route53_client=self._route53))
 
-        return  queryLogActionList
+       return  queryLogActionList
   
 
     def _create_query_log_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
         queryLogActionList = []
-        if hostedZone.queryLog == "":
-                 queryLogActionList.append(CreateQueryLogAction(account, self._route53, self._iam, self._config, hostedZone.id ))
+        queryLogActionList.append(CreateQueryLogAction(account, self._route53, self._iam, self._config, hostedZone.id ))
         return  queryLogActionList
         
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]: 

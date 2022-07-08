@@ -139,7 +139,7 @@ class CreateQueryLogAction(ComplianceAction):
     def _apply(self) -> None:
         self.route53_client.create_query_logging_config(
             self.zone_id,
-            self.config.query_log_arn(),
+            self.query_log_arn,
         )
 
     def plan(self) -> ComplianceActionReport:

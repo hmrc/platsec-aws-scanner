@@ -36,8 +36,11 @@ class AwsHostedZonesClient:
             raise QueryLogException(f"unable to get the query log config: {err}")
 
     def create_query_logging_config(self, hosted_zone_id: str, cloudwatch_logs_loggrouparn: str) -> Any:
-        return self._route53.create_query_logging_config(
-            HostedZoneId=hosted_zone_id, CloudWatchLogsLogGroupArn=cloudwatch_logs_loggrouparn
+        hosted_zone_query_log =  self._route53.list_query_logging_configs(HostedZoneId= hosted_zone_id)
+
+        if  len(hosted_zone_query_log["QueryLoggingConfigs"]) == 0 or hosted_zone_query_log["QueryLoggingConfigs"][0]["CloudWatchLogsLogGroupArn"] == "":
+            return self._route53.create_query_logging_config(
+                HostedZoneId=hosted_zone_id, CloudWatchLogsLogGroupArn=cloudwatch_logs_loggrouparn
         )
         
 
