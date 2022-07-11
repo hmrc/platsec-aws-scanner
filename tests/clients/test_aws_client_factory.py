@@ -28,15 +28,21 @@ class TestGetBotoClients(TestCase):
         mock_get_client = Mock(return_value=mock_client)
 
         with patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token"):
-            with patch("src.clients.aws_client_factory.AwsClientFactory._get_client", mock_get_client):
-                factory = AwsClientFactory(self.mfa, self.username)
-                client = (
-                    getattr(factory, method_under_test)(**method_args)
-                    if method_args
-                    else getattr(factory, method_under_test)()
-                )
-        self.assertEqual(mock_client, client)
-        mock_get_client.assert_called_once_with(service, target_account, role)
+             with patch("src.clients.aws_client_factory.AwsClientFactory._get_client", mock_get_client):
+                 factory = AwsClientFactory(self.mfa, self.username)
+                 client = (
+                     getattr(factory, method_under_test)(**method_args)
+                     if method_args
+                     else getattr(factory, method_under_test)()
+                 )
+
+             self.assertEqual(mock_client, client)
+
+             if(method_under_test == "get_logs_boto_client"):
+                mock_get_client.assert_called_once_with(service, target_account, role, None)
+            
+             else:
+                mock_get_client.assert_called_once_with(service, target_account, role)
 
     def test_get_athena_boto_client(self) -> None:
         self.assert_get_client(
@@ -108,7 +114,7 @@ class TestGetBotoClients(TestCase):
         logs_account = account(identifier="654654654654", name="some_logs_account")
         self.assert_get_client(
             method_under_test="get_logs_boto_client",
-            method_args={"account": logs_account},
+            method_args={"account": logs_account, "region" : None},
             service="logs",
             target_account=logs_account,
             role="logs_role",
@@ -218,9 +224,9 @@ class TestGetClients(TestCase):
         logs_boto_client = Mock()
         with patch(
             f"{self.factory_path}.get_logs_boto_client",
-            side_effect=lambda acc: logs_boto_client if acc == account() else None,
+            side_effect=lambda acc, region : logs_boto_client if acc == account() else None,
         ):
-            logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account())
+            logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account(), None)
             self.assertEqual(logs_client._logs, logs_boto_client)
 
     def test_get_iam_client(self, _: Mock) -> None:
