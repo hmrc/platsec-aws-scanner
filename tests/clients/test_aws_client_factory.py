@@ -185,7 +185,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_route53_boto_client",
             side_effect=lambda acc, role: route53_boto_client if acc == account() and role == "route53_role" else None,
         ):
-            route53_client = AwsClientFactory(self.mfa, self.username).get_route53_client(account())
+            route53_client = AwsClientFactory(self.mfa, self.username).get_hosted_zones_client(account())
             self.assertEqual(route53_client._route53, route53_boto_client)
 
     def test_get_organizations_client(self, _: Mock) -> None:
