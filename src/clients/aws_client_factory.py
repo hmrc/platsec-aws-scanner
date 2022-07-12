@@ -103,7 +103,7 @@ class AwsClientFactory:
 
     def get_route53_client(self, account: Account, role: Optional[str] = None) -> AwsRoute53Client:
         return AwsRoute53Client(
-            boto_route53= self.get_hosted_zones_client(account),
+            boto_route53= self._(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account, region="us-east-1"),
             kms=self.get_kms_client(account),
