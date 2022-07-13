@@ -31,7 +31,7 @@ from tests.test_types_generator import (
     put_vpc_log_group_subscription_filter_action,
     put_vpc_log_group_retention_policy_action,
     role,
-    subscription_filter,
+    subscription_filter,        
     tag_flow_log_delivery_role_action,
     tag_vpc_log_group_action,
     vpc,

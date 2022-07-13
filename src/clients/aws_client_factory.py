@@ -107,6 +107,7 @@ class AwsClientFactory:
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account, region="us-east-1"),
             kms=self.get_kms_client(account),
+            config= self._config
         )
 
     def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:

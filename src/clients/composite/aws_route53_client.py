@@ -31,21 +31,18 @@ from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 
 
 class AwsRoute53Client:
-    def __init__(self, boto_route53: AwsHostedZonesClient, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
+    def __init__(self, boto_route53: AwsHostedZonesClient, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient, config: Config):
         self._logger = getLogger(self.__class__.__name__)
-        self._config = Config()
+        self._config = config
         self._route53 = boto_route53
         self._iam = iam
         self._logs = logs
         self.kms = kms
-        self.config = Config()
-  
-        
+
     def enforcement_actions(self, account: Account, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
         log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
-        #delivery_role_actions = self._delivery_role_enforcement_actions()
         route53_actions = [action for zone in hostedZones for action in self._route53_enforcement_actions(account, hostedZones[zone])]
         return list(chain(log_group_actions, route53_actions))
 
@@ -61,21 +58,21 @@ class AwsRoute53Client:
 
     def _is_query_log_misconfigured(self, query_log: route53Type.QueryLog) -> bool:
         return self._is_query_log_centralised(query_log) and (
-            query_log.status != self.config.ec2_query_log_status()
-            or query_log.traffic_type != self.config.ec2_query_log_traffic_type()
-            or query_log.log_format != self.config.ec2_query_log_format()
+            query_log.status != self._config.ec2_query_log_status()
+            or query_log.traffic_type != self._config.ec2_query_log_traffic_type()
+            or query_log.log_format != self._config.ec2_query_log_format()
             or query_log.deliver_log_role_arn is None
-            or not query_log.deliver_log_role_arn.endswith(f":role/{self.config.logs_route53_log_group_delivery_role()}")
+            or not query_log.deliver_log_role_arn.endswith(f":role/{self._config.logs_route53_log_group_delivery_role()}")
         )
 
 
     def _delete_misconfigured_query_log_actions(self, account: Account, hostedZone: route53Type.Route53Zone) -> Sequence[ComplianceAction]:
     
-       query_log_arn = "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self.config.logs_route53_log_group_name()
+       query_log_arn = "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self._config.logs_route53_log_group_name()
        queryLogActionList = []
 
        if  hostedZone.queryLog != query_log_arn:
-            queryLogActionList.append(DeleteQueryLogAction(hosted_zone_id= hostedZone.id, route53_client=self._route53))
+            queryLogActionList.append(DeleteQueryLogAction(hosted_zone_id= hostedZone.id, route53_client=self._route53, config=self._config))
 
        return  queryLogActionList
   
@@ -86,9 +83,9 @@ class AwsRoute53Client:
         return  queryLogActionList
         
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]: 
-        log_group = self._find_log_group(self.config.logs_route53_log_group_name())
+        log_group = self._find_log_group(self._config.logs_route53_log_group_name())
         if log_group != None:
-             return [PutRoute53LogGroupRetentionPolicyAction(logs=self._logs), TagRoute53LogGroupAction(logs=self._logs)]
+             return [PutRoute53LogGroupRetentionPolicyAction(logs=self._logs, config=self._config), TagRoute53LogGroupAction(logs=self._logs, config=self._config)]
         actions: List[Any] = []
         # if log_group:
         #     if self._is_central_route53_log_group(log_group) and not with_subscription_filter:
@@ -103,8 +100,8 @@ class AwsRoute53Client:
         actions.extend(
             [
                 CreateRoute53LogGroupAction(logs=self._logs),
-                PutRoute53LogGroupRetentionPolicyAction(logs=self._logs),
-                TagRoute53LogGroupAction(logs=self._logs),
+                PutRoute53LogGroupRetentionPolicyAction(logs=self._logs, config=self._config),
+                TagRoute53LogGroupAction(logs=self._logs, config=self._config),
             ]
         )
             # if with_subscription_filter:
@@ -121,14 +118,14 @@ class AwsRoute53Client:
     #     return recreate_role_actions or self._tag_delivery_role_action()
     
     def _is_central_route53_log_group(self, log_group: LogGroup) -> bool:
-        return log_group.name == self.config.logs_route53_log_group_name() and any(
+        return log_group.name == self._config.logs_route53_log_group_name() and any(
             map(self._is_central_route53_destination_filter, log_group.subscription_filters)
         )
         
     def _is_central_route53_destination_filter(self, sub_filter: SubscriptionFilter) -> bool:
         return (
-            sub_filter.filter_pattern == self.config.logs_route53_log_group_pattern()
-            and sub_filter.destination_arn == self.config.logs_route53_log_group_destination()
+            sub_filter.filter_pattern == self._config.logs_route53_log_group_pattern()
+            and sub_filter.destination_arn == self._config.logs_route53_log_group_destination()
         )
         
     def _delete_delivery_role_action(self) -> Sequence[ComplianceAction]:
@@ -157,24 +154,24 @@ class AwsRoute53Client:
     def _is_query_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(
             role
-            and role.assume_policy == self.config.logs_route53_log_group_delivery_role_assume_policy()
+            and role.assume_policy == self._config.logs_route53_log_group_delivery_role_assume_policy()
             and role.policies
-            and all(p.doc_equals(self.config.logs_route53_log_group_delivery_role_policy_document()) for p in role.policies)
+            and all(p.doc_equals(self._config.logs_route53_log_group_delivery_role_policy_document()) for p in role.policies)
         )
  
     def _delivery_role_policy_exists(self) -> bool:
-        return bool(self._iam.find_policy_arn(self.config.logs_route53_log_group_delivery_role_policy()))
+        return bool(self._iam.find_policy_arn(self._config.logs_route53_log_group_delivery_role_policy()))
     
     def _find_query_log_delivery_role(self) -> Optional[Role]:
-        return self._iam.find_role(self.config.logs_route53_log_group_delivery_role())
+        return self._iam.find_role(self._config.logs_route53_log_group_delivery_role())
     
     def _is_query_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(
             role
-            and role.assume_policy == self.config.logs_route53_log_group_delivery_role_assume_policy()
+            and role.assume_policy == self._config.logs_route53_log_group_delivery_role_assume_policy()
             and role.policies
-            and all(p.doc_equals(self.config.logs_route53_log_group_delivery_role_policy_document()) for p in role.policies)
+            and all(p.doc_equals(self._config.logs_route53_log_group_delivery_role_policy_document()) for p in role.policies)
         )
         
     def _find_query_log_delivery_role(self) -> Optional[Role]:
-        return self._iam.find_role(self.config.logs_route53_log_group_delivery_role())
+        return self._iam.find_role(self._config.logs_route53_log_group_delivery_role())
