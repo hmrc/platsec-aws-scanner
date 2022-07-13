@@ -270,16 +270,16 @@ class CreateVpcLogGroupAction(ComplianceAction):
 class CreateRoute53LogGroupAction(ComplianceAction):
     logs: AwsLogsClient
 
-    def __init__(self, logs: AwsLogsClient) -> None:
+    def __init__(self, logs: AwsLogsClient, config: Config) -> None:
         super().__init__("Create central Route53 log group")
         self.logs = logs
-
+        self.config = config
     def _apply(self) -> None:
-        self.logs.create_log_group(Config().logs_route53_log_group_name())
+        self.logs.create_log_group(self.config.logs_route53_log_group_name())
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
-            description=self.description, details=dict(log_group_name=Config().logs_route53_log_group_name())
+            description=self.description, details=dict(log_group_name=self.config.logs_route53_log_group_name())
         )
 
 @dataclass
