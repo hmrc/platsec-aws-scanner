@@ -101,7 +101,7 @@ class AwsClientFactory:
     def get_route53_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("route53", account, role)
 
-    def get_route53_client(self, account: Account, role: Optional[str] = None) -> AwsRoute53Client:
+    def get_route53_client(self, account: Account) -> AwsRoute53Client:
         return AwsRoute53Client(
             boto_route53= self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
