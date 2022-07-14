@@ -122,6 +122,9 @@ GET_BUCKET_TAGGING_EXPIRY_90_DAYS = {
 GET_BUCKET_TAGGING_EXPIRY_6_MONTHS = {
     "TagSet": [{"Key": "data_expiry", "Value": "6-months"}, {"Key": "data_sensitivity", "Value": "low"}]
 }
+GET_BUCKET_TAGGING_EXPIRY_18_MONTHS = {
+    "TagSet": [{"Key": "data_expiry", "Value": "18-months"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
 GET_BUCKET_TAGGING_EXPIRY_1_YEAR = {
     "TagSet": [{"Key": "data_expiry", "Value": "1-year"}, {"Key": "data_sensitivity", "Value": "low"}]
 }
