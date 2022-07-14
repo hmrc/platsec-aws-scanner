@@ -10,7 +10,9 @@ from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
+from src.clients.aws_hostedZones_client import AwsHostedZonesClient
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
+
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
     ComplianceActionReport,
@@ -25,6 +27,11 @@ from src.data.aws_compliance_actions import (
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
+    DeleteQueryLogAction,
+    CreateQueryLogAction,
+    CreateRoute53LogGroupAction,
+    PutRoute53LogGroupRetentionPolicyAction,
+    TagRoute53LogGroupAction
 )
 
 from src.data.aws_route53_types import Route53Zone
@@ -403,12 +410,24 @@ def create_flow_log_action(
 ) -> CreateFlowLogAction:
     return CreateFlowLogAction(ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), vpc_id=vpc_id)
 
+def create_query_log_action(
+     route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient),
+     iam: AwsIamClient = Mock(spec=AwsIamClient),
+     config: AwsScannerConfig = Mock(),
+     zone_id: str = "zoneId"
+) -> CreateQueryLogAction:
+     config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+     return CreateQueryLogAction(account = account(), route53_client=route53_client, iam=iam, config= config, zone_id= zone_id)
 
 def delete_flow_log_action(
     ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client), flow_log_id: str = flow_log().id
 ) -> DeleteFlowLogAction:
     return DeleteFlowLogAction(ec2_client=ec2_client, flow_log_id=flow_log_id)
 
+def delete_query_log_action(
+    logs : AwsLogsClient = Mock(spec=AwsLogsClient), hosted_zone_id: str = "hosted_zone_id"
+) -> DeleteQueryLogAction:
+    return DeleteQueryLogAction(route53_client=logs, config = Mock(),  hosted_zone_id= hosted_zone_id)
 
 def create_flow_log_delivery_role_action(
     iam: AwsIamClient = Mock(spec=AwsIamClient),
@@ -423,6 +442,8 @@ def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient))
 def create_vpc_log_group_action(logs: AwsLogsClient = Mock(spec=AwsLogsClient)) -> CreateVpcLogGroupAction:
     return CreateVpcLogGroupAction(logs=logs)
 
+def create_route53_log_group_action(logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)) -> CreateRoute53LogGroupAction:
+    return CreateRoute53LogGroupAction(logs=logs, config= config)
 
 def put_vpc_log_group_subscription_filter_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
@@ -441,6 +462,15 @@ def put_vpc_log_group_retention_policy_action(
 ) -> PutVpcLogGroupRetentionPolicyAction:
     return PutVpcLogGroupRetentionPolicyAction(logs=logs)
 
+def put_route53_log_group_retention_policy_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+) -> PutRoute53LogGroupRetentionPolicyAction:
+    return PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config)
+
+def tag_route53_log_group_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+) -> TagRoute53LogGroupAction:
+    return TagRoute53LogGroupAction(logs=logs, config=config)
 
 def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
     return TagFlowLogDeliveryRoleAction(iam=iam)
