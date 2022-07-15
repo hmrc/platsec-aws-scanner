@@ -11,6 +11,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 
 from src.data.aws_common_types import Tag
@@ -34,7 +35,7 @@ from src.data.aws_compliance_actions import (
     TagRoute53LogGroupAction
 )
 
-from src.data.aws_route53_types import Route53Zone
+from src.data.aws_route53_types import Route53Zone, QueryLog
 from src.data.aws_ec2_types import FlowLog, Instance, Vpc, VpcPeeringConnection
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
@@ -74,7 +75,7 @@ from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
-
+from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
 
 
 def partition(
@@ -410,24 +411,13 @@ def create_flow_log_action(
 ) -> CreateFlowLogAction:
     return CreateFlowLogAction(ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), vpc_id=vpc_id)
 
-def create_query_log_action(
-     route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient),
-     iam: AwsIamClient = Mock(spec=AwsIamClient),
-     config: AwsScannerConfig = Mock(),
-     zone_id: str = "zoneId"
-) -> CreateQueryLogAction:
-     config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
-     return CreateQueryLogAction(account = account(), route53_client=route53_client, iam=iam, config= config, zone_id= zone_id)
+
 
 def delete_flow_log_action(
     ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client), flow_log_id: str = flow_log().id
 ) -> DeleteFlowLogAction:
     return DeleteFlowLogAction(ec2_client=ec2_client, flow_log_id=flow_log_id)
 
-def delete_query_log_action(
-    logs : AwsLogsClient = Mock(spec=AwsLogsClient), hosted_zone_id: str = "hosted_zone_id"
-) -> DeleteQueryLogAction:
-    return DeleteQueryLogAction(route53_client=logs, config = Mock(),  hosted_zone_id= hosted_zone_id)
 
 def create_flow_log_delivery_role_action(
     iam: AwsIamClient = Mock(spec=AwsIamClient),
@@ -686,9 +676,58 @@ def instance(
     )
 
 
+def query_log(
+    id: str = "ql-1234",
+    status: str = "ACTIVE",
+    log_destination: Optional[str] = "arn:/aws/route53/query_log",
+    log_destination_type: Optional[str] = "cloud-watch-logs",
+    log_group_name: Optional[str] = "/aws/route53/query_log",
+    traffic_type: str = "ALL",
+    log_format: str = "${srcaddr} ${dstaddr}",
+    deliver_log_role_arn: Optional[str] = ":role/route53_query_log_role",
+    deliver_log_role: Optional[Role] = role(name="route53_query_log_role"),
+    log_group: Optional[LogGroup] = None,
+) -> QueryLog:
+    return QueryLog(
+        id=id,
+        status=status,
+        log_destination=log_destination,
+        log_destination_type=log_destination_type,
+        log_group_name=log_group_name,
+        traffic_type=traffic_type,
+        log_format=log_format,
+        deliver_log_role_arn=deliver_log_role_arn,
+        deliver_log_role=deliver_log_role,
+        log_group=log_group,
+    )
+
+
 def route53Zone(
     id: str = "1234",
     name: str = "zone name",
     privateZone: bool = True,
 ) -> Route53Zone:
     return Route53Zone(id=id, name=name, privateZone=privateZone, queryLog="")
+
+
+def aws_audit_route53_query_logs_task(
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+) -> AwsAuditRoute53QueryLogsTask:
+    return AwsAuditRoute53QueryLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
+
+
+def create_query_log_action(
+        route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient),
+        iam: AwsIamClient = Mock(spec=AwsIamClient),
+        config: AwsScannerConfig = Mock(),
+        zone_id: str = "zoneId"
+) -> CreateQueryLogAction:
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    return CreateQueryLogAction(account=account(), route53_client=route53_client, iam=iam, config=config,
+                                zone_id=zone_id)
+
+
+def delete_query_log_action(
+    logs : AwsLogsClient = Mock(spec=AwsLogsClient), hosted_zone_id: str = "hosted_zone_id"
+) -> DeleteQueryLogAction:
+    return DeleteQueryLogAction(route53_client=logs, config = Mock(),  hosted_zone_id= hosted_zone_id)
