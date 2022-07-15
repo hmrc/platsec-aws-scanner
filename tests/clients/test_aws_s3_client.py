@@ -188,6 +188,7 @@ def get_bucket_expiry_tagging(**kwargs: Dict[str, str]) -> Any:
         "expiry-1-month": responses.GET_BUCKET_TAGGING_EXPIRY_1_MONTH,
         "expiry-90-days": responses.GET_BUCKET_TAGGING_EXPIRY_90_DAYS,
         "expiry-6-months": responses.GET_BUCKET_TAGGING_EXPIRY_6_MONTHS,
+        "expiry-18-months": responses.GET_BUCKET_TAGGING_EXPIRY_18_MONTHS,
         "expiry-1-year": responses.GET_BUCKET_TAGGING_EXPIRY_1_YEAR,
         "expiry-7-years": responses.GET_BUCKET_TAGGING_EXPIRY_7_YEARS,
         "expiry-10-years": responses.GET_BUCKET_TAGGING_EXPIRY_10_YEARS,
