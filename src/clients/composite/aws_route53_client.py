@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, Sequence, List, Optional
+from typing import Any, Sequence, List, Optional, Dict
 from itertools import chain
 
 import src.data.aws_route53_types as route53Type
@@ -40,13 +40,15 @@ class AwsRoute53Client:
         self.kms = kms
 
     def enforcement_actions(
-        self, account: Account, hostedZones: Sequence[route53Type.Route53Zone], with_subscription_filter: bool
+        self, account: Account, hostedZones: Dict[Any, Any], with_subscription_filter: bool
     ) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
         log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
         route53_actions = [
-            action for zone in hostedZones for action in self._route53_enforcement_actions(account, hostedZones[zone])
+            action
+            for zone in hostedZones
+            for action in self._route53_enforcement_actions(account=account, hostedZone=hostedZones[zone])
         ]
         return list(chain(log_group_actions, route53_actions))
 

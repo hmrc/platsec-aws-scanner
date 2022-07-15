@@ -18,13 +18,16 @@ from tests.test_types_generator import (
 
 route53_client = AwsRoute53Client(boto_route53=Mock(), iam=Mock(), logs=Mock(), kms=Mock(), config=Mock())
 hostedZones = [route53Zone(id="1234", privateZone=False), route53Zone(id="5678", privateZone=True)]
-# hostedZones = [route53Zone(id="1234"), route53Zone(id="5678")]
-actions = [create_query_log_action(zone_id="1234"), delete_query_log_action(hosted_zone_id="5678")]
+config = Mock()
+config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+actions = [create_query_log_action(config=config, zone_id="1234"), delete_query_log_action(hosted_zone_id="5678")]
 
 
 def enforcement_actions(z: Sequence[Route53Zone], with_sub_filter: bool) -> Sequence[ComplianceAction]:
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
     return (
-        [delete_query_log_action(zone_id="5678"), create_query_log_action(zone_id="1234")]
+        [delete_query_log_action(hosted_zone_id="5678"), create_query_log_action(config=config, zone_id="1234")]
         if z == hostedZones and with_sub_filter
         else []
     )

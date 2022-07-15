@@ -691,7 +691,7 @@ def query_log(
     log_format: str = "${srcaddr} ${dstaddr}",
     deliver_log_role_arn: Optional[str] = ":role/route53_query_log_role",
     deliver_log_role: Optional[Role] = role(name="route53_query_log_role"),
-    log_group: Optional[LogGroup] = None,
+    log_group: Optional[QueryLog] = None,
 ) -> QueryLog:
     return QueryLog(
         id=id,
@@ -729,13 +729,12 @@ def create_query_log_action(
     config: AwsScannerConfig = Mock(),
     zone_id: str = "zoneId",
 ) -> CreateQueryLogAction:
-    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
     return CreateQueryLogAction(
         account=account(), route53_client=route53_client, iam=iam, config=config, zone_id=zone_id
     )
 
 
 def delete_query_log_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient), hosted_zone_id: str = "hosted_zone_id"
+    route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient), hosted_zone_id: str = "hosted_zone_id"
 ) -> DeleteQueryLogAction:
-    return DeleteQueryLogAction(route53_client=logs, config=Mock(), hosted_zone_id=hosted_zone_id)
+    return DeleteQueryLogAction(route53_client=route53_client, config=Mock(), hosted_zone_id=hosted_zone_id)

@@ -37,7 +37,6 @@ class ComplianceActionReport:
         return self
 
 
-@dataclass
 class ComplianceAction:
     description: str
     logger: Logger

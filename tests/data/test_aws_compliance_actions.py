@@ -84,7 +84,7 @@ def test_apply_delete_flow_log_action() -> None:
 
 def test_apply_delete_query_log_action() -> None:
     logsClient = Mock(spec=AwsHostedZonesClient)
-    delete_query_log_action(logs=logsClient, hosted_zone_id="42")._apply()
+    delete_query_log_action(route53_client=logsClient, hosted_zone_id="42")._apply()
     logsClient.delete_query_logging_config.assert_called_once_with("42")
 
 
@@ -110,9 +110,10 @@ def test_apply_create_flow_log_action() -> None:
 
 
 def test_apply_create_query_log_action() -> None:
-    route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient)
+    route53_client = Mock(spec=AwsHostedZonesClient)
+    route53_client.create_query_logging_config = Mock()
     iam: AwsIamClient = Mock(spec=AwsIamClient)
-    config: Config = Mock(spec=Config)
+    config = Mock(spec=Config)
     config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
     zone_id: str = "zoneId"
     create_query_log_action(route53_client=route53_client, iam=iam, config=config, zone_id=zone_id)._apply()
@@ -133,7 +134,9 @@ def test_plan_create_query_log_action() -> None:
         description="Create hosted zone query log",
         details={"zone_id": "zoneId", "log_group_name": "logs_route53_log_group_name"},
     )
-    assert expected == create_query_log_action().plan()
+    config = Mock(spec=Config)
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    assert expected == create_query_log_action(config=config).plan()
 
 
 def test_apply_create_flow_log_delivery_role_action() -> None:
