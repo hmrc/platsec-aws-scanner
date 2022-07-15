@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from src.data.aws_iam_types import Role
 
 
 @dataclass
@@ -16,6 +17,7 @@ class QueryLog:
     deliver_log_role_arn: Optional[str]
     deliver_log_role: Optional[Role] = None
     log_group: Optional[QueryLog] = None
+
 
 @dataclass
 class Route53Zone:

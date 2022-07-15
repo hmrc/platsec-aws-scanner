@@ -17,6 +17,8 @@ class AwsAuditRoute53QueryLogsTask(AwsTask):
     def _run_task(self, client: AwsRoute53Client) -> Dict[Any, Any]:
         hostedZones = client._route53.list_hosted_zones()
         actions = client.enforcement_actions(self.target_account, hostedZones, self.with_subscription_filter)
+
+        hostedZones = client._route53.list_hosted_zon
         if self.enforce:
             apply = [a.apply() for a in actions]
             return {"hostedZones": hostedZones, "enforcement_actions": apply}

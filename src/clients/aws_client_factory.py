@@ -103,11 +103,11 @@ class AwsClientFactory:
 
     def get_route53_client(self, account: Account) -> AwsRoute53Client:
         return AwsRoute53Client(
-            boto_route53= self.get_hosted_zones_client(account),
+            boto_route53=self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account, region="us-east-1"),
             kms=self.get_kms_client(account),
-            config= self._config
+            config=self._config,
         )
 
     def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:
@@ -177,7 +177,7 @@ class AwsClientFactory:
     def _get_client(self, service_name: str, account: Account, role: str, region: Optional[str] = None) -> BaseClient:
         assumed_role = self._assume_role(account, role)
         self._logger.info(f"creating {service_name} client for {role} in {account}")
-        if region != None:
+        if region is not None:
             return boto3.client(
                 service_name=service_name,
                 aws_access_key_id=assumed_role.accessKeyId,

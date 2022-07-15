@@ -59,9 +59,6 @@ def test_init_config_from_file() -> None:
     assert "arn:aws:logs:::destination:central" == config.logs_route53_log_group_destination()
     assert "route53_flow_log_role" == config.logs_route53_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_route53_log_group_delivery_role_assume_policy()
-    assert {
-        "Statement": [{"Action": ["logs:*"], "Effect": "Allow", "Resource": "*"}]
-    } == config.logs_route53_log_group_delivery_role_policy_document()
     assert 14 == config.logs_route53_log_group_retention_policy_days()
     assert Account("999888777666", "organization") == config.organization_account()
     assert "orgs_role" == config.organization_role()
@@ -117,7 +114,6 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_DELIVERY_ROLE": "the_query_log_delivery_role",
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": '{"Statement": [{"Action": "s3:something"}]}',
-        "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": '{"Statement": [{"Action": ["sts:hi"]}]}',
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_RETENTION_POLICY_DAYS": "21",
         "AWS_SCANNER_ORGANIZATION_ACCOUNT": "666777888999",
         "AWS_SCANNER_ORGANIZATION_ROLE": "the_orgs_role",
@@ -173,7 +169,6 @@ def test_init_config_from_env_vars() -> None:
     assert "arn:aws:logs:::destination:some-central" == config.logs_route53_log_group_destination()
     assert "the_query_log_delivery_role" == config.logs_route53_log_group_delivery_role()
     assert {"Statement": [{"Action": "s3:something"}]} == config.logs_route53_log_group_delivery_role_assume_policy()
-    assert {"Statement": [{"Action": ["sts:hi"]}]} == config.logs_route53_log_group_delivery_role_policy_document()
     assert 21 == config.logs_route53_log_group_retention_policy_days()
     assert Account("666777888999", "organization") == config.organization_account()
     assert "the_orgs_role" == config.organization_role()
@@ -226,12 +221,6 @@ def test_invalid_format_logs_vpc_log_group_delivery_role_assume_policy() -> None
 def test_invalid_format_logs_vpc_log_group_delivery_role_policy_document() -> None:
     with pytest.raises(SystemExit, match="vpc_log_group_delivery_role_policy_document"):
         AwsScannerConfig().logs_vpc_log_group_delivery_role_policy_document()
-
-
-@patch.dict(os.environ, {"AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": "}"})
-def test_invalid_format_logs_route53_log_group_delivery_role_policy_document() -> None:
-    with pytest.raises(SystemExit, match="route53_log_group_delivery_role_policy_document"):
-        AwsScannerConfig().logs_route53_log_group_delivery_role_policy_document()
 
 
 @patch.dict(os.environ, {"AWS_SCANNER_ATHENA_QUERY_TIMEOUT_SECONDS": "bonjour"})

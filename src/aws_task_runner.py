@@ -24,7 +24,6 @@ from src.clients.composite.aws_s3_kms_client import AwsS3KmsClient
 from src.clients.composite.aws_route53_client import AwsRoute53Client
 
 
-
 class AwsTaskRunner:
     def __init__(self, client_factory: AwsClientFactory) -> None:
         self._logger = getLogger(self.__class__.__name__)

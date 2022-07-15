@@ -254,7 +254,6 @@ class AwsScannerArgumentParser:
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
 
-
     def _add_audit_route53_query_logs(self, subparsers: Any) -> None:
         desc = "audit route53 logging"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53_query_logs, help=desc, description=desc)
