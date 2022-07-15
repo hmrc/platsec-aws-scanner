@@ -82,7 +82,9 @@ class TestAwsEC2ClientCreateFlowLogs(TestCase):
             "ResourceType": "vpc-flow-log",
             "Tags": [
                 {"Key": "allow-management-by-platsec-scanner", "Value": "true"},
-                {"Key": "src-repo", "Value": "https://github.com/hmrc/platsec-aws-scanner"},
+                {"Key": "source-code", "Value": "https://github.com/hmrc/platsec-aws-scanner"},
+                {"Key": "business-unit", "Value": "MDTP"},
+                {"Key": "owner", "Value": "PlatSec"},
             ],
         }
     ]

@@ -197,7 +197,9 @@ def test_plan_tag_vpc_log_group_action() -> None:
                 "log_group_name": "/vpc/flow_log",
                 "tags": [
                     tag("allow-management-by-platsec-scanner", "true"),
-                    tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+                    tag("source-code", "https://github.com/hmrc/platsec-aws-scanner"),
+                    tag("business-unit", "MDTP"),
+                    tag("owner", "PlatSec"),
                 ],
             },
         )
@@ -212,7 +214,9 @@ def test_apply_tag_vpc_log_group_action() -> None:
         log_group_name="/vpc/flow_log",
         tags=[
             tag("allow-management-by-platsec-scanner", "true"),
-            tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+            tag("source-code", "https://github.com/hmrc/platsec-aws-scanner"),
+            tag("business-unit", "MDTP"),
+            tag("owner", "PlatSec"),
         ],
     )
 
@@ -225,7 +229,9 @@ def test_plan_tag_flow_log_delivery_role_action() -> None:
                 "role_name": "vpc_flow_log_role",
                 "tags": [
                     tag("allow-management-by-platsec-scanner", "true"),
-                    tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+                    tag("source-code", "https://github.com/hmrc/platsec-aws-scanner"),
+                    tag("business-unit", "MDTP"),
+                    tag("owner", "PlatSec"),
                 ],
             },
         )
@@ -240,7 +246,9 @@ def test_apply_tag_flow_log_delivery_role_action() -> None:
         name="vpc_flow_log_role",
         tags=[
             tag("allow-management-by-platsec-scanner", "true"),
-            tag("src-repo", "https://github.com/hmrc/platsec-aws-scanner"),
+            tag("source-code", "https://github.com/hmrc/platsec-aws-scanner"),
+            tag("business-unit", "MDTP"),
+            tag("owner", "PlatSec"),
         ],
     )
 
