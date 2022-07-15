@@ -1,42 +1,15 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch
-
-from typing import Sequence
-
-from src.clients.composite.aws_route53_client import AwsRoute53Client
-from src.clients.aws_hostedZones_client import AwsHostedZonesClient
-from src.data.aws_compliance_actions import ComplianceAction
-from src.data.aws_route53_types import Route53Zone
+from unittest.mock import Mock
 
 from tests.test_types_generator import (
     aws_audit_route53_query_logs_task,
-    create_query_log_action,
-    delete_query_log_action,
     route53Zone,
     account,
 )
 
-route53_client = AwsRoute53Client(boto_route53=Mock(), iam=Mock(), logs=Mock(), kms=Mock(), config=Mock())
-hostedZones = [route53Zone(id="1234", privateZone=False), route53Zone(id="5678", privateZone=True)]
-config = Mock()
-config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
-actions = [create_query_log_action(config=config, zone_id="1234"), delete_query_log_action(hosted_zone_id="5678")]
 
-
-def enforcement_actions(z: Sequence[Route53Zone], with_sub_filter: bool) -> Sequence[ComplianceAction]:
-    config = Mock()
-    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
-    return (
-        [delete_query_log_action(hosted_zone_id="5678"), create_query_log_action(config=config, zone_id="1234")]
-        if z == hostedZones and with_sub_filter
-        else []
-    )
-
-
-@patch.object(AwsRoute53Client, "enforcement_actions", side_effect=enforcement_actions)
-@patch.object(AwsHostedZonesClient, "list_hosted_zones", return_value=hostedZones)
 class TestAwsAuditRoute53QueryLogsTask(TestCase):
-    def test_run_papply_task(self, _: Mock, __: Mock) -> None:
+    def test_run_papply_task(self) -> None:
 
         hostedZones = [route53Zone(id="1234", privateZone=False), route53Zone(id="5678", privateZone=True)]
 
@@ -61,7 +34,7 @@ class TestAwsAuditRoute53QueryLogsTask(TestCase):
         compliance_action_report1.apply.assert_called_once()
         compliance_action_report2.apply.assert_called_once()
 
-    def test_run_plan_task(self, _: Mock, __: Mock) -> None:
+    def test_run_plan_task(self) -> None:
 
         hostedZones = [route53Zone(id="1234", privateZone=False), route53Zone(id="5678", privateZone=True)]
 
