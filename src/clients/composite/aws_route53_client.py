@@ -8,7 +8,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
-from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_organizations_types import Account
 
 from src.data.aws_compliance_actions import (

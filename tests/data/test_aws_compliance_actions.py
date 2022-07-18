@@ -6,7 +6,7 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.aws_scanner_config import AwsScannerConfig as Config
-from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_scanner_exceptions import AwsScannerException
 

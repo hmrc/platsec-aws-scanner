@@ -18,7 +18,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
-from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient

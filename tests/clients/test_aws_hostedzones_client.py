@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest import TestCase
 from unittest.mock import Mock, call
 
-from src.clients.aws_hostedZones_client import AwsHostedZonesClient
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_scanner_exceptions import QueryLogException
 
 import tests.clients.composite.test_aws_rout53_client_responses as responses
