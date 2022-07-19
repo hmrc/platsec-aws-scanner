@@ -1,33 +1,20 @@
 from typing import Dict, Any
 
+import src.data.aws_route53_types as route53Type
 
-EXPECTED_LIST_HOSTED_ZONES: Dict[str, Any] = {
-    "HostedZones": [
-        {
-            "Id": "/hostedzone/AAAABBBBCCCCDD",
-            "Name": "public.aws.scanner.gov.uk.",
-            "CallerReference": "string",
-            "Config": {"Comment": "string", "PrivateZone": False},
-            "ResourceRecordSetCount": 123,
-            "LinkedService": {"ServicePrincipal": "string", "Description": "string"},
-        },
-        {
-            "Id": "/hostedzone/EEEEFFFFGGGGHH",
-            "Name": "private.aws.scanner.gov.uk.",
-            "CallerReference": "string",
-            "Config": {"Comment": "string", "PrivateZone": True},
-            "ResourceRecordSetCount": 123,
-            "LinkedService": {"ServicePrincipal": "string", "Description": "string"},
-        },
-        {
-            "Id": "/hostedzone/IIIIIIILLLLLLL",
-            "Name": "public.aws.scanner.gov.uk.",
-            "CallerReference": "string",
-            "Config": {"Comment": "string", "PrivateZone": False},
-            "ResourceRecordSetCount": 123,
-            "LinkedService": {"ServicePrincipal": "string", "Description": "string"},
-        },
-    ],
+EXPECTED_LIST_HOSTED_ZONES: Dict[Any, Any] = {
+    "/hostedzone/AAAABBBBCCCCDD": route53Type.Route53Zone(
+        id="/hostedzone/AAAABBBBCCCCDD",
+        name="public.aws.scanner.gov.uk.",
+        privateZone=False,
+        queryLog="arn:aws:logs:us-east-1:123456789012:log-group:/aws/route53/public.aws.scanner.gov.uk.",
+    ),
+    "/hostedzone/IIIIIIILLLLLLL": route53Type.Route53Zone(
+        id="/hostedzone/IIIIIIILLLLLLL",
+        name="public.aws.scanner.gov.uk.",
+        privateZone=False,
+        queryLog="",
+    ),
 }
 
 EXPECTED_QUERY_LOG: Dict[str, Any] = {

@@ -10,7 +10,9 @@ from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
+
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
     ComplianceActionReport,
@@ -25,9 +27,14 @@ from src.data.aws_compliance_actions import (
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
+    DeleteQueryLogAction,
+    CreateQueryLogAction,
+    CreateRoute53LogGroupAction,
+    PutRoute53LogGroupRetentionPolicyAction,
+    TagRoute53LogGroupAction,
 )
 
-from src.data.aws_route53_types import Route53Zone
+from src.data.aws_route53_types import Route53Zone, QueryLog
 from src.data.aws_ec2_types import FlowLog, Instance, Vpc, VpcPeeringConnection
 from src.data.aws_iam_types import PasswordPolicy, Policy, Role
 from src.data.aws_kms_types import Key
@@ -67,7 +74,7 @@ from src.tasks.aws_organizations_task import AwsOrganizationsTask
 from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
-from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
+from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
 
 
 def partition(
@@ -424,6 +431,12 @@ def create_vpc_log_group_action(logs: AwsLogsClient = Mock(spec=AwsLogsClient)) 
     return CreateVpcLogGroupAction(logs=logs)
 
 
+def create_route53_log_group_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+) -> CreateRoute53LogGroupAction:
+    return CreateRoute53LogGroupAction(logs=logs, config=config)
+
+
 def put_vpc_log_group_subscription_filter_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
 ) -> PutVpcLogGroupSubscriptionFilterAction:
@@ -440,6 +453,18 @@ def put_vpc_log_group_retention_policy_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
 ) -> PutVpcLogGroupRetentionPolicyAction:
     return PutVpcLogGroupRetentionPolicyAction(logs=logs)
+
+
+def put_route53_log_group_retention_policy_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+) -> PutRoute53LogGroupRetentionPolicyAction:
+    return PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config)
+
+
+def tag_route53_log_group_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+) -> TagRoute53LogGroupAction:
+    return TagRoute53LogGroupAction(logs=logs, config=config)
 
 
 def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
@@ -638,10 +663,6 @@ def audit_ec2_instances_task(account: Account = account()) -> AwsAuditEc2Instanc
     return AwsAuditEc2InstancesTask(account)
 
 
-def audit_route53_public_zones_task(account: Account = account()) -> AwsAuditRoute53PublicZonesTask:
-    return AwsAuditRoute53PublicZonesTask(account)
-
-
 def instance(
     id: str = "instance-1234",
     component: str = "some-component",
@@ -660,9 +681,60 @@ def instance(
     )
 
 
+def query_log(
+    id: str = "ql-1234",
+    status: str = "ACTIVE",
+    log_destination: Optional[str] = "arn:/aws/route53/query_log",
+    log_destination_type: Optional[str] = "cloud-watch-logs",
+    log_group_name: Optional[str] = "/aws/route53/query_log",
+    traffic_type: str = "ALL",
+    log_format: str = "${srcaddr} ${dstaddr}",
+    deliver_log_role_arn: Optional[str] = ":role/route53_query_log_role",
+    deliver_log_role: Optional[Role] = role(name="route53_query_log_role"),
+    log_group: Optional[QueryLog] = None,
+) -> QueryLog:
+    return QueryLog(
+        id=id,
+        status=status,
+        log_destination=log_destination,
+        log_destination_type=log_destination_type,
+        log_group_name=log_group_name,
+        traffic_type=traffic_type,
+        log_format=log_format,
+        deliver_log_role_arn=deliver_log_role_arn,
+        deliver_log_role=deliver_log_role,
+        log_group=log_group,
+    )
+
+
 def route53Zone(
     id: str = "1234",
     name: str = "zone name",
     privateZone: bool = True,
 ) -> Route53Zone:
     return Route53Zone(id=id, name=name, privateZone=privateZone, queryLog="")
+
+
+def aws_audit_route53_query_logs_task(
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+) -> AwsAuditRoute53QueryLogsTask:
+    return AwsAuditRoute53QueryLogsTask(
+        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter
+    )
+
+
+def create_query_log_action(
+    route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient),
+    iam: AwsIamClient = Mock(spec=AwsIamClient),
+    config: AwsScannerConfig = Mock(),
+    zone_id: str = "zoneId",
+) -> CreateQueryLogAction:
+    return CreateQueryLogAction(
+        account=account(), route53_client=route53_client, iam=iam, config=config, zone_id=zone_id
+    )
+
+
+def delete_query_log_action(
+    route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient), hosted_zone_id: str = "hosted_zone_id"
+) -> DeleteQueryLogAction:
+    return DeleteQueryLogAction(route53_client=route53_client, config=Mock(), hosted_zone_id=hosted_zone_id)

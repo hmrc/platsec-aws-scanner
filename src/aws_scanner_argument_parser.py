@@ -52,6 +52,8 @@ class AwsScannerCommands:
     audit_vpc_peering = "audit_vpc_peering"
     audit_ec2_instances = "audit_ec2_instances"
     audit_route53 = "list_public_zones"
+    enable_route53_logging = "enable_route53_logging"
+    audit_route53_query_logs = "audit_route53_query_logs"
 
 
 class AwsScannerArgumentParser:
@@ -126,6 +128,8 @@ class AwsScannerArgumentParser:
         self._add_audit_vpc_peering_command(subparsers)
         self._add_audit_ec2_instances_command(subparsers)
         self._add_audit_route53_command(subparsers)
+        self._add_enable_route53_logging_command(subparsers)
+        self._add_audit_route53_query_logs(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -242,6 +246,21 @@ class AwsScannerArgumentParser:
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
+
+    def _add_enable_route53_logging_command(self, subparsers: Any) -> None:
+        desc = "enable route53 logging"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.enable_route53_logging, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+
+    def _add_audit_route53_query_logs(self, subparsers: Any) -> None:
+        desc = "audit route53 logging"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53_query_logs, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+        self._add_enforce_arg(audit_parser, "add centralised query logs to Route53 Zones that don't already have one")
 
     def _add_create_flow_logs_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table for flow logs querying"

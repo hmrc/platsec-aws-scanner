@@ -1,10 +1,12 @@
 from logging import ERROR
 from typing import Any
 from unittest.mock import Mock, call
-
+from src import PLATSEC_SCANNER_TAGS
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
+from src.aws_scanner_config import AwsScannerConfig as Config
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_scanner_exceptions import AwsScannerException
 
@@ -14,12 +16,14 @@ from tests.test_types_generator import (
     compliance_action_report,
     policy,
     delete_flow_log_action,
+    delete_query_log_action,
     role,
     create_flow_log_action,
     create_flow_log_delivery_role_action,
     delete_flow_log_delivery_role_action,
     delete_vpc_log_group_subscription_filter_action,
     create_vpc_log_group_action,
+    create_route53_log_group_action,
     password_policy,
     put_vpc_log_group_subscription_filter_action,
     put_vpc_log_group_retention_policy_action,
@@ -27,6 +31,9 @@ from tests.test_types_generator import (
     tag_vpc_log_group_action,
     tag,
     update_password_policy_action,
+    create_query_log_action,
+    put_route53_log_group_retention_policy_action,
+    tag_route53_log_group_action,
 )
 
 
@@ -75,9 +82,22 @@ def test_apply_delete_flow_log_action() -> None:
     ec2.delete_flow_logs.assert_called_once_with("42")
 
 
+def test_apply_delete_query_log_action() -> None:
+    logsClient = Mock(spec=AwsHostedZonesClient)
+    delete_query_log_action(route53_client=logsClient, hosted_zone_id="42")._apply()
+    logsClient.delete_query_logging_config.assert_called_once_with("42")
+
+
 def test_plan_delete_flow_log_action() -> None:
     expected = compliance_action_report(description="Delete VPC flow log", details={"flow_log_id": "fl-1234"})
     assert expected == delete_flow_log_action().plan()
+
+
+def test_plan_delete_query_log_action() -> None:
+    expected = compliance_action_report(
+        description="Delete Route53 query logging config", details={"hosted_zone_id": "hosted_zone_id"}
+    )
+    assert expected == delete_query_log_action().plan()
 
 
 def test_apply_create_flow_log_action() -> None:
@@ -89,11 +109,34 @@ def test_apply_create_flow_log_action() -> None:
     builder.ec2.create_flow_logs.assert_called_once_with("8", "/vpc/flow_log", "arn:aws:iam::112233445566:role/a_role")
 
 
+def test_apply_create_query_log_action() -> None:
+    route53_client = Mock(spec=AwsHostedZonesClient)
+    route53_client.create_query_logging_config = Mock()
+    iam: AwsIamClient = Mock(spec=AwsIamClient)
+    config = Mock(spec=Config)
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    zone_id: str = "zoneId"
+    create_query_log_action(route53_client=route53_client, iam=iam, config=config, zone_id=zone_id)._apply()
+    route53_client.create_query_logging_config.assert_called_once_with(
+        "zoneId", "arn:aws:logs:us-east-1:account_id:log-group:logs_route53_log_group_name"
+    )
+
+
 def test_plan_create_flow_log_action() -> None:
     expected = compliance_action_report(
         description="Create VPC flow log", details={"vpc_id": "vpc-1234", "log_group_name": "/vpc/flow_log"}
     )
     assert expected == create_flow_log_action().plan()
+
+
+def test_plan_create_query_log_action() -> None:
+    expected = compliance_action_report(
+        description="Create hosted zone query log",
+        details={"zone_id": "zoneId", "log_group_name": "logs_route53_log_group_name"},
+    )
+    config = Mock(spec=Config)
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    assert expected == create_query_log_action(config=config).plan()
 
 
 def test_apply_create_flow_log_delivery_role_action() -> None:
@@ -136,6 +179,23 @@ def test_plan_create_central_vpc_log_group_action() -> None:
         description="Create central VPC log group", details=dict(log_group_name="/vpc/flow_log")
     )
     assert expected == create_vpc_log_group_action().plan()
+
+
+def test_plan_create_route53_log_group_action() -> None:
+    expected = compliance_action_report(
+        description="Create central Route53 log group", details=dict(log_group_name="logs_route53_log_group_name")
+    )
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    assert expected == create_route53_log_group_action(config=config).plan()
+
+
+def test_apply_create_route53_log_group_action() -> None:
+    logs = Mock()
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    create_route53_log_group_action(logs=logs, config=config).apply()
+    logs.create_log_group.assert_called_once_with("logs_route53_log_group_name")
 
 
 def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
@@ -183,10 +243,52 @@ def test_plan_put_vpc_log_group_retention_policy_action() -> None:
     )
 
 
+def test_plan_put_route53_log_group_retention_policy_action() -> None:
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    config.logs_route53_log_group_retention_policy_days = Mock(return_value=5)
+    assert (
+        compliance_action_report(
+            description="Put central Route53 log group retention policy",
+            details={"log_group_name": "logs_route53_log_group_name", "retention_days": 5},
+        )
+        == put_route53_log_group_retention_policy_action(config=config).plan()
+    )
+
+
+def test_apply_put_route53_log_group_retention_policy_action() -> None:
+    logs = Mock()
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    config.logs_route53_log_group_retention_policy_days = Mock(return_value=5)
+    put_route53_log_group_retention_policy_action(logs=logs, config=config).apply()
+    logs.put_retention_policy.assert_called_once_with(log_group_name="logs_route53_log_group_name", retention_days=5)
+
+
 def test_apply_put_vpc_log_group_retention_policy_action() -> None:
     logs = Mock(spec=AwsLogsClient)
     put_vpc_log_group_retention_policy_action(logs=logs)._apply()
     logs.put_retention_policy.assert_called_once_with(log_group_name="/vpc/flow_log", retention_days=14)
+
+
+def test_apply_tag_route53_log_group_action() -> None:
+    logs = Mock()
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    tag_route53_log_group_action(logs=logs, config=config).apply()
+    logs.tag_log_group.assert_called_once_with(log_group_name="logs_route53_log_group_name", tags=PLATSEC_SCANNER_TAGS)
+
+
+def test_plan_tag_route53_log_group_action() -> None:
+    config = Mock()
+    config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+    assert (
+        compliance_action_report(
+            description="Tag central ROUTE53 log group",
+            details={"log_group_name": "logs_route53_log_group_name", "tags": PLATSEC_SCANNER_TAGS},
+        )
+        == tag_route53_log_group_action(config=config).plan()
+    )
 
 
 def test_plan_tag_vpc_log_group_action() -> None:

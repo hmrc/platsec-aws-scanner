@@ -18,6 +18,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
+from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.clients.composite.aws_cloudtrail_client import AwsCloudtrailClient
 from src.clients.composite.aws_central_logging_client import AwsCentralLoggingClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
@@ -76,8 +77,8 @@ class AwsClientFactory:
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("ssm", account, self._config.ssm_role())
 
-    def get_logs_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("logs", account, self._config.logs_role())
+    def get_logs_boto_client(self, account: Account, region: Optional[str] = None) -> BaseClient:
+        return self._get_client("logs", account, self._config.logs_role(), region)
 
     def get_iam_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("iam", account, role)
@@ -100,8 +101,17 @@ class AwsClientFactory:
     def get_route53_boto_client(self, account: Account, role: str) -> BaseClient:
         return self._get_client("route53", account, role)
 
-    def get_route53_client(self, account: Account, role: Optional[str] = None) -> AwsRoute53Client:
-        return AwsRoute53Client(self.get_route53_boto_client(account, role or self._config.route53_role()))
+    def get_route53_client(self, account: Account) -> AwsRoute53Client:
+        return AwsRoute53Client(
+            boto_route53=self.get_hosted_zones_client(account),
+            iam=self.get_iam_client(account),
+            logs=self.get_logs_client(account, region="us-east-1"),
+            kms=self.get_kms_client(account),
+            config=self._config,
+        )
+
+    def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:
+        return AwsHostedZonesClient(self.get_route53_boto_client(account, role or self._config.route53_role()))
 
     def get_organizations_client(self) -> AwsOrganizationsClient:
         return AwsOrganizationsClient(self.get_organizations_boto_client())
@@ -109,8 +119,8 @@ class AwsClientFactory:
     def get_ssm_client(self, account: Account) -> AwsSSMClient:
         return AwsSSMClient(self.get_ssm_boto_client(account))
 
-    def get_logs_client(self, account: Account) -> AwsLogsClient:
-        return AwsLogsClient(self.get_logs_boto_client(account))
+    def get_logs_client(self, account: Account, region: Optional[str] = None) -> AwsLogsClient:
+        return AwsLogsClient(self.get_logs_boto_client(account, region))
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account, self._config.iam_role()))
@@ -164,9 +174,17 @@ class AwsClientFactory:
             sessionToken=credentials_dict["Credentials"]["SessionToken"],
         )
 
-    def _get_client(self, service_name: str, account: Account, role: str) -> BaseClient:
+    def _get_client(self, service_name: str, account: Account, role: str, region: Optional[str] = None) -> BaseClient:
         assumed_role = self._assume_role(account, role)
         self._logger.info(f"creating {service_name} client for {role} in {account}")
+        if region is not None:
+            return boto3.client(
+                service_name=service_name,
+                aws_access_key_id=assumed_role.accessKeyId,
+                aws_secret_access_key=assumed_role.secretAccessKey,
+                aws_session_token=assumed_role.sessionToken,
+                region_name=region,
+            )
         return boto3.client(
             service_name=service_name,
             aws_access_key_id=assumed_role.accessKeyId,

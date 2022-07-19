@@ -139,17 +139,29 @@ class AwsScannerConfig:
     def logs_vpc_log_group_name(self) -> str:
         return self._get_config("logs", "vpc_log_group_name")
 
+    def logs_route53_log_group_name(self) -> str:
+        return self._get_config("logs", "route53_log_group_name")
+
     def logs_vpc_log_group_subscription_filter_name(self) -> str:
         return f"{self.logs_vpc_log_group_name()}_sub_filter"
 
     def logs_vpc_log_group_pattern(self) -> str:
         return self._get_config("logs", "vpc_log_group_pattern")
 
+    def logs_route53_log_group_pattern(self) -> str:
+        return self._get_config("logs", "route53_log_group_pattern")
+
     def logs_vpc_log_group_destination(self) -> str:
         return self._get_config("logs", "vpc_log_group_destination")
 
+    def logs_route53_log_group_destination(self) -> str:
+        return self._get_config("logs", "route53_log_group_destination")
+
     def logs_vpc_log_group_delivery_role(self) -> str:
         return self._get_config("logs", "vpc_log_group_delivery_role")
+
+    def logs_route53_log_group_delivery_role(self) -> str:
+        return self._get_config("logs", "route53_log_group_delivery_role")
 
     def logs_vpc_log_group_delivery_role_policy(self) -> str:
         return self._get_config("logs", "vpc_log_group_delivery_role_policy")
@@ -157,11 +169,17 @@ class AwsScannerConfig:
     def logs_vpc_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_assume_policy")
 
+    def logs_route53_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
+        return self._get_json_config("logs", "route53_log_group_delivery_role_assume_policy")
+
     def logs_vpc_log_group_delivery_role_policy_document(self) -> Dict[str, Any]:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
 
     def logs_vpc_log_group_retention_policy_days(self) -> int:
         return self._get_int_config("logs", "vpc_log_group_retention_policy_days")
+
+    def logs_route53_log_group_retention_policy_days(self) -> int:
+        return self._get_int_config("logs", "route53_log_group_retention_policy_days")
 
     def logs_role(self) -> str:
         return self._get_config("logs", "role")

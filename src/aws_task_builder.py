@@ -16,6 +16,7 @@ from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
+from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
 from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_create_flow_logs_table_task import AwsCreateFlowLogsTableTask
@@ -26,7 +27,6 @@ from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
 from src.tasks.aws_service_usage_scanner_task import AwsServiceUsageScannerTask
 from src.tasks.aws_audit_ec2_instances_task import AwsAuditEc2InstancesTask
 from src.tasks.aws_task import AwsTask
-from src.tasks.aws_audit_route53_public_zones_task import AwsAuditRoute53PublicZonesTask
 
 
 class AwsTaskBuilder:
@@ -76,7 +76,11 @@ class AwsTaskBuilder:
             ),
             Cmd.audit_vpc_peering: lambda: self._tasks(AwsAuditVpcPeeringTask),
             Cmd.audit_ec2_instances: lambda: self._tasks(AwsAuditEc2InstancesTask),
-            Cmd.audit_route53: lambda: self._tasks(AwsAuditRoute53PublicZonesTask),
+            Cmd.audit_route53_query_logs: lambda: self._tasks(
+                AwsAuditRoute53QueryLogsTask,
+                enforce=self._args.enforce,
+                with_subscription_filter=self._args.with_subscription_filter,
+            ),
         }
         try:
             return task_mapping[self._args.task]()
