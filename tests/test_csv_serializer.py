@@ -29,10 +29,10 @@ reports = [
 ]
 
 expected_csv = """account_id,account_name,instance_id,instance_component,instance_image_id,instance_image_creation_date,instance_launch_time,instance_metadata_options_http_tokens
-1234,first-account,i-1,comp-1,ami-1,2020-03-23T09:01:26.000Z,2020-03-25T09:06:07+00:00,required
-1234,first-account,i-2,comp-2,ami-2,2020-03-23T09:01:26.000Z,2020-03-25T09:06:07+00:00,required
-5678,second-account,i-3,comp-3,ami-3,2020-03-23T09:01:26.000Z,2020-03-25T09:06:07+00:00,required
-5678,second-account,i-4,comp-4,ami-4,2020-03-23T09:01:26.000Z,2020-03-25T09:06:07+00:00,required"""
+1234,first-account,i-1,comp-1,ami-1,2020-03-23 09:01:26+00:00,2020-03-25 09:06:07+00:00,required
+1234,first-account,i-2,comp-2,ami-2,2020-03-23 09:01:26+00:00,2020-03-25 09:06:07+00:00,required
+5678,second-account,i-3,comp-3,ami-3,2020-03-23 09:01:26+00:00,2020-03-25 09:06:07+00:00,required
+5678,second-account,i-4,comp-4,ami-4,2020-03-23 09:01:26+00:00,2020-03-25 09:06:07+00:00,required"""
 
 
 def test_to_csv() -> None:
