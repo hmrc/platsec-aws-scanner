@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from src.data.aws_iam_types import Role
@@ -77,12 +78,12 @@ class Instance:
     id: str
     component: str
     image_id: str
-    image_creation_date: Optional[str]
-    launch_time: str
+    image_creation_date: Optional[datetime]
+    launch_time: datetime
     metadata_options_http_tokens: str
 
     def with_image_creation_date(self, creation_date: str) -> Instance:
-        self.image_creation_date = creation_date
+        self.image_creation_date = datetime.strptime(creation_date, "%Y-%m-%dT%H:%M:%S.%f%z")
         return self
 
 

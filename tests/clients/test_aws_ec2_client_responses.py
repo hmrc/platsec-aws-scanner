@@ -1,3 +1,4 @@
+import datetime
 from typing import Dict, Any, Sequence
 
 from src.data.aws_ec2_types import FlowLog
@@ -145,7 +146,7 @@ DESCRIBE_INSTANCES = [
                     {
                         "ImageId": "ami-1234",
                         "InstanceId": "i-a1b2c3",
-                        "LaunchTime": "2022-02-26T16:58:26.000Z",
+                        "LaunchTime": datetime.datetime(2022, 5, 18, 15, 18, 7),
                         "Tags": [{"Key": "Name", "Value": "some-component"}],
                         "MetadataOptions": {"HttpTokens": "required"},
                     }
@@ -160,7 +161,7 @@ DESCRIBE_INSTANCES = [
                     {
                         "ImageId": "ami-5678",
                         "InstanceId": "i-d4e5f6",
-                        "LaunchTime": "2022-02-27T17:32:24.000Z",
+                        "LaunchTime": datetime.datetime(2022, 5, 19, 15, 18, 7),
                         "MetadataOptions": {"HttpTokens": "optional"},
                     }
                 ]
@@ -174,16 +175,16 @@ EXPECTED_INSTANCES = [
         id="i-a1b2c3",
         component="some-component",
         image_id="ami-1234",
-        image_creation_date="2022-02-21T14:05:14.000Z",
-        launch_time="2022-02-26T16:58:26.000Z",
+        image_creation_date=datetime.datetime(2022, 2, 21, 14, 5, 14, tzinfo=datetime.timezone.utc),
+        launch_time=datetime.datetime(2022, 5, 18, 15, 18, 7),
         metadata_options_http_tokens="required",
     ),
     instance(
         id="i-d4e5f6",
         component="Unknown",
         image_id="ami-5678",
-        image_creation_date="2022-02-21T14:05:14.000Z",
-        launch_time="2022-02-27T17:32:24.000Z",
+        image_creation_date=datetime.datetime(2022, 2, 21, 14, 5, 14, tzinfo=datetime.timezone.utc),
+        launch_time=datetime.datetime(2022, 5, 19, 15, 18, 7),
         metadata_options_http_tokens="optional",
     ),
 ]
