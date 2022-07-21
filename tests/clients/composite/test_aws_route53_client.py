@@ -13,9 +13,9 @@ from src.data.aws_compliance_actions import (
     PutRoute53LogGroupRetentionPolicyAction,
     TagRoute53LogGroupAction,
     DeleteQueryLogAction,
-    CreateRoute53LogGroupAction,
+    CreateLogGroupAction,
 )
-
+from src.data.aws_common_types import ServiceName
 
 class TestAwsRoute53Client(TestCase):
     def test_enforcement_actions_no_hostedZones(self) -> None:
@@ -58,7 +58,7 @@ class TestAwsRoute53Client(TestCase):
         logs = Mock()
         kms = Mock()
         config = Mock()
-        config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+        config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
 
         expectedLogGroups = [
             LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id"),
@@ -125,7 +125,7 @@ class TestAwsRoute53Client(TestCase):
         logs = Mock()
         kms = Mock()
         config = Mock()
-        config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
+        config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
 
         expectedLogGroups: List[Any] = []
 
@@ -133,7 +133,7 @@ class TestAwsRoute53Client(TestCase):
         kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
-        expectedQueryLogActionList.append(CreateRoute53LogGroupAction(logs=logs, config=config))
+        expectedQueryLogActionList.append(CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config))
         expectedQueryLogActionList.append(TagRoute53LogGroupAction(logs=logs, config=config))
         expectedQueryLogActionList.append(

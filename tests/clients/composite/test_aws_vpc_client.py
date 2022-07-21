@@ -16,6 +16,7 @@ from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
 )
+from src.data.aws_common_types import ServiceName
 
 from tests.test_types_generator import (
     create_flow_log_action,
@@ -271,7 +272,7 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_log_group_action(logs=client.logs),
+                create_log_group_action(service_name= ServiceName.vpc, logs=client.logs),
                 put_vpc_log_group_retention_policy_action(logs=client.logs),
                 tag_vpc_log_group_action(logs=client.logs),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),
@@ -287,7 +288,7 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_log_group_action(logs=client.logs),
+                create_log_group_action(service_name=ServiceName.vpc, logs=client.logs),
                 put_vpc_log_group_retention_policy_action(logs=client.logs),
                 tag_vpc_log_group_action(logs=client.logs),
             ],

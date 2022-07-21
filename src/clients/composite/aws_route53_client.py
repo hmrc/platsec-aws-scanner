@@ -15,12 +15,13 @@ from src.data.aws_compliance_actions import (
     ComplianceAction,
     PutRoute53LogGroupRetentionPolicyAction,
     TagRoute53LogGroupAction,
-    CreateRoute53LogGroupAction,
+    CreateLogGroupAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
 )
 
 from src.data.aws_logs_types import LogGroup
+from src.data.aws_common_types import ServiceName
 
 
 class AwsRoute53Client:
@@ -67,7 +68,7 @@ class AwsRoute53Client:
     ) -> Sequence[ComplianceAction]:
 
         query_log_arn = (
-            "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self._config.logs_route53_log_group_name()
+            "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self._config.logs_group_name()
         )
         queryLogActionList = []
 
@@ -86,7 +87,7 @@ class AwsRoute53Client:
         return queryLogActionList
 
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
-        log_group = self._find_log_group(self._config.logs_route53_log_group_name())
+        log_group = self._find_log_group(self._config.logs_group_name(ServiceName.route53))
         if log_group is not None:
             return [
                 PutRoute53LogGroupRetentionPolicyAction(logs=self._logs, config=self._config),
@@ -96,7 +97,7 @@ class AwsRoute53Client:
 
         actions.extend(
             [
-                CreateRoute53LogGroupAction(logs=self._logs, config=self._config),
+                CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.vpc),
                 PutRoute53LogGroupRetentionPolicyAction(logs=self._logs, config=self._config),
                 TagRoute53LogGroupAction(logs=self._logs, config=self._config),
             ]

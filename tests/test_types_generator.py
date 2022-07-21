@@ -16,7 +16,7 @@ from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
     ComplianceActionReport,
-    CreateVpcLogGroupAction,
+    CreateLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
@@ -29,7 +29,7 @@ from src.data.aws_compliance_actions import (
     UpdatePasswordPolicyAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
-    CreateRoute53LogGroupAction,
+    CreateLogGroupAction,
     PutRoute53LogGroupRetentionPolicyAction,
     TagRoute53LogGroupAction,
 )
@@ -75,6 +75,7 @@ from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
+from src.data.aws_common_types import ServiceName
 
 
 def partition(
@@ -426,11 +427,11 @@ def create_flow_log_delivery_role_action(
 def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient)) -> DeleteFlowLogDeliveryRoleAction:
     return DeleteFlowLogDeliveryRoleAction(iam=iam)
 
-def create_log_group_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
-) -> CreateRoute53LogGroupAction:
-    return CreateRoute53LogGroupAction(logs=logs, config=config)
 
+def create_log_group_action( service_name: ServiceName,
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+) -> CreateLogGroupAction:
+    return CreateLogGroupAction(logs=logs, config=config, service_name=service_name)
 
 def put_vpc_log_group_subscription_filter_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
