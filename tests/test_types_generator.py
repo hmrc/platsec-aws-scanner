@@ -426,12 +426,7 @@ def create_flow_log_delivery_role_action(
 def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient)) -> DeleteFlowLogDeliveryRoleAction:
     return DeleteFlowLogDeliveryRoleAction(iam=iam)
 
-
-def create_vpc_log_group_action(logs: AwsLogsClient = Mock(spec=AwsLogsClient)) -> CreateVpcLogGroupAction:
-    return CreateVpcLogGroupAction(logs=logs)
-
-
-def create_route53_log_group_action(
+def create_log_group_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
 ) -> CreateRoute53LogGroupAction:
     return CreateRoute53LogGroupAction(logs=logs, config=config)

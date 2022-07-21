@@ -20,7 +20,7 @@ from src.data.aws_compliance_actions import (
 from tests.test_types_generator import (
     create_flow_log_action,
     create_flow_log_delivery_role_action,
-    create_vpc_log_group_action,
+    create_log_group_action,
     delete_flow_log_action,
     delete_flow_log_delivery_role_action,
     delete_vpc_log_group_subscription_filter_action,
@@ -271,7 +271,7 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_vpc_log_group_action(logs=client.logs),
+                create_log_group_action(logs=client.logs),
                 put_vpc_log_group_retention_policy_action(logs=client.logs),
                 tag_vpc_log_group_action(logs=client.logs),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),
@@ -287,7 +287,7 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_vpc_log_group_action(logs=client.logs),
+                create_log_group_action(logs=client.logs),
                 put_vpc_log_group_retention_policy_action(logs=client.logs),
                 tag_vpc_log_group_action(logs=client.logs),
             ],

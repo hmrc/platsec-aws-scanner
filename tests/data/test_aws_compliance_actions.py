@@ -22,8 +22,7 @@ from tests.test_types_generator import (
     create_flow_log_delivery_role_action,
     delete_flow_log_delivery_role_action,
     delete_vpc_log_group_subscription_filter_action,
-    create_vpc_log_group_action,
-    create_route53_log_group_action,
+    create_log_group_action,
     password_policy,
     put_vpc_log_group_subscription_filter_action,
     put_vpc_log_group_retention_policy_action,
@@ -170,15 +169,15 @@ def test_plan_delete_flow_log_delivery_role_action() -> None:
 
 def test_apply_create_central_vpc_log_group_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    create_vpc_log_group_action(logs=logs)._apply()
+    create_log_group_action(logs=logs)._apply()
     logs.create_log_group.assert_called_once_with("/vpc/flow_log")
 
 
 def test_plan_create_central_vpc_log_group_action() -> None:
     expected = compliance_action_report(
-        description="Create central VPC log group", details=dict(log_group_name="/vpc/flow_log")
+        description="Create log groups for VPC", details=dict(log_group_name="/vpc/flow_log")
     )
-    assert expected == create_vpc_log_group_action().plan()
+    assert expected == create_log_group_action().plan()
 
 
 def test_plan_create_route53_log_group_action() -> None:
@@ -187,14 +186,14 @@ def test_plan_create_route53_log_group_action() -> None:
     )
     config = Mock()
     config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
-    assert expected == create_route53_log_group_action(config=config).plan()
+    assert expected == create_log_group_action(config=config).plan()
 
 
 def test_apply_create_route53_log_group_action() -> None:
     logs = Mock()
     config = Mock()
     config.logs_route53_log_group_name = Mock(return_value="logs_route53_log_group_name")
-    create_route53_log_group_action(logs=logs, config=config).apply()
+    create_log_group_action(logs=logs, config=config).apply()
     logs.create_log_group.assert_called_once_with("logs_route53_log_group_name")
 
 
