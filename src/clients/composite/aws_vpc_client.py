@@ -17,7 +17,7 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogDeliveryRoleAction,
     DeleteVpcLogGroupSubscriptionFilterAction,
     PutVpcLogGroupSubscriptionFilterAction,
-    PutVpcLogGroupRetentionPolicyAction,
+    PutLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
 )
@@ -160,15 +160,15 @@ class AwsVpcClient:
                 actions.append(DeleteVpcLogGroupSubscriptionFilterAction(logs=self.logs))
             if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
                 actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
-            if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days():
-                actions.append(PutVpcLogGroupRetentionPolicyAction(logs=self.logs))
+            if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days(service_name=ServiceName.vpc):
+                actions.append(PutLogGroupRetentionPolicyAction(logs=self.log, config=self.config, service_name=ServiceName.vpc))
             if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
                 actions.append(TagVpcLogGroupAction(logs=self.logs))
         else:
             actions.extend(
                 [
                     CreateLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
-                    PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
+                    PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
                     TagVpcLogGroupAction(logs=self.logs),
                 ]
             )

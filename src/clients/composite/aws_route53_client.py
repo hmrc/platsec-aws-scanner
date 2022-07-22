@@ -13,7 +13,7 @@ from src.data.aws_organizations_types import Account
 
 from src.data.aws_compliance_actions import (
     ComplianceAction,
-    PutRoute53LogGroupRetentionPolicyAction,
+    PutLogGroupRetentionPolicyAction,
     TagRoute53LogGroupAction,
     CreateLogGroupAction,
     DeleteQueryLogAction,
@@ -93,15 +93,15 @@ class AwsRoute53Client:
         log_group = self._find_log_group(self._config.logs_group_name(ServiceName.route53))
         if log_group is not None:
             return [
-                PutRoute53LogGroupRetentionPolicyAction(logs=self._logs, config=self._config),
+                PutLogGroupRetentionPolicyAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
                 TagRoute53LogGroupAction(logs=self._logs, config=self._config),
             ]
         actions: List[Any] = []
 
         actions.extend(
             [
-                CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.vpc),
-                PutRoute53LogGroupRetentionPolicyAction(logs=self._logs, config=self._config),
+                CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                PutLogGroupRetentionPolicyAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
                 TagRoute53LogGroupAction(logs=self._logs, config=self._config),
             ]
         )

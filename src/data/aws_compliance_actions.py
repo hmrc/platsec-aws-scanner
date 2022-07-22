@@ -284,44 +284,19 @@ class DeleteVpcLogGroupSubscriptionFilterAction(ComplianceAction):
 
 
 @dataclass
-class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
-    logs: AwsLogsClient
-
-    def __init__(self, logs: AwsLogsClient) -> None:
-        super().__init__("Put central VPC log group retention policy")
-        self.logs = logs
-
-    def _apply(self) -> None:
-        config = Config()
-        self.logs.put_retention_policy(
-            log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
-            retention_days=config.logs_vpc_log_group_retention_policy_days(),
-        )
-
-    def plan(self) -> ComplianceActionReport:
-        config = Config()
-        return ComplianceActionReport(
-            description=self.description,
-            details=dict(
-                log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
-                retention_days=config.logs_vpc_log_group_retention_policy_days(),
-            ),
-        )
-
-
-@dataclass
-class PutRoute53LogGroupRetentionPolicyAction(ComplianceAction):
+class PutLogGroupRetentionPolicyAction(ComplianceAction):
     logs: AwsLogsClient
     config: Config
 
-    def __init__(self, logs: AwsLogsClient, config: Config) -> None:
-        super().__init__("Put central Route53 log group retention policy")
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
+        super().__init__("Put log group retention policy")
         self.logs = logs
         self.config = config
+        self.service_name = service_name
 
     def _apply(self) -> None:
         self.logs.put_retention_policy(
-            log_group_name=self.config.logs_group_name(ServiceName.route53),
+            log_group_name=self.config.logs_group_name(self.service_name),
             retention_days=self.config.logs_route53_log_group_retention_policy_days(),
         )
 
