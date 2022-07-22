@@ -176,14 +176,14 @@ def test_apply_create_central_vpc_log_group_action() -> None:
 
 def test_plan_create_central_vpc_log_group_action() -> None:
     expected = compliance_action_report(
-        description="Create log groups for VPC", details=dict(log_group_name="/vpc/flow_log")
+        description="Create log group", details=dict(log_group_name="/vpc/flow_log")
     )
     assert expected == create_log_group_action(service_name=ServiceName.vpc).plan()
 
 
 def test_plan_create_route53_log_group_action() -> None:
     expected = compliance_action_report(
-        description="Create central Route53 log group", details=dict(log_group_name="logs_route53_log_group_name")
+        description="Create log group", details=dict(log_group_name="logs_route53_log_group_name")
     )
     config = Mock()
     config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
