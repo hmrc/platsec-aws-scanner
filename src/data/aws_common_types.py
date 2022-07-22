@@ -13,5 +13,5 @@ class Tag:
 
 
 class ServiceName(Enum):
-    vpc: 1
-    route53: 2
+    vpc = 1
+    route53 = 2

@@ -111,7 +111,7 @@ class CreateFlowLogAction(ComplianceAction):
     def _apply(self) -> None:
         self.ec2.create_flow_logs(
             self.vpc_id,
-            self.config.logs_log_group_name(),
+            self.config.logs_group_name(service_name= ServiceName.vpc),
             self._get_flow_log_delivery_role_arn(self.config.logs_vpc_log_group_delivery_role()),
         )
 
@@ -243,14 +243,14 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_log_group_name(), destination_arn=config.logs_vpc_log_group_destination()
+                log_group_name=config.logs_group_name(service_name= ServiceName.vpc), destination_arn=config.logs_vpc_log_group_destination()
             ),
         )
 
     def _apply(self) -> None:
         config = Config()
         self.logs.put_subscription_filter(
-            log_group_name=config.logs_group_name(service_name=Servicename.vpc),
+            log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
             filter_name=config.logs_vpc_log_group_subscription_filter_name(),
             filter_pattern=config.logs_vpc_log_group_pattern(),
             destination_arn=config.logs_vpc_log_group_destination(),
@@ -270,7 +270,7 @@ class DeleteVpcLogGroupSubscriptionFilterAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_group_name(),
+                log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
                 subscription_filter_name=config.logs_vpc_log_group_subscription_filter_name(),
             ),
         )
@@ -278,7 +278,7 @@ class DeleteVpcLogGroupSubscriptionFilterAction(ComplianceAction):
     def _apply(self) -> None:
         config = Config()
         self.logs.delete_subscription_filter(
-            log_group_name=config.logs_group_name(service_name=Servicename.vpc),
+            log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
             filter_name=config.logs_vpc_log_group_subscription_filter_name(),
         )
 
@@ -294,7 +294,7 @@ class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
     def _apply(self) -> None:
         config = Config()
         self.logs.put_retention_policy(
-            log_group_name=config.logs_group_name(service_name=Servicename.vpc),
+            log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
             retention_days=config.logs_vpc_log_group_retention_policy_days(),
         )
 
@@ -303,7 +303,7 @@ class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_group_name(service_name=Servicename.vpc),
+                log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
                 retention_days=config.logs_vpc_log_group_retention_policy_days(),
             ),
         )
@@ -321,7 +321,7 @@ class PutRoute53LogGroupRetentionPolicyAction(ComplianceAction):
 
     def _apply(self) -> None:
         self.logs.put_retention_policy(
-            log_group_name=self.config.logs_group_name(ServiceName.route53)(),
+            log_group_name=self.config.logs_group_name(ServiceName.route53),
             retention_days=self.config.logs_route53_log_group_retention_policy_days(),
         )
 
@@ -329,7 +329,7 @@ class PutRoute53LogGroupRetentionPolicyAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=self.config.logs_group_name(ServiceName.route53)(),
+                log_group_name=self.config.logs_group_name(ServiceName.route53),
                 retention_days=self.config.logs_route53_log_group_retention_policy_days(),
             ),
         )
@@ -366,12 +366,12 @@ class TagRoute53LogGroupAction(ComplianceAction):
         self.config = config
 
     def _apply(self) -> None:
-        self.logs.tag_log_group(log_group_name=self.config.logs_group_name(ServiceName.route53)(), tags=PLATSEC_SCANNER_TAGS)
+        self.logs.tag_log_group(log_group_name=self.config.logs_group_name(ServiceName.route53), tags=PLATSEC_SCANNER_TAGS)
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
-            details=dict(log_group_name=self.config.logs_group_name(ServiceName.route53)(), tags=PLATSEC_SCANNER_TAGS),
+            details=dict(log_group_name=self.config.logs_group_name(ServiceName.route53), tags=PLATSEC_SCANNER_TAGS),
         )
 
 
