@@ -111,12 +111,11 @@ class CreateFlowLogAction(ComplianceAction):
     def _apply(self) -> None:
         self.ec2.create_flow_logs(
             self.vpc_id,
-            self.config.logs_group_name(service_name= ServiceName.vpc),
+            self.config.logs_group_name(service_name=ServiceName.vpc),
             self._get_flow_log_delivery_role_arn(self.config.logs_vpc_log_group_delivery_role()),
         )
 
     def plan(self) -> ComplianceActionReport:
-        print(">>>>>>>>>", ServiceName.vpc)
         return ComplianceActionReport(
             description=self.description,
             details=dict(vpc_id=self.vpc_id, log_group_name=self.config.logs_group_name(service_name=ServiceName.vpc)),
@@ -131,7 +130,7 @@ class CreateQueryLogAction(ComplianceAction):
     def __init__(
         self, account: Account, route53_client: AwsHostedZonesClient, iam: AwsIamClient, config: Config, zone_id: str
     ):
-        super().__init__("Create hosted zone query log")
+        super().__init__("Create log group")
         self.route53_client = route53_client
         self.iam = iam
         self.zone_id = zone_id
@@ -141,7 +140,7 @@ class CreateQueryLogAction(ComplianceAction):
             "arn:aws:logs:us-east-1:"
             + self.account.identifier
             + ":log-group:"
-            + self.config.logs_group_name(ServiceName.route53)()
+            + self.config.logs_group_name(ServiceName.route53)
         )
 
     def _apply(self) -> None:
@@ -243,7 +242,8 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_group_name(service_name= ServiceName.vpc), destination_arn=config.logs_vpc_log_group_destination()
+                log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
+                destination_arn=config.logs_vpc_log_group_destination(),
             ),
         )
 
@@ -345,13 +345,17 @@ class TagVpcLogGroupAction(ComplianceAction):
 
     def _apply(self) -> None:
         config = Config()
-        self.logs.tag_log_group(log_group_name=config.logs_group_name(service_name=ServiceName.vpc), tags=PLATSEC_SCANNER_TAGS)
+        self.logs.tag_log_group(
+            log_group_name=config.logs_group_name(service_name=ServiceName.vpc), tags=PLATSEC_SCANNER_TAGS
+        )
 
     def plan(self) -> ComplianceActionReport:
         config = Config()
         return ComplianceActionReport(
             description=self.description,
-            details=dict(log_group_name=config.logs_group_name(service_name=ServiceName.vpc), tags=PLATSEC_SCANNER_TAGS),
+            details=dict(
+                log_group_name=config.logs_group_name(service_name=ServiceName.vpc), tags=PLATSEC_SCANNER_TAGS
+            ),
         )
 
 
@@ -366,7 +370,9 @@ class TagRoute53LogGroupAction(ComplianceAction):
         self.config = config
 
     def _apply(self) -> None:
-        self.logs.tag_log_group(log_group_name=self.config.logs_group_name(ServiceName.route53), tags=PLATSEC_SCANNER_TAGS)
+        self.logs.tag_log_group(
+            log_group_name=self.config.logs_group_name(ServiceName.route53), tags=PLATSEC_SCANNER_TAGS
+        )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(

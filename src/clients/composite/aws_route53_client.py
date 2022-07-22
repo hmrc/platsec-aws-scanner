@@ -68,7 +68,10 @@ class AwsRoute53Client:
     ) -> Sequence[ComplianceAction]:
 
         query_log_arn = (
-            "arn:aws:logs:us-east-1:" + account.identifier + ":log-group:" + self._config.logs_group_name()
+            "arn:aws:logs:us-east-1:"
+            + account.identifier
+            + ":log-group:"
+            + self._config.logs_group_name(ServiceName.route53)
         )
         queryLogActionList = []
 

@@ -26,6 +26,7 @@ from src.data.aws_iam_types import Role
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
 from src.data.aws_common_types import ServiceName
 
+
 class AwsVpcClient:
     def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
         self._logger = getLogger(self.__class__.__name__)
@@ -166,7 +167,7 @@ class AwsVpcClient:
         else:
             actions.extend(
                 [
-                    CreateLogGroupAction(logs=self.logs, config= self.config, service_name=ServiceName.vpc),
+                    CreateLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
                     PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
                     TagVpcLogGroupAction(logs=self.logs),
                 ]

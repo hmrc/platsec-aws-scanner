@@ -131,7 +131,7 @@ def test_plan_create_flow_log_action() -> None:
 
 def test_plan_create_query_log_action() -> None:
     expected = compliance_action_report(
-        description="Create hosted zone query log",
+        description="Create log group",
         details={"zone_id": "zoneId", "log_group_name": "logs_route53_log_group_name"},
     )
     config = Mock(spec=Config)
@@ -170,15 +170,17 @@ def test_plan_delete_flow_log_delivery_role_action() -> None:
 
 def test_apply_create_central_vpc_log_group_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    create_log_group_action(service_name=ServiceName.vpc, logs=logs)._apply()
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    create_log_group_action(config=config, service_name=ServiceName.vpc, logs=logs)._apply()
     logs.create_log_group.assert_called_once_with("/vpc/flow_log")
 
 
 def test_plan_create_central_vpc_log_group_action() -> None:
-    expected = compliance_action_report(
-        description="Create log group", details=dict(log_group_name="/vpc/flow_log")
-    )
-    assert expected == create_log_group_action(service_name=ServiceName.vpc).plan()
+    expected = compliance_action_report(description="Create log group", details=dict(log_group_name="/vpc/flow_log"))
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    assert expected == create_log_group_action(config=config, service_name=ServiceName.vpc).plan()
 
 
 def test_plan_create_route53_log_group_action() -> None:

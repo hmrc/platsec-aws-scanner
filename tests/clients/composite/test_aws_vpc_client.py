@@ -272,7 +272,7 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_log_group_action(service_name= ServiceName.vpc, logs=client.logs),
+                create_log_group_action(service_name=ServiceName.vpc, logs=client.logs),
                 put_vpc_log_group_retention_policy_action(logs=client.logs),
                 tag_vpc_log_group_action(logs=client.logs),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),

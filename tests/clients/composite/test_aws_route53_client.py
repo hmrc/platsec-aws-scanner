@@ -17,6 +17,7 @@ from src.data.aws_compliance_actions import (
 )
 from src.data.aws_common_types import ServiceName
 
+
 class TestAwsRoute53Client(TestCase):
     def test_enforcement_actions_no_hostedZones(self) -> None:
 
@@ -133,7 +134,9 @@ class TestAwsRoute53Client(TestCase):
         kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
-        expectedQueryLogActionList.append(CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
+        expectedQueryLogActionList.append(
+            CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
+        )
         expectedQueryLogActionList.append(PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config))
         expectedQueryLogActionList.append(TagRoute53LogGroupAction(logs=logs, config=config))
         expectedQueryLogActionList.append(

@@ -16,7 +16,6 @@ from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 from src.data.aws_common_types import Tag
 from src.data.aws_compliance_actions import (
     ComplianceActionReport,
-    CreateLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
@@ -428,10 +427,13 @@ def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient))
     return DeleteFlowLogDeliveryRoleAction(iam=iam)
 
 
-def create_log_group_action( service_name: ServiceName,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
+def create_log_group_action(
+    service_name: ServiceName,
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> CreateLogGroupAction:
     return CreateLogGroupAction(logs=logs, config=config, service_name=service_name)
+
 
 def put_vpc_log_group_subscription_filter_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
