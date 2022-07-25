@@ -11,7 +11,7 @@ from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_compliance_actions import (
     CreateQueryLogAction,
     PutLogGroupRetentionPolicyAction,
-    TagRoute53LogGroupAction,
+    TagLogGroupAction,
     DeleteQueryLogAction,
     CreateLogGroupAction,
 )
@@ -72,7 +72,7 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(
             PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
-        expectedQueryLogActionList.append(TagRoute53LogGroupAction(logs=logs, config=config))
+        expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(
                 route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD"
@@ -142,7 +142,7 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(
             PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
-        expectedQueryLogActionList.append(TagRoute53LogGroupAction(logs=logs, config=config))
+        expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(
                 route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD"

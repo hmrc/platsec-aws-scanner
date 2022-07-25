@@ -19,7 +19,7 @@ from src.data.aws_compliance_actions import (
     PutVpcLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
-    TagVpcLogGroupAction,
+    TagLogGroupAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
@@ -165,13 +165,13 @@ class AwsVpcClient:
                     PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc)
                 )
             if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
-                actions.append(TagVpcLogGroupAction(logs=self.logs))
+                actions.append(TagLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc))
         else:
             actions.extend(
                 [
                     CreateLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
                     PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
-                    TagVpcLogGroupAction(logs=self.logs),
+                    TagLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
                 ]
             )
             if with_subscription_filter:

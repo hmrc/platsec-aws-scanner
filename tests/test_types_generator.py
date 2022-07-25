@@ -24,12 +24,11 @@ from src.data.aws_compliance_actions import (
     PutLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
-    TagVpcLogGroupAction,
     UpdatePasswordPolicyAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
     CreateLogGroupAction,
-    TagRoute53LogGroupAction,
+    TagLogGroupAction,
 )
 
 from src.data.aws_route53_types import Route53Zone, QueryLog
@@ -446,33 +445,24 @@ def delete_vpc_log_group_subscription_filter_action(
     return DeleteVpcLogGroupSubscriptionFilterAction(logs=logs)
 
 
-def put_vpc_log_group_retention_policy_action(
+def put_log_group_retention_policy_action(
+    service_name: ServiceName,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
     config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> PutLogGroupRetentionPolicyAction:
-    return PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.vpc)
+    return PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=service_name)
 
 
-def put_route53_log_group_retention_policy_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
-) -> PutLogGroupRetentionPolicyAction:
-    return PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
-
-
-def tag_route53_log_group_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
-) -> TagRoute53LogGroupAction:
-    return TagRoute53LogGroupAction(logs=logs, config=config)
+def tag_log_group_action(
+    service_name: ServiceName,
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
+) -> TagLogGroupAction:
+    return TagLogGroupAction(logs=logs, config=config, service_name=service_name)
 
 
 def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
     return TagFlowLogDeliveryRoleAction(iam=iam)
-
-
-def tag_vpc_log_group_action(
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> TagVpcLogGroupAction:
-    return TagVpcLogGroupAction(logs=logs)
 
 
 def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:

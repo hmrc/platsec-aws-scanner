@@ -14,7 +14,7 @@ from src.data.aws_organizations_types import Account
 from src.data.aws_compliance_actions import (
     ComplianceAction,
     PutLogGroupRetentionPolicyAction,
-    TagRoute53LogGroupAction,
+    TagLogGroupAction,
     CreateLogGroupAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
@@ -96,7 +96,7 @@ class AwsRoute53Client:
                 PutLogGroupRetentionPolicyAction(
                     logs=self._logs, config=self._config, service_name=ServiceName.route53
                 ),
-                TagRoute53LogGroupAction(logs=self._logs, config=self._config),
+                TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
             ]
         actions: List[Any] = []
 
@@ -106,7 +106,7 @@ class AwsRoute53Client:
                 PutLogGroupRetentionPolicyAction(
                     logs=self._logs, config=self._config, service_name=ServiceName.route53
                 ),
-                TagRoute53LogGroupAction(logs=self._logs, config=self._config),
+                TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
             ]
         )
 

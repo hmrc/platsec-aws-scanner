@@ -30,11 +30,11 @@ from tests.test_types_generator import (
     log_group,
     policy,
     put_vpc_log_group_subscription_filter_action,
-    put_vpc_log_group_retention_policy_action,
+    put_log_group_retention_policy_action,
     role,
     subscription_filter,
     tag_flow_log_delivery_role_action,
-    tag_vpc_log_group_action,
+    tag_log_group_action,
     vpc,
     tag,
 )
@@ -277,8 +277,10 @@ class TestAwsEnforcementActions(TestCase):
         self.assertEqual(
             [
                 create_log_group_action(service_name=ServiceName.vpc, logs=client.logs, config=client.config),
-                put_vpc_log_group_retention_policy_action(logs=client.logs, config=client.config),
-                tag_vpc_log_group_action(logs=client.logs),
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                ),
+                tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),
             ],
             actions,
@@ -293,8 +295,10 @@ class TestAwsEnforcementActions(TestCase):
         self.assertEqual(
             [
                 create_log_group_action(service_name=ServiceName.vpc, logs=client.logs, config=client.config),
-                put_vpc_log_group_retention_policy_action(logs=client.logs, config=client.config),
-                tag_vpc_log_group_action(logs=client.logs),
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                ),
+                tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
             ],
             actions,
         )
@@ -313,7 +317,11 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(retention_days=None, default_kms_key=True)])
 
         self.assertEqual(
-            [put_vpc_log_group_retention_policy_action(logs=client.logs, config=client.config)],
+            [
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                )
+            ],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -322,7 +330,11 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(retention_days=21, default_kms_key=True)])
 
         self.assertEqual(
-            [put_vpc_log_group_retention_policy_action(logs=client.logs, config=client.config)],
+            [
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                )
+            ],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -331,7 +343,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(tags=[tag("unrelated_tag", "1")], default_kms_key=True)])
 
         self.assertEqual(
-            [tag_vpc_log_group_action(logs=client.logs)],
+            [tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc)],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 

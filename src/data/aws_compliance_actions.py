@@ -311,48 +311,25 @@ class PutLogGroupRetentionPolicyAction(ComplianceAction):
 
 
 @dataclass
-class TagVpcLogGroupAction(ComplianceAction):
-    logs: AwsLogsClient
-
-    def __init__(self, logs: AwsLogsClient) -> None:
-        super().__init__("Tag central VPC log group")
-        self.logs = logs
-
-    def _apply(self) -> None:
-        config = Config()
-        self.logs.tag_log_group(
-            log_group_name=config.logs_group_name(service_name=ServiceName.vpc), tags=PLATSEC_SCANNER_TAGS
-        )
-
-    def plan(self) -> ComplianceActionReport:
-        config = Config()
-        return ComplianceActionReport(
-            description=self.description,
-            details=dict(
-                log_group_name=config.logs_group_name(service_name=ServiceName.vpc), tags=PLATSEC_SCANNER_TAGS
-            ),
-        )
-
-
-@dataclass
-class TagRoute53LogGroupAction(ComplianceAction):
+class TagLogGroupAction(ComplianceAction):
     logs: AwsLogsClient
     config: Config
 
-    def __init__(self, logs: AwsLogsClient, config: Config) -> None:
-        super().__init__("Tag central ROUTE53 log group")
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
+        super().__init__("Tag central log group")
         self.logs = logs
         self.config = config
+        self.service_name = service_name
 
     def _apply(self) -> None:
         self.logs.tag_log_group(
-            log_group_name=self.config.logs_group_name(ServiceName.route53), tags=PLATSEC_SCANNER_TAGS
+            log_group_name=self.config.logs_group_name(self.service_name), tags=PLATSEC_SCANNER_TAGS
         )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
-            details=dict(log_group_name=self.config.logs_group_name(ServiceName.route53), tags=PLATSEC_SCANNER_TAGS),
+            details=dict(log_group_name=self.config.logs_group_name(self.service_name), tags=PLATSEC_SCANNER_TAGS),
         )
 
 
