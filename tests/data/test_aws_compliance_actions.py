@@ -236,22 +236,25 @@ def test_plan_delete_vpc_log_group_subscription_filter_action() -> None:
 
 
 def test_plan_put_vpc_log_group_retention_policy_action() -> None:
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_group_retention_policy_days = Mock(return_value=14)
     assert (
         compliance_action_report(
-            description="Put central VPC log group retention policy",
+            description="Put log group retention policy",
             details={"log_group_name": "/vpc/flow_log", "retention_days": 14},
         )
-        == put_vpc_log_group_retention_policy_action().plan()
+        == put_vpc_log_group_retention_policy_action(config=config).plan()
     )
 
 
 def test_plan_put_route53_log_group_retention_policy_action() -> None:
     config = Mock()
     config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
-    config.logs_route53_log_group_retention_policy_days = Mock(return_value=5)
+    config.logs_group_retention_policy_days = Mock(return_value=5)
     assert (
         compliance_action_report(
-            description="Put central Route53 log group retention policy",
+            description="Put log group retention policy",
             details={"log_group_name": "logs_route53_log_group_name", "retention_days": 5},
         )
         == put_route53_log_group_retention_policy_action(config=config).plan()
@@ -262,14 +265,17 @@ def test_apply_put_route53_log_group_retention_policy_action() -> None:
     logs = Mock()
     config = Mock()
     config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
-    config.logs_route53_log_group_retention_policy_days = Mock(return_value=5)
+    config.logs_group_retention_policy_days = Mock(return_value=5)
     put_route53_log_group_retention_policy_action(logs=logs, config=config).apply()
     logs.put_retention_policy.assert_called_once_with(log_group_name="logs_route53_log_group_name", retention_days=5)
 
 
 def test_apply_put_vpc_log_group_retention_policy_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    put_vpc_log_group_retention_policy_action(logs=logs)._apply()
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_group_retention_policy_days = Mock(return_value=14)
+    put_vpc_log_group_retention_policy_action(logs=logs, config=config)._apply()
     logs.put_retention_policy.assert_called_once_with(log_group_name="/vpc/flow_log", retention_days=14)
 
 

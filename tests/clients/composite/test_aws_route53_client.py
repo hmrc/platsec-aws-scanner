@@ -10,7 +10,7 @@ from src.data.aws_organizations_types import Account
 from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_compliance_actions import (
     CreateQueryLogAction,
-    PutRoute53LogGroupRetentionPolicyAction,
+    PutLogGroupRetentionPolicyAction,
     TagRoute53LogGroupAction,
     DeleteQueryLogAction,
     CreateLogGroupAction,
@@ -69,7 +69,9 @@ class TestAwsRoute53Client(TestCase):
         kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
-        expectedQueryLogActionList.append(PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config))
+        expectedQueryLogActionList.append(
+            PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
+        )
         expectedQueryLogActionList.append(TagRoute53LogGroupAction(logs=logs, config=config))
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(
@@ -137,7 +139,9 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(
             CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
-        expectedQueryLogActionList.append(PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config))
+        expectedQueryLogActionList.append(
+            PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
+        )
         expectedQueryLogActionList.append(TagRoute53LogGroupAction(logs=logs, config=config))
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(

@@ -28,13 +28,13 @@ from src.data.aws_common_types import ServiceName
 
 
 class AwsVpcClient:
-    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
+    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient, config: Config):
         self._logger = getLogger(self.__class__.__name__)
         self.ec2 = ec2
         self.iam = iam
         self.logs = logs
         self.kms = kms
-        self.config = Config()
+        self.config = config
 
     def list_vpcs(self) -> Sequence[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self.ec2.list_vpcs()]
@@ -160,8 +160,10 @@ class AwsVpcClient:
                 actions.append(DeleteVpcLogGroupSubscriptionFilterAction(logs=self.logs))
             if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
                 actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
-            if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days(service_name=ServiceName.vpc):
-                actions.append(PutLogGroupRetentionPolicyAction(logs=self.log, config=self.config, service_name=ServiceName.vpc))
+            if log_group.retention_days != self.config.logs_group_retention_policy_days(service_name=ServiceName.vpc):
+                actions.append(
+                    PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc)
+                )
             if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
                 actions.append(TagVpcLogGroupAction(logs=self.logs))
         else:

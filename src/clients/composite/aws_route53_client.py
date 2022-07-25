@@ -93,7 +93,9 @@ class AwsRoute53Client:
         log_group = self._find_log_group(self._config.logs_group_name(ServiceName.route53))
         if log_group is not None:
             return [
-                PutLogGroupRetentionPolicyAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                PutLogGroupRetentionPolicyAction(
+                    logs=self._logs, config=self._config, service_name=ServiceName.route53
+                ),
                 TagRoute53LogGroupAction(logs=self._logs, config=self._config),
             ]
         actions: List[Any] = []
@@ -101,7 +103,9 @@ class AwsRoute53Client:
         actions.extend(
             [
                 CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
-                PutLogGroupRetentionPolicyAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                PutLogGroupRetentionPolicyAction(
+                    logs=self._logs, config=self._config, service_name=ServiceName.route53
+                ),
                 TagRoute53LogGroupAction(logs=self._logs, config=self._config),
             ]
         )

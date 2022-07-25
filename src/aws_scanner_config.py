@@ -1,4 +1,3 @@
-import enum
 import boto3
 import os
 import sys
@@ -181,7 +180,7 @@ class AwsScannerConfig:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
 
     def logs_group_retention_policy_days(self, service_name: ServiceName) -> int:
-        init_config = ""
+        init_config = 0
         if service_name == ServiceName.vpc:
             init_config = self._get_int_config("logs", "vpc_log_group_retention_policy_days")
         elif service_name == ServiceName.route53:

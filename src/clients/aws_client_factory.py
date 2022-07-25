@@ -140,6 +140,7 @@ class AwsClientFactory:
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account),
             kms=self.get_kms_client(account),
+            config=self._config,
         )
 
     def get_vpc_peering_client(self, account: Account) -> AwsVpcPeeringClient:

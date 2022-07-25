@@ -21,7 +21,7 @@ from src.data.aws_compliance_actions import (
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
     DeleteVpcLogGroupSubscriptionFilterAction,
-    PutVpcLogGroupRetentionPolicyAction,
+    PutLogGroupRetentionPolicyAction,
     PutVpcLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
     TagVpcLogGroupAction,
@@ -29,7 +29,6 @@ from src.data.aws_compliance_actions import (
     DeleteQueryLogAction,
     CreateQueryLogAction,
     CreateLogGroupAction,
-    PutRoute53LogGroupRetentionPolicyAction,
     TagRoute53LogGroupAction,
 )
 
@@ -449,14 +448,15 @@ def delete_vpc_log_group_subscription_filter_action(
 
 def put_vpc_log_group_retention_policy_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> PutVpcLogGroupRetentionPolicyAction:
-    return PutVpcLogGroupRetentionPolicyAction(logs=logs)
+    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
+) -> PutLogGroupRetentionPolicyAction:
+    return PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.vpc)
 
 
 def put_route53_log_group_retention_policy_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient), config: AwsScannerConfig = Mock(spec=AwsScannerConfig)
-) -> PutRoute53LogGroupRetentionPolicyAction:
-    return PutRoute53LogGroupRetentionPolicyAction(logs=logs, config=config)
+) -> PutLogGroupRetentionPolicyAction:
+    return PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
 
 
 def tag_route53_log_group_action(

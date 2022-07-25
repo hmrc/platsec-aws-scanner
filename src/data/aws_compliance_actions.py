@@ -297,15 +297,15 @@ class PutLogGroupRetentionPolicyAction(ComplianceAction):
     def _apply(self) -> None:
         self.logs.put_retention_policy(
             log_group_name=self.config.logs_group_name(self.service_name),
-            retention_days=self.config.logs_route53_log_group_retention_policy_days(),
+            retention_days=self.config.logs_group_retention_policy_days(self.service_name),
         )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=self.config.logs_group_name(ServiceName.route53),
-                retention_days=self.config.logs_route53_log_group_retention_policy_days(),
+                log_group_name=self.config.logs_group_name(self.service_name),
+                retention_days=self.config.logs_group_retention_policy_days(self.service_name),
             ),
         )
 
