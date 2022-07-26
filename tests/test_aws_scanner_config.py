@@ -1,4 +1,6 @@
 from unittest.mock import mock_open, patch
+
+
 import pytest
 import logging
 from typing import Any
@@ -9,6 +11,7 @@ from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_organizations_types import Account
 from src.data.aws_common_types import ServiceName
+from src.data import aws_scanner_exceptions as exceptions
 
 
 def test_init_config_from_file() -> None:
@@ -239,3 +242,8 @@ def test_load_config_from_s3() -> None:
         side_effect=lambda b, k: conf if b == "conf-buck" and k == "aws_scanner_config.ini" else None,
     ):
         assert AwsScannerConfig().iam_role() == "TheIamRole"
+
+
+def test_log_group_name_invalid_service_name_exception() -> None:
+    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
+        AwsScannerConfig().logs_group_name(ServiceName.default)

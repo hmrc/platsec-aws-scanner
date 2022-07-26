@@ -13,5 +13,6 @@ class Tag:
 
 
 class ServiceName(Enum):
+    default = 0
     vpc = 1
     route53 = 2

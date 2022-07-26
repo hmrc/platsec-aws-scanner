@@ -11,6 +11,7 @@ from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_iam_types import PasswordPolicy
 from src.data.aws_organizations_types import Account
 from src.data.aws_common_types import ServiceName
+from src.data import aws_scanner_exceptions as exceptions
 
 CONFIG_FILE = "aws_scanner_config.ini"
 
@@ -143,6 +144,9 @@ class AwsScannerConfig:
             log_name = self._get_config("logs", "vpc_log_group_name")
         elif service_name == ServiceName.route53:
             log_name = self._get_config("logs", "route53_log_group_name")
+
+        if log_name == "":
+            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
 
         return log_name
 
