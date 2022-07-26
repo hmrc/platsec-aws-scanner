@@ -247,3 +247,8 @@ def test_load_config_from_s3() -> None:
 def test_log_group_name_invalid_service_name_exception() -> None:
     with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
         AwsScannerConfig().logs_group_name(ServiceName.default)
+
+
+def test_retention_period_invalid_service_name_exception() -> None:
+    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
+        AwsScannerConfig().logs_group_retention_policy_days(ServiceName.default)

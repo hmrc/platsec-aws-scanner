@@ -189,6 +189,10 @@ class AwsScannerConfig:
             init_config = self._get_int_config("logs", "vpc_log_group_retention_policy_days")
         elif service_name == ServiceName.route53:
             init_config = self._get_int_config("logs", "route53_log_group_retention_policy_days")
+
+        if init_config == 0:
+            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
+
         return init_config
 
     def logs_role(self) -> str:
