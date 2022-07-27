@@ -228,6 +228,11 @@ def test_get_bucket_data_tagging_expiry_1_year() -> None:
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-year")
 
 
+def test_get_bucket_data_tagging_expiry_18_months() -> None:
+    tagging = bucket_data_tagging(expiry="18-months", sensitivity="low")
+    assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-18-months")
+
+
 def test_get_bucket_data_tagging_expiry_7_years() -> None:
     tagging = bucket_data_tagging(expiry="7-years", sensitivity="low")
     assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-7-years")
