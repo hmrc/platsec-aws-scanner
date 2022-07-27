@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
@@ -87,13 +87,14 @@ class AwsEC2Client:
         except (BotoCoreError, ClientError) as err:
             raise EC2Exception(f"unable to describe VPC peering connections: {err}")
 
+    def __fetch_creation_date(self, instance: Instance) -> Instance:
+        creation_date = self._get_image_metadata(self._describe_images(instance.image_id), "CreationDate")
+        if creation_date:
+            instance.with_image_creation_date(creation_date=creation_date)
+        return instance
+
     def list_instances(self) -> List[Instance]:
-        return [
-            instance.with_image_creation_date(
-                self._get_image_metadata(self._describe_images(instance.image_id), "CreationDate")
-            )
-            for instance in self._describe_instances()
-        ]
+        return list(map(self.__fetch_creation_date, self._describe_instances()))
 
     def _describe_instances(self) -> List[Instance]:
         return boto_try(
@@ -115,5 +116,5 @@ class AwsEC2Client:
         )
 
     @staticmethod
-    def _get_image_metadata(images: List[Dict[str, Any]], metadata_key: str) -> str:
-        return next(iter(images), {metadata_key: "unknown"})[metadata_key]
+    def _get_image_metadata(images: List[Dict[str, Any]], metadata_key: str) -> Optional[str]:
+        return next(iter(images), {metadata_key: None})[metadata_key]

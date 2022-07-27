@@ -166,3 +166,17 @@ def test_list_instances() -> None:
         ),
     )
     assert AwsEC2Client(boto_mock).list_instances() == responses.EXPECTED_INSTANCES
+
+
+def test_list_instances_missing_ami_data() -> None:
+    paginator_mock = Mock(paginate=Mock(side_effect=lambda **k: iter(responses.DESCRIBE_INSTANCES)))
+    boto_mock = Mock(
+        get_paginator=Mock(side_effect=lambda func: paginator_mock if func == "describe_instances" else None),
+        describe_images=Mock(
+            side_effect=lambda **kwargs: {
+                "ami-1234": responses.DESCRIBE_IMAGE_1234,
+                "ami-5678": responses.DESCRIBE_IMAGE_NOT_FOUND,
+            }[kwargs["ImageIds"][0]]
+        ),
+    )
+    assert AwsEC2Client(boto_mock).list_instances() == responses.EXPECTED_INSTANCES_MISSING_CREATED_DATE
