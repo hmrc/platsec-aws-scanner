@@ -7,7 +7,7 @@ from src.data.aws_logs_types import LogGroup
 from src.data.aws_scanner_exceptions import IamException
 from unittest import TestCase
 from unittest.mock import Mock
-
+from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
@@ -16,11 +16,12 @@ from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
 )
+from src.data.aws_common_types import ServiceName
 
 from tests.test_types_generator import (
     create_flow_log_action,
     create_flow_log_delivery_role_action,
-    create_vpc_log_group_action,
+    create_log_group_action,
     delete_flow_log_action,
     delete_flow_log_delivery_role_action,
     delete_vpc_log_group_subscription_filter_action,
@@ -29,11 +30,11 @@ from tests.test_types_generator import (
     log_group,
     policy,
     put_vpc_log_group_subscription_filter_action,
-    put_vpc_log_group_retention_policy_action,
+    put_log_group_retention_policy_action,
     role,
     subscription_filter,
     tag_flow_log_delivery_role_action,
-    tag_vpc_log_group_action,
+    tag_log_group_action,
     vpc,
     tag,
 )
@@ -74,7 +75,9 @@ class TestAwsLogDeliveryRoleCompliance(TestCase):
             assume_policy={"Statement": [{"Action": "sts:AssumeRole"}]},
             policies=[policy(document={"Statement": [{"Effect": "Allow", "Action": ["logs:*"], "Resource": "*"}]})],
         )
-        client = AwsVpcClientBuilder().build()
+        clientBuilder = AwsVpcClientBuilder()
+
+        client = clientBuilder.build()
         self.assertTrue(client._is_flow_log_role_compliant(delivery_role))
 
     def test_flow_log_role_not_compliant(self) -> None:
@@ -112,7 +115,8 @@ class TestAwsFlowLogCompliance(TestCase):
         return AwsVpcClientBuilder().build()
 
     def test_flow_log_centralised(self) -> None:
-        self.assertTrue(self.client()._is_flow_log_centralised(flow_log(log_group_name="/vpc/flow_log")))
+        client = AwsVpcClientBuilder().build()
+        self.assertTrue(client._is_flow_log_centralised(flow_log(log_group_name="/vpc/flow_log")))
 
     def test_flow_log_not_centralised(self) -> None:
         self.assertFalse(self.client()._is_flow_log_centralised(flow_log(log_group_name=None)))
@@ -123,11 +127,12 @@ class TestAwsFlowLogCompliance(TestCase):
         self.assertFalse(self.client()._is_flow_log_misconfigured(flow_log(log_group_name="/vpc/something_else")))
 
     def test_flow_log_misconfigured(self) -> None:
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(status="a")))
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(traffic_type="b")))
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(log_format="c")))
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role_arn=None)))
-        self.assertTrue(self.client()._is_flow_log_misconfigured(flow_log(deliver_log_role_arn="bla")))
+        client = AwsVpcClientBuilder().build()
+        self.assertTrue(client._is_flow_log_misconfigured(flow_log(status="a")))
+        self.assertTrue(client._is_flow_log_misconfigured(flow_log(traffic_type="b")))
+        self.assertTrue(client._is_flow_log_misconfigured(flow_log(log_format="c")))
+        self.assertTrue(client._is_flow_log_misconfigured(flow_log(deliver_log_role_arn=None)))
+        self.assertTrue(client._is_flow_log_misconfigured(flow_log(deliver_log_role_arn="bla")))
 
 
 class TestAwsEnforcementActions(TestCase):
@@ -139,7 +144,6 @@ class TestAwsEnforcementActions(TestCase):
         client = AwsVpcClientBuilder()
         client.with_default_log_group()
         client.with_roles([role()])
-
         self.assertEqual([], client.build().enforcement_actions([vpc()], with_subscription_filter=True))
 
     def test_create_vpc_flow_logs(self) -> None:
@@ -264,6 +268,7 @@ class TestAwsEnforcementActions(TestCase):
         )
 
     def test_create_central_vpc_log_group_when_missing_with_subscription_filter(self) -> None:
+
         client = AwsVpcClientBuilder()
         client.with_log_groups([])
 
@@ -271,9 +276,11 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_vpc_log_group_action(logs=client.logs),
-                put_vpc_log_group_retention_policy_action(logs=client.logs),
-                tag_vpc_log_group_action(logs=client.logs),
+                create_log_group_action(service_name=ServiceName.vpc, logs=client.logs, config=client.config),
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                ),
+                tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
                 put_vpc_log_group_subscription_filter_action(logs=client.logs),
             ],
             actions,
@@ -287,9 +294,11 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                create_vpc_log_group_action(logs=client.logs),
-                put_vpc_log_group_retention_policy_action(logs=client.logs),
-                tag_vpc_log_group_action(logs=client.logs),
+                create_log_group_action(service_name=ServiceName.vpc, logs=client.logs, config=client.config),
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                ),
+                tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
             ],
             actions,
         )
@@ -308,7 +317,11 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(retention_days=None, default_kms_key=True)])
 
         self.assertEqual(
-            [put_vpc_log_group_retention_policy_action(logs=client.logs)],
+            [
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                )
+            ],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -317,7 +330,11 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(retention_days=21, default_kms_key=True)])
 
         self.assertEqual(
-            [put_vpc_log_group_retention_policy_action(logs=client.logs)],
+            [
+                put_log_group_retention_policy_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                )
+            ],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -326,7 +343,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(tags=[tag("unrelated_tag", "1")], default_kms_key=True)])
 
         self.assertEqual(
-            [tag_vpc_log_group_action(logs=client.logs)],
+            [tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc)],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -392,6 +409,7 @@ class AwsVpcClientBuilder(TestCase):
         self.iam = Mock(spec=AwsIamClient, wraps=AwsIamClient(Mock()))
         self.logs = Mock(spec=AwsLogsClient, wraps=AwsLogsClient(Mock()))
         self.kms = Mock(spec=AwsKmsClient, wraps=AwsKmsClient(Mock()))
+        self.config = Config()
 
     def with_default_vpc(self) -> AwsVpcClientBuilder:
         vpcs = [
@@ -448,7 +466,7 @@ class AwsVpcClientBuilder(TestCase):
         return self
 
     def build(self) -> AwsVpcClient:
-        return AwsVpcClient(self.ec2, self.iam, self.logs, self.kms)
+        return AwsVpcClient(self.ec2, self.iam, self.logs, self.kms, self.config)
 
     def with_create_role(self, expected_role: Role) -> AwsVpcClientBuilder:
         def create_role(name: str, assume_policy: Dict[str, Any]) -> Role:

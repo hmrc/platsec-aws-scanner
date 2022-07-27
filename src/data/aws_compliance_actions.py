@@ -12,6 +12,7 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import AwsScannerException
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_organizations_types import Account
+from src.data.aws_common_types import ServiceName
 
 
 @dataclass
@@ -110,14 +111,14 @@ class CreateFlowLogAction(ComplianceAction):
     def _apply(self) -> None:
         self.ec2.create_flow_logs(
             self.vpc_id,
-            self.config.logs_vpc_log_group_name(),
+            self.config.logs_group_name(service_name=ServiceName.vpc),
             self._get_flow_log_delivery_role_arn(self.config.logs_vpc_log_group_delivery_role()),
         )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
-            details=dict(vpc_id=self.vpc_id, log_group_name=self.config.logs_vpc_log_group_name()),
+            details=dict(vpc_id=self.vpc_id, log_group_name=self.config.logs_group_name(service_name=ServiceName.vpc)),
         )
 
 
@@ -129,7 +130,7 @@ class CreateQueryLogAction(ComplianceAction):
     def __init__(
         self, account: Account, route53_client: AwsHostedZonesClient, iam: AwsIamClient, config: Config, zone_id: str
     ):
-        super().__init__("Create hosted zone query log")
+        super().__init__("Create log group")
         self.route53_client = route53_client
         self.iam = iam
         self.zone_id = zone_id
@@ -139,7 +140,7 @@ class CreateQueryLogAction(ComplianceAction):
             "arn:aws:logs:us-east-1:"
             + self.account.identifier
             + ":log-group:"
-            + self.config.logs_route53_log_group_name()
+            + self.config.logs_group_name(ServiceName.route53)
         )
 
     def _apply(self) -> None:
@@ -152,7 +153,7 @@ class CreateQueryLogAction(ComplianceAction):
 
         return ComplianceActionReport(
             description=self.description,
-            details=dict(zone_id=self.zone_id, log_group_name=self.config.logs_route53_log_group_name()),
+            details=dict(zone_id=self.zone_id, log_group_name=self.config.logs_group_name(ServiceName.route53)),
         )
 
 
@@ -210,37 +211,21 @@ class TagFlowLogDeliveryRoleAction(ComplianceAction):
 
 
 @dataclass
-class CreateVpcLogGroupAction(ComplianceAction):
+class CreateLogGroupAction(ComplianceAction):
     logs: AwsLogsClient
 
-    def __init__(self, logs: AwsLogsClient) -> None:
-        super().__init__("Create central VPC log group")
-        self.logs = logs
-
-    def _apply(self) -> None:
-        self.logs.create_log_group(Config().logs_vpc_log_group_name())
-
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(
-            description=self.description, details=dict(log_group_name=Config().logs_vpc_log_group_name())
-        )
-
-
-@dataclass
-class CreateRoute53LogGroupAction(ComplianceAction):
-    logs: AwsLogsClient
-
-    def __init__(self, logs: AwsLogsClient, config: Config) -> None:
-        super().__init__("Create central Route53 log group")
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
+        super().__init__("Create log group")
         self.logs = logs
         self.config = config
+        self.service_name = service_name
 
     def _apply(self) -> None:
-        self.logs.create_log_group(self.config.logs_route53_log_group_name())
+        self.logs.create_log_group(self.config.logs_group_name(self.service_name))
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
-            description=self.description, details=dict(log_group_name=self.config.logs_route53_log_group_name())
+            description=self.description, details=dict(log_group_name=self.config.logs_group_name(self.service_name))
         )
 
 
@@ -257,14 +242,15 @@ class PutVpcLogGroupSubscriptionFilterAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_vpc_log_group_name(), destination_arn=config.logs_vpc_log_group_destination()
+                log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
+                destination_arn=config.logs_vpc_log_group_destination(),
             ),
         )
 
     def _apply(self) -> None:
         config = Config()
         self.logs.put_subscription_filter(
-            log_group_name=config.logs_vpc_log_group_name(),
+            log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
             filter_name=config.logs_vpc_log_group_subscription_filter_name(),
             filter_pattern=config.logs_vpc_log_group_pattern(),
             destination_arn=config.logs_vpc_log_group_destination(),
@@ -284,7 +270,7 @@ class DeleteVpcLogGroupSubscriptionFilterAction(ComplianceAction):
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=config.logs_vpc_log_group_name(),
+                log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
                 subscription_filter_name=config.logs_vpc_log_group_subscription_filter_name(),
             ),
         )
@@ -292,100 +278,58 @@ class DeleteVpcLogGroupSubscriptionFilterAction(ComplianceAction):
     def _apply(self) -> None:
         config = Config()
         self.logs.delete_subscription_filter(
-            log_group_name=config.logs_vpc_log_group_name(),
+            log_group_name=config.logs_group_name(service_name=ServiceName.vpc),
             filter_name=config.logs_vpc_log_group_subscription_filter_name(),
         )
 
 
 @dataclass
-class PutVpcLogGroupRetentionPolicyAction(ComplianceAction):
-    logs: AwsLogsClient
-
-    def __init__(self, logs: AwsLogsClient) -> None:
-        super().__init__("Put central VPC log group retention policy")
-        self.logs = logs
-
-    def _apply(self) -> None:
-        config = Config()
-        self.logs.put_retention_policy(
-            log_group_name=config.logs_vpc_log_group_name(),
-            retention_days=config.logs_vpc_log_group_retention_policy_days(),
-        )
-
-    def plan(self) -> ComplianceActionReport:
-        config = Config()
-        return ComplianceActionReport(
-            description=self.description,
-            details=dict(
-                log_group_name=config.logs_vpc_log_group_name(),
-                retention_days=config.logs_vpc_log_group_retention_policy_days(),
-            ),
-        )
-
-
-@dataclass
-class PutRoute53LogGroupRetentionPolicyAction(ComplianceAction):
+class PutLogGroupRetentionPolicyAction(ComplianceAction):
     logs: AwsLogsClient
     config: Config
 
-    def __init__(self, logs: AwsLogsClient, config: Config) -> None:
-        super().__init__("Put central Route53 log group retention policy")
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
+        super().__init__("Put log group retention policy")
         self.logs = logs
         self.config = config
+        self.service_name = service_name
 
     def _apply(self) -> None:
         self.logs.put_retention_policy(
-            log_group_name=self.config.logs_route53_log_group_name(),
-            retention_days=self.config.logs_route53_log_group_retention_policy_days(),
+            log_group_name=self.config.logs_group_name(self.service_name),
+            retention_days=self.config.logs_group_retention_policy_days(self.service_name),
         )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
             details=dict(
-                log_group_name=self.config.logs_route53_log_group_name(),
-                retention_days=self.config.logs_route53_log_group_retention_policy_days(),
+                log_group_name=self.config.logs_group_name(self.service_name),
+                retention_days=self.config.logs_group_retention_policy_days(self.service_name),
             ),
         )
 
 
 @dataclass
-class TagVpcLogGroupAction(ComplianceAction):
-    logs: AwsLogsClient
-
-    def __init__(self, logs: AwsLogsClient) -> None:
-        super().__init__("Tag central VPC log group")
-        self.logs = logs
-
-    def _apply(self) -> None:
-        config = Config()
-        self.logs.tag_log_group(log_group_name=config.logs_vpc_log_group_name(), tags=PLATSEC_SCANNER_TAGS)
-
-    def plan(self) -> ComplianceActionReport:
-        config = Config()
-        return ComplianceActionReport(
-            description=self.description,
-            details=dict(log_group_name=config.logs_vpc_log_group_name(), tags=PLATSEC_SCANNER_TAGS),
-        )
-
-
-@dataclass
-class TagRoute53LogGroupAction(ComplianceAction):
+class TagLogGroupAction(ComplianceAction):
     logs: AwsLogsClient
     config: Config
 
-    def __init__(self, logs: AwsLogsClient, config: Config) -> None:
-        super().__init__("Tag central ROUTE53 log group")
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
+        super().__init__("Tag central log group")
         self.logs = logs
         self.config = config
+        self.service_name = service_name
 
     def _apply(self) -> None:
-        self.logs.tag_log_group(log_group_name=self.config.logs_route53_log_group_name(), tags=PLATSEC_SCANNER_TAGS)
+        self.logs.tag_log_group(
+            log_group_name=self.config.logs_group_name(self.service_name), tags=PLATSEC_SCANNER_TAGS
+        )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
-            details=dict(log_group_name=self.config.logs_route53_log_group_name(), tags=PLATSEC_SCANNER_TAGS),
+            details=dict(log_group_name=self.config.logs_group_name(self.service_name), tags=PLATSEC_SCANNER_TAGS),
         )
 
 

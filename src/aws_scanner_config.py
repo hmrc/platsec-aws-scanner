@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional
 from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_iam_types import PasswordPolicy
 from src.data.aws_organizations_types import Account
+from src.data.aws_common_types import ServiceName
+from src.data import aws_scanner_exceptions as exceptions
 
 CONFIG_FILE = "aws_scanner_config.ini"
 
@@ -136,14 +138,20 @@ class AwsScannerConfig:
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
 
-    def logs_vpc_log_group_name(self) -> str:
-        return self._get_config("logs", "vpc_log_group_name")
+    def logs_group_name(self, service_name: ServiceName) -> str:
+        log_name = ""
+        if service_name == ServiceName.vpc:
+            log_name = self._get_config("logs", "vpc_log_group_name")
+        elif service_name == ServiceName.route53:
+            log_name = self._get_config("logs", "route53_log_group_name")
 
-    def logs_route53_log_group_name(self) -> str:
-        return self._get_config("logs", "route53_log_group_name")
+        if log_name == "":
+            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
+
+        return log_name
 
     def logs_vpc_log_group_subscription_filter_name(self) -> str:
-        return f"{self.logs_vpc_log_group_name()}_sub_filter"
+        return f"{self.logs_group_name(ServiceName.vpc)}_sub_filter"
 
     def logs_vpc_log_group_pattern(self) -> str:
         return self._get_config("logs", "vpc_log_group_pattern")
@@ -175,11 +183,17 @@ class AwsScannerConfig:
     def logs_vpc_log_group_delivery_role_policy_document(self) -> Dict[str, Any]:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
 
-    def logs_vpc_log_group_retention_policy_days(self) -> int:
-        return self._get_int_config("logs", "vpc_log_group_retention_policy_days")
+    def logs_group_retention_policy_days(self, service_name: ServiceName) -> int:
+        init_config = 0
+        if service_name == ServiceName.vpc:
+            init_config = self._get_int_config("logs", "vpc_log_group_retention_policy_days")
+        elif service_name == ServiceName.route53:
+            init_config = self._get_int_config("logs", "route53_log_group_retention_policy_days")
 
-    def logs_route53_log_group_retention_policy_days(self) -> int:
-        return self._get_int_config("logs", "route53_log_group_retention_policy_days")
+        if init_config == 0:
+            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
+
+        return init_config
 
     def logs_role(self) -> str:
         return self._get_config("logs", "role")

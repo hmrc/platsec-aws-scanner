@@ -10,30 +10,31 @@ from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
-    CreateVpcLogGroupAction,
+    CreateLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
     DeleteVpcLogGroupSubscriptionFilterAction,
     PutVpcLogGroupSubscriptionFilterAction,
-    PutVpcLogGroupRetentionPolicyAction,
+    PutLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
-    TagVpcLogGroupAction,
+    TagLogGroupAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter
+from src.data.aws_common_types import ServiceName
 
 
 class AwsVpcClient:
-    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient):
+    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient, config: Config):
         self._logger = getLogger(self.__class__.__name__)
         self.ec2 = ec2
         self.iam = iam
         self.logs = logs
         self.kms = kms
-        self.config = Config()
+        self.config = config
 
     def list_vpcs(self) -> Sequence[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self.ec2.list_vpcs()]
@@ -64,7 +65,7 @@ class AwsVpcClient:
         )
 
     def _is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
-        return flow_log.log_group_name == self.config.logs_vpc_log_group_name()
+        return flow_log.log_group_name == self.config.logs_group_name(ServiceName.vpc)
 
     def _is_flow_log_misconfigured(self, flow_log: FlowLog) -> bool:
         return self._is_flow_log_centralised(flow_log) and (
@@ -152,23 +153,25 @@ class AwsVpcClient:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
 
     def _vpc_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
-        log_group = self._find_log_group(self.config.logs_vpc_log_group_name())
+        log_group = self._find_log_group(self.config.logs_group_name(ServiceName.vpc))
         actions: List[Any] = []
         if log_group:
             if self._is_central_vpc_log_group(log_group) and not with_subscription_filter:
                 actions.append(DeleteVpcLogGroupSubscriptionFilterAction(logs=self.logs))
             if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
                 actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
-            if log_group.retention_days != self.config.logs_vpc_log_group_retention_policy_days():
-                actions.append(PutVpcLogGroupRetentionPolicyAction(logs=self.logs))
+            if log_group.retention_days != self.config.logs_group_retention_policy_days(service_name=ServiceName.vpc):
+                actions.append(
+                    PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc)
+                )
             if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
-                actions.append(TagVpcLogGroupAction(logs=self.logs))
+                actions.append(TagLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc))
         else:
             actions.extend(
                 [
-                    CreateVpcLogGroupAction(logs=self.logs),
-                    PutVpcLogGroupRetentionPolicyAction(logs=self.logs),
-                    TagVpcLogGroupAction(logs=self.logs),
+                    CreateLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
+                    PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
+                    TagLogGroupAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc),
                 ]
             )
             if with_subscription_filter:
@@ -182,7 +185,7 @@ class AwsVpcClient:
         )
 
     def _is_central_vpc_log_group(self, log_group: LogGroup) -> bool:
-        return log_group.name == self.config.logs_vpc_log_group_name() and any(
+        return log_group.name == self.config.logs_group_name(ServiceName.vpc) and any(
             map(self._is_central_vpc_destination_filter, log_group.subscription_filters)
         )
 
