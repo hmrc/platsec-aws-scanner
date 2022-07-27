@@ -667,7 +667,7 @@ def instance(
     id: str = "instance-1234",
     component: str = "some-component",
     image_id: str = "image-5678",
-    image_creation_date: datetime = datetime.fromisoformat("2020-03-23T09:01:26+00:00"),
+    image_creation_date: Optional[datetime] = datetime.fromisoformat("2020-03-23T09:01:26+00:00"),
     launch_time: datetime = datetime.fromisoformat("2020-03-25T09:06:07+00:00"),
     metadata_options_http_tokens: str = "required",
 ) -> Instance:

@@ -137,6 +137,7 @@ EXPECTED_VPC_PEERING_CONNECTIONS = [
 
 DESCRIBE_IMAGE_1234 = {"Images": [{"CreationDate": "2022-02-21T14:05:14.000Z", "ImageId": "ami-1234", "Public": False}]}
 DESCRIBE_IMAGE_5678 = {"Images": [{"CreationDate": "2022-02-21T14:05:14.000Z", "ImageId": "ami-5678", "Public": True}]}
+DESCRIBE_IMAGE_NOT_FOUND: Dict[str, Any] = {"Images": []}
 
 DESCRIBE_INSTANCES = [
     {
@@ -184,6 +185,25 @@ EXPECTED_INSTANCES = [
         component="Unknown",
         image_id="ami-5678",
         image_creation_date=datetime.datetime(2022, 2, 21, 14, 5, 14, tzinfo=datetime.timezone.utc),
+        launch_time=datetime.datetime(2022, 5, 19, 15, 18, 7),
+        metadata_options_http_tokens="optional",
+    ),
+]
+
+EXPECTED_INSTANCES_MISSING_CREATED_DATE = [
+    instance(
+        id="i-a1b2c3",
+        component="some-component",
+        image_id="ami-1234",
+        image_creation_date=datetime.datetime(2022, 2, 21, 14, 5, 14, tzinfo=datetime.timezone.utc),
+        launch_time=datetime.datetime(2022, 5, 18, 15, 18, 7),
+        metadata_options_http_tokens="required",
+    ),
+    instance(
+        id="i-d4e5f6",
+        component="Unknown",
+        image_id="ami-5678",
+        image_creation_date=None,
         launch_time=datetime.datetime(2022, 5, 19, 15, 18, 7),
         metadata_options_http_tokens="optional",
     ),
