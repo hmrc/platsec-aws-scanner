@@ -15,8 +15,8 @@ from src.data.aws_compliance_actions import (
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    DeleteVpcLogGroupSubscriptionFilterAction,
-    PutVpcLogGroupSubscriptionFilterAction,
+    DeleteLogGroupSubscriptionFilterAction,
+    PutLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
     TagLogGroupAction,
@@ -157,9 +157,9 @@ class AwsVpcClient:
         actions: List[Any] = []
         if log_group:
             if self._is_central_vpc_log_group(log_group) and not with_subscription_filter:
-                actions.append(DeleteVpcLogGroupSubscriptionFilterAction(logs=self.logs))
+                actions.append(DeleteLogGroupSubscriptionFilterAction(logs=self.logs, service_name= ServiceName.vpc))
             if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
-                actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
+                actions.append(PutLogGroupSubscriptionFilterAction(logs=self.logs))
             if log_group.retention_days != self.config.logs_group_retention_policy_days(service_name=ServiceName.vpc):
                 actions.append(
                     PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc)

@@ -20,9 +20,9 @@ from src.data.aws_compliance_actions import (
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    DeleteVpcLogGroupSubscriptionFilterAction,
+    DeleteLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
-    PutVpcLogGroupSubscriptionFilterAction,
+    PutLogGroupSubscriptionFilterAction,
     TagFlowLogDeliveryRoleAction,
     UpdatePasswordPolicyAction,
     DeleteQueryLogAction,
@@ -435,14 +435,14 @@ def create_log_group_action(
 
 def put_vpc_log_group_subscription_filter_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> PutVpcLogGroupSubscriptionFilterAction:
-    return PutVpcLogGroupSubscriptionFilterAction(logs=logs)
+) -> PutLogGroupSubscriptionFilterAction:
+    return PutLogGroupSubscriptionFilterAction(logs=logs, service_name= ServiceName.vpc)
 
 
 def delete_vpc_log_group_subscription_filter_action(
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-) -> DeleteVpcLogGroupSubscriptionFilterAction:
-    return DeleteVpcLogGroupSubscriptionFilterAction(logs=logs)
+) -> DeleteLogGroupSubscriptionFilterAction:
+    return DeleteLogGroupSubscriptionFilterAction(logs=logs, service_name= ServiceName.vpc)
 
 
 def put_log_group_retention_policy_action(
