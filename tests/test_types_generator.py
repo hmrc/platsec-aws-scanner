@@ -434,15 +434,19 @@ def create_log_group_action(
 
 
 def put_vpc_log_group_subscription_filter_action(
+    service_name: ServiceName,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> PutLogGroupSubscriptionFilterAction:
-    return PutLogGroupSubscriptionFilterAction(logs=logs, service_name= ServiceName.vpc)
+    return PutLogGroupSubscriptionFilterAction(logs=logs, config=config, service_name=ServiceName.vpc)
 
 
 def delete_vpc_log_group_subscription_filter_action(
+    service_name: ServiceName,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> DeleteLogGroupSubscriptionFilterAction:
-    return DeleteLogGroupSubscriptionFilterAction(logs=logs, service_name= ServiceName.vpc)
+    return DeleteLogGroupSubscriptionFilterAction(logs=logs, config=config, service_name=ServiceName.vpc)
 
 
 def put_log_group_retention_policy_action(

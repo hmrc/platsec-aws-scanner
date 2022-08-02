@@ -200,7 +200,7 @@ def test_apply_create_route53_log_group_action() -> None:
 
 def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    put_vpc_log_group_subscription_filter_action(logs=logs)._apply()
+    put_vpc_log_group_subscription_filter_action(service_name=ServiceName.vpc, logs=logs)._apply()
     logs.put_subscription_filter.assert_called_once_with(
         log_group_name="/vpc/flow_log",
         filter_name="/vpc/flow_log_sub_filter",
@@ -210,27 +210,37 @@ def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
 
 
 def test_plan_put_central_vpc_log_group_subscription_filter_action() -> None:
+    logs = Mock(spec=AwsLogsClient)
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_destination = Mock(return_value="arn:aws:logs:::destination:central")
     expected = compliance_action_report(
         description="Put central VPC log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", destination_arn="arn:aws:logs:::destination:central"),
     )
-    assert expected == put_vpc_log_group_subscription_filter_action().plan()
+    assert expected == put_vpc_log_group_subscription_filter_action(logs=logs, config=config, service_name=ServiceName.vpc).plan()
 
 
 def test_apply_delete_vpc_log_group_subscription_filter_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    delete_vpc_log_group_subscription_filter_action(logs=logs)._apply()
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_subscription_filter_name = Mock(return_value="/vpc/flow_log_sub_filter")
+    delete_vpc_log_group_subscription_filter_action(config=config, service_name=ServiceName.vpc, logs=logs)._apply()
     logs.delete_subscription_filter.assert_called_once_with(
         log_group_name="/vpc/flow_log", filter_name="/vpc/flow_log_sub_filter"
     )
 
 
 def test_plan_delete_vpc_log_group_subscription_filter_action() -> None:
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_subscription_filter_name = Mock(return_value="/vpc/flow_log_sub_filter")
     expected = compliance_action_report(
         description="Delete central VPC log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", subscription_filter_name="/vpc/flow_log_sub_filter"),
     )
-    assert expected == delete_vpc_log_group_subscription_filter_action().plan()
+    assert expected == delete_vpc_log_group_subscription_filter_action(config=config, service_name=ServiceName.vpc).plan()
 
 
 def test_plan_put_vpc_log_group_retention_policy_action() -> None:
