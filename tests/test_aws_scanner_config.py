@@ -262,3 +262,8 @@ def test_log_group_subscription_filter_name_exception() -> None:
 def test_log_group_pattern_exception() -> None:
     with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
         AwsScannerConfig().logs_log_group_pattern(ServiceName.default)
+
+
+def test_log_group_destination_exception() -> None:
+    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
+        AwsScannerConfig().logs_log_group_destination(ServiceName.default)
