@@ -281,7 +281,7 @@ class TestAwsEnforcementActions(TestCase):
                     logs=client.logs, config=client.config, service_name=ServiceName.vpc
                 ),
                 tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
-                put_vpc_log_group_subscription_filter_action(logs=client.logs),
+                put_vpc_log_group_subscription_filter_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
             ],
             actions,
         )
@@ -308,7 +308,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(subscription_filters=[], default_kms_key=True)])
 
         self.assertEqual(
-            [put_vpc_log_group_subscription_filter_action(logs=client.logs)],
+            [put_vpc_log_group_subscription_filter_action(service_name=ServiceName.vpc, logs=client.logs)],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -358,7 +358,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_default_log_group()
 
         self.assertEqual(
-            [delete_vpc_log_group_subscription_filter_action(logs=client.logs)],
+            [delete_vpc_log_group_subscription_filter_action(service_name=ServiceName.vpc, logs=client.logs)],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=False),
         )
 
