@@ -281,7 +281,9 @@ class TestAwsEnforcementActions(TestCase):
                     logs=client.logs, config=client.config, service_name=ServiceName.vpc
                 ),
                 tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
-                put_vpc_log_group_subscription_filter_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
+                put_vpc_log_group_subscription_filter_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                ),
             ],
             actions,
         )

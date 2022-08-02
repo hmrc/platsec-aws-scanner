@@ -150,7 +150,7 @@ class AwsScannerConfig:
 
         return log_name
 
-    def logs_log_group_subscription_filter_name(self,  service_name: ServiceName) -> str:
+    def logs_log_group_subscription_filter_name(self, service_name: ServiceName) -> str:
         log_group_subscription_filter_name = ""
         if service_name == ServiceName.vpc:
             log_group_subscription_filter_name = f"{self.logs_group_name(ServiceName.vpc)}_sub_filter"

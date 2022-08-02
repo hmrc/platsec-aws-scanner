@@ -18,7 +18,7 @@ from src.data.aws_compliance_actions import (
     CreateLogGroupAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
-    PutLogGroupSubscriptionFilterAction
+    PutLogGroupSubscriptionFilterAction,
 )
 
 from src.data.aws_logs_types import LogGroup
@@ -96,25 +96,33 @@ class AwsRoute53Client:
         actions: List[Any] = []
 
         if log_group is not None:
-            actions.extend([
-                PutLogGroupRetentionPolicyAction(
-                    logs=self._logs, config=self._config, service_name=ServiceName.route53
-                ),
-                TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
-            ])
+            actions.extend(
+                [
+                    PutLogGroupRetentionPolicyAction(
+                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                    ),
+                    TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                ]
+            )
         else:
-            actions.extend([
-                CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
-                PutLogGroupRetentionPolicyAction(
-                    logs=self._logs, config=self._config, service_name=ServiceName.route53
-                ),
-                TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
-            ])
+            actions.extend(
+                [
+                    CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                    PutLogGroupRetentionPolicyAction(
+                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                    ),
+                    TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                ]
+            )
 
         if with_subscription_filter:
-            actions.extend([
-                PutLogGroupSubscriptionFilterAction(logs=self._logs, config=self._config, service_name=ServiceName.route53)
-            ])
+            actions.extend(
+                [
+                    PutLogGroupSubscriptionFilterAction(
+                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                    )
+                ]
+            )
 
         return actions
 

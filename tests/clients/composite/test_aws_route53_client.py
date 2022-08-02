@@ -176,8 +176,6 @@ class TestAwsRoute53Client(TestCase):
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
-
-
     def test_enforcement_actions_with_new_LogGroup_with_subscription_filter(self) -> None:
 
         hostedZones: Dict[Any, Any] = {
@@ -217,11 +215,7 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(
-            PutLogGroupSubscriptionFilterAction(
-                service_name=ServiceName.route53,
-                config=config,
-                logs=logs
-            )
+            PutLogGroupSubscriptionFilterAction(service_name=ServiceName.route53, config=config, logs=logs)
         )
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(

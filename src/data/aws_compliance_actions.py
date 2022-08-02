@@ -233,7 +233,7 @@ class CreateLogGroupAction(ComplianceAction):
 class PutLogGroupSubscriptionFilterAction(ComplianceAction):
     logs: AwsLogsClient
 
-    def __init__(self, logs: AwsLogsClient, config: Config, service_name=ServiceName) -> None:
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
         super().__init__(f"Put central {service_name.name} log group subscription filter")
         self.logs = logs
         self.service_name = service_name
@@ -261,7 +261,7 @@ class PutLogGroupSubscriptionFilterAction(ComplianceAction):
 class DeleteLogGroupSubscriptionFilterAction(ComplianceAction):
     logs: AwsLogsClient
 
-    def __init__(self, logs: AwsLogsClient, config: Config, service_name=ServiceName) -> None:
+    def __init__(self, logs: AwsLogsClient, config: Config, service_name: ServiceName) -> None:
         super().__init__(f"Delete central {service_name.name} log group subscription filter")
         self.logs = logs
         self.service_name = service_name

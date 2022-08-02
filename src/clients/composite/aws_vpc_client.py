@@ -157,9 +157,17 @@ class AwsVpcClient:
         actions: List[Any] = []
         if log_group:
             if self._is_central_vpc_log_group(log_group) and not with_subscription_filter:
-                actions.append(DeleteLogGroupSubscriptionFilterAction(logs=self.logs, config=self.config, service_name= ServiceName.vpc))
+                actions.append(
+                    DeleteLogGroupSubscriptionFilterAction(
+                        logs=self.logs, config=self.config, service_name=ServiceName.vpc
+                    )
+                )
             if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
-                actions.append(PutLogGroupSubscriptionFilterAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc))
+                actions.append(
+                    PutLogGroupSubscriptionFilterAction(
+                        logs=self.logs, config=self.config, service_name=ServiceName.vpc
+                    )
+                )
             if log_group.retention_days != self.config.logs_group_retention_policy_days(service_name=ServiceName.vpc):
                 actions.append(
                     PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc)
@@ -175,7 +183,11 @@ class AwsVpcClient:
                 ]
             )
             if with_subscription_filter:
-                actions.append(PutLogGroupSubscriptionFilterAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc))
+                actions.append(
+                    PutLogGroupSubscriptionFilterAction(
+                        logs=self.logs, config=self.config, service_name=ServiceName.vpc
+                    )
+                )
 
         return actions
 
@@ -190,7 +202,6 @@ class AwsVpcClient:
         )
 
     def _is_central_vpc_destination_filter(self, sub_filter: SubscriptionFilter) -> bool:
-        return (
-            sub_filter.filter_pattern == self.config.logs_log_group_pattern(service_name=ServiceName.vpc)
-            and sub_filter.destination_arn == self.config.logs_log_group_destination(service_name=ServiceName.vpc)
-        )
+        return sub_filter.filter_pattern == self.config.logs_log_group_pattern(
+            service_name=ServiceName.vpc
+        ) and sub_filter.destination_arn == self.config.logs_log_group_destination(service_name=ServiceName.vpc)

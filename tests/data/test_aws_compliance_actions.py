@@ -1,5 +1,4 @@
 from logging import ERROR
-import re
 from typing import Any
 from unittest.mock import Mock, call
 from src import PLATSEC_SCANNER_TAGS
@@ -224,7 +223,10 @@ def test_plan_put_central_vpc_log_group_subscription_filter_action() -> None:
         description=f"Put central {ServiceName.vpc.name} log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", destination_arn="arn:aws:logs:::destination:central"),
     )
-    assert expected == put_vpc_log_group_subscription_filter_action(logs=logs, config=config, service_name=ServiceName.vpc).plan()
+    assert (
+        expected
+        == put_vpc_log_group_subscription_filter_action(logs=logs, config=config, service_name=ServiceName.vpc).plan()
+    )
 
 
 def test_apply_delete_vpc_log_group_subscription_filter_action() -> None:
@@ -246,7 +248,9 @@ def test_plan_delete_vpc_log_group_subscription_filter_action() -> None:
         description=f"Delete central {ServiceName.vpc.name} log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", subscription_filter_name="/vpc/flow_log_sub_filter"),
     )
-    assert expected == delete_vpc_log_group_subscription_filter_action(config=config, service_name=ServiceName.vpc).plan()
+    assert (
+        expected == delete_vpc_log_group_subscription_filter_action(config=config, service_name=ServiceName.vpc).plan()
+    )
 
 
 def test_plan_put_vpc_log_group_retention_policy_action() -> None:
