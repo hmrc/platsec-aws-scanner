@@ -1,6 +1,6 @@
 from logging import getLogger
 from typing import Sequence
-
+from functools import partial
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -8,6 +8,7 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.data.aws_common_types import Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter, to_log_group, to_subscription_filter
 from src.data.aws_scanner_exceptions import LogsException
+from src.data.aws_common_types import ServiceName
 
 
 class AwsLogsClient:
@@ -92,3 +93,13 @@ class AwsLogsClient:
             raise LogsException(
                 f"unable to put {retention_days} days retention policy for log group '{log_group_name}': {err}"
             ) from None
+
+    def is_central_log_group(self, log_group: LogGroup, service_name: ServiceName) -> bool:
+        return log_group.name == self._config.logs_group_name(service_name) and any(
+            map(partial(self.is_central_destination_filter, service_name=service_name), log_group.subscription_filters)
+        )
+
+    def is_central_destination_filter(self, sub_filter: SubscriptionFilter, service_name: ServiceName) -> bool:
+        return sub_filter.filter_pattern == self._config.logs_log_group_pattern(
+            service_name=service_name
+        ) and sub_filter.destination_arn == self._config.logs_log_group_destination(service_name=service_name)

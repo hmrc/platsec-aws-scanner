@@ -23,7 +23,7 @@ from src.data.aws_compliance_actions import (
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
-from src.data.aws_logs_types import LogGroup, SubscriptionFilter
+from src.data.aws_logs_types import LogGroup
 from src.data.aws_common_types import ServiceName
 
 
@@ -156,13 +156,19 @@ class AwsVpcClient:
         log_group = self._find_log_group(self.config.logs_group_name(ServiceName.vpc))
         actions: List[Any] = []
         if log_group:
-            if self._is_central_vpc_log_group(log_group) and not with_subscription_filter:
+            if (
+                self.logs.is_central_log_group(log_group=log_group, service_name=ServiceName.vpc)
+                and not with_subscription_filter
+            ):
                 actions.append(
                     DeleteLogGroupSubscriptionFilterAction(
                         logs=self.logs, config=self.config, service_name=ServiceName.vpc
                     )
                 )
-            if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
+            if (
+                not self.logs.is_central_log_group(log_group=log_group, service_name=ServiceName.vpc)
+                and with_subscription_filter
+            ):
                 actions.append(
                     PutLogGroupSubscriptionFilterAction(
                         logs=self.logs, config=self.config, service_name=ServiceName.vpc
@@ -195,13 +201,3 @@ class AwsVpcClient:
         return list(
             filter(lambda fl: self._is_flow_log_centralised(fl) and not self._is_flow_log_misconfigured(fl), fls)
         )
-
-    def _is_central_vpc_log_group(self, log_group: LogGroup) -> bool:
-        return log_group.name == self.config.logs_group_name(ServiceName.vpc) and any(
-            map(self._is_central_vpc_destination_filter, log_group.subscription_filters)
-        )
-
-    def _is_central_vpc_destination_filter(self, sub_filter: SubscriptionFilter) -> bool:
-        return sub_filter.filter_pattern == self.config.logs_log_group_pattern(
-            service_name=ServiceName.vpc
-        ) and sub_filter.destination_arn == self.config.logs_log_group_destination(service_name=ServiceName.vpc)

@@ -19,6 +19,7 @@ from src.data.aws_compliance_actions import (
     DeleteQueryLogAction,
     CreateQueryLogAction,
     PutLogGroupSubscriptionFilterAction,
+    DeleteLogGroupSubscriptionFilterAction,
 )
 
 from src.data.aws_logs_types import LogGroup
@@ -96,6 +97,24 @@ class AwsRoute53Client:
         actions: List[Any] = []
 
         if log_group is not None:
+            if (
+                self._logs.is_central_log_group(log_group=log_group, service_name=ServiceName.route53)
+                and not with_subscription_filter
+            ):
+                actions.append(
+                    DeleteLogGroupSubscriptionFilterAction(
+                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                    )
+                )
+            if (
+                not self._logs.is_central_log_group(log_group=log_group, service_name=ServiceName.route53)
+                and with_subscription_filter
+            ):
+                actions.append(
+                    PutLogGroupSubscriptionFilterAction(
+                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                    )
+                )
             actions.extend(
                 [
                     PutLogGroupRetentionPolicyAction(
@@ -114,15 +133,15 @@ class AwsRoute53Client:
                     TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
                 ]
             )
-
-        if with_subscription_filter:
-            actions.extend(
-                [
+            if (
+                self._config.logs_log_group_destination(service_name=ServiceName.route53) != ""
+                and with_subscription_filter
+            ):
+                actions.append(
                     PutLogGroupSubscriptionFilterAction(
                         logs=self._logs, config=self._config, service_name=ServiceName.route53
                     )
-                ]
-            )
+                )
 
         return actions
 
