@@ -14,6 +14,7 @@ from src.data.aws_compliance_actions import (
     TagLogGroupAction,
     DeleteQueryLogAction,
     CreateLogGroupAction,
+    PutLogGroupSubscriptionFilterAction,
 )
 from src.data.aws_common_types import ServiceName
 
@@ -105,7 +106,7 @@ class TestAwsRoute53Client(TestCase):
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
-    def test_enforcement_actions_with_new_LogGroup(self) -> None:
+    def test_enforcement_actions_with_new_LogGroup_no_subscription_filter(self) -> None:
 
         hostedZones: Dict[Any, Any] = {
             "/hostedzone/AAAABBBBCCCCDD": route53Type.Route53Zone(
@@ -174,3 +175,83 @@ class TestAwsRoute53Client(TestCase):
         client = AwsRoute53Client(boto_route53, iam, logs, kms, config)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
+
+
+
+    def test_enforcement_actions_with_new_LogGroup_with_subscription_filter(self) -> None:
+
+        hostedZones: Dict[Any, Any] = {
+            "/hostedzone/AAAABBBBCCCCDD": route53Type.Route53Zone(
+                id="/hostedzone/AAAABBBBCCCCDD",
+                name="public.aws.scanner.gov.uk.",
+                privateZone=False,
+                queryLog="arn:aws:logs:us-east-1:123456789012:log-group:/aws/route53/public.aws.scanner.gov.uk.",
+            ),
+            "/hostedzone/IIIIIIILLLLLLL": route53Type.Route53Zone(
+                id="/hostedzone/IIIIIIILLLLLLL",
+                name="public.aws.scanner.gov.uk.",
+                privateZone=False,
+                queryLog="",
+            ),
+        }
+
+        account = Account(identifier="AAAAAAAAAA", name="AAAAAAAA")
+        boto_route53 = Mock()
+        iam = Mock()
+        logs = Mock()
+        kms = Mock()
+        config = Mock()
+        config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
+
+        expectedLogGroups: List[Any] = []
+
+        logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
+        kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+
+        expectedQueryLogActionList: List[ComplianceAction] = []
+        expectedQueryLogActionList.append(
+            CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
+        )
+        expectedQueryLogActionList.append(
+            PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
+        )
+        expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
+        expectedQueryLogActionList.append(
+            PutLogGroupSubscriptionFilterAction(
+                service_name=ServiceName.route53,
+                config=config,
+                logs=logs
+            )
+        )
+        expectedQueryLogActionList.append(
+            DeleteQueryLogAction(
+                route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD"
+            )
+        )
+        expectedQueryLogActionList.append(
+            CreateQueryLogAction(
+                account=account,
+                route53_client=boto_route53,
+                iam=iam,
+                config=config,
+                zone_id="/hostedzone/AAAABBBBCCCCDD",
+            )
+        )
+        expectedQueryLogActionList.append(
+            DeleteQueryLogAction(
+                route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/IIIIIIILLLLLLL"
+            )
+        )
+        expectedQueryLogActionList.append(
+            CreateQueryLogAction(
+                account=account,
+                route53_client=boto_route53,
+                iam=iam,
+                config=config,
+                zone_id="/hostedzone/IIIIIIILLLLLLL",
+            )
+        )
+
+        client = AwsRoute53Client(boto_route53, iam, logs, kms, config)
+
+        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)

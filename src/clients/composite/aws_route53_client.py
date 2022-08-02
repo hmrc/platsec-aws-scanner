@@ -18,6 +18,7 @@ from src.data.aws_compliance_actions import (
     CreateLogGroupAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
+    PutLogGroupSubscriptionFilterAction
 )
 
 from src.data.aws_logs_types import LogGroup
@@ -91,24 +92,29 @@ class AwsRoute53Client:
 
     def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         log_group = self._find_log_group(self._config.logs_group_name(ServiceName.route53))
+
+        actions: List[Any] = []
+
         if log_group is not None:
-            return [
+            actions.extend([
                 PutLogGroupRetentionPolicyAction(
                     logs=self._logs, config=self._config, service_name=ServiceName.route53
                 ),
                 TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
-            ]
-        actions: List[Any] = []
-
-        actions.extend(
-            [
+            ])
+        else:
+            actions.extend([
                 CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
                 PutLogGroupRetentionPolicyAction(
                     logs=self._logs, config=self._config, service_name=ServiceName.route53
                 ),
                 TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
-            ]
-        )
+            ])
+
+        if with_subscription_filter:
+            actions.extend([
+                PutLogGroupSubscriptionFilterAction(logs=self._logs, config=self._config, service_name=ServiceName.route53)
+            ])
 
         return actions
 

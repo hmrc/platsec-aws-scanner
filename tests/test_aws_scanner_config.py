@@ -252,3 +252,13 @@ def test_log_group_name_invalid_service_name_exception() -> None:
 def test_retention_period_invalid_service_name_exception() -> None:
     with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
         AwsScannerConfig().logs_group_retention_policy_days(ServiceName.default)
+
+
+def test_log_group_subscription_filter_name_exception() -> None:
+    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
+        AwsScannerConfig().logs_log_group_subscription_filter_name(ServiceName.default)
+
+
+def test_log_group_pattern_exception() -> None:
+    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
+        AwsScannerConfig().logs_log_group_pattern(ServiceName.default)
