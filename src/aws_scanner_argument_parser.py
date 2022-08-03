@@ -261,6 +261,7 @@ class AwsScannerArgumentParser:
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised query logs to Route53 Zones that don't already have one")
+        audit_parser.add_argument("-w", "--with_subscription_filter", type=bool, help="create subscription filter")
 
     def _add_create_flow_logs_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table for flow logs querying"
