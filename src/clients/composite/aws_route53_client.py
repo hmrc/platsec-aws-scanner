@@ -106,7 +106,7 @@ class AwsRoute53Client:
                         logs=self._logs, config=self._config, service_name=ServiceName.route53
                     )
                 )
-            if (
+            elif (
                 not self._logs.is_central_log_group(log_group=log_group, service_name=ServiceName.route53)
                 and with_subscription_filter
             ):
