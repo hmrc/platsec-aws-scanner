@@ -281,7 +281,9 @@ class TestAwsEnforcementActions(TestCase):
                     logs=client.logs, config=client.config, service_name=ServiceName.vpc
                 ),
                 tag_log_group_action(logs=client.logs, config=client.config, service_name=ServiceName.vpc),
-                put_vpc_log_group_subscription_filter_action(logs=client.logs),
+                put_vpc_log_group_subscription_filter_action(
+                    logs=client.logs, config=client.config, service_name=ServiceName.vpc
+                ),
             ],
             actions,
         )
@@ -308,7 +310,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_log_groups([log_group(subscription_filters=[], default_kms_key=True)])
 
         self.assertEqual(
-            [put_vpc_log_group_subscription_filter_action(logs=client.logs)],
+            [put_vpc_log_group_subscription_filter_action(service_name=ServiceName.vpc, logs=client.logs)],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
         )
 
@@ -358,7 +360,7 @@ class TestAwsEnforcementActions(TestCase):
         client.with_default_log_group()
 
         self.assertEqual(
-            [delete_vpc_log_group_subscription_filter_action(logs=client.logs)],
+            [delete_vpc_log_group_subscription_filter_action(service_name=ServiceName.vpc, logs=client.logs)],
             client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=False),
         )
 
@@ -371,10 +373,8 @@ class TestAwsEnforcementActions(TestCase):
 class TestLogGroupCompliance(TestCase):
     def test_central_vpc_log_group(self) -> None:
         self.assertTrue(
-            AwsVpcClientBuilder()
-            .build()
-            ._is_central_vpc_log_group(
-                log_group(
+            AwsLogsClient(Mock()).is_central_log_group(
+                log_group=log_group(
                     name="/vpc/flow_log",
                     subscription_filters=[
                         subscription_filter(
@@ -382,22 +382,29 @@ class TestLogGroupCompliance(TestCase):
                             destination_arn="arn:aws:logs:::destination:central",
                         )
                     ],
-                )
+                ),
+                service_name=ServiceName.vpc,
             )
         )
 
     def test_log_group_is_not_vpc_central(self) -> None:
-        client = AwsVpcClientBuilder().build()
-        self.assertFalse(client._is_central_vpc_log_group(log_group(name="/vpc/something_else")))
-        self.assertFalse(client._is_central_vpc_log_group(log_group(subscription_filters=[])))
+        client = AwsLogsClient(Mock())
         self.assertFalse(
-            client._is_central_vpc_log_group(
-                log_group(subscription_filters=[subscription_filter(filter_pattern="something")])
+            client.is_central_log_group(log_group=log_group(name="/vpc/something_else"), service_name=ServiceName.vpc)
+        )
+        self.assertFalse(
+            client.is_central_log_group(log_group=log_group(subscription_filters=[]), service_name=ServiceName.vpc)
+        )
+        self.assertFalse(
+            client.is_central_log_group(
+                log_group=log_group(subscription_filters=[subscription_filter(filter_pattern="something")]),
+                service_name=ServiceName.vpc,
             )
         )
         self.assertFalse(
-            client._is_central_vpc_log_group(
-                log_group(subscription_filters=[subscription_filter(destination_arn="somewhere")])
+            client.is_central_log_group(
+                log_group=log_group(subscription_filters=[subscription_filter(destination_arn="somewhere")]),
+                service_name=ServiceName.vpc,
             )
         )
 

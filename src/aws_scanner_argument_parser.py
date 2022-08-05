@@ -75,6 +75,16 @@ class AwsScannerArgumentParser:
         )
 
     @staticmethod
+    def _add_with_subscription_filter_arg(parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "-w",
+            "--with_subscription_filter",
+            type=lambda x: (str(x).lower() == "true"),
+            choices=[True, False],
+            help="create subscription filter",
+        )
+
+    @staticmethod
     def _add_athena_cloudtrail_task_args(parser: ArgumentParser) -> None:
         parser.add_argument("-re", "--region", type=str, help="region for AWS Athena data partition")
         AwsScannerArgumentParser._add_year_arg(parser, "year for AWS Athena data partition")
@@ -172,7 +182,7 @@ class AwsScannerArgumentParser:
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
-        audit_parser.add_argument("-w", "--with_subscription_filter", type=bool, help="create subscription filter")
+        self._add_with_subscription_filter_arg(audit_parser)
         self._add_verbosity_arg(audit_parser)
 
     def _add_audit_password_policy_command(self, subparsers: Any) -> None:
@@ -261,6 +271,7 @@ class AwsScannerArgumentParser:
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised query logs to Route53 Zones that don't already have one")
+        self._add_with_subscription_filter_arg(audit_parser)
 
     def _add_create_flow_logs_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table for flow logs querying"

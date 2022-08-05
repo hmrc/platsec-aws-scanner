@@ -15,15 +15,15 @@ from src.data.aws_compliance_actions import (
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    DeleteVpcLogGroupSubscriptionFilterAction,
-    PutVpcLogGroupSubscriptionFilterAction,
+    DeleteLogGroupSubscriptionFilterAction,
+    PutLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
     TagLogGroupAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
-from src.data.aws_logs_types import LogGroup, SubscriptionFilter
+from src.data.aws_logs_types import LogGroup
 from src.data.aws_common_types import ServiceName
 
 
@@ -156,10 +156,24 @@ class AwsVpcClient:
         log_group = self._find_log_group(self.config.logs_group_name(ServiceName.vpc))
         actions: List[Any] = []
         if log_group:
-            if self._is_central_vpc_log_group(log_group) and not with_subscription_filter:
-                actions.append(DeleteVpcLogGroupSubscriptionFilterAction(logs=self.logs))
-            if not self._is_central_vpc_log_group(log_group) and with_subscription_filter:
-                actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
+            if (
+                self.logs.is_central_log_group(log_group=log_group, service_name=ServiceName.vpc)
+                and not with_subscription_filter
+            ):
+                actions.append(
+                    DeleteLogGroupSubscriptionFilterAction(
+                        logs=self.logs, config=self.config, service_name=ServiceName.vpc
+                    )
+                )
+            if (
+                not self.logs.is_central_log_group(log_group=log_group, service_name=ServiceName.vpc)
+                and with_subscription_filter
+            ):
+                actions.append(
+                    PutLogGroupSubscriptionFilterAction(
+                        logs=self.logs, config=self.config, service_name=ServiceName.vpc
+                    )
+                )
             if log_group.retention_days != self.config.logs_group_retention_policy_days(service_name=ServiceName.vpc):
                 actions.append(
                     PutLogGroupRetentionPolicyAction(logs=self.logs, config=self.config, service_name=ServiceName.vpc)
@@ -175,22 +189,15 @@ class AwsVpcClient:
                 ]
             )
             if with_subscription_filter:
-                actions.append(PutVpcLogGroupSubscriptionFilterAction(logs=self.logs))
+                actions.append(
+                    PutLogGroupSubscriptionFilterAction(
+                        logs=self.logs, config=self.config, service_name=ServiceName.vpc
+                    )
+                )
 
         return actions
 
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(
             filter(lambda fl: self._is_flow_log_centralised(fl) and not self._is_flow_log_misconfigured(fl), fls)
-        )
-
-    def _is_central_vpc_log_group(self, log_group: LogGroup) -> bool:
-        return log_group.name == self.config.logs_group_name(ServiceName.vpc) and any(
-            map(self._is_central_vpc_destination_filter, log_group.subscription_filters)
-        )
-
-    def _is_central_vpc_destination_filter(self, sub_filter: SubscriptionFilter) -> bool:
-        return (
-            sub_filter.filter_pattern == self.config.logs_vpc_log_group_pattern()
-            and sub_filter.destination_arn == self.config.logs_vpc_log_group_destination()
         )

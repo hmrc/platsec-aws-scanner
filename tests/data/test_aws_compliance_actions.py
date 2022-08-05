@@ -200,7 +200,12 @@ def test_apply_create_route53_log_group_action() -> None:
 
 def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    put_vpc_log_group_subscription_filter_action(logs=logs)._apply()
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_subscription_filter_name = Mock(return_value="/vpc/flow_log_sub_filter")
+    config.logs_log_group_pattern = Mock(return_value="[version, account_id, interface_id]")
+    config.logs_log_group_destination = Mock(return_value="arn:aws:logs:::destination:central")
+    put_vpc_log_group_subscription_filter_action(service_name=ServiceName.vpc, logs=logs, config=config)._apply()
     logs.put_subscription_filter.assert_called_once_with(
         log_group_name="/vpc/flow_log",
         filter_name="/vpc/flow_log_sub_filter",
@@ -210,27 +215,42 @@ def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
 
 
 def test_plan_put_central_vpc_log_group_subscription_filter_action() -> None:
+    logs = Mock(spec=AwsLogsClient)
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_destination = Mock(return_value="arn:aws:logs:::destination:central")
     expected = compliance_action_report(
-        description="Put central VPC log group subscription filter",
+        description=f"Put central {ServiceName.vpc.name} log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", destination_arn="arn:aws:logs:::destination:central"),
     )
-    assert expected == put_vpc_log_group_subscription_filter_action().plan()
+    assert (
+        expected
+        == put_vpc_log_group_subscription_filter_action(logs=logs, config=config, service_name=ServiceName.vpc).plan()
+    )
 
 
 def test_apply_delete_vpc_log_group_subscription_filter_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    delete_vpc_log_group_subscription_filter_action(logs=logs)._apply()
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_subscription_filter_name = Mock(return_value="/vpc/flow_log_sub_filter")
+    delete_vpc_log_group_subscription_filter_action(config=config, service_name=ServiceName.vpc, logs=logs)._apply()
     logs.delete_subscription_filter.assert_called_once_with(
         log_group_name="/vpc/flow_log", filter_name="/vpc/flow_log_sub_filter"
     )
 
 
 def test_plan_delete_vpc_log_group_subscription_filter_action() -> None:
+    config = Mock()
+    config.logs_group_name = Mock(return_value="/vpc/flow_log")
+    config.logs_log_group_subscription_filter_name = Mock(return_value="/vpc/flow_log_sub_filter")
     expected = compliance_action_report(
-        description="Delete central VPC log group subscription filter",
+        description=f"Delete central {ServiceName.vpc.name} log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", subscription_filter_name="/vpc/flow_log_sub_filter"),
     )
-    assert expected == delete_vpc_log_group_subscription_filter_action().plan()
+    assert (
+        expected == delete_vpc_log_group_subscription_filter_action(config=config, service_name=ServiceName.vpc).plan()
+    )
 
 
 def test_plan_put_vpc_log_group_retention_policy_action() -> None:
@@ -239,10 +259,10 @@ def test_plan_put_vpc_log_group_retention_policy_action() -> None:
     config.logs_group_retention_policy_days = Mock(return_value=14)
     assert (
         compliance_action_report(
-            description="Put log group retention policy",
+            description=f"Put {ServiceName.vpc.name} log group retention policy",
             details={"log_group_name": "/vpc/flow_log", "retention_days": 14},
         )
-        == put_log_group_retention_policy_action(config=config, service_name=ServiceName.route53).plan()
+        == put_log_group_retention_policy_action(config=config, service_name=ServiceName.vpc).plan()
     )
 
 
@@ -252,7 +272,7 @@ def test_plan_put_route53_log_group_retention_policy_action() -> None:
     config.logs_group_retention_policy_days = Mock(return_value=5)
     assert (
         compliance_action_report(
-            description="Put log group retention policy",
+            description=f"Put {ServiceName.route53.name} log group retention policy",
             details={"log_group_name": "logs_route53_log_group_name", "retention_days": 5},
         )
         == put_log_group_retention_policy_action(config=config, service_name=ServiceName.route53).plan()
