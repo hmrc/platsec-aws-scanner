@@ -81,6 +81,9 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(
+            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
+        )
+        expectedQueryLogActionList.append(
             DeleteQueryLogAction(
                 route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD"
             )
@@ -155,6 +158,9 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(
+            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
+        )
+        expectedQueryLogActionList.append(
             DeleteQueryLogAction(
                 route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD"
             )
@@ -218,15 +224,15 @@ class TestAwsRoute53Client(TestCase):
 
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
-            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
-        )
-        expectedQueryLogActionList.append(
             CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
         expectedQueryLogActionList.append(
             PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
+        expectedQueryLogActionList.append(
+            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
+        )
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(
                 route53_client=boto_route53, config=config, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD"
@@ -293,9 +299,6 @@ class TestAwsRoute53Client(TestCase):
 
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
-            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
-        )
-        expectedQueryLogActionList.append(
             CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
         expectedQueryLogActionList.append(
@@ -304,6 +307,9 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53))
         expectedQueryLogActionList.append(
             PutLogGroupSubscriptionFilterAction(service_name=ServiceName.route53, config=config, logs=logs)
+        )
+        expectedQueryLogActionList.append(
+            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
         )
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(

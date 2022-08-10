@@ -149,9 +149,6 @@ class AwsRoute53Client:
         else:
             actions.extend(
                 [
-                    PutRoute53LogGroupResourcePolicyAction(
-                        logs=self._logs, config=self._config, policy_document=policy_document
-                    ),
                     CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
                     PutLogGroupRetentionPolicyAction(
                         logs=self._logs, config=self._config, service_name=ServiceName.route53
@@ -168,6 +165,11 @@ class AwsRoute53Client:
                         logs=self._logs, config=self._config, service_name=ServiceName.route53
                     )
                 )
+        actions.append(
+            PutRoute53LogGroupResourcePolicyAction(
+                logs=self._logs, config=self._config, policy_document=policy_document
+            )
+        )
 
         return actions
 
