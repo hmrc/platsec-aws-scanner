@@ -23,6 +23,7 @@ from src.data.aws_compliance_actions import (
     DeleteLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     PutLogGroupSubscriptionFilterAction,
+    PutRoute53LogGroupResourcePolicyAction,
     TagFlowLogDeliveryRoleAction,
     UpdatePasswordPolicyAction,
     DeleteQueryLogAction,
@@ -467,6 +468,33 @@ def tag_log_group_action(
 
 def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
     return TagFlowLogDeliveryRoleAction(iam=iam)
+
+
+def resource_policy_document() -> str:
+    return """
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": [ "route53.amazonaws.com" ]
+                    },
+                    "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                    "Resource": "arn:aws:logs:us-east-1:1234567890:log-group:*"
+                }
+            ]
+        }
+    """
+
+
+def put_route53_log_group_resource_policy_action(
+    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
+    policy_document: str = resource_policy_document(),
+) -> PutRoute53LogGroupResourcePolicyAction:
+    return PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document=policy_document)
 
 
 def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:

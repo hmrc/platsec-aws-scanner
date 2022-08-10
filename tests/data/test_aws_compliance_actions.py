@@ -32,6 +32,8 @@ from tests.test_types_generator import (
     tag,
     update_password_policy_action,
     create_query_log_action,
+    resource_policy_document,
+    put_route53_log_group_resource_policy_action,
 )
 
 
@@ -120,6 +122,17 @@ def test_apply_create_query_log_action() -> None:
     )
 
 
+def test_apply_put_resource_policy_action() -> None:
+    logs = Mock(spec=AwsLogsClient)
+    config = Mock(spec=Config)
+    config.logs_route53_log_group_resource_policy_name = Mock(return_value="route53_query_logs_to_cloudwatch_logs")
+    put_route53_log_group_resource_policy_action(logs=logs, config=config)._apply()
+    logs.put_resource_policy.assert_called_once_with(
+        policy_name="route53_query_logs_to_cloudwatch_logs",
+        policy_document=resource_policy_document(),
+    )
+
+
 def test_plan_create_flow_log_action() -> None:
     expected = compliance_action_report(
         description="Create VPC flow log", details={"vpc_id": "vpc-1234", "log_group_name": "/vpc/flow_log"}
@@ -135,6 +148,16 @@ def test_plan_create_query_log_action() -> None:
     config = Mock(spec=Config)
     config.logs_group_name = Mock(return_value="logs_route53_log_group_name")
     assert expected == create_query_log_action(config=config).plan()
+
+
+def test_plan_put_resource_policy_action() -> None:
+    expected = compliance_action_report(
+        description="Put route53 log group resource policy",
+        details={"policy_name": "route53_query_logs_to_cloudwatch_logs"},
+    )
+    config = Mock(spec=Config)
+    config.logs_route53_log_group_resource_policy_name = Mock(return_value="route53_query_logs_to_cloudwatch_logs")
+    assert expected == put_route53_log_group_resource_policy_action(config=config).plan()
 
 
 def test_apply_create_flow_log_delivery_role_action() -> None:

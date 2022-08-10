@@ -58,6 +58,7 @@ def test_init_config_from_file() -> None:
     } == config.logs_vpc_log_group_delivery_role_policy_document()
     assert 14 == config.logs_group_retention_policy_days(ServiceName.vpc)
     assert "logs_role" == config.logs_role()
+    assert "route53_query_logs_to_cloudwatch_logs" == config.logs_route53_log_group_resource_policy_name()
     assert "/aws/route53/query_log" == config.logs_group_name(ServiceName.route53)
     assert "[version, account_id, interface_id]" == config.logs_log_group_pattern(ServiceName.route53)
     assert "arn:aws:logs:::destination:central" == config.logs_log_group_destination(ServiceName.route53)

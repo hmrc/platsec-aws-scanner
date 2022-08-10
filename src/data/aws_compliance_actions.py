@@ -311,6 +311,29 @@ class PutLogGroupRetentionPolicyAction(ComplianceAction):
 
 
 @dataclass
+class PutRoute53LogGroupResourcePolicyAction(ComplianceAction):
+    def __init__(self, logs: AwsLogsClient, config: Config, policy_document: str) -> None:
+        super().__init__("Put route53 log group resource policy")
+        self.logs = logs
+        self.config = config
+        self.policy_document = policy_document
+
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(
+                policy_name=self.config.logs_route53_log_group_resource_policy_name(),
+            ),
+        )
+
+    def _apply(self) -> None:
+        self.logs.put_resource_policy(
+            policy_name=self.config.logs_route53_log_group_resource_policy_name(),
+            policy_document=self.policy_document,
+        )
+
+
+@dataclass
 class TagLogGroupAction(ComplianceAction):
     logs: AwsLogsClient
     config: Config

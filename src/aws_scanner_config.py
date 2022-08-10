@@ -223,6 +223,9 @@ class AwsScannerConfig:
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
 
+    def logs_route53_log_group_resource_policy_name(self) -> str:
+        return self._get_config("logs", "route53_log_group_resource_policy_name")
+
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")
 

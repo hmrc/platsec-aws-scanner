@@ -94,6 +94,12 @@ class AwsLogsClient:
                 f"unable to put {retention_days} days retention policy for log group '{log_group_name}': {err}"
             ) from None
 
+    def put_resource_policy(self, policy_name: str, policy_document: str) -> None:
+        try:
+            self._logs.put_resource_policy(policyName=policy_name, policyDocument=policy_document)
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(f"unable to put logs resource policy': {err}") from None
+
     def is_central_log_group(self, log_group: LogGroup, service_name: ServiceName) -> bool:
         return log_group.name == self._config.logs_group_name(service_name) and any(
             map(partial(self.is_central_destination_filter, service_name=service_name), log_group.subscription_filters)
