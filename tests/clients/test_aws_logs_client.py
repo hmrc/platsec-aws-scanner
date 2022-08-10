@@ -109,3 +109,15 @@ def test_delete_subscription_filter_failure() -> None:
     boto = Mock(delete_subscription_filter=Mock(side_effect=client_error("DeleteSubscriptionFilter", "No", "no!")))
     with raises(LogsException, match="some_broken_filter"):
         AwsLogsClient(boto).delete_subscription_filter("a_log_group", "some_broken_filter")
+
+
+def test_put_resource_policy() -> None:
+    boto = Mock()
+    AwsLogsClient(boto).put_resource_policy(policy_name="a_policy_name", policy_document="a_policy_document")
+    boto.put_resource_policy.assert_called_once_with(policyName="a_policy_name", policyDocument="a_policy_document")
+
+
+def test_put_resource_policy_failure() -> None:
+    boto = Mock(put_resource_policy=Mock(side_effect=client_error("PutResourcePolicy", "some_error", "boom!")))
+    with raises(LogsException, match="logs resource policy"):
+        AwsLogsClient(boto).put_resource_policy("a_policy_name", "a_policy_document")

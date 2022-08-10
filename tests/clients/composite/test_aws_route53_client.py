@@ -16,6 +16,7 @@ from src.data.aws_compliance_actions import (
     CreateLogGroupAction,
     PutLogGroupSubscriptionFilterAction,
     DeleteLogGroupSubscriptionFilterAction,
+    PutRoute53LogGroupResourcePolicyAction,
 )
 from src.data.aws_common_types import ServiceName
 
@@ -217,6 +218,9 @@ class TestAwsRoute53Client(TestCase):
 
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
+            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
+        )
+        expectedQueryLogActionList.append(
             CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
         )
         expectedQueryLogActionList.append(
@@ -288,6 +292,9 @@ class TestAwsRoute53Client(TestCase):
         kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
+        expectedQueryLogActionList.append(
+            PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document="a_policy_document")
+        )
         expectedQueryLogActionList.append(
             CreateLogGroupAction(logs=logs, config=config, service_name=ServiceName.route53)
         )

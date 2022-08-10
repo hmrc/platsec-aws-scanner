@@ -1,3 +1,4 @@
+from json import dumps
 from logging import getLogger
 from typing import Any, Sequence, List, Optional, Dict
 from itertools import chain
@@ -20,6 +21,7 @@ from src.data.aws_compliance_actions import (
     CreateQueryLogAction,
     PutLogGroupSubscriptionFilterAction,
     DeleteLogGroupSubscriptionFilterAction,
+    PutRoute53LogGroupResourcePolicyAction,
 )
 
 from src.data.aws_logs_types import LogGroup
@@ -47,7 +49,9 @@ class AwsRoute53Client:
     ) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
-        log_group_actions = self._route53_log_group_enforcement_actions(with_subscription_filter)
+        log_group_actions = self._route53_log_group_enforcement_actions(
+            account=account, with_subscription_filter=with_subscription_filter
+        )
         route53_actions = [
             action
             for zone in hostedZones
@@ -91,8 +95,27 @@ class AwsRoute53Client:
         queryLogActionList.append(CreateQueryLogAction(account, self._route53, self._iam, self._config, hostedZone.id))
         return queryLogActionList
 
-    def _route53_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
+    def _route53_query_logs_resource_policy_document(self, account: Account) -> str:
+        return dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "",
+                        "Effect": "Allow",
+                        "Principal": {"Service": ["route53.amazonaws.com"]},
+                        "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                        "Resource": f"arn:aws:logs:us-east-1:{account.identifier}:log-group:*",
+                    }
+                ],
+            }
+        )
+
+    def _route53_log_group_enforcement_actions(
+        self, account: Account, with_subscription_filter: bool
+    ) -> Sequence[ComplianceAction]:
         log_group = self._find_log_group(self._config.logs_group_name(ServiceName.route53))
+        policy_document = self._route53_query_logs_resource_policy_document(account)
 
         actions: List[Any] = []
 
@@ -126,6 +149,9 @@ class AwsRoute53Client:
         else:
             actions.extend(
                 [
+                    PutRoute53LogGroupResourcePolicyAction(
+                        logs=self._logs, config=self._config, policy_document=policy_document
+                    ),
                     CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
                     PutLogGroupRetentionPolicyAction(
                         logs=self._logs, config=self._config, service_name=ServiceName.route53
