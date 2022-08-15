@@ -60,7 +60,7 @@ def test_init_config_from_file() -> None:
     assert "logs_role" == config.logs_role()
     assert "route53_query_logs_to_cloudwatch_logs" == config.logs_route53_log_group_resource_policy_name()
     assert "/aws/route53/query_log" == config.logs_group_name(ServiceName.route53)
-    assert "[version, account_id, interface_id]" == config.logs_log_group_pattern(ServiceName.route53)
+    assert "" == config.logs_log_group_pattern(ServiceName.route53)
     assert "arn:aws:logs:::destination:central" == config.logs_log_group_destination(ServiceName.route53)
     assert "route53_flow_log_role" == config.logs_route53_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_route53_log_group_delivery_role_assume_policy()
