@@ -221,7 +221,11 @@ def to_bucket_secure_transport(bucket_policy_dict: Dict[Any, Any]) -> BucketSecu
 
 
 def _has_secure_transport(policy: Dict[Any, Any]) -> bool:
-    return policy.get("Effect") == "Deny" and policy.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}
+    return (
+        policy.get("Effect") == "Deny"
+        and policy.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}
+        and policy.get("Action") == "s3:*"
+    )
 
 
 @dataclass

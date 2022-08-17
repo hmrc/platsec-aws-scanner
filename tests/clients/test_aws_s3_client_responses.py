@@ -86,6 +86,30 @@ GET_BUCKET_POLICY_SECURE_TRANSPORT: Dict[str, Any] = {
         ]
     }"""
 }
+GET_BUCKET_POLICY_SECURE_TRANSPORT_BAD_ACTION: Dict[str, Any] = {
+    "Policy": """{
+        "Statement": [
+            {
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:PutObject",
+                "Resource": "arn:aws:s3:::almost-secure-bucket/*",
+                "Condition": {"Null": {"s3:x-amz-server-side-encryption": "true"}}
+            },
+            {
+                "Sid": "2",
+                "Effect": "Deny",
+                "Principal": "*",
+                "Action": "s3:GetObject",
+                "Resource": [
+                    "arn:aws:s3:::almost-secure-bucket/*",
+                    "arn:aws:s3:::almost-secure-bucket"
+                ],
+                "Condition": {"Bool": {"aws:SecureTransport": "false"}}
+            }
+        ]
+    }"""
+}
 
 
 def public_access_block(

@@ -532,6 +532,7 @@ def get_bucket_secure_transport(**kwargs: Dict[str, Any]) -> Any:
     policy_mapping: Dict[str, Any] = {
         "bucket": responses.GET_BUCKET_POLICY,
         "secure-bucket": responses.GET_BUCKET_POLICY_SECURE_TRANSPORT,
+        "almost-secure-bucket": responses.GET_BUCKET_POLICY_SECURE_TRANSPORT_BAD_ACTION,
     }
     return policy_mapping[buck]
 
@@ -543,6 +544,11 @@ def s3_client_secure_transport() -> AwsS3Client:
 def test_get_bucket_secure_transport_disabled() -> None:
     secure_transport = bucket_secure_transport(enabled=False)
     assert secure_transport == s3_client_secure_transport().get_bucket_secure_transport("bucket")
+
+
+def test_get_bucket_secure_transport_disabled_if_block_ineffective() -> None:
+    secure_transport = bucket_secure_transport(enabled=False)
+    assert secure_transport == s3_client_secure_transport().get_bucket_secure_transport("almost-secure-bucket")
 
 
 def test_get_bucket_secure_transport_enabled() -> None:
