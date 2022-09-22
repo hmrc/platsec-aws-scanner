@@ -35,14 +35,13 @@ class AwsRoute53Client:
         iam: AwsIamClient,
         logs: AwsLogsClient,
         kms: AwsKmsClient,
-        config: Config,
     ):
         self._logger = getLogger(self.__class__.__name__)
-        self._config = config
         self._route53 = boto_route53
         self._iam = iam
         self._logs = logs
         self.kms = kms
+        self.log_group_config = Config().logs_route53_query_log_group_config()
 
     def enforcement_actions(
         self, account: Account, hostedZones: Dict[Any, Any], with_subscription_filter: bool
@@ -77,13 +76,13 @@ class AwsRoute53Client:
             "arn:aws:logs:us-east-1:"
             + account.identifier
             + ":log-group:"
-            + self._config.logs_group_name(ServiceName.route53)
+            + self.log_group_config .logs_group_name
         )
         queryLogActionList = []
 
         if hostedZone.queryLog != query_log_arn:
             queryLogActionList.append(
-                DeleteQueryLogAction(hosted_zone_id=hostedZone.id, route53_client=self._route53, config=self._config)
+                DeleteQueryLogAction(hosted_zone_id=hostedZone.id, route53_client=self._route53)
             )
 
         return queryLogActionList
@@ -92,7 +91,7 @@ class AwsRoute53Client:
         self, account: Account, hostedZone: route53Type.Route53Zone
     ) -> Sequence[ComplianceAction]:
         queryLogActionList = []
-        queryLogActionList.append(CreateQueryLogAction(account, self._route53, self._iam, self._config, hostedZone.id))
+        queryLogActionList.append(CreateQueryLogAction(account= account, route53_client= self._route53, iam =self._iam , log_group_config = self.log_group_config, zone_id=  hostedZone.id))
         return queryLogActionList
 
     def _route53_query_logs_resource_policy_document(self, account: Account) -> str:
@@ -114,60 +113,60 @@ class AwsRoute53Client:
     def _route53_log_group_enforcement_actions(
         self, account: Account, with_subscription_filter: bool
     ) -> Sequence[ComplianceAction]:
-        log_group = self._find_log_group(self._config.logs_group_name(ServiceName.route53))
+        log_group = self._find_log_group(self.log_group_config .logs_group_name)
         policy_document = self._route53_query_logs_resource_policy_document(account)
 
         actions: List[Any] = []
 
         if log_group is not None:
             if (
-                self._logs.is_central_log_group(log_group=log_group, service_name=ServiceName.route53)
+                self._logs.is_central_log_group(log_group=log_group, log_group_config=self.log_group_config )
                 and not with_subscription_filter
             ):
                 actions.append(
                     DeleteLogGroupSubscriptionFilterAction(
-                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                        logs=self._logs, log_group_config=self.log_group_config 
                     )
                 )
             elif (
-                not self._logs.is_central_log_group(log_group=log_group, service_name=ServiceName.route53)
+                not self._logs.is_central_log_group(log_group=log_group, log_group_config=self.log_group_config )
                 and with_subscription_filter
             ):
                 actions.append(
                     PutLogGroupSubscriptionFilterAction(
-                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                        logs=self._logs, log_group_config=self.log_group_config 
                     )
                 )
             actions.extend(
                 [
                     PutLogGroupRetentionPolicyAction(
-                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                        logs=self._logs, log_group_config=self.log_group_config 
                     ),
-                    TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                    TagLogGroupAction(logs=self._logs, log_group_config=self.log_group_config ),
                 ]
             )
         else:
             actions.extend(
                 [
-                    CreateLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                    CreateLogGroupAction(logs=self._logs, log_group_config=self.log_group_config ),
                     PutLogGroupRetentionPolicyAction(
-                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                        logs=self._logs, log_group_config=self.log_group_config 
                     ),
-                    TagLogGroupAction(logs=self._logs, config=self._config, service_name=ServiceName.route53),
+                    TagLogGroupAction(logs=self._logs, log_group_config=self.log_group_config ),
                 ]
             )
             if (
-                self._config.logs_log_group_destination(service_name=ServiceName.route53) != ""
+                self.log_group_config .logs_log_group_destination != ""
                 and with_subscription_filter
             ):
                 actions.append(
                     PutLogGroupSubscriptionFilterAction(
-                        logs=self._logs, config=self._config, service_name=ServiceName.route53
+                        logs=self._logs, log_group_config =self.log_group_config 
                     )
                 )
         actions.append(
             PutRoute53LogGroupResourcePolicyAction(
-                logs=self._logs, config=self._config, policy_document=policy_document
+                logs=self._logs, log_group_config=self.log_group_config , policy_document=policy_document
             )
         )
 

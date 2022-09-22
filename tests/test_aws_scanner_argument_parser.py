@@ -185,6 +185,7 @@ def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
         assert args.with_subscription_filter is False
         assert args.parent == "Parent OU"
 
+
 def test_parse_cli_args_for_audit_vpc_dns_logs_task() -> None:
     with patch("sys.argv", ". audit_vpc_dns_logs -t 223344 -a 5,9 -di true -e true -v debug".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
@@ -204,7 +205,8 @@ def test_parse_cli_args_for_audit_vpc_dns_logs_task() -> None:
         assert args.disable_account_lookup is True
         assert args.with_subscription_filter is False
         assert args.parent == "Parent OU"
-        
+
+
 def test_parse_cli_args_for_enforce_false() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce False".split()):
         long_args = AwsScannerArgumentParser().parse_cli_args()

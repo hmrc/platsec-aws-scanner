@@ -125,10 +125,9 @@ class TestAwsTaskBuilder(TestCase):
     def test_audit_vpc_dns_logs_tasks(self) -> None:
         self.assert_tasks_equal(
             [AwsAuditVPCDnsLogsTask(acct1, False, True), AwsAuditVPCDnsLogsTask(acct2, False, True)],
-            task_builder(
-                args(task=Cmd.audit_vpc_dns_logs, enforce=False, with_subscription_filter=True)
-            ).build_tasks(),
+            task_builder(args(task=Cmd.audit_vpc_dns_logs, enforce=False, with_subscription_filter=True)).build_tasks(),
         )
+
     def test_audit_iam_tasks(self) -> None:
         self.assert_tasks_equal(
             [AwsAuditIamTask(acct1), AwsAuditIamTask(acct2)],

@@ -69,7 +69,7 @@ class AwsTaskBuilder:
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
             ),
-             Cmd.audit_vpc_dns_logs: lambda: self._tasks(
+            Cmd.audit_vpc_dns_logs: lambda: self._tasks(
                 AwsAuditVPCDnsLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,

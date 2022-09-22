@@ -30,7 +30,7 @@ def enforcement_actions(v: Sequence[Vpc], with_sub_filter: bool) -> Sequence[Com
     )
 
 
-@patch.object(AwsVpcClient, "enforcement_actions", side_effect=enforcement_actions)
+@patch.object(AwsVpcClient, "enforcement_flow_log_actions", side_effect=enforcement_actions)
 @patch.object(AwsVpcClient, "list_vpcs", return_value=vpcs)
 class TestAwsAuditVPCFlowLogsTask(TestCase):
     def test_run_plan_task(self, _: Mock, __: Mock) -> None:

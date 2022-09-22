@@ -1,3 +1,4 @@
+from distutils.command.config import config
 from typing import Any, Dict, List, Optional, Sequence, Union
 from unittest.mock import Mock
 from datetime import date, datetime
@@ -6,7 +7,7 @@ from botocore.exceptions import ClientError
 
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_argument_parser import AwsScannerArguments
-from src.aws_scanner_config import AwsScannerConfig
+from src.aws_scanner_config import AwsScannerConfig, LogGroupConfig
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
@@ -406,8 +407,11 @@ def create_flow_log_action(
     ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client),
     iam: AwsIamClient = Mock(spec=AwsIamClient),
     vpc_id: str = vpc().id,
+    log_group_config=AwsScannerConfig().logs_vpc_flow_log_group_config()
 ) -> CreateFlowLogAction:
-    return CreateFlowLogAction(ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), vpc_id=vpc_id)
+    return CreateFlowLogAction(
+        ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), log_group_config=log_group_config, vpc_id=vpc_id
+    )
 
 
 def delete_flow_log_action(
@@ -427,43 +431,38 @@ def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient))
 
 
 def create_log_group_action(
-    service_name: ServiceName,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
+     log_group_config: LogGroupConfig,
+     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+   
 ) -> CreateLogGroupAction:
-    return CreateLogGroupAction(logs=logs, config=config, service_name=service_name)
+    return CreateLogGroupAction(logs=logs,  log_group_config=log_group_config)
 
 
 def put_vpc_log_group_subscription_filter_action(
-    service_name: ServiceName,
+    log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> PutLogGroupSubscriptionFilterAction:
-    return PutLogGroupSubscriptionFilterAction(logs=logs, config=config, service_name=ServiceName.vpc)
+    return PutLogGroupSubscriptionFilterAction(logs=logs, log_group_config=log_group_config)
 
 
 def delete_vpc_log_group_subscription_filter_action(
-    service_name: ServiceName,
+    log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> DeleteLogGroupSubscriptionFilterAction:
-    return DeleteLogGroupSubscriptionFilterAction(logs=logs, config=config, service_name=ServiceName.vpc)
+    return DeleteLogGroupSubscriptionFilterAction(logs=logs, log_group_config=log_group_config)
 
 
 def put_log_group_retention_policy_action(
-    service_name: ServiceName,
+    log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
 ) -> PutLogGroupRetentionPolicyAction:
-    return PutLogGroupRetentionPolicyAction(logs=logs, config=config, service_name=service_name)
+    return PutLogGroupRetentionPolicyAction(logs=logs, log_group_config=log_group_config)
 
 
 def tag_log_group_action(
-    service_name: ServiceName,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
+    log_group_config: LogGroupConfig, logs: AwsLogsClient = Mock(spec=AwsLogsClient)
 ) -> TagLogGroupAction:
-    return TagLogGroupAction(logs=logs, config=config, service_name=service_name)
+    return TagLogGroupAction(logs=logs, log_group_config=log_group_config)
 
 
 def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
@@ -490,11 +489,11 @@ def resource_policy_document() -> str:
 
 
 def put_route53_log_group_resource_policy_action(
+    log_group_config = LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    config: AwsScannerConfig = Mock(spec=AwsScannerConfig),
     policy_document: str = resource_policy_document(),
 ) -> PutRoute53LogGroupResourcePolicyAction:
-    return PutRoute53LogGroupResourcePolicyAction(logs=logs, config=config, policy_document=policy_document)
+    return PutRoute53LogGroupResourcePolicyAction(logs=logs, log_group_config= log_group_config, policy_document=policy_document)
 
 
 def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:
@@ -744,17 +743,17 @@ def aws_audit_route53_query_logs_task(
 
 
 def create_query_log_action(
+    log_group_config : LogGroupConfig,
     route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient),
     iam: AwsIamClient = Mock(spec=AwsIamClient),
-    config: AwsScannerConfig = Mock(),
     zone_id: str = "zoneId",
 ) -> CreateQueryLogAction:
     return CreateQueryLogAction(
-        account=account(), route53_client=route53_client, iam=iam, config=config, zone_id=zone_id
+        account=account(), route53_client=route53_client, iam=iam, log_group_config=log_group_config, zone_id=zone_id
     )
 
 
 def delete_query_log_action(
     route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient), hosted_zone_id: str = "hosted_zone_id"
 ) -> DeleteQueryLogAction:
-    return DeleteQueryLogAction(route53_client=route53_client, config=Mock(), hosted_zone_id=hosted_zone_id)
+    return DeleteQueryLogAction(route53_client=route53_client, hosted_zone_id=hosted_zone_id)

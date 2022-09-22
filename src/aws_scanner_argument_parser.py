@@ -186,7 +186,7 @@ class AwsScannerArgumentParser:
         self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
         self._add_verbosity_arg(audit_parser)
-        
+
     def _add_audit_vpc_dns_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC dns logs compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_dns_logs, help=desc, description=desc)
