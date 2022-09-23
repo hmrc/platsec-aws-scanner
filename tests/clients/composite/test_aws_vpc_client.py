@@ -19,7 +19,6 @@ from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
 )
-from src.data.aws_common_types import ServiceName
 
 from tests.test_types_generator import (
     create_flow_log_action,

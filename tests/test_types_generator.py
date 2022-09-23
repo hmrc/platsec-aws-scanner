@@ -74,7 +74,6 @@ from src.tasks.aws_ssm_task import AwsSSMTask
 from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
-from src.data.aws_common_types import ServiceName
 
 
 def partition(

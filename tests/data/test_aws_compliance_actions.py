@@ -10,8 +10,6 @@ from src.aws_scanner_config import LogGroupConfig
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_compliance_actions import ComplianceAction
 from src.data.aws_scanner_exceptions import AwsScannerException
-from src.data.aws_common_types import ServiceName
-
 from tests import _raise
 from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
 from tests.test_types_generator import (

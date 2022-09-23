@@ -21,7 +21,6 @@ from src.data.aws_compliance_actions import (
     DeleteLogGroupSubscriptionFilterAction,
     PutRoute53LogGroupResourcePolicyAction,
 )
-from src.data.aws_common_types import ServiceName
 
 
 class TestAwsRoute53Client(TestCase):

@@ -107,6 +107,3 @@ class UnsupportedPolicyDocumentElement(AwsScannerException):
 class UnsupportedTaskException(AwsScannerException):
     pass
 
-
-class InvalidServiceNameException(AwsScannerException):
-    pass
