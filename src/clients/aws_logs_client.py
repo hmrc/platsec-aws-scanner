@@ -1,14 +1,14 @@
 from logging import getLogger
-from typing import Sequence
+from typing import Sequence, List, Any
 from functools import partial
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
+from src import PLATSEC_SCANNER_TAGS
 
 from src.aws_scanner_config import AwsScannerConfig as Config, LogGroupConfig
 from src.data.aws_common_types import Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter, to_log_group, to_subscription_filter
 from src.data.aws_scanner_exceptions import LogsException
-from src.data.aws_common_types import ServiceName
 
 
 class AwsLogsClient:
@@ -107,4 +107,5 @@ class AwsLogsClient:
 
     def is_central_destination_filter(self, sub_filter: SubscriptionFilter, log_group_config: LogGroupConfig) -> bool:
         return (sub_filter.filter_pattern == log_group_config.logs_log_group_pattern)  and (sub_filter.destination_arn == log_group_config.logs_log_group_destination)
+             
              

@@ -9,32 +9,27 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
+from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
-    CreateLogGroupAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
-    DeleteLogGroupSubscriptionFilterAction,
-    PutLogGroupSubscriptionFilterAction,
-    PutLogGroupRetentionPolicyAction,
     TagFlowLogDeliveryRoleAction,
-    TagLogGroupAction,
 )
 from src.data.aws_ec2_types import FlowLog, Vpc
 from src.data.aws_iam_types import Role
-from src.data.aws_logs_types import LogGroup
 
 
 class AwsVpcClient:
-    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient, kms: AwsKmsClient, config: Config):
+    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient,  config: Config, log_group: AwsLogGroupClient):
         self._logger = getLogger(self.__class__.__name__)
         self.ec2 = ec2
         self.iam = iam
         self.logs = logs
-        self.kms = kms
         self.config = config
+        self.log_group = log_group
 
     def list_vpcs(self) -> Sequence[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self.ec2.list_vpcs()]
@@ -45,13 +40,8 @@ class AwsVpcClient:
 
     def _enrich_flow_log(self, fl: FlowLog) -> FlowLog:
         fl.deliver_log_role = self.iam.find_role_by_arn(fl.deliver_log_role_arn) if fl.deliver_log_role_arn else None
-        fl.log_group = self._find_log_group(fl.log_group_name) if fl.log_group_name else None
+        fl.log_group = self.log_group.find_log_group(fl.log_group_name) if fl.log_group_name else None
         return fl
-
-    def _find_log_group(self, name: str) -> Optional[LogGroup]:
-        log_group = next(iter(self.logs.describe_log_groups(name)), None)
-        kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
-        return log_group.with_kms_key(kms_key) if log_group else None
 
     def _find_flow_log_delivery_role(self) -> Optional[Role]:
         return self.iam.find_role(self.config.logs_vpc_log_group_delivery_role())
@@ -82,7 +72,7 @@ class AwsVpcClient:
         if not vpcs:
             return list()
         log_group_config=self.config.logs_vpc_flow_log_group_config()
-        log_group_actions = self._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
+        log_group_actions = self.log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
@@ -93,8 +83,9 @@ class AwsVpcClient:
         if not vpcs:
             return list()
         log_group_config=self.config.logs_vpc_dns_log_group_config()
-        log_group_actions = self._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
+        log_group_actions = self.log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
+        delivery_role_actions = self._delivery_role_enforcement_actions()
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
 
     def _vpc_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
@@ -167,51 +158,7 @@ class AwsVpcClient:
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
 
-    def _vpc_log_group_enforcement_actions(self, log_group_config: LogGroupConfig, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
-        log_group = self._find_log_group(log_group_config.logs_group_name)
-        actions: List[Any] = []
-        if log_group:
-            if (
-                self.logs.is_central_log_group(log_group=log_group, log_group_config=log_group_config)
-                and not with_subscription_filter
-            ):
-                actions.append(
-                    DeleteLogGroupSubscriptionFilterAction(
-                        logs=self.logs, log_group_config=log_group_config
-                    )
-                )
-            if (
-                not self.logs.is_central_log_group(log_group=log_group, log_group_config=log_group_config)
-                and with_subscription_filter
-            ):
-                actions.append(
-                    PutLogGroupSubscriptionFilterAction(
-                        logs=self.logs, log_group_config =log_group_config
-                    )
-                )
-            if log_group.retention_days != log_group_config.logs_group_retention_policy_days:
-                actions.append(
-                    PutLogGroupRetentionPolicyAction(logs=self.logs, log_group_config=log_group_config)
-                )
-            if not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
-                actions.append(TagLogGroupAction(logs=self.logs, log_group_config=log_group_config))
-        else:
-            actions.extend(
-                [
-                    CreateLogGroupAction(logs=self.logs, log_group_config =log_group_config),
-                    PutLogGroupRetentionPolicyAction(logs=self.logs, log_group_config =log_group_config),
-                    TagLogGroupAction(logs=self.logs, log_group_config =log_group_config),
-                ]
-            )
-            if with_subscription_filter:
-                actions.append(
-                    PutLogGroupSubscriptionFilterAction(
-                        logs=self.logs, log_group_config =log_group_config
-                    )
-                )
-
-        return actions
-
+    
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(
             filter(lambda fl: self._is_flow_log_centralised(fl) and not self._is_flow_log_misconfigured(fl), fls)
