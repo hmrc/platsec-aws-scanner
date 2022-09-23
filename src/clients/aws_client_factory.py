@@ -107,7 +107,7 @@ class AwsClientFactory:
             boto_route53=self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account, region="us-east-1"),
-            kms=self.get_kms_client(account),
+            log_group=self.get_log_group_client(account)
         )
 
     def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:

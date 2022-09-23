@@ -355,11 +355,11 @@ class TestGetCompositeClients(TestCase):
 
     def test_get_route53_client(self, _: Mock) -> None:
         acc = account(identifier="1234", name="some_account")
-        boto_route53, iam, logs, kms = (
+        boto_route53, iam, logs, log_group = (
             Mock(name="boto_route53"),
             Mock(name="iam"),
             Mock(name="logs"),
-            Mock(name="kms"),
+            Mock(name="log_group"),
         )
         with patch.object(AwsClientFactory, "get_hosted_zones_client", side_effect=self.mock_client(boto_route53, acc)):
             with patch.object(
@@ -368,11 +368,11 @@ class TestGetCompositeClients(TestCase):
                 side_effect=self.mock_client_region(client=logs, expected_account=acc, expected_region="us-east-1"),
             ):
                 with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
-                    with patch.object(AwsClientFactory, "get_kms_client", side_effect=self.mock_client(kms, acc)):
+                    with patch.object(AwsClientFactory, "get_log_group_client", side_effect=self.mock_client(log_group, acc)):
                         route53_client = AwsClientFactory("123456", "joe.bloggs").get_route53_client(acc)
         self.assertEqual(
-            [boto_route53, iam, logs, kms],
-            [route53_client._route53, route53_client._iam, route53_client._logs, route53_client.kms],
+            [boto_route53, iam, logs, log_group],
+            [route53_client._route53, route53_client._iam, route53_client._logs, route53_client.log_group],
         )
 
     def test_get_vpc_peering_client(self, _: Mock) -> None:

@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 from unittest import TestCase
 from typing import List
+from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.data.aws_logs_types import LogGroup
 from src.aws_scanner_config import AwsScannerConfig  as Config
@@ -35,11 +36,11 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         iam = Mock()
         logs = Mock()
-        kms = Mock()
+        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
-        client = AwsRoute53Client(boto_route53, iam, logs, kms)
+        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
@@ -64,7 +65,7 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         iam = Mock()
         logs = Mock()
-        kms = Mock()
+        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
 
       
         log_group_config=Config().logs_route53_query_log_group_config()
@@ -74,7 +75,7 @@ class TestAwsRoute53Client(TestCase):
         ]
 
         logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
@@ -116,7 +117,7 @@ class TestAwsRoute53Client(TestCase):
                 zone_id="/hostedzone/IIIIIIILLLLLLL",
             )
         )
-        client = AwsRoute53Client(boto_route53, iam, logs, kms)
+        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
@@ -142,14 +143,14 @@ class TestAwsRoute53Client(TestCase):
         iam = Mock()
         logs = Mock()
         logs.is_central_log_group = Mock(return_value=False)
-        kms = Mock()
+        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
 
         expectedLogGroups = [
             LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id"),
         ]
 
         logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
@@ -191,7 +192,7 @@ class TestAwsRoute53Client(TestCase):
                 zone_id="/hostedzone/IIIIIIILLLLLLL",
             )
         )
-        client = AwsRoute53Client(boto_route53, iam, logs, kms)
+        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)
 
@@ -216,14 +217,14 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         iam = Mock()
         logs = Mock()
-        kms = Mock()
+        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
         log_group_config=Config().logs_route53_query_log_group_config()
       
 
         expectedLogGroups: List[Any] = []
 
         logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
@@ -264,7 +265,7 @@ class TestAwsRoute53Client(TestCase):
                 zone_id="/hostedzone/IIIIIIILLLLLLL",
             )
         )
-        client = AwsRoute53Client(boto_route53, iam, logs, kms)
+        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
@@ -292,14 +293,14 @@ class TestAwsRoute53Client(TestCase):
         iam = Mock()
         logs = Mock()
         logs.is_central_log_group = Mock(return_value=True)
-        kms = Mock()
+        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
         
         log_group_config = Config().logs_route53_query_log_group_config()
          
         expectedLogGroups: List[Any] = []
 
         logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
 
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
@@ -344,6 +345,6 @@ class TestAwsRoute53Client(TestCase):
             )
         )
 
-        client = AwsRoute53Client(boto_route53, iam, logs, kms)
+        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)
