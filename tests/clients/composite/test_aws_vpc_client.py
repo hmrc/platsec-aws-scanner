@@ -275,8 +275,9 @@ class TestAwsEnforcementActions(TestCase):
 
         client = AwsVpcClientBuilder()
         client.with_log_groups([])
+    
 
-        actions = client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True)
+        actions = client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True)
 
         self.assertEqual(
             [
@@ -297,7 +298,7 @@ class TestAwsEnforcementActions(TestCase):
         client = AwsVpcClientBuilder()
         client.with_log_groups([])
 
-        actions = client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=False)
+        actions = client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=False)
         expectedAction =[
                 create_log_group_action(log_group_config = log_group_config , logs=client.logs),
                 put_log_group_retention_policy_action(
@@ -320,69 +321,69 @@ class TestAwsEnforcementActions(TestCase):
 
         self.assertEqual(
             [put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=client.logs)],
-            client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
+            client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True),
         )
 
     def test_put_retention_policy_when_central_vpc_log_group_does_not_have_one(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(retention_days=None, default_kms_key=True)])
-
+        log_group_config= Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
             [
                 put_log_group_retention_policy_action(
-                    log_group_config= Config().logs_vpc_flow_log_group_config(),
+                    log_group_config= log_group_config,
                     logs=client.logs,
                 )
             ],
-            client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
+            client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True),
         )
 
     def test_put_retention_policy_when_central_vpc_log_group_retention_differs_from_config(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(retention_days=21, default_kms_key=True)])
-
+        log_group_config= Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
             [
                 put_log_group_retention_policy_action(
-                    log_group_config= Config().logs_vpc_flow_log_group_config(),
+                    log_group_config= log_group_config,
                     logs=client.logs,
                 )
             ],
-            client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
+            client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True),
         )
 
     def test_tag_vpc_log_group_when_tags_missing(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(tags=[tag("unrelated_tag", "1")], default_kms_key=True)])
-
+        log_group_config= Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
             [
                 tag_log_group_action(
-                    log_group_config= Config().logs_vpc_flow_log_group_config(),
+                    log_group_config=log_group_config,
                     logs=client.logs,
                 )
             ],
-            client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True),
+            client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True),
         )
 
     def test_no_central_vpc_log_group_action_when_log_group_is_compliant(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_log_group()
-
-        self.assertEqual([], client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=True))
+        log_group_config= Config().logs_vpc_flow_log_group_config()
+        self.assertEqual([], client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True))
 
     def test_delete_subscription_filter_when_exists_and_not_required(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_log_group()
-
+        log_group_config= Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
             [
                 delete_vpc_log_group_subscription_filter_action(
-                    log_group_config= Config().logs_vpc_flow_log_group_config(),
+                    log_group_config= log_group_config,
                     logs = client.logs
                 )
             ],
-            client.build()._vpc_log_group_enforcement_actions(with_subscription_filter=False),
+            client.build()._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=False),
         )
 
     def test_no_enforcement_actions_required_when_no_vpc_exists(self) -> None:

@@ -4,6 +4,7 @@ from typing import Optional, Sequence, List, Any
 
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
+from src.aws_scanner_config import LogGroupConfig
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
@@ -80,8 +81,8 @@ class AwsVpcClient:
     ) -> Sequence[ComplianceAction]:
         if not vpcs:
             return list()
-        log_group_name = self.config.logs_vpc_flow_log_group_config().logs_group_name
-        log_group_actions = self._vpc_log_group_enforcement_actions(with_subscription_filter)
+        log_group_config=self.config.logs_vpc_flow_log_group_config()
+        log_group_actions = self._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
         delivery_role_actions = self._delivery_role_enforcement_actions()
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
@@ -91,7 +92,8 @@ class AwsVpcClient:
     ) -> Sequence[ComplianceAction]:
         if not vpcs:
             return list()
-        log_group_actions = self._vpc_log_group_enforcement_actions(with_subscription_filter)
+        log_group_config=self.config.logs_vpc_dns_log_group_config()
+        log_group_actions = self._vpc_log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
         vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
 
@@ -165,8 +167,7 @@ class AwsVpcClient:
     def _delivery_role_policy_exists(self) -> bool:
         return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
 
-    def _vpc_log_group_enforcement_actions(self, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
-        log_group_config=self.config.logs_vpc_flow_log_group_config()
+    def _vpc_log_group_enforcement_actions(self, log_group_config: LogGroupConfig, with_subscription_filter: bool) -> Sequence[ComplianceAction]:
         log_group = self._find_log_group(log_group_config.logs_group_name)
         actions: List[Any] = []
         if log_group:
