@@ -1,7 +1,7 @@
 LIST_QUERY_LOG_CONFIGS = {
     "ResolverQueryLogConfig": [
         {
-            "Id": 1234567890,
+            "Id": "someid",
             "OwnerId": 1234567890,
             "Status": "CREATED",
             "ShareStatus": "NOT_SHARED",
@@ -13,7 +13,7 @@ LIST_QUERY_LOG_CONFIGS = {
             "CreationTime": "a date string?",
         },
         {
-            "Id": 1234567890,
+            "Id": "someid",
             "OwnerId": 12345627890,
             "Status": "CREATED",
             "ShareStatus": "NOT_SHARED",
@@ -29,7 +29,7 @@ LIST_QUERY_LOG_CONFIGS = {
 
 CREATE_QUERY_LOG_CONFIG = {
     "ResolverQueryLogConfig": {
-        "Id": "string",
+        "Id": "someid",
         "OwnerId": "string",
         "Status": "CREATING",
         "ShareStatus": "NOT_SHARED",

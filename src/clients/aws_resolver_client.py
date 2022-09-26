@@ -11,6 +11,7 @@ from src.data.aws_scanner_exceptions import LogsException
 @dataclass
 class ResolverQueryLogConfig:
     name: str
+    id: str
     arn: str
     destination_arn: str
 
@@ -33,6 +34,7 @@ class AwsResolverClient:
     def __to_resolver_query_log_config(response: Dict[str, Any]) -> ResolverQueryLogConfig:
         return ResolverQueryLogConfig(
             name=response["Name"],
+            id=response["Id"],
             arn=response["Arn"],
             destination_arn=response["DestinationArn"],
         )
@@ -47,3 +49,9 @@ class AwsResolverClient:
                 f"unable to create_resolver_query_log_config with name '{name}' and destination_arn '{destination_arn}'"
                 f": {err}"
             )
+
+    def delete_resolver_query_log_config(self, id: str) -> None:
+        try:
+            self.__resolver.delete_resolver_query_log_config(ResolverQueryLogConfigId=id)
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(f"unable to delete_resolver_query_log_config with id '{id}': {err}")
