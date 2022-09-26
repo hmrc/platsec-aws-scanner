@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from _pytest.python_api import raises
 
-from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfigs
+from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfig
 from src.data.aws_scanner_exceptions import LogsException
 from tests.clients import test_aws_resolver_client_responses as responses
 from tests.test_types_generator import client_error
@@ -16,10 +16,8 @@ def test_list_query_log_configs() -> None:
     boto.list_resolver_query_log_configs.assert_called_once()
 
     assert [
-        ResolverQueryLogConfigs(name="scanner_query_log_name", arn="somearn", destination_arn="some_destination_arn"),
-        ResolverQueryLogConfigs(
-            name="scanner_query_log_name2", arn="somearn2", destination_arn="some_destination_arn2"
-        ),
+        ResolverQueryLogConfig(name="scanner_query_log_name", arn="somearn", destination_arn="some_destination_arn"),
+        ResolverQueryLogConfig(name="scanner_query_log_name2", arn="somearn2", destination_arn="some_destination_arn2"),
     ] == query_log_configs
 
 
@@ -29,3 +27,29 @@ def test_list_query_log_configs_failure() -> None:
     )
     with raises(LogsException, match="unable to run list_resolver_query_log_configs: An error occurred"):
         AwsResolverClient(boto).list_resolver_query_log_configs()
+
+
+def test_create_query_log_configs() -> None:
+    dest_arn = "some_destination_arn"
+    name = "scanner_query_log_name"
+    boto = Mock(
+        create_resolver_query_log_config=Mock(return_value=responses.CREATE_QUERY_LOG_CONFIG),
+    )
+
+    query_log_config = AwsResolverClient(boto).create_resolver_query_log_config(name=name, destination_arn=dest_arn)
+
+    boto.create_resolver_query_log_config.assert_called_once_with(Name=name, DestinationArn=dest_arn)
+    assert (
+        ResolverQueryLogConfig(name=name, arn="some arn that you can use later", destination_arn=dest_arn)
+        == query_log_config
+    )
+
+
+def test_create_query_log_configs_failure() -> None:
+    boto = Mock(
+        create_resolver_query_log_config=Mock(side_effect=client_error("SomeError", "AccessDenied", "nope")),
+    )
+    with raises(
+        LogsException, match="unable to create_resolver_query_log_config with name 'fail1' and destination_arn 'fail2'"
+    ):
+        AwsResolverClient(boto).create_resolver_query_log_config(name="fail1", destination_arn="fail2")

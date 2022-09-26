@@ -9,7 +9,7 @@ from src.data.aws_scanner_exceptions import LogsException
 
 
 @dataclass
-class ResolverQueryLogConfigs:
+class ResolverQueryLogConfig:
     name: str
     arn: str
     destination_arn: str
@@ -20,19 +20,30 @@ class AwsResolverClient:
         self.__logger = getLogger(self.__class__.__name__)
         self.__resolver = resolver
 
-    def list_resolver_query_log_configs(self) -> List[ResolverQueryLogConfigs]:
+    def list_resolver_query_log_configs(self) -> List[ResolverQueryLogConfig]:
         try:
             response = self.__resolver.list_resolver_query_log_configs()
         except (BotoCoreError, ClientError) as err:
-            raise LogsException(f"unable to run list_resolver_query_log_configs: {err}") from None
+            raise LogsException(f"unable to run list_resolver_query_log_configs: {err}")
 
-        resolver_query_log_configs = response.get("ResolverQueryLogConfigs", [])
+        resolver_query_log_configs = response.get("ResolverQueryLogConfig", [])
         return list(map(self.__to_resolver_query_log_config, resolver_query_log_configs))
 
     @staticmethod
-    def __to_resolver_query_log_config(response: Dict[str, Any]) -> ResolverQueryLogConfigs:
-        return ResolverQueryLogConfigs(
+    def __to_resolver_query_log_config(response: Dict[str, Any]) -> ResolverQueryLogConfig:
+        return ResolverQueryLogConfig(
             name=response["Name"],
             arn=response["Arn"],
             destination_arn=response["DestinationArn"],
         )
+
+    def create_resolver_query_log_config(self, name: str, destination_arn: str) -> ResolverQueryLogConfig:
+        try:
+            response = self.__resolver.create_resolver_query_log_config(Name=name, DestinationArn=destination_arn)
+            return self.__to_resolver_query_log_config(response["ResolverQueryLogConfig"])
+
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(
+                f"unable to create_resolver_query_log_config with name '{name}' and destination_arn '{destination_arn}'"
+                f": {err}"
+            )

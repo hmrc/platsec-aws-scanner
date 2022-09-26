@@ -1,7 +1,5 @@
-from tests.test_types_generator import log_group, subscription_filter, tag
-
 LIST_QUERY_LOG_CONFIGS = {
-    "ResolverQueryLogConfigs": [
+    "ResolverQueryLogConfig": [
         {
             "Id": 1234567890,
             "OwnerId": 1234567890,
@@ -27,4 +25,19 @@ LIST_QUERY_LOG_CONFIGS = {
             "CreationTime": "a date string?",
         },
     ]
+}
+
+CREATE_QUERY_LOG_CONFIG = {
+    "ResolverQueryLogConfig": {
+        "Id": "string",
+        "OwnerId": "string",
+        "Status": "CREATING",
+        "ShareStatus": "NOT_SHARED",
+        "AssociationCount": 123,
+        "Arn": "some arn that you can use later",
+        "Name": "scanner_query_log_name",
+        "DestinationArn": "some_destination_arn",
+        "CreatorRequestId": "string",
+        "CreationTime": "string",
+    }
 }
