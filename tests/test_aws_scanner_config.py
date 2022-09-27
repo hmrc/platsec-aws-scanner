@@ -46,6 +46,7 @@ def test_init_config_from_file() -> None:
     assert 12 == config.iam_password_policy_password_reuse_prevention()
     assert not config.iam_password_policy_hard_expiry()
     assert "kms_role" == config.kms_role()
+    assert "route53resolver_role" == config.route53_resolver_role()
     assert "vpc_flow_log_role" == config.logs_vpc_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
     assert {
@@ -69,7 +70,10 @@ def test_init_config_from_file() -> None:
     assert 10 == config.tasks_executors()
     assert Account("111222333444", "user") == config.user_account()
     assert "joe.bloggs" == config.user_name()
-
+    assert "[version, account_id]" == config.logs_vpc_dns_log_group_config().logs_log_group_pattern
+    assert "/vpc/central_dns_log_name" == config.logs_vpc_dns_log_group_config().logs_group_name 
+    assert "arn:aws:logs:::destination:some-dns-central" == config.logs_vpc_dns_log_group_config().logs_log_group_destination    
+    assert 16 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days 
 
 @patch.dict(
     os.environ,
@@ -96,6 +100,7 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_IAM_ROLE": "the_iam_role",
         "AWS_SCANNER_IAM_AUDIT_ROLE": "the_iam_audit_role",
         "AWS_SCANNER_KMS_ROLE": "the_kms_role",
+        "AWS_SCANNER_ROUTE53RESOLVER_ROLE": "the_route53resolver_role",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
@@ -103,6 +108,10 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": '{"Statement": [{"Action": "s3:something"}]}',
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": '{"Statement": [{"Action": ["sts:hi"]}]}',
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_RETENTION_POLICY_DAYS": "21",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_NAME": "/vpc/central_dns_log_name",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_PATTERN": "[version, account_id]",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-dns-central",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_RETENTION_POLICY_DAYS": "16",
         "AWS_SCANNER_LOGS_ROLE": "some_logs_role",
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_NAME": "/aws/route53/query_log",
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_PATTERN": "[version, account_id, interface_id]",
@@ -127,6 +136,7 @@ def test_init_config_from_file() -> None:
     },
     clear=True,
 )
+
 def test_init_config_from_env_vars() -> None:
     config = AwsScannerConfig()
     assert Account("888777666555", "athena") == config.athena_account()
@@ -151,6 +161,7 @@ def test_init_config_from_env_vars() -> None:
     assert "the_iam_role" == config.iam_role()
     assert "the_iam_audit_role" == config.iam_audit_role()
     assert "the_kms_role" == config.kms_role()
+    assert "the_route53resolver_role" == config.route53_resolver_role()
     assert "the_flow_log_delivery_role" == config.logs_vpc_log_group_delivery_role()
     assert {"Statement": [{"Action": "s3:something"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
     assert {"Statement": [{"Action": ["sts:hi"]}]} == config.logs_vpc_log_group_delivery_role_policy_document()
