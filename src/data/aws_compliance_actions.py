@@ -82,7 +82,7 @@ class DeleteFlowLogAction(ComplianceAction):
 class CreateResolverQueryLogConfig(ComplianceAction):
     log_group_config: LogGroupConfig
     log: AwsLogsClient
-    esolver: AwsResolverClient
+    resolver: AwsResolverClient
 
     def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient ,log_group_config: LogGroupConfig):
         super().__init__("Create Resolver Query Log Config")
@@ -108,7 +108,7 @@ class CreateResolverQueryLogConfig(ComplianceAction):
 class CreateResolverQueryLogConfigAssociation(ComplianceAction):
     log_group_config: LogGroupConfig
     log: AwsLogsClient
-    esolver: AwsResolverClient
+    resolver: AwsResolverClient
     vpc:Vpc
 
     def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient ,log_group_config: LogGroupConfig, vpc:Vpc):

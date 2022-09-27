@@ -1,9 +1,11 @@
 from __future__ import annotations
+
+import unittest
 from distutils.command.config import config
 
 from typing import Sequence, Optional, Type, Dict, Any
 from src.clients.aws_log_group_client import AwsLogGroupClient
-from src.clients.aws_resolver_client import AwsResolverClient
+from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfig
 
 from src.data.aws_iam_types import Role, Policy
 from src.data.aws_logs_types import LogGroup
@@ -39,7 +41,7 @@ from tests.test_types_generator import (
     tag_flow_log_delivery_role_action,
     tag_log_group_action,
     vpc,
-    tag,
+    tag, expected_subscription_filter, expected_resolver_query_log_config,
 )
 
 
@@ -139,7 +141,7 @@ class TestAwsFlowLogCompliance(TestCase):
         self.assertTrue(client._is_flow_log_misconfigured(flow_log(deliver_log_role_arn="bla")))
 
 
-class TestAwsEnforcementActions(TestCase):
+class TestVPCFlowLogEnforcementActions(TestCase):
     @staticmethod
     def mock_action(action: Type[ComplianceAction], expected_client: Mock, applied_action: Mock) -> Mock:
         return Mock(spec=action, apply=Mock(side_effect=lambda c: applied_action if c == expected_client else None))
@@ -276,8 +278,8 @@ class TestAwsEnforcementActions(TestCase):
         log_group_config =Config().logs_vpc_flow_log_group_config()
 
         client = AwsVpcClientBuilder()
-        client.log_group.logs.find_log_group.side_effect = [None]   
-    
+        client.log_group.logs.find_log_group.side_effect = [None]
+
 
         actions = client.build().log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=True)
 
@@ -296,9 +298,9 @@ class TestAwsEnforcementActions(TestCase):
 
     def test_create_central_vpc_log_group_without_subscription_filter(self) -> None:
         log_group_config= Config().logs_vpc_flow_log_group_config()
-        
+
         client = AwsVpcClientBuilder()
-        client.log_group.logs.find_log_group.side_effect = [None]   
+        client.log_group.logs.find_log_group.side_effect = [None]
 
         actions = client.build().log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=False)
         expectedAction =[
@@ -315,9 +317,9 @@ class TestAwsEnforcementActions(TestCase):
         self.assertEqual(expectedAction, actions,  )
 
     def test_put_subscription_filter_when_central_vpc_log_group_is_not_compliant(self) -> None:
-        
+
         log_group_config= Config().logs_vpc_flow_log_group_config()
-         
+
         client = AwsVpcClientBuilder()
         client.with_log_groups([log_group(subscription_filters=[], default_kms_key=True)])
 
@@ -388,10 +390,35 @@ class TestAwsEnforcementActions(TestCase):
             client.build().log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=False),
         )
 
-    def test_no_enforcement_actions_required_when_no_vpc_exists(self) -> None:
+    def test_no_flow_log_enforcement_actions_required_when_no_vpc_exists(self) -> None:
         client = AwsVpcClientBuilder()
         self.assertEqual([], client.build().enforcement_flow_log_actions(vpcs=[], with_subscription_filter=False))
         self.assertEqual([], client.build().enforcement_flow_log_actions(vpcs=[], with_subscription_filter=True))
+
+
+
+
+class TestDNSEnforcementActions(TestCase):
+
+    @unittest.skip("TODO will always create new resources at the moment")
+    def test_crate_do_nothing_when_all_correct(self) -> None:
+        TestCase.maxDiff = None
+        client = AwsVpcClientBuilder()
+        config = Config().logs_vpc_dns_log_group_config()
+        expected_subscription = expected_subscription_filter(config)
+        client.with_log_groups([log_group(
+            subscription_filters=[expected_subscription],
+            name=config.logs_group_name,
+            retention_days=config.logs_group_retention_policy_days,
+        )])
+        client.with_roles([role()])
+        client.with_resolver_query_log_config(expected_resolver_query_log_config(config))
+        self.assertEqual([], client.build().enforcement_dns_log_actions([vpc()], with_subscription_filter=True))
+
+    def test_no_dns_enforcement_actions_required_when_no_vpc_exists(self) -> None:
+        client = AwsVpcClientBuilder()
+        self.assertEqual([], client.build().enforcement_dns_log_actions(vpcs=[], with_subscription_filter=False))
+        self.assertEqual([], client.build().enforcement_dns_log_actions(vpcs=[], with_subscription_filter=True))
 
 
 class TestLogGroupCompliance(TestCase):
@@ -540,3 +567,10 @@ class AwsVpcClientBuilder(TestCase):
     def with_create_flow_logs(self) -> AwsVpcClientBuilder:
         self.ec2.create_flow_logs.return_value = None
         return self
+
+    def with_resolver_query_log_config(self, resolver_query_log_config: ResolverQueryLogConfig):
+        def list_resolver_query_log_configs():
+            return resolver_query_log_config
+
+        self.resolver.list_resolver_query_log_configs.side_effect = list_resolver_query_log_configs
+        pass

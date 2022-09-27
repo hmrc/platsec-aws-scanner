@@ -12,6 +12,7 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
+from src.clients.aws_resolver_client import ResolverQueryLogConfig
 from src.data.aws_athena_data_partition import AwsAthenaDataPartition
 
 from src.data.aws_common_types import Tag
@@ -548,6 +549,14 @@ def subscription_filter(
         destination_arn=destination_arn,
     )
 
+def expected_subscription_filter(config: LogGroupConfig) -> SubscriptionFilter:
+    return SubscriptionFilter(
+        log_group_name=config.logs_log_group_subscription_filter_name,
+        filter_name=config.logs_log_group_subscription_filter_name,
+        filter_pattern=config.logs_log_group_pattern,
+        destination_arn=config.logs_log_group_destination,
+    )
+
 
 def key(
     account_id: str = "112233445566",
@@ -762,3 +771,11 @@ def delete_query_log_action(
     route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient), hosted_zone_id: str = "hosted_zone_id"
 ) -> DeleteQueryLogAction:
     return DeleteQueryLogAction(route53_client=route53_client, hosted_zone_id=hosted_zone_id)
+
+def expected_resolver_query_log_config(config: LogGroupConfig) -> ResolverQueryLogConfig:
+    return ResolverQueryLogConfig(
+        name=config.logs_group_name,
+        id="some-id",
+        arn="somearn2",
+        destination_arn=config.logs_log_group_destination
+    )
