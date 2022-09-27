@@ -13,7 +13,7 @@ def test_list_query_log_configs() -> None:
         list_resolver_query_log_configs=Mock(return_value=responses.LIST_QUERY_LOG_CONFIGS),
     )
     
-    query_log_configs = AwsResolverClient(boto).list_resolver_query_log_configs()
+    query_log_configs = AwsResolverClient(boto).list_resolver_query_log_configs(query_log_config_name= "query_log_config_name")
     boto.list_resolver_query_log_configs.assert_called_once()
     id = "someid"
 
@@ -33,7 +33,7 @@ def test_list_query_log_configs_failure() -> None:
     )
     with raises(LogsException, match="unable to run list_resolver_query_log_configs: An error occurred"):
 
-        AwsResolverClient(boto).list_resolver_query_log_configs()
+        AwsResolverClient(boto).list_resolver_query_log_configs(query_log_config_name="query_log_config_name")
 
 
 def test_create_query_log_configs() -> None:

@@ -23,15 +23,13 @@ class AwsResolverClient:
         self.__logger = getLogger(self.__class__.__name__)
         self.resolver = resolver
 
-    def list_resolver_query_log_configs(self, ) -> List[ResolverQueryLogConfig]:
+    def list_resolver_query_log_configs(self, query_log_config_name: str ) -> List[ResolverQueryLogConfig]:
         try:
             response = self.resolver.list_resolver_query_log_configs(Filters=[
                 {
-                    'DestinationArn': 'string',
-                    'Values': [
-                        "",
-                    ]
-                },
+                    'Name': 'Name',
+                    'Values':[query_log_config_name]
+                }
             ])
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to run list_resolver_query_log_configs: {err}")

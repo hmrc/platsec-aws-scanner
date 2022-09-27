@@ -92,7 +92,7 @@ class CreateResolverQueryLogConfig(ComplianceAction):
         
     def _apply(self) -> None:
         log_group = self.log.find_log_group(self.log_group_config.logs_group_name)
-        resolver_config = self.resolver.list_resolver_query_log_configs(log_group.arn)
+        resolver_config = self.resolver.list_resolver_query_log_configs(query_log_config_name= "query_log_config_name" )
         if(not resolver_config):
             resolver_config = self.resolver.create_resolver_query_log_config(
                     name='vpc_dns_resolver',
@@ -112,25 +112,14 @@ class CreateResolverQueryLogConfigAssociation(ComplianceAction):
     vpc:Vpc
 
     def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient ,log_group_config: LogGroupConfig, vpc:Vpc):
-        super().__init__("Create Resolver Query Log Config")
+        super().__init__("Create Resolver Query Log Config Association")
         self.log_group_config = log_group_config
         self.log=log
         self.resolver = resolver 
         self.vpc = vpc
         
         
-    def _apply(self) -> None:
-        log_group = self.log.find_log_group(self.log_group_config.logs_group_name)
-        resolver_config_association = self.resolver.list_resolver_query_log_configs(log_group.arn, self.vpc.id )
-        if(not resolver_config_association):
-            resolver_config = self.resolver.list_resolver_query_log_configs(log_group.arn)
-            resolver_config_association = self.resolver.associate_resolver_query_log_config(
-                    ResolverQueryLogConfigId=resolver_config.Id,
-                    ResourceId=self.vpc.id
-                )
-
-    def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description, details=dict(log_group_name=self.log_group_config.logs_group_name))
+    
     
 @dataclass
 class DeleteQueryLogAction(ComplianceAction):

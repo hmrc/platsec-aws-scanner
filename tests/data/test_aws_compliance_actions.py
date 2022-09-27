@@ -1,3 +1,4 @@
+from ast import List
 from logging import ERROR
 from typing import Any
 from unittest.mock import Mock, call
@@ -8,7 +9,8 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.aws_scanner_config import LogGroupConfig
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
-from src.data.aws_compliance_actions import ComplianceAction
+from src.clients.aws_resolver_client import ResolverQueryLogConfig
+from src.data.aws_compliance_actions import ComplianceAction, ComplianceActionReport, CreateResolverQueryLogConfig, CreateResolverQueryLogConfigAssociation
 from src.data.aws_scanner_exceptions import AwsScannerException
 from tests import _raise
 from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
@@ -421,3 +423,54 @@ def test_apply_update_password_policy_action() -> None:
     iam = Mock(spec=AwsIamClient)
     update_password_policy_action(iam=iam)._apply()
     iam.update_account_password_policy.assert_called_once_with(password_policy())
+    
+def test_apply_create_resolver_query_log_config_with_existing_query_log_config() -> None:
+    log = Mock()
+    resolver= Mock()
+    log_group_config = Mock()
+    
+    query_config= ResolverQueryLogConfig( name= 'name', id='id', arn= 'arn', destination_arn = 'destination_arn')
+    
+    log.find_log_group = Mock()
+    resolver.list_resolver_query_log_configs= Mock(return_value= [query_config])
+    resolver.create_resolver_query_log_config = Mock()
+    CreateResolverQueryLogConfig(log= log, resolver=resolver, log_group_config=log_group_config)._apply()
+    
+    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name= "query_log_config_name")
+    resolver.create_resolver_query_log_config.assert_not_called()
+    
+    
+def test_apply_create_resolver_query_log_config_with_no_existing_query_log_config() -> None:
+    log = Mock()
+    resolver= Mock()
+    log_group_config = Mock()
+    
+    log.find_log_group = Mock()
+    resolver.list_resolver_query_log_configs= Mock(return_value= [])
+    resolver.create_resolver_query_log_config = Mock()
+    CreateResolverQueryLogConfig(log= log, resolver=resolver, log_group_config=log_group_config)._apply()
+    
+    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name= "query_log_config_name")
+    resolver.create_resolver_query_log_config.assert_called_once()
+    
+
+def test_plan_create_resolver_query_log_config() -> None:
+    log = Mock()
+    resolver= Mock()
+    log_group_config = Config().logs_vpc_dns_log_group_config()
+    
+    expected_action = ComplianceActionReport(description="Create Resolver Query Log Config", details= {"log_group_name" : log_group_config.logs_group_name})
+    
+    assert expected_action == CreateResolverQueryLogConfig(log= log, resolver=resolver, log_group_config=log_group_config).plan()
+
+def test_plan_create_resolver_query_log_config_association_constructor() -> None:
+    log = Mock()
+    resolver= Mock()
+    vpc = Mock()
+    log_group_config = Config().logs_vpc_dns_log_group_config()
+    
+    resolver_action = CreateResolverQueryLogConfigAssociation(log= log, resolver=resolver, log_group_config= log_group_config, vpc=vpc)
+    
+    assert resolver_action.log == log
+    assert resolver_action.resolver == resolver
+    assert resolver_action.vpc == vpc
