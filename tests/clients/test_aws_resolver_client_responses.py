@@ -1,9 +1,7 @@
-from tests.test_types_generator import log_group, subscription_filter, tag
-
 LIST_QUERY_LOG_CONFIGS = {
-    "ResolverQueryLogConfigs": [
+    "ResolverQueryLogConfig": [
         {
-            "Id": 1234567890,
+            "Id": "someid",
             "OwnerId": 1234567890,
             "Status": "CREATED",
             "ShareStatus": "NOT_SHARED",
@@ -13,6 +11,37 @@ LIST_QUERY_LOG_CONFIGS = {
             "DestinationArn": "log_group_arn",
             "CreatorRequestId": "203582384",
             "CreationTime": "a date string?",
+<<<<<<< HEAD
         }
+=======
+        },
+        {
+            "Id": "someid",
+            "OwnerId": 12345627890,
+            "Status": "CREATED",
+            "ShareStatus": "NOT_SHARED",
+            "AssociationCount": 123,
+            "Arn": "somearn2",
+            "Name": "scanner_query_log_name2",
+            "DestinationArn": "some_destination_arn2",
+            "CreatorRequestId": "2035823843",
+            "CreationTime": "a date string?",
+        },
+>>>>>>> 6469dabaa3597d6bb9952c2ff9c6b91cff19c59c
     ]
+}
+
+CREATE_QUERY_LOG_CONFIG = {
+    "ResolverQueryLogConfig": {
+        "Id": "someid",
+        "OwnerId": "string",
+        "Status": "CREATING",
+        "ShareStatus": "NOT_SHARED",
+        "AssociationCount": 123,
+        "Arn": "some arn that you can use later",
+        "Name": "scanner_query_log_name",
+        "DestinationArn": "some_destination_arn",
+        "CreatorRequestId": "string",
+        "CreationTime": "string",
+    }
 }
