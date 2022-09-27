@@ -35,7 +35,7 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         iam = Mock()
         logs = Mock()
-        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
+        log_group = AwsLogGroupClient(logs=logs)
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
@@ -64,17 +64,17 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         iam = Mock()
         logs = Mock()
-        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
+        log_group = AwsLogGroupClient(logs=logs)
 
       
         log_group_config=Config().logs_route53_query_log_group_config()
 
-        expectedLogGroups = [
-            LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id"),
-        ]
+        expectedLogGroup=LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id", retention_days=0)
+        
 
-        logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+
+        logs.find_log_group = Mock(side_effect=lambda name: expectedLogGroup)
+
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
@@ -142,14 +142,12 @@ class TestAwsRoute53Client(TestCase):
         iam = Mock()
         logs = Mock()
         logs.is_central_log_group = Mock(return_value=False)
-        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
+        log_group = AwsLogGroupClient(logs=logs)
 
-        expectedLogGroups = [
-            LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id"),
-        ]
+        expectedLogGroup = LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id", retention_days = 0)
+        
 
-        logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+        logs.find_log_group = Mock(side_effect=lambda name: expectedLogGroup)
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
@@ -216,14 +214,13 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         iam = Mock()
         logs = Mock()
-        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
+        log_group = AwsLogGroupClient(logs=logs)
         log_group_config=Config().logs_route53_query_log_group_config()
       
 
         expectedLogGroups: List[Any] = []
 
-        logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
+        logs.find_log_group = Mock(side_effect=lambda name: expectedLogGroups)
 
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
@@ -292,15 +289,14 @@ class TestAwsRoute53Client(TestCase):
         iam = Mock()
         logs = Mock()
         logs.is_central_log_group = Mock(return_value=True)
-        log_group = AwsLogGroupClient(logs=logs, kms=Mock())
+        log_group = AwsLogGroupClient(logs=logs)
         
         log_group_config = Config().logs_route53_query_log_group_config()
          
         expectedLogGroups: List[Any] = []
 
-        logs.describe_log_groups = Mock(side_effect=lambda name: expectedLogGroups)
-        log_group.kms.get_key = Mock(side_effect=lambda key_id: "kms_key_id")
-
+        logs.find_log_group = Mock(side_effect=lambda name: expectedLogGroups)
+        
         expectedQueryLogActionList: List[ComplianceAction] = []
         expectedQueryLogActionList.append(
             CreateLogGroupAction(logs=logs, log_group_config=log_group_config)

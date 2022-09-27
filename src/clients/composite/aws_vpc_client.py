@@ -7,13 +7,15 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 from src.aws_scanner_config import LogGroupConfig
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_kms_client import AwsKmsClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_log_group_client import AwsLogGroupClient
+from src.clients.aws_resolver_client import AwsResolverClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
     CreateFlowLogAction,
     CreateFlowLogDeliveryRoleAction,
+    CreateResolverQueryLogConfig,
+    CreateResolverQueryLogConfigAssociation,
     DeleteFlowLogAction,
     DeleteFlowLogDeliveryRoleAction,
     TagFlowLogDeliveryRoleAction,
@@ -23,13 +25,14 @@ from src.data.aws_iam_types import Role
 
 
 class AwsVpcClient:
-    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient,  config: Config, log_group: AwsLogGroupClient):
+    def __init__(self, ec2: AwsEC2Client, iam: AwsIamClient, logs: AwsLogsClient,  config: Config, log_group: AwsLogGroupClient, resolver: AwsResolverClient):
         self._logger = getLogger(self.__class__.__name__)
         self.ec2 = ec2
         self.iam = iam
         self.logs = logs
         self.config = config
         self.log_group = log_group
+        self.resolver= resolver
 
     def list_vpcs(self) -> Sequence[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self.ec2.list_vpcs()]
@@ -40,7 +43,7 @@ class AwsVpcClient:
 
     def _enrich_flow_log(self, fl: FlowLog) -> FlowLog:
         fl.deliver_log_role = self.iam.find_role_by_arn(fl.deliver_log_role_arn) if fl.deliver_log_role_arn else None
-        fl.log_group = self.log_group.find_log_group(fl.log_group_name) if fl.log_group_name else None
+        fl.log_group = self.logs.find_log_group(fl.log_group_name) if fl.log_group_name else None
         return fl
 
     def _find_flow_log_delivery_role(self) -> Optional[Role]:
@@ -72,9 +75,10 @@ class AwsVpcClient:
         if not vpcs:
             return list()
         log_group_config=self.config.logs_vpc_flow_log_group_config()
-        log_group_actions = self.log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
+        log_group_actions = self.log_group.log_group_enforcement_actions(
+        log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
         delivery_role_actions = self._delivery_role_enforcement_actions()
-        vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
+        vpc_actions = [action for vpc in vpcs for action in self._vpc_flow_enforcement_actions(vpc)]
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
 
     def enforcement_dns_log_actions(
@@ -84,11 +88,19 @@ class AwsVpcClient:
             return list()
         log_group_config=self.config.logs_vpc_dns_log_group_config()
         log_group_actions = self.log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
-        vpc_actions = [action for vpc in vpcs for action in self._vpc_enforcement_actions(vpc)]
-        delivery_role_actions = self._delivery_role_enforcement_actions()
-        return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
+        resolver_query_log_config =self._resolver_query_log_config_enforcement_actions(log_group_config=log_group_config)
+        vpc_actions = [action for vpc in vpcs for action in self._vpc_resolver_query_log_config_associations_enforcement_actions(vpc)]
+        return list(chain(log_group_actions, resolver_query_log_config, vpc_actions))
 
-    def _vpc_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
+    def _resolver_query_log_config_enforcement_actions(self, log_group_config: LogGroupConfig) -> Sequence[ComplianceAction]:
+        return [CreateResolverQueryLogConfig(log_group=self.log_group, resolver= self.resolver, log_group_config= log_group_config)]
+        
+    
+    def _vpc_resolver_query_log_config_associations_enforcement_actions(self, vpc: Vpc, log_group_config: LogGroupConfig) -> Sequence[ComplianceAction]:
+        return [CreateResolverQueryLogConfigAssociation(vpc=vpc, resolver= self.resolver, log_group_config= log_group_config)]
+      
+        
+    def _vpc_flow_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return list(
             chain(
                 self._delete_misconfigured_flow_log_actions(vpc),

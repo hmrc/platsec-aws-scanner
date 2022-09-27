@@ -20,9 +20,16 @@ class AwsResolverClient:
         self.__logger = getLogger(self.__class__.__name__)
         self.__resolver = resolver
 
-    def list_resolver_query_log_configs(self) -> List[ResolverQueryLogConfigs]:
+    def list_resolver_query_log_configs(self, log_group_arn) -> List[ResolverQueryLogConfigs]:
         try:
-            response = self.__resolver.list_resolver_query_log_configs()
+            response = self.__resolver.list_resolver_query_log_configs(Filters=[
+                {
+                    'DestinationArn': 'string',
+                    'Values': [
+                        log_group_arn,
+                    ]
+                },
+            ])
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to run list_resolver_query_log_configs: {err}") from None
 
@@ -35,4 +42,13 @@ class AwsResolverClient:
             name=response["Name"],
             arn=response["Arn"],
             destination_arn=response["DestinationArn"],
+        )
+
+
+    def create_resolver_query_log_config(self, name: str, destination_arn: str,creator_request_id:str, tags: list[str] ) -> str:
+      return self.__resolver.create_resolver_query_log_config(
+            Name=name,
+            DestinationArn=destination_arn,
+            CreatorRequestId=creator_request_id,
+            Tags=tags
         )

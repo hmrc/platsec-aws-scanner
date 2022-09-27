@@ -8,23 +8,11 @@ LIST_QUERY_LOG_CONFIGS = {
             "Status": "CREATED",
             "ShareStatus": "NOT_SHARED",
             "AssociationCount": 123,
-            "Arn": "somearn",
+            "Arn": "arn",
             "Name": "scanner_query_log_name",
-            "DestinationArn": "some_destination_arn",
+            "DestinationArn": "log_group_arn",
             "CreatorRequestId": "203582384",
             "CreationTime": "a date string?",
-        },
-        {
-            "Id": 1234567890,
-            "OwnerId": 12345627890,
-            "Status": "CREATED",
-            "ShareStatus": "NOT_SHARED",
-            "AssociationCount": 123,
-            "Arn": "somearn2",
-            "Name": "scanner_query_log_name2",
-            "DestinationArn": "some_destination_arn2",
-            "CreatorRequestId": "2035823843",
-            "CreationTime": "a date string?",
-        },
+        }
     ]
 }

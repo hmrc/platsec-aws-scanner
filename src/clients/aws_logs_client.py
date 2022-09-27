@@ -1,21 +1,23 @@
 from logging import getLogger
-from typing import Sequence, List, Any
+from typing import Sequence, List, Any, Optional
 from functools import partial
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 from src import PLATSEC_SCANNER_TAGS
 
 from src.aws_scanner_config import AwsScannerConfig as Config, LogGroupConfig
+from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_common_types import Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter, to_log_group, to_subscription_filter
 from src.data.aws_scanner_exceptions import LogsException
 
 
 class AwsLogsClient:
-    def __init__(self, boto_logs: BaseClient):
+    def __init__(self, boto_logs: BaseClient, kms: AwsKmsClient):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._logs = boto_logs
+        self.kms = kms
 
     def describe_log_groups(self, name_prefix: str) -> Sequence[LogGroup]:
         try:
@@ -108,4 +110,8 @@ class AwsLogsClient:
     def is_central_destination_filter(self, sub_filter: SubscriptionFilter, log_group_config: LogGroupConfig) -> bool:
         return (sub_filter.filter_pattern == log_group_config.logs_log_group_pattern)  and (sub_filter.destination_arn == log_group_config.logs_log_group_destination)
              
-             
+    
+    def find_log_group(self, name: str) -> Optional[LogGroup]:
+        log_group = next(iter(self.describe_log_groups(name)), None)
+        kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
+        return log_group.with_kms_key(kms_key) if log_group else None

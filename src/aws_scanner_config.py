@@ -148,6 +148,9 @@ class AwsScannerConfig:
 
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
+    
+    def route53_resolver_role(self) -> str:
+        return self._get_config("route53resolver", "role")
 
     def logs_vpc_flow_log_group_config(self) -> LogGroupConfig:
         return LogGroupConfig(
