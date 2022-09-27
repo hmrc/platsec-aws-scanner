@@ -106,4 +106,3 @@ class UnsupportedPolicyDocumentElement(AwsScannerException):
 
 class UnsupportedTaskException(AwsScannerException):
     pass
-

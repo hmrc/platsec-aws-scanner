@@ -71,9 +71,13 @@ def test_init_config_from_file() -> None:
     assert Account("111222333444", "user") == config.user_account()
     assert "joe.bloggs" == config.user_name()
     assert "[version, account_id]" == config.logs_vpc_dns_log_group_config().logs_log_group_pattern
-    assert "/vpc/central_dns_log_name" == config.logs_vpc_dns_log_group_config().logs_group_name 
-    assert "arn:aws:logs:::destination:some-dns-central" == config.logs_vpc_dns_log_group_config().logs_log_group_destination    
-    assert 16 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days 
+    assert "/vpc/central_dns_log_name" == config.logs_vpc_dns_log_group_config().logs_group_name
+    assert (
+        "arn:aws:logs:::destination:some-dns-central"
+        == config.logs_vpc_dns_log_group_config().logs_log_group_destination
+    )
+    assert 16 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days
+
 
 @patch.dict(
     os.environ,
@@ -136,7 +140,6 @@ def test_init_config_from_file() -> None:
     },
     clear=True,
 )
-
 def test_init_config_from_env_vars() -> None:
     config = AwsScannerConfig()
     assert Account("888777666555", "athena") == config.athena_account()
@@ -236,4 +239,3 @@ def test_load_config_from_s3() -> None:
         side_effect=lambda b, k: conf if b == "conf-buck" and k == "aws_scanner_config.ini" else None,
     ):
         assert AwsScannerConfig().iam_role() == "TheIamRole"
-

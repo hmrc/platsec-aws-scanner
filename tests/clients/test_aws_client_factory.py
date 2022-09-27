@@ -149,7 +149,7 @@ class TestGetBotoClients(TestCase):
             target_account=kms_account,
             role="route53resolver_role",
         )
-        
+
     def test_get_cloudtrail_boto_client(self) -> None:
         cloudtrail_account = account(identifier="644355211788", name="some_cloudtrail_account")
         self.assert_get_client(
@@ -239,22 +239,22 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_logs_boto_client",
             side_effect=lambda acc, region: logs_boto_client if acc == account() else None,
         ):
-             with patch(
-               f"{self.factory_path}.get_kms_boto_client",
-               side_effect=lambda acc: kms_boto_client if acc == account() else None,
+            with patch(
+                f"{self.factory_path}.get_kms_boto_client",
+                side_effect=lambda acc: kms_boto_client if acc == account() else None,
             ):
-                    logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account(), None)
-                    self.assertEqual(logs_client._logs, logs_boto_client)
-                    self.assertEqual(logs_client.kms, kms_boto_client)
-    
+                logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account(), None)
+                self.assertEqual(logs_client._logs, logs_boto_client)
+                self.assertEqual(logs_client.kms, kms_boto_client)
+
     def test_get_log_group_client(self, _: Mock) -> None:
         logs_boto_client = Mock()
         with patch(
             f"{self.factory_path}.get_logs_client",
             side_effect=lambda acc: logs_boto_client if acc == account() else None,
         ):
-                log_group_client = AwsClientFactory(self.mfa, self.username).get_log_group_client(account())
-                self.assertEqual(log_group_client.logs, logs_boto_client)
+            log_group_client = AwsClientFactory(self.mfa, self.username).get_log_group_client(account())
+            self.assertEqual(log_group_client.logs, logs_boto_client)
 
     def test_get_iam_client(self, _: Mock) -> None:
         iam_boto_client = Mock()
@@ -283,7 +283,7 @@ class TestGetClients(TestCase):
         ):
             kms_client = AwsClientFactory(self.mfa, self.username).get_kms_client(account())
             self.assertEqual(kms_client._kms, kms_boto_client)
-            
+
     def test_getroute53_resolver_client(self, _: Mock) -> None:
         route53_resolver__boto_client = Mock()
         with patch(
@@ -305,7 +305,7 @@ class TestGetClients(TestCase):
                 side_effect=lambda acc: logs_client if acc == account() else None,
             ):
                 cloudtrail_client = AwsClientFactory(self.mfa, self.username).get_cloudtrail_client(account())
-            
+
                 self.assertEqual(cloudtrail_client._cloudtrail, cloudtrail_boto_client)
                 self.assertEqual(cloudtrail_client._logs, logs_client)
 
@@ -364,14 +364,26 @@ class TestGetCompositeClients(TestCase):
 
     def test_get_vpc_client(self, _: Mock) -> None:
         acc = account(identifier="1234", name="some_account")
-        ec2, iam, logs, log_group, resolver = (Mock(name="ec2"), Mock(name="iam"), Mock(name="logs"), Mock(name="log_group"), Mock(name="resolver"))
+        ec2, iam, logs, log_group, resolver = (
+            Mock(name="ec2"),
+            Mock(name="iam"),
+            Mock(name="logs"),
+            Mock(name="log_group"),
+            Mock(name="resolver"),
+        )
         with patch.object(AwsClientFactory, "get_ec2_client", side_effect=self.mock_client(ec2, acc)):
             with patch.object(AwsClientFactory, "get_logs_client", side_effect=self.mock_client(logs, acc)):
                 with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
-                    with patch.object(AwsClientFactory, "get_log_group_client", side_effect=self.mock_client(log_group, acc)):
-                        with patch.object(AwsClientFactory, "get_route53resolver_client", side_effect=self.mock_client(resolver, acc)):
-                               vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
-        self.assertEqual([ec2, iam, logs, log_group], [vpc_client.ec2, vpc_client.iam, vpc_client.logs, vpc_client.log_group])
+                    with patch.object(
+                        AwsClientFactory, "get_log_group_client", side_effect=self.mock_client(log_group, acc)
+                    ):
+                        with patch.object(
+                            AwsClientFactory, "get_route53resolver_client", side_effect=self.mock_client(resolver, acc)
+                        ):
+                            vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
+        self.assertEqual(
+            [ec2, iam, logs, log_group], [vpc_client.ec2, vpc_client.iam, vpc_client.logs, vpc_client.log_group]
+        )
 
     def test_get_route53_client(self, _: Mock) -> None:
         acc = account(identifier="1234", name="some_account")
@@ -388,7 +400,9 @@ class TestGetCompositeClients(TestCase):
                 side_effect=self.mock_client_region(client=logs, expected_account=acc, expected_region="us-east-1"),
             ):
                 with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
-                    with patch.object(AwsClientFactory, "get_log_group_client", side_effect=self.mock_client(log_group, acc)):
+                    with patch.object(
+                        AwsClientFactory, "get_log_group_client", side_effect=self.mock_client(log_group, acc)
+                    ):
                         route53_client = AwsClientFactory("123456", "joe.bloggs").get_route53_client(acc)
         self.assertEqual(
             [boto_route53, iam, logs, log_group],

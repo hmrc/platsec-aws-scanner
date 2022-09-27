@@ -87,7 +87,7 @@ class AwsClientFactory:
 
     def get_kms_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("kms", account, self._config.kms_role())
-    
+
     def get_route53_resolver_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("route53resolver", account, self._config.route53_resolver_role())
 
@@ -111,7 +111,7 @@ class AwsClientFactory:
             boto_route53=self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account, region="us-east-1"),
-            log_group=self.get_log_group_client(account)
+            log_group=self.get_log_group_client(account),
         )
 
     def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:
@@ -124,7 +124,9 @@ class AwsClientFactory:
         return AwsSSMClient(self.get_ssm_boto_client(account))
 
     def get_logs_client(self, account: Account, region: Optional[str] = None) -> AwsLogsClient:
-        return AwsLogsClient(boto_logs= self.get_logs_boto_client(account, region), kms= self.get_kms_boto_client(account))
+        return AwsLogsClient(
+            boto_logs=self.get_logs_boto_client(account, region), kms=self.get_kms_boto_client(account)
+        )
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account, self._config.iam_role()))
@@ -134,15 +136,15 @@ class AwsClientFactory:
 
     def get_kms_client(self, account: Account) -> AwsKmsClient:
         return AwsKmsClient(self.get_kms_boto_client(account))
-    
-    def get_route53resolver_client(self, account: Account) -> AwsKmsClient:
+
+    def get_route53resolver_client(self, account: Account) -> AwsResolverClient:
         return AwsResolverClient(self.get_route53_resolver_boto_client(account))
 
     def get_cloudtrail_client(self, account: Account) -> AwsCloudtrailClient:
         return AwsCloudtrailClient(self.get_cloudtrail_boto_client(account), self.get_logs_client(account))
-    
+
     def get_log_group_client(self, account: Account) -> AwsLogGroupClient:
-        return AwsLogGroupClient(logs= self.get_logs_client(account))
+        return AwsLogGroupClient(logs=self.get_logs_client(account))
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
@@ -151,7 +153,7 @@ class AwsClientFactory:
             logs=self.get_logs_client(account),
             config=self._config,
             log_group=self.get_log_group_client(account),
-            resolver = self.get_route53resolver_client(account)
+            resolver=self.get_route53resolver_client(account),
         )
 
     def get_vpc_peering_client(self, account: Account) -> AwsVpcPeeringClient:

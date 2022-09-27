@@ -1,4 +1,3 @@
-from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.data.aws_task_report import AwsTaskReport
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -18,7 +17,7 @@ from tests.test_types_generator import (
     vpc,
 )
 
-vpc_client = AwsVpcClient(ec2=Mock(), iam=Mock(), logs=Mock(), config=Mock(), log_group= Mock(),resolver= Mock())
+vpc_client = AwsVpcClient(ec2=Mock(), iam=Mock(), logs=Mock(), config=Mock(), log_group=Mock(), resolver=Mock())
 vpcs = [vpc(id="vpc-1"), vpc(id="vpc-2")]
 actions = [delete_flow_log_action(flow_log_id="fl-4"), create_flow_log_action(vpc_id="vpc-7")]
 

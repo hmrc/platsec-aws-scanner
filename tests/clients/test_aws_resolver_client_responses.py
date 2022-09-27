@@ -23,7 +23,7 @@ LIST_QUERY_LOG_CONFIGS = {
             "DestinationArn": "some_destination_arn2",
             "CreatorRequestId": "2035823843",
             "CreationTime": "a date string?",
-        }
+        },
     ]
 }
 

@@ -14,7 +14,7 @@ from src.clients.aws_resolver_client import AwsResolverClient
 from src.data.aws_scanner_exceptions import AwsScannerException
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_organizations_types import Account
-from src.data.aws_ec2_types import Vpc
+
 
 @dataclass
 class ComplianceActionReport:
@@ -78,49 +78,36 @@ class DeleteFlowLogAction(ComplianceAction):
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(description=self.description, details=dict(flow_log_id=self.flow_log_id))
 
+
 @dataclass
 class CreateResolverQueryLogConfig(ComplianceAction):
     log_group_config: LogGroupConfig
     log: AwsLogsClient
     resolver: AwsResolverClient
 
-    def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient ,log_group_config: LogGroupConfig):
+    def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient, log_group_config: LogGroupConfig):
         super().__init__("Create Resolver Query Log Config")
         self.log_group_config = log_group_config
-        self.log=log
-        self.resolver = resolver 
-        
+        self.log = log
+        self.resolver = resolver
+
     def _apply(self) -> None:
-        log_group = self.log.find_log_group(self.log_group_config.logs_group_name)
-        resolver_config = self.resolver.list_resolver_query_log_configs(query_log_config_name= "query_log_config_name" )
-        if(not resolver_config):
-            resolver_config = self.resolver.create_resolver_query_log_config(
-                    name='vpc_dns_resolver',
-                    destination_arn=log_group.arn,
-                    creator_request_id='scanner',
-                    tags=PLATSEC_SCANNER_TAGS   
-                )
+        # log_group = self.log.find_log_group(self.log_group_config.logs_group_name)
+        resolver_config = self.resolver.list_resolver_query_log_configs(query_log_config_name="query_log_config_name")
+        if not resolver_config:
+            self.resolver.create_resolver_query_log_config(
+                name="vpc_dns_resolver",
+                destination_arn="log_group.arn",
+                # creator_request_id="scanner",
+                # tags=PLATSEC_SCANNER_TAGS,
+            )
 
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description, details=dict(log_group_name=self.log_group_config.logs_group_name))
+        return ComplianceActionReport(
+            description=self.description, details=dict(log_group_name=self.log_group_config.logs_group_name)
+        )
 
-@dataclass
-class CreateResolverQueryLogConfigAssociation(ComplianceAction):
-    log_group_config: LogGroupConfig
-    log: AwsLogsClient
-    resolver: AwsResolverClient
-    vpc:Vpc
 
-    def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient ,log_group_config: LogGroupConfig, vpc:Vpc):
-        super().__init__("Create Resolver Query Log Config Association")
-        self.log_group_config = log_group_config
-        self.log=log
-        self.resolver = resolver 
-        self.vpc = vpc
-        
-        
-    
-    
 @dataclass
 class DeleteQueryLogAction(ComplianceAction):
     def __init__(self, route53_client: AwsHostedZonesClient, hosted_zone_id: str):
@@ -188,7 +175,7 @@ class CreateQueryLogAction(ComplianceAction):
         self.log_group_config = log_group_config
         self.account = account
         self.query_log_arn = (
-            "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:" + self.log_group_config .logs_group_name
+            "arn:aws:logs:us-east-1:" + self.account.identifier + ":log-group:" + self.log_group_config.logs_group_name
         )
 
     def _apply(self) -> None:

@@ -13,10 +13,11 @@ from tests.test_types_generator import (
     create_flow_log_action,
     delete_flow_log_action,
     task_report,
-    vpc, aws_audit_vpc_dns_logs_task,
+    vpc,
+    aws_audit_vpc_dns_logs_task,
 )
 
-vpc_client = AwsVpcClient(ec2=Mock(), iam=Mock(), logs=Mock(), config=Mock(), log_group= Mock(),resolver= Mock())
+vpc_client = AwsVpcClient(ec2=Mock(), iam=Mock(), logs=Mock(), config=Mock(), log_group=Mock(), resolver=Mock())
 vpcs = [vpc(id="vpc-1"), vpc(id="vpc-2")]
 
 

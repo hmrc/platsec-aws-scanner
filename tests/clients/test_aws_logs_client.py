@@ -1,7 +1,7 @@
 from pytest import raises
 from unittest.mock import Mock, call
 
-from src import Tag
+from src.data.aws_common_types import Tag
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import LogsException
 
@@ -17,15 +17,13 @@ def test_find_log_group() -> None:
     )
 
     expected_key = key(id="9")
-    mock_kms = Mock(
-        get_key=Mock(return_value=expected_key)
-    )
+    mock_kms = Mock(get_key=Mock(return_value=expected_key))
 
     actual_log_group = AwsLogsClient(boto_logs, mock_kms).find_log_group("lg_2")
 
     boto_logs.describe_log_groups.assert_called_once_with(logGroupNamePrefix="lg_2")
     boto_logs.describe_subscription_filters.assert_has_calls([call(logGroupName="lg_2")])
-    mock_kms.get_key.assert_has_calls([call('9')])
+    mock_kms.get_key.assert_has_calls([call("9")])
     assert actual_log_group == log_group(
         name="lg_2",
         kms_key_id=expected_key.id,
@@ -40,10 +38,7 @@ def test_find_log_group() -> None:
                 destination_arn="arn:aws:logs:us-east-1:223322332233:destination:OtherDestination",
             )
         ],
-        tags=[
-            Tag(key='a_tag', value='a_value'),
-            Tag(key='another_tag', value='another_value')
-        ],
+        tags=[Tag(key="a_tag", value="a_value"), Tag(key="another_tag", value="another_value")],
     )
 
 

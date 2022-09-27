@@ -27,7 +27,6 @@ DESCRIBE_SUBSCRIPTION_FILTERS_SINGLE = [
 ]
 
 
-
 DESCRIBE_SUBSCRIPTION_FILTERS = [
     {
         "subscriptionFilters": [

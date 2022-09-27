@@ -12,8 +12,10 @@ def test_list_query_log_configs() -> None:
     boto = Mock(
         list_resolver_query_log_configs=Mock(return_value=responses.LIST_QUERY_LOG_CONFIGS),
     )
-    
-    query_log_configs = AwsResolverClient(boto).list_resolver_query_log_configs(query_log_config_name= "query_log_config_name")
+
+    query_log_configs = AwsResolverClient(boto).list_resolver_query_log_configs(
+        query_log_config_name="query_log_config_name"
+    )
     boto.list_resolver_query_log_configs.assert_called_once()
     id = "someid"
 
@@ -81,4 +83,3 @@ def test_delete_query_log_configs_failure() -> None:
     )
     with raises(LogsException, match="unable to delete_resolver_query_log_config with id 'someid'"):
         AwsResolverClient(boto).delete_resolver_query_log_config(id=id)
-

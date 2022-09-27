@@ -1,4 +1,3 @@
-from ast import List
 from logging import ERROR
 from typing import Any
 from unittest.mock import Mock, call
@@ -7,10 +6,13 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.aws_scanner_config import AwsScannerConfig as Config
-from src.aws_scanner_config import LogGroupConfig
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.clients.aws_resolver_client import ResolverQueryLogConfig
-from src.data.aws_compliance_actions import ComplianceAction, ComplianceActionReport, CreateResolverQueryLogConfig, CreateResolverQueryLogConfigAssociation
+from src.data.aws_compliance_actions import (
+    ComplianceAction,
+    ComplianceActionReport,
+    CreateResolverQueryLogConfig,
+)
 from src.data.aws_scanner_exceptions import AwsScannerException
 from tests import _raise
 from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
@@ -115,15 +117,23 @@ def test_apply_create_query_log_action() -> None:
     route53_client.create_query_logging_config = Mock()
     iam: AwsIamClient = Mock(spec=AwsIamClient)
     zone_id: str = "zoneId"
-    create_query_log_action(route53_client=route53_client, iam=iam, log_group_config=Config().logs_route53_query_log_group_config(), zone_id=zone_id)._apply()
+    create_query_log_action(
+        route53_client=route53_client,
+        iam=iam,
+        log_group_config=Config().logs_route53_query_log_group_config(),
+        zone_id=zone_id,
+    )._apply()
     route53_client.create_query_logging_config.assert_called_once_with(
-        "zoneId", f"arn:aws:logs:us-east-1:account_id:log-group:{Config().logs_route53_query_log_group_config().logs_group_name}"
+        "zoneId",
+        f"arn:aws:logs:us-east-1:account_id:log-group:{Config().logs_route53_query_log_group_config().logs_group_name}",
     )
 
 
 def test_apply_put_resource_policy_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    put_route53_log_group_resource_policy_action(log_group_config=Config().logs_route53_query_log_group_config(), logs=logs)._apply()
+    put_route53_log_group_resource_policy_action(
+        log_group_config=Config().logs_route53_query_log_group_config(), logs=logs
+    )._apply()
     logs.put_resource_policy.assert_called_once_with(
         policy_name="route53_query_logs_to_cloudwatch_logs",
         policy_document=resource_policy_document(),
@@ -138,12 +148,12 @@ def test_plan_create_flow_log_action() -> None:
 
 
 def test_plan_create_query_log_action() -> None:
-    
+
     expected = compliance_action_report(
         description="Create log group",
         details={"zone_id": "zoneId", "log_group_name": Config().logs_route53_query_log_group_config().logs_group_name},
     )
-   
+
     assert expected == create_query_log_action(log_group_config=Config().logs_route53_query_log_group_config()).plan()
 
 
@@ -152,7 +162,12 @@ def test_plan_put_resource_policy_action() -> None:
         description="Put route53 log group resource policy",
         details={"policy_name": "route53_query_logs_to_cloudwatch_logs"},
     )
-    assert expected == put_route53_log_group_resource_policy_action(log_group_config= Config().logs_route53_query_log_group_config()).plan()
+    assert (
+        expected
+        == put_route53_log_group_resource_policy_action(
+            log_group_config=Config().logs_route53_query_log_group_config()
+        ).plan()
+    )
 
 
 def test_apply_create_flow_log_delivery_role_action() -> None:
@@ -196,7 +211,7 @@ def test_plan_create_central_vpc_log_group_action() -> None:
     expected = compliance_action_report(description="Create log group", details=dict(log_group_name="/vpc/flow_log"))
     log_group_config = Config().logs_vpc_flow_log_group_config()
     log_group_config.logs_group_name = "/vpc/flow_log"
-    assert expected == create_log_group_action(log_group_config = log_group_config).plan()
+    assert expected == create_log_group_action(log_group_config=log_group_config).plan()
 
 
 def test_plan_create_route53_log_group_action() -> None:
@@ -218,8 +233,8 @@ def test_apply_create_route53_log_group_action() -> None:
 
 def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    
-    log_group_config=Config().logs_vpc_flow_log_group_config()
+
+    log_group_config = Config().logs_vpc_flow_log_group_config()
     put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=logs)._apply()
     logs.put_subscription_filter.assert_called_once_with(
         log_group_name="/vpc/flow_log",
@@ -230,15 +245,12 @@ def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
 
 
 def test_plan_put_central_vpc_log_group_subscription_filter_action() -> None:
-    log_group_config=Config().logs_vpc_flow_log_group_config()
+    log_group_config = Config().logs_vpc_flow_log_group_config()
     expected = compliance_action_report(
-        description=f"Put central /vpc/flow_log log group subscription filter",
-        details=dict(log_group_name="/vpc/flow_log", destination_arn="arn:aws:logs:::destination:central"),
+        description="Put central /vpc/flow_log log group subscription filter",
+        details={"log_group_name": "/vpc/flow_log", "destination_arn": "arn:aws:logs:::destination:central"},
     )
-    assert (
-        expected
-        == put_vpc_log_group_subscription_filter_action(log_group_config= log_group_config).plan()
-    )
+    assert expected == put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config).plan()
 
 
 def test_apply_delete_vpc_log_group_subscription_filter_action() -> None:
@@ -257,92 +269,84 @@ def test_apply_delete_vpc_log_group_subscription_filter_action() -> None:
 
 def test_plan_delete_vpc_log_group_subscription_filter_action() -> None:
     expected = compliance_action_report(
-        description=f"Delete central /vpc/flow_log_sub_filter log group subscription filter",
+        description="Delete central /vpc/flow_log_sub_filter log group subscription filter",
         details=dict(log_group_name="/vpc/flow_log", subscription_filter_name="/vpc/flow_log_sub_filter"),
     )
-    assert (
-        expected
-        == delete_vpc_log_group_subscription_filter_action(
-            Config().logs_vpc_flow_log_group_config()
-        ).plan()
-    )
+    assert expected == delete_vpc_log_group_subscription_filter_action(Config().logs_vpc_flow_log_group_config()).plan()
 
 
 def test_plan_put_vpc_log_group_retention_policy_action() -> None:
-    log_group_config =  Config().logs_vpc_flow_log_group_config()
-    
+    log_group_config = Config().logs_vpc_flow_log_group_config()
+
     assert (
         compliance_action_report(
             description=f"Put {log_group_config.logs_group_name} log group retention policy",
             details={"log_group_name": log_group_config.logs_group_name, "retention_days": 14},
         )
-        == put_log_group_retention_policy_action(
-           log_group_config=log_group_config
-        ).plan()
+        == put_log_group_retention_policy_action(log_group_config=log_group_config).plan()
     )
 
 
 def test_plan_put_route53_log_group_retention_policy_action() -> None:
-    log_group_config= Config().logs_route53_query_log_group_config()
+    log_group_config = Config().logs_route53_query_log_group_config()
     log_group_config.logs_group_retention_policy_days = 5
     assert (
         compliance_action_report(
             description=f"Put {log_group_config.logs_group_name} log group retention policy",
             details={"log_group_name": log_group_config.logs_group_name, "retention_days": 5},
         )
-        == put_log_group_retention_policy_action(
-           log_group_config
-        ).plan()
+        == put_log_group_retention_policy_action(log_group_config).plan()
     )
 
 
 def test_apply_put_route53_log_group_retention_policy_action() -> None:
     logs = Mock()
-    log_group_config= Config().logs_route53_query_log_group_config()
+    log_group_config = Config().logs_route53_query_log_group_config()
     log_group_config.logs_group_retention_policy_days = 5
     put_log_group_retention_policy_action(
         log_group_config=log_group_config,
         logs=logs,
     ).apply()
-    logs.put_retention_policy.assert_called_once_with(log_group_name= log_group_config.logs_group_name, retention_days=5)
+    logs.put_retention_policy.assert_called_once_with(log_group_name=log_group_config.logs_group_name, retention_days=5)
 
 
 def test_apply_put_vpc_log_group_retention_policy_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    log_group_config= Config().logs_vpc_flow_log_group_config()
+    log_group_config = Config().logs_vpc_flow_log_group_config()
     log_group_config.logs_group_retention_policy_days = 14
     put_log_group_retention_policy_action(
         log_group_config=log_group_config,
         logs=logs,
     ).apply()
-    logs.put_retention_policy.assert_called_once_with(log_group_name=log_group_config.logs_group_name, retention_days=14)
+    logs.put_retention_policy.assert_called_once_with(
+        log_group_name=log_group_config.logs_group_name, retention_days=14
+    )
 
 
 def test_apply_tag_route53_log_group_action() -> None:
     logs = Mock()
-    log_group_config= Config().logs_route53_query_log_group_config()
+    log_group_config = Config().logs_route53_query_log_group_config()
     tag_log_group_action(
         log_group_config,
         logs=logs,
     ).apply()
-    logs.tag_log_group.assert_called_once_with(log_group_name= log_group_config.logs_group_name, tags=PLATSEC_SCANNER_TAGS)
+    logs.tag_log_group.assert_called_once_with(
+        log_group_name=log_group_config.logs_group_name, tags=PLATSEC_SCANNER_TAGS
+    )
 
 
 def test_plan_tag_route53_log_group_action() -> None:
-    log_group_config= Config().logs_route53_query_log_group_config()
+    log_group_config = Config().logs_route53_query_log_group_config()
     assert (
         compliance_action_report(
             description="Tag central log group",
-            details={"log_group_name": log_group_config.logs_group_name , "tags": PLATSEC_SCANNER_TAGS},
+            details={"log_group_name": log_group_config.logs_group_name, "tags": PLATSEC_SCANNER_TAGS},
         )
-        == tag_log_group_action(
-            log_group_config
-        ).plan()
+        == tag_log_group_action(log_group_config).plan()
     )
 
 
 def test_plan_tag_vpc_log_group_action() -> None:
-    log_group_config= Config().logs_vpc_flow_log_group_config()
     assert (
         compliance_action_report(
             description="Tag central log group",
@@ -356,17 +360,15 @@ def test_plan_tag_vpc_log_group_action() -> None:
                 ],
             },
         )
-        == tag_log_group_action(
-            log_group_config= Config().logs_vpc_flow_log_group_config()
-        ).plan()
+        == tag_log_group_action(log_group_config=Config().logs_vpc_flow_log_group_config()).plan()
     )
 
 
 def test_apply_tag_vpc_log_group_action() -> None:
-    log_group_config= Config().logs_vpc_flow_log_group_config()
+    log_group_config = Config().logs_vpc_flow_log_group_config()
     logs = Mock(spec=AwsLogsClient)
     tag_log_group_action(
-       log_group_config,
+        log_group_config,
         logs=logs,
     )._apply()
     logs.tag_log_group.assert_called_once_with(
@@ -423,54 +425,48 @@ def test_apply_update_password_policy_action() -> None:
     iam = Mock(spec=AwsIamClient)
     update_password_policy_action(iam=iam)._apply()
     iam.update_account_password_policy.assert_called_once_with(password_policy())
-    
+
+
 def test_apply_create_resolver_query_log_config_with_existing_query_log_config() -> None:
     log = Mock()
-    resolver= Mock()
+    resolver = Mock()
     log_group_config = Mock()
-    
-    query_config= ResolverQueryLogConfig( name= 'name', id='id', arn= 'arn', destination_arn = 'destination_arn')
-    
+
+    query_config = ResolverQueryLogConfig(name="name", id="id", arn="arn", destination_arn="destination_arn")
+
     log.find_log_group = Mock()
-    resolver.list_resolver_query_log_configs= Mock(return_value= [query_config])
+    resolver.list_resolver_query_log_configs = Mock(return_value=[query_config])
     resolver.create_resolver_query_log_config = Mock()
-    CreateResolverQueryLogConfig(log= log, resolver=resolver, log_group_config=log_group_config)._apply()
-    
-    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name= "query_log_config_name")
+    CreateResolverQueryLogConfig(log=log, resolver=resolver, log_group_config=log_group_config)._apply()
+
+    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name="query_log_config_name")
     resolver.create_resolver_query_log_config.assert_not_called()
-    
-    
+
+
 def test_apply_create_resolver_query_log_config_with_no_existing_query_log_config() -> None:
     log = Mock()
-    resolver= Mock()
+    resolver = Mock()
     log_group_config = Mock()
-    
+
     log.find_log_group = Mock()
-    resolver.list_resolver_query_log_configs= Mock(return_value= [])
+    resolver.list_resolver_query_log_configs = Mock(return_value=[])
     resolver.create_resolver_query_log_config = Mock()
-    CreateResolverQueryLogConfig(log= log, resolver=resolver, log_group_config=log_group_config)._apply()
-    
-    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name= "query_log_config_name")
+    CreateResolverQueryLogConfig(log=log, resolver=resolver, log_group_config=log_group_config)._apply()
+
+    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name="query_log_config_name")
     resolver.create_resolver_query_log_config.assert_called_once()
-    
+
 
 def test_plan_create_resolver_query_log_config() -> None:
     log = Mock()
-    resolver= Mock()
+    resolver = Mock()
     log_group_config = Config().logs_vpc_dns_log_group_config()
-    
-    expected_action = ComplianceActionReport(description="Create Resolver Query Log Config", details= {"log_group_name" : log_group_config.logs_group_name})
-    
-    assert expected_action == CreateResolverQueryLogConfig(log= log, resolver=resolver, log_group_config=log_group_config).plan()
 
-def test_plan_create_resolver_query_log_config_association_constructor() -> None:
-    log = Mock()
-    resolver= Mock()
-    vpc = Mock()
-    log_group_config = Config().logs_vpc_dns_log_group_config()
-    
-    resolver_action = CreateResolverQueryLogConfigAssociation(log= log, resolver=resolver, log_group_config= log_group_config, vpc=vpc)
-    
-    assert resolver_action.log == log
-    assert resolver_action.resolver == resolver
-    assert resolver_action.vpc == vpc
+    expected_action = ComplianceActionReport(
+        description="Create Resolver Query Log Config", details={"log_group_name": log_group_config.logs_group_name}
+    )
+
+    assert (
+        expected_action
+        == CreateResolverQueryLogConfig(log=log, resolver=resolver, log_group_config=log_group_config).plan()
+    )

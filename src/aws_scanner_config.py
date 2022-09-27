@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import string
 import boto3
 import os
 import sys
@@ -19,12 +18,12 @@ CONFIG_FILE = "aws_scanner_config.ini"
 
 @dataclass
 class LogGroupConfig:
-    logs_group_name: string
-    logs_log_group_subscription_filter_name: string
-    logs_log_group_pattern: string
+    logs_group_name: str
+    logs_log_group_subscription_filter_name: str
+    logs_log_group_pattern: str
     logs_group_retention_policy_days: int
-    logs_log_group_destination: string
-    log_group_resource_policy_name: string
+    logs_log_group_destination: str
+    log_group_resource_policy_name: str
 
 
 class AwsScannerConfig:
@@ -148,7 +147,7 @@ class AwsScannerConfig:
 
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
-    
+
     def route53_resolver_role(self) -> str:
         return self._get_config("route53resolver", "role")
 
@@ -159,7 +158,7 @@ class AwsScannerConfig:
             logs_log_group_pattern=self._get_config("logs", "vpc_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "vpc_log_group_retention_policy_days")),
             logs_log_group_destination=self._get_config("logs", "vpc_log_group_destination"),
-            log_group_resource_policy_name=""
+            log_group_resource_policy_name="",
         )
 
     def logs_vpc_dns_log_group_config(self) -> LogGroupConfig:
@@ -169,7 +168,7 @@ class AwsScannerConfig:
             logs_log_group_pattern=self._get_config("logs", "vpc_dns_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "vpc_dns_log_group_retention_policy_days")),
             logs_log_group_destination=self._get_config("logs", "vpc_dns_log_group_destination"),
-            log_group_resource_policy_name= ""
+            log_group_resource_policy_name="",
         )
 
     def logs_route53_query_log_group_config(self) -> LogGroupConfig:
@@ -179,7 +178,7 @@ class AwsScannerConfig:
             logs_log_group_pattern=self._get_config("logs", "route53_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "route53_log_group_retention_policy_days")),
             logs_log_group_destination=self._get_config("logs", "route53_log_group_destination"),
-            log_group_resource_policy_name= self.logs_route53_log_group_resource_policy_name()
+            log_group_resource_policy_name=self.logs_route53_log_group_resource_policy_name(),
         )
 
     def logs_vpc_log_group_delivery_role(self) -> str:
