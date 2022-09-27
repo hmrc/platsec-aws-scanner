@@ -12,13 +12,7 @@ def test_list_query_log_configs() -> None:
     boto = Mock(
         list_resolver_query_log_configs=Mock(return_value=responses.LIST_QUERY_LOG_CONFIGS),
     )
-<<<<<<< HEAD
-    query_log_configs = AwsResolverClient(boto).list_resolver_query_log_configs("log_group_arn")
-    boto.list_resolver_query_log_configs.calledoncewith("log_group_arn")
-
-    assert [
-        ResolverQueryLogConfigs(name="scanner_query_log_name", arn="arn", destination_arn="log_group_arn"),
-=======
+    
     query_log_configs = AwsResolverClient(boto).list_resolver_query_log_configs()
     boto.list_resolver_query_log_configs.assert_called_once()
     id = "someid"
@@ -30,7 +24,6 @@ def test_list_query_log_configs() -> None:
         ResolverQueryLogConfig(
             name="scanner_query_log_name2", id=id, arn="somearn2", destination_arn="some_destination_arn2"
         ),
->>>>>>> 6469dabaa3597d6bb9952c2ff9c6b91cff19c59c
     ] == query_log_configs
 
 
@@ -39,9 +32,7 @@ def test_list_query_log_configs_failure() -> None:
         list_resolver_query_log_configs=Mock(side_effect=client_error("SomeError", "AccessDenied", "nope")),
     )
     with raises(LogsException, match="unable to run list_resolver_query_log_configs: An error occurred"):
-<<<<<<< HEAD
-        AwsResolverClient(boto).list_resolver_query_log_configs("log_group_arn")
-=======
+
         AwsResolverClient(boto).list_resolver_query_log_configs()
 
 
@@ -90,4 +81,4 @@ def test_delete_query_log_configs_failure() -> None:
     )
     with raises(LogsException, match="unable to delete_resolver_query_log_config with id 'someid'"):
         AwsResolverClient(boto).delete_resolver_query_log_config(id=id)
->>>>>>> 6469dabaa3597d6bb9952c2ff9c6b91cff19c59c
+

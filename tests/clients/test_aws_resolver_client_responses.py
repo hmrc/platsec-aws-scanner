@@ -6,14 +6,11 @@ LIST_QUERY_LOG_CONFIGS = {
             "Status": "CREATED",
             "ShareStatus": "NOT_SHARED",
             "AssociationCount": 123,
-            "Arn": "arn",
+            "Arn": "somearn",
             "Name": "scanner_query_log_name",
-            "DestinationArn": "log_group_arn",
+            "DestinationArn": "some_destination_arn",
             "CreatorRequestId": "203582384",
             "CreationTime": "a date string?",
-<<<<<<< HEAD
-        }
-=======
         },
         {
             "Id": "someid",
@@ -26,8 +23,7 @@ LIST_QUERY_LOG_CONFIGS = {
             "DestinationArn": "some_destination_arn2",
             "CreatorRequestId": "2035823843",
             "CreationTime": "a date string?",
-        },
->>>>>>> 6469dabaa3597d6bb9952c2ff9c6b91cff19c59c
+        }
     ]
 }
 

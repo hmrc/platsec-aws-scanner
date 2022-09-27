@@ -21,17 +21,13 @@ class AwsResolverClient:
         self.__logger = getLogger(self.__class__.__name__)
         self.__resolver = resolver
 
-<<<<<<< HEAD
-    def list_resolver_query_log_configs(self, log_group_arn) -> List[ResolverQueryLogConfigs]:
-=======
-    def list_resolver_query_log_configs(self) -> List[ResolverQueryLogConfig]:
->>>>>>> 6469dabaa3597d6bb9952c2ff9c6b91cff19c59c
+    def list_resolver_query_log_configs(self, ) -> List[ResolverQueryLogConfig]:
         try:
             response = self.__resolver.list_resolver_query_log_configs(Filters=[
                 {
                     'DestinationArn': 'string',
                     'Values': [
-                        log_group_arn,
+                        "",
                     ]
                 },
             ])
@@ -50,16 +46,8 @@ class AwsResolverClient:
             destination_arn=response["DestinationArn"],
         )
 
-<<<<<<< HEAD
 
-    def create_resolver_query_log_config(self, name: str, destination_arn: str,creator_request_id:str, tags: list[str] ) -> str:
-      return self.__resolver.create_resolver_query_log_config(
-            Name=name,
-            DestinationArn=destination_arn,
-            CreatorRequestId=creator_request_id,
-            Tags=tags
-        )
-=======
+
     def create_resolver_query_log_config(self, name: str, destination_arn: str) -> ResolverQueryLogConfig:
         try:
             response = self.__resolver.create_resolver_query_log_config(Name=name, DestinationArn=destination_arn)
@@ -76,4 +64,3 @@ class AwsResolverClient:
             self.__resolver.delete_resolver_query_log_config(ResolverQueryLogConfigId=id)
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to delete_resolver_query_log_config with id '{id}': {err}")
->>>>>>> 6469dabaa3597d6bb9952c2ff9c6b91cff19c59c
