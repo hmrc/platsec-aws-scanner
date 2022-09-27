@@ -65,6 +65,7 @@ from src.tasks.aws_audit_cloudtrail_task import AwsAuditCloudtrailTask
 from src.tasks.aws_audit_ec2_instances_task import AwsAuditEc2InstancesTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
+from src.tasks.aws_audit_vpc_dns_logs_task import AwsAuditVPCDnsLogsTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
 from src.tasks.aws_cloudtrail_task import AwsCloudTrailTask
@@ -503,6 +504,11 @@ def aws_audit_vpc_flow_logs_task(
     account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
 ) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
+
+def aws_audit_vpc_dns_logs_task(
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+) -> AwsAuditVPCDnsLogsTask:
+    return AwsAuditVPCDnsLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
 
 
 def log_group(

@@ -32,7 +32,7 @@ class AwsVpcClient:
         self.logs = logs
         self.config = config
         self.log_group = log_group
-        self.resolver= resolver
+        self.resolver = resolver
 
     def list_vpcs(self) -> Sequence[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self.ec2.list_vpcs()]
@@ -89,15 +89,15 @@ class AwsVpcClient:
         log_group_config=self.config.logs_vpc_dns_log_group_config()
         log_group_actions = self.log_group.log_group_enforcement_actions(log_group_config=log_group_config, with_subscription_filter=with_subscription_filter)
         resolver_query_log_config =self._resolver_query_log_config_enforcement_actions(log_group_config=log_group_config)
-        vpc_actions = [action for vpc in vpcs for action in self._vpc_resolver_query_log_config_associations_enforcement_actions(vpc)]
+        vpc_actions = [action for vpc in vpcs for action in self._vpc_resolver_query_log_config_associations_enforcement_actions(vpc=vpc, log_group_config=log_group_config)]
         return list(chain(log_group_actions, resolver_query_log_config, vpc_actions))
 
     def _resolver_query_log_config_enforcement_actions(self, log_group_config: LogGroupConfig) -> Sequence[ComplianceAction]:
-        return [CreateResolverQueryLogConfig(log_group=self.log_group, resolver= self.resolver, log_group_config= log_group_config)]
+        return [CreateResolverQueryLogConfig(log=self.logs, log_group_config=log_group_config, resolver=self.resolver)]
         
     
     def _vpc_resolver_query_log_config_associations_enforcement_actions(self, vpc: Vpc, log_group_config: LogGroupConfig) -> Sequence[ComplianceAction]:
-        return [CreateResolverQueryLogConfigAssociation(vpc=vpc, resolver= self.resolver, log_group_config= log_group_config)]
+        return [CreateResolverQueryLogConfigAssociation(log=self.logs, resolver=self.resolver, log_group_config=log_group_config, vpc=vpc)]
       
         
     def _vpc_flow_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
