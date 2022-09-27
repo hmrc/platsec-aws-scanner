@@ -140,6 +140,16 @@ class TestGetBotoClients(TestCase):
             role="kms_role",
         )
 
+    def test_get_route53_resolver_boto_client(self) -> None:
+        kms_account = account(identifier="887331665442", name="some_kms_account")
+        self.assert_get_client(
+            method_under_test="get_route53_resolver_boto_client",
+            method_args={"account": kms_account},
+            service="route53resolver",
+            target_account=kms_account,
+            role="route53resolver_role",
+        )
+        
     def test_get_cloudtrail_boto_client(self) -> None:
         cloudtrail_account = account(identifier="644355211788", name="some_cloudtrail_account")
         self.assert_get_client(
@@ -273,6 +283,15 @@ class TestGetClients(TestCase):
         ):
             kms_client = AwsClientFactory(self.mfa, self.username).get_kms_client(account())
             self.assertEqual(kms_client._kms, kms_boto_client)
+            
+    def test_getroute53_resolver_client(self, _: Mock) -> None:
+        route53_resolver__boto_client = Mock()
+        with patch(
+            f"{self.factory_path}.get_route53_resolver_boto_client",
+            side_effect=lambda acc: route53_resolver__boto_client if acc == account() else None,
+        ):
+            route53_resolver_client = AwsClientFactory(self.mfa, self.username).get_route53resolver_client(account())
+            self.assertEqual(route53_resolver_client.resolver, route53_resolver__boto_client)
 
     def test_get_cloudtrail_client(self, _: Mock) -> None:
         cloudtrail_boto_client = Mock()
