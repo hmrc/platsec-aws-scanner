@@ -1,11 +1,50 @@
 from pytest import raises
 from unittest.mock import Mock, call
 
+from src import Tag
 from src.clients.aws_logs_client import AwsLogsClient
 from src.data.aws_scanner_exceptions import LogsException
 
 from tests.clients import test_aws_logs_client_responses as responses
-from tests.test_types_generator import client_error, tag
+from tests.test_types_generator import client_error, tag, key, subscription_filter, log_group
+
+
+def test_find_log_group() -> None:
+    boto_logs = Mock(
+        describe_log_groups=Mock(return_value=responses.DESCRIBE_LOG_GROUPS_SINGLE_WITH_KMS),
+        describe_subscription_filters=Mock(side_effect=responses.DESCRIBE_SUBSCRIPTION_FILTERS_SINGLE),
+        list_tags_log_group=Mock(side_effect=responses.LIST_TAGS_LOG_GROUP),
+    )
+
+    expected_key = key(id="9")
+    mock_kms = Mock(
+        get_key=Mock(return_value=expected_key)
+    )
+
+    actual_log_group = AwsLogsClient(boto_logs, mock_kms).find_log_group("lg_2")
+
+    boto_logs.describe_log_groups.assert_called_once_with(logGroupNamePrefix="lg_2")
+    boto_logs.describe_subscription_filters.assert_has_calls([call(logGroupName="lg_2")])
+    mock_kms.get_key.assert_has_calls([call('9')])
+    assert actual_log_group == log_group(
+        name="lg_2",
+        kms_key_id=expected_key.id,
+        kms_key=expected_key,
+        retention_days=None,
+        stored_bytes=1234,
+        subscription_filters=[
+            subscription_filter(
+                filter_name="SecondFilter",
+                log_group_name="/vpc/flow_log_2",
+                filter_pattern="[account_id]",
+                destination_arn="arn:aws:logs:us-east-1:223322332233:destination:OtherDestination",
+            )
+        ],
+        tags=[
+            Tag(key='a_tag', value='a_value'),
+            Tag(key='another_tag', value='another_value')
+        ],
+    )
 
 
 def test_describe_log_groups() -> None:

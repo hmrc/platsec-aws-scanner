@@ -7,6 +7,27 @@ DESCRIBE_LOG_GROUPS = {
     ]
 }
 
+DESCRIBE_LOG_GROUPS_SINGLE_WITH_KMS = {
+    "logGroups": [
+        {"logGroupName": "lg_2", "kmsKeyId": "9", "storedBytes": 1234},
+    ]
+}
+
+DESCRIBE_SUBSCRIPTION_FILTERS_SINGLE = [
+    {
+        "subscriptionFilters": [
+            {
+                "filterName": "SecondFilter",
+                "logGroupName": "/vpc/flow_log_2",
+                "filterPattern": "[account_id]",
+                "destinationArn": "arn:aws:logs:us-east-1:223322332233:destination:OtherDestination",
+            }
+        ]
+    },
+]
+
+
+
 DESCRIBE_SUBSCRIPTION_FILTERS = [
     {
         "subscriptionFilters": [
