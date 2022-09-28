@@ -1,5 +1,5 @@
 LIST_QUERY_LOG_CONFIGS = {
-    "ResolverQueryLogConfig": [
+    "ResolverQueryLogConfigs": [
         {
             "Id": "someid",
             "OwnerId": 1234567890,

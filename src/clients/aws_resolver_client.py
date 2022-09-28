@@ -32,7 +32,7 @@ class AwsResolverClient:
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to run list_resolver_query_log_configs: {err}")
 
-        resolver_query_log_configs = response.get("ResolverQueryLogConfig", [])
+        resolver_query_log_configs = response["ResolverQueryLogConfigs"]
         return list(map(self.__to_resolver_query_log_config, resolver_query_log_configs))
 
     @staticmethod
