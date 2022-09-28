@@ -76,7 +76,7 @@ def test_init_config_from_file() -> None:
         "arn:aws:logs:::destination:some-dns-central"
         == config.logs_vpc_dns_log_group_config().logs_log_group_destination
     )
-    assert 16 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days
+    assert 14 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days
 
 
 @patch.dict(
