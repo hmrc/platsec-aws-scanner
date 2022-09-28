@@ -258,7 +258,7 @@ class AwsScannerConfig:
         return self._get_config("vpc_peering", "role")
 
     def resolver_dns_query_log_config_name(self) -> str:
-        return self._get_config("resolver", "dns_query_log_config_name")
+        return self._get_config("route53resolver", "dns_query_log_config_name")
 
     def _get_config(self, section: str, key: str) -> str:
         try:
