@@ -51,7 +51,9 @@ def test_create_query_log_configs() -> None:
         name=name, destination_arn=dest_arn, tags=tags
     )
 
-    boto.create_resolver_query_log_config.assert_called_once_with(Name=name, DestinationArn=dest_arn, tags=tags)
+    boto.create_resolver_query_log_config.assert_called_once_with(
+        Name=name, DestinationArn=dest_arn, Tags=[{"Key": "foo", "Value": "bar"}]
+    )
     assert (
         ResolverQueryLogConfig(name=name, id=id, arn="some arn that you can use later", destination_arn=dest_arn)
         == query_log_config

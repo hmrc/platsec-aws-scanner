@@ -47,9 +47,10 @@ class AwsResolverClient:
     def create_resolver_query_log_config(
         self, name: str, destination_arn: str, tags: Sequence[Tag]
     ) -> ResolverQueryLogConfig:
+        tags_dictionary = [tag.to_dict() for tag in tags]
         try:
             response = self.resolver.create_resolver_query_log_config(
-                Name=name, DestinationArn=destination_arn, tags=tags
+                Name=name, DestinationArn=destination_arn, Tags=tags_dictionary
             )
             return self.__to_resolver_query_log_config(response["ResolverQueryLogConfig"])
 
