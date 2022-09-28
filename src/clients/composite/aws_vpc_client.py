@@ -90,6 +90,8 @@ class AwsVpcClient:
     def enforcement_dns_log_actions(
         self, vpcs: Sequence[Vpc], with_subscription_filter: bool
     ) -> Sequence[ComplianceAction]:
+
+        print("I'm at enforcement_dns_log_actions")
         # if not vpcs:
         return list()
 
