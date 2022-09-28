@@ -140,7 +140,6 @@ class AwsScannerArgumentParser:
         self._add_audit_vpc_peering_command(subparsers)
         self._add_audit_ec2_instances_command(subparsers)
         self._add_audit_route53_command(subparsers)
-        self._add_enable_route53_logging_command(subparsers)
         self._add_audit_route53_query_logs(subparsers)
         return parser
 
@@ -264,13 +263,6 @@ class AwsScannerArgumentParser:
     def _add_audit_route53_command(self, subparsers: Any) -> None:
         desc = "list public zones"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
-        self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
-
-    def _add_enable_route53_logging_command(self, subparsers: Any) -> None:
-        desc = "enable route53 logging"
-        audit_parser = subparsers.add_parser(AwsScannerCommands.enable_route53_logging, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
