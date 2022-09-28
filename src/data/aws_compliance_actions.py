@@ -11,7 +11,7 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_resolver_client import AwsResolverClient
-from src.data.aws_scanner_exceptions import AwsScannerException
+from src.data.aws_scanner_exceptions import AwsScannerException, LogsException
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_organizations_types import Account
 
@@ -84,23 +84,31 @@ class CreateResolverQueryLogConfig(ComplianceAction):
     log_group_config: LogGroupConfig
     log: AwsLogsClient
     resolver: AwsResolverClient
+    query_log_config_name: str
 
-    def __init__(self, log: AwsLogsClient, resolver: AwsResolverClient, log_group_config: LogGroupConfig):
+    def __init__(
+        self,
+        logs: AwsLogsClient,
+        resolver: AwsResolverClient,
+        log_group_config: LogGroupConfig,
+        query_log_config_name: str,
+    ):
         super().__init__("Create Resolver Query Log Config")
         self.log_group_config = log_group_config
-        self.log = log
+        self.log = logs
         self.resolver = resolver
+        self.query_log_config_name = query_log_config_name
 
     def _apply(self) -> None:
-        # log_group = self.log.find_log_group(self.log_group_config.logs_group_name)
-        resolver_config = self.resolver.list_resolver_query_log_configs(query_log_config_name="query_log_config_name")
-        if not resolver_config:
-            self.resolver.create_resolver_query_log_config(
-                name="vpc_dns_resolver",
-                destination_arn="log_group.arn",
-                # creator_request_id="scanner",
-                # tags=PLATSEC_SCANNER_TAGS,
+        log_group = self.log.find_log_group(self.log_group_config.logs_group_name)
+        if log_group is None:
+            raise LogsException(
+                f"unable to find log group '{self.log_group_config.logs_group_name}'"
+                ": this should have been created in another action before this one"
             )
+        self.resolver.create_resolver_query_log_config(
+            name=self.query_log_config_name, destination_arn=str(log_group.arn), tags=PLATSEC_SCANNER_TAGS
+        )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(

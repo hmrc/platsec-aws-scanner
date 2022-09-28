@@ -16,7 +16,6 @@ class AwsAuditVPCDnsLogsTask(AwsTask):
     def _run_task(self, client: AwsVpcClient) -> Dict[Any, Any]:
         vpcs = client.list_vpcs()
         actions = client.enforcement_dns_log_actions(vpcs, self.with_subscription_filter)
-        print(">>>>>>>", actions)
         if self.enforce:
             apply = [a.apply() for a in actions]
             return {"vpcs": vpcs, "enforcement_actions": apply}

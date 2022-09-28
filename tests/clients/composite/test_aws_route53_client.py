@@ -67,7 +67,9 @@ class TestAwsRoute53Client(TestCase):
 
         log_group_config = Config().logs_route53_query_log_group_config()
 
-        expectedLogGroup = LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id", retention_days=0)
+        expectedLogGroup = LogGroup(
+            name="logs_route53_log_group_name", kms_key_id="kms_key_id", retention_days=0, arn=""
+        )
 
         logs.find_log_group = Mock(side_effect=lambda name: expectedLogGroup)
 
@@ -137,7 +139,9 @@ class TestAwsRoute53Client(TestCase):
         logs.is_central_log_group = Mock(return_value=False)
         log_group = AwsLogGroupClient(logs=logs)
 
-        expectedLogGroup = LogGroup(name="logs_route53_log_group_name", kms_key_id="kms_key_id", retention_days=0)
+        expectedLogGroup = LogGroup(
+            name="logs_route53_log_group_name", arn="foo", kms_key_id="kms_key_id", retention_days=0
+        )
 
         logs.find_log_group = Mock(side_effect=lambda name: expectedLogGroup)
 

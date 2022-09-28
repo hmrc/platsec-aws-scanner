@@ -5,7 +5,7 @@ from _pytest.python_api import raises
 from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfig
 from src.data.aws_scanner_exceptions import LogsException
 from tests.clients import test_aws_resolver_client_responses as responses
-from tests.test_types_generator import client_error
+from tests.test_types_generator import client_error, tag
 
 
 def test_list_query_log_configs() -> None:
@@ -46,9 +46,12 @@ def test_create_query_log_configs() -> None:
         create_resolver_query_log_config=Mock(return_value=responses.CREATE_QUERY_LOG_CONFIG),
     )
 
-    query_log_config = AwsResolverClient(boto).create_resolver_query_log_config(name=name, destination_arn=dest_arn)
+    tags = [tag("foo", "bar")]
+    query_log_config = AwsResolverClient(boto).create_resolver_query_log_config(
+        name=name, destination_arn=dest_arn, tags=tags
+    )
 
-    boto.create_resolver_query_log_config.assert_called_once_with(Name=name, DestinationArn=dest_arn)
+    boto.create_resolver_query_log_config.assert_called_once_with(Name=name, DestinationArn=dest_arn, tags=tags)
     assert (
         ResolverQueryLogConfig(name=name, id=id, arn="some arn that you can use later", destination_arn=dest_arn)
         == query_log_config
@@ -62,7 +65,9 @@ def test_create_query_log_configs_failure() -> None:
     with raises(
         LogsException, match="unable to create_resolver_query_log_config with name 'fail1' and destination_arn 'fail2'"
     ):
-        AwsResolverClient(boto).create_resolver_query_log_config(name="fail1", destination_arn="fail2")
+        AwsResolverClient(boto).create_resolver_query_log_config(
+            name="fail1", destination_arn="fail2", tags=[tag("foo", "bar")]
+        )
 
 
 def test_delete_query_log_configs() -> None:

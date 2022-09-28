@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from logging import getLogger
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Sequence
 
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
+from src.data.aws_common_types import Tag
 from src.data.aws_scanner_exceptions import LogsException
 
 
@@ -43,9 +44,13 @@ class AwsResolverClient:
             destination_arn=response["DestinationArn"],
         )
 
-    def create_resolver_query_log_config(self, name: str, destination_arn: str) -> ResolverQueryLogConfig:
+    def create_resolver_query_log_config(
+        self, name: str, destination_arn: str, tags: Sequence[Tag]
+    ) -> ResolverQueryLogConfig:
         try:
-            response = self.resolver.create_resolver_query_log_config(Name=name, DestinationArn=destination_arn)
+            response = self.resolver.create_resolver_query_log_config(
+                Name=name, DestinationArn=destination_arn, tags=tags
+            )
             return self.__to_resolver_query_log_config(response["ResolverQueryLogConfig"])
 
         except (BotoCoreError, ClientError) as err:

@@ -20,13 +20,13 @@ class LogGroup:
     def __init__(
         self,
         name: str,
+        arn: str,
         kms_key_id: Optional[str] = None,
         kms_key: Optional[Key] = None,
         retention_days: Optional[int] = None,
         stored_bytes: Optional[int] = None,
         subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
         tags: Optional[Sequence[Tag]] = None,
-        arn: Optional[str] = None,
     ):
         self.name = name
         self.kms_key_id = kms_key_id
@@ -45,10 +45,10 @@ class LogGroup:
 def to_log_group(lg: Dict[str, Any]) -> LogGroup:
     return LogGroup(
         name=lg["logGroupName"],
+        arn=lg["arn"],
         kms_key_id=lg.get("kmsKeyId"),
         retention_days=lg.get("retentionInDays"),
         stored_bytes=lg.get("storedBytes"),
-        arn=lg.get("arn"),
     )
 
 

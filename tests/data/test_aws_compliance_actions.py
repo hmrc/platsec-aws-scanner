@@ -1,19 +1,22 @@
 from logging import ERROR
 from typing import Any
 from unittest.mock import Mock, call
+
+import pytest
+
 from src import PLATSEC_SCANNER_TAGS
 from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
-from src.clients.aws_resolver_client import ResolverQueryLogConfig
+from src.clients.aws_resolver_client import AwsResolverClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
     ComplianceActionReport,
     CreateResolverQueryLogConfig,
 )
-from src.data.aws_scanner_exceptions import AwsScannerException
+from src.data.aws_scanner_exceptions import AwsScannerException, LogsException
 from tests import _raise
 from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
 from tests.test_types_generator import (
@@ -37,6 +40,7 @@ from tests.test_types_generator import (
     create_query_log_action,
     resource_policy_document,
     put_route53_log_group_resource_policy_action,
+    log_group,
 )
 
 
@@ -427,34 +431,39 @@ def test_apply_update_password_policy_action() -> None:
     iam.update_account_password_policy.assert_called_once_with(password_policy())
 
 
-def test_apply_create_resolver_query_log_config_with_existing_query_log_config() -> None:
-    log = Mock()
-    resolver = Mock()
+def test_apply_create_resolver_query_log_config() -> None:
+    log = Mock(spec_set=AwsLogsClient)
+    resolver = Mock(spec_set=AwsResolverClient)
     log_group_config = Mock()
-
-    query_config = ResolverQueryLogConfig(name="name", id="id", arn="arn", destination_arn="destination_arn")
-
-    log.find_log_group = Mock()
-    resolver.list_resolver_query_log_configs = Mock(return_value=[query_config])
-    resolver.create_resolver_query_log_config = Mock()
-    CreateResolverQueryLogConfig(log=log, resolver=resolver, log_group_config=log_group_config)._apply()
-
-    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name="query_log_config_name")
-    resolver.create_resolver_query_log_config.assert_not_called()
-
-
-def test_apply_create_resolver_query_log_config_with_no_existing_query_log_config() -> None:
-    log = Mock()
-    resolver = Mock()
-    log_group_config = Mock()
-
-    log.find_log_group = Mock()
+    log_group_arn = "test-arn-string"
+    log.find_log_group = Mock(return_value=log_group(arn=log_group_arn))
     resolver.list_resolver_query_log_configs = Mock(return_value=[])
     resolver.create_resolver_query_log_config = Mock()
-    CreateResolverQueryLogConfig(log=log, resolver=resolver, log_group_config=log_group_config)._apply()
 
-    resolver.list_resolver_query_log_configs.assert_called_with(query_log_config_name="query_log_config_name")
-    resolver.create_resolver_query_log_config.assert_called_once()
+    CreateResolverQueryLogConfig(
+        logs=log, resolver=resolver, log_group_config=log_group_config, query_log_config_name="foo"
+    )._apply()
+
+    resolver.create_resolver_query_log_config.assert_called_with(
+        name="foo", destination_arn=log_group_arn, tags=PLATSEC_SCANNER_TAGS
+    )
+
+
+def test_apply_create_resolver_query_log_config_missing_log_group_destination() -> None:
+    log = Mock(spec_set=AwsLogsClient)
+    log_group_config = Mock(logs_group_name="test-name")
+    log.find_log_group = Mock(return_value=None)
+
+    with pytest.raises(
+        LogsException,
+        match="unable to find log group 'test-name': this should have been created in another action before this one",
+    ):
+        CreateResolverQueryLogConfig(
+            logs=log,
+            resolver=Mock(spec_set=AwsResolverClient),
+            log_group_config=log_group_config,
+            query_log_config_name="foo",
+        )._apply()
 
 
 def test_plan_create_resolver_query_log_config() -> None:
@@ -468,5 +477,7 @@ def test_plan_create_resolver_query_log_config() -> None:
 
     assert (
         expected_action
-        == CreateResolverQueryLogConfig(log=log, resolver=resolver, log_group_config=log_group_config).plan()
+        == CreateResolverQueryLogConfig(
+            logs=log, resolver=resolver, log_group_config=log_group_config, query_log_config_name="foo"
+        ).plan()
     )

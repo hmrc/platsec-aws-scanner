@@ -522,6 +522,7 @@ def log_group(
     subscription_filters: Optional[Sequence[SubscriptionFilter]] = None,
     tags: Optional[Sequence[Tag]] = PLATSEC_SCANNER_TAGS,
     default_kms_key: bool = False,
+    arn: str = "some-arn",
 ) -> LogGroup:
     if default_kms_key:
         kms_key_id = key().id
@@ -534,6 +535,7 @@ def log_group(
         stored_bytes=stored_bytes,
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
         tags=tags,
+        arn=arn,
     )
 
 
@@ -775,7 +777,7 @@ def delete_query_log_action(
     return DeleteQueryLogAction(route53_client=route53_client, hosted_zone_id=hosted_zone_id)
 
 
-def expected_resolver_query_log_config(config: LogGroupConfig) -> ResolverQueryLogConfig:
+def expected_resolver_query_log_config(config: LogGroupConfig, name: str) -> ResolverQueryLogConfig:
     return ResolverQueryLogConfig(
-        name=config.logs_group_name, id="some-id", arn="somearn2", destination_arn=config.logs_log_group_destination
+        name=name, id="some-id", arn="somearn2", destination_arn=config.logs_log_group_destination
     )

@@ -26,6 +26,7 @@ def test_find_log_group() -> None:
     mock_kms.get_key.assert_has_calls([call("9")])
     assert actual_log_group == log_group(
         name="lg_2",
+        arn="some-arn2",
         kms_key_id=expected_key.id,
         kms_key=expected_key,
         retention_days=None,

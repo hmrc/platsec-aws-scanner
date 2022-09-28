@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import unittest
-
-from typing import Sequence, Optional, Type, Dict, Any
+from typing import Sequence, Optional, Type, Dict, Any, List
 from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfig
 
@@ -18,6 +16,11 @@ from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_compliance_actions import (
     ComplianceAction,
+    CreateLogGroupAction,
+    PutLogGroupRetentionPolicyAction,
+    TagLogGroupAction,
+    PutLogGroupSubscriptionFilterAction,
+    CreateResolverQueryLogConfig,
 )
 
 from tests.test_types_generator import (
@@ -409,27 +412,58 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
 
 class TestDNSEnforcementActions(TestCase):
-    @unittest.skip("TODO will always create new resources at the moment")
-    def test_crate_do_nothing_when_all_correct(self) -> None:
-        TestCase.maxDiff = None
+    def test_new_resources_when_nothing_exists(self) -> None:
+        config = Config()
+        log_config = config.logs_vpc_dns_log_group_config()
+
         client = AwsVpcClientBuilder()
-        config = Config().logs_vpc_dns_log_group_config()
-        expected_subscription = expected_subscription_filter(config)
+        client.with_log_groups([None])
+        client.with_resolver_query_log_config([])
+        vpc_client = client.build()
+
+        actual_response = vpc_client.enforcement_dns_log_actions([vpc()], with_subscription_filter=True)
+        expected_response = [
+            CreateLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
+            PutLogGroupRetentionPolicyAction(logs=vpc_client.logs, log_group_config=log_config),
+            TagLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
+            PutLogGroupSubscriptionFilterAction(logs=vpc_client.logs, log_group_config=log_config),
+            CreateResolverQueryLogConfig(
+                logs=vpc_client.logs,
+                resolver=vpc_client.resolver,
+                log_group_config=log_config,
+                query_log_config_name=config.resolver_dns_query_log_config_name(),
+            ),
+        ]
+        client.resolver.list_resolver_query_log_configs.assert_called_with(
+            query_log_config_name=config.resolver_dns_query_log_config_name()
+        )
+
+        self.assertEqual(len(expected_response), len(actual_response))
+        self.assertEqual(expected_response, actual_response)
+
+    def test_crate_do_nothing_when_all_correct(self) -> None:
+        client = AwsVpcClientBuilder()
+        config = Config()
+        log_config = config.logs_vpc_dns_log_group_config()
+        expected_subscription = expected_subscription_filter(log_config)
         client.with_log_groups(
             [
                 log_group(
                     subscription_filters=[expected_subscription],
-                    name=config.logs_group_name,
-                    retention_days=config.logs_group_retention_policy_days,
+                    name=log_config.logs_group_name,
+                    retention_days=log_config.logs_group_retention_policy_days,
                 )
             ]
         )
-        client.with_roles([role()])
-        client.with_resolver_query_log_config(expected_resolver_query_log_config(config))
+        client.with_resolver_query_log_config(
+            [expected_resolver_query_log_config(log_config, config.resolver_dns_query_log_config_name())]
+        )
         self.assertEqual([], client.build().enforcement_dns_log_actions([vpc()], with_subscription_filter=True))
 
     def test_no_dns_enforcement_actions_required_when_no_vpc_exists(self) -> None:
         client = AwsVpcClientBuilder()
+        client.with_log_groups([None])
+        client.with_resolver_query_log_config([])
         self.assertEqual([], client.build().enforcement_dns_log_actions(vpcs=[], with_subscription_filter=False))
         self.assertEqual([], client.build().enforcement_dns_log_actions(vpcs=[], with_subscription_filter=True))
 
@@ -506,7 +540,7 @@ class AwsVpcClientBuilder(TestCase):
         self.with_log_groups([log_group(kms_key_id=key().id)])
         return self
 
-    def with_log_groups(self, log_groups: Sequence[LogGroup]) -> AwsVpcClientBuilder:
+    def with_log_groups(self, log_groups: Sequence[Optional[LogGroup]]) -> AwsVpcClientBuilder:
         self.logs.find_log_group.side_effect = log_groups
         return self
 
@@ -593,8 +627,10 @@ class AwsVpcClientBuilder(TestCase):
         self.ec2.create_flow_logs.return_value = None
         return self
 
-    def with_resolver_query_log_config(self, resolver_query_log_config: ResolverQueryLogConfig) -> AwsVpcClientBuilder:
-        def list_resolver_query_log_configs() -> ResolverQueryLogConfig:
+    def with_resolver_query_log_config(
+        self, resolver_query_log_config: List[ResolverQueryLogConfig]
+    ) -> AwsVpcClientBuilder:
+        def list_resolver_query_log_configs(query_log_config_name: str) -> List[ResolverQueryLogConfig]:
             return resolver_query_log_config
 
         self.resolver.list_resolver_query_log_configs.side_effect = list_resolver_query_log_configs
