@@ -65,3 +65,38 @@ class AwsResolverClient:
             self.resolver.delete_resolver_query_log_config(ResolverQueryLogConfigId=id)
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to delete_resolver_query_log_config with id '{id}': {err}")
+
+    def associate_resolver_query_log_config(self, resolver_query_log_config_id: str, resource_id: str) -> None:
+        try:
+            self.resolver.associate_resolver_query_log_config(
+                ResolverQueryLogConfigId=resolver_query_log_config_id, ResourceId=resource_id
+            )
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(
+                f"unable to associate_resolver_query_log_config with from '{resolver_query_log_config_id}': {err}"
+            )
+
+    def disassociate_resolver_query_log_config(self, resolver_query_log_config_id: str, resource_id: str) -> None:
+        try:
+            self.resolver.disassociate_resolver_query_log_config(
+                ResolverQueryLogConfigId=resolver_query_log_config_id, ResourceId=resource_id
+            )
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(
+                f"unable to disassociate_resolver_query_log_config with from '{resolver_query_log_config_id}': {err}"
+            )
+
+    def query_log_config_association_exists(self, vpc_id: str, resolver_query_log_config_id: str) -> bool:
+        try:
+            result = self.resolver.list_resolver_query_log_config_associations(
+                Filters=[
+                    {"Name": "ResolverQueryLogConfigId", "Values": [resolver_query_log_config_id]},
+                    {"Name": "ResourceId", "Values": [vpc_id]},
+                ]
+            )
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(
+                "unable to list_resolver_query_log_config_associations"
+                f" with config id '{resolver_query_log_config_id}' and vpc id {vpc_id}: {err}"
+            )
+        return bool(result["TotalFilteredCount"] > 0)

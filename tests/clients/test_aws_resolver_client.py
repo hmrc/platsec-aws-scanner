@@ -90,3 +90,110 @@ def test_delete_query_log_configs_failure() -> None:
     )
     with raises(LogsException, match="unable to delete_resolver_query_log_config with id 'someid'"):
         AwsResolverClient(boto).delete_resolver_query_log_config(id=id)
+
+
+def test_associate_resolver_query_log_config() -> None:
+    id = "someid"
+    resource_id = "resource_id"
+    boto = Mock(
+        associate_resolver_query_log_config=Mock(),
+    )
+
+    AwsResolverClient(boto).associate_resolver_query_log_config(
+        resolver_query_log_config_id=id, resource_id=resource_id
+    )
+
+    boto.associate_resolver_query_log_config.assert_called_once_with(
+        ResolverQueryLogConfigId=id, ResourceId=resource_id
+    )
+
+
+def test_associate_resolver_query_log_config_failure() -> None:
+    id = "someid"
+    resource_id = "resource_id"
+    boto = Mock(
+        associate_resolver_query_log_config=Mock(side_effect=client_error("SomeError", "AccessDenied", "nope")),
+    )
+    with raises(LogsException, match="unable to associate_resolver_query_log_config with from 'someid'"):
+        AwsResolverClient(boto).associate_resolver_query_log_config(
+            resolver_query_log_config_id=id, resource_id=resource_id
+        )
+
+
+def test_disassociate_resolver_query_log_config() -> None:
+    id = "someid"
+    resource_id = "resource_id"
+    boto = Mock(
+        associate_resolver_query_log_config=Mock(),
+    )
+
+    AwsResolverClient(boto).disassociate_resolver_query_log_config(
+        resolver_query_log_config_id=id, resource_id=resource_id
+    )
+
+    boto.disassociate_resolver_query_log_config.assert_called_once_with(
+        ResolverQueryLogConfigId=id, ResourceId=resource_id
+    )
+
+
+def test_disassociate_resolver_query_log_config_failure() -> None:
+    id = "someid"
+    resource_id = "resource_id"
+    boto = Mock(
+        disassociate_resolver_query_log_config=Mock(side_effect=client_error("SomeError", "AccessDenied", "nope")),
+    )
+    with raises(LogsException, match="unable to disassociate_resolver_query_log_config with from 'someid'"):
+        AwsResolverClient(boto).disassociate_resolver_query_log_config(
+            resolver_query_log_config_id=id, resource_id=resource_id
+        )
+
+
+def test_query_log_config_association_exists() -> None:
+    boto = Mock(
+        list_resolver_query_log_config_associations=Mock(
+            return_value=responses.LIST_RESOLVER_QUERY_LOG_CONFIG_ASSOCIATIONS
+        ),
+    )
+
+    assert AwsResolverClient(boto).query_log_config_association_exists(
+        resolver_query_log_config_id="resolver_query_log_config_id", vpc_id="vpc-id"
+    )
+    boto.list_resolver_query_log_config_associations.assert_called_once_with(
+        Filters=[
+            {"Name": "ResolverQueryLogConfigId", "Values": ["resolver_query_log_config_id"]},
+            {"Name": "ResourceId", "Values": ["vpc-id"]},
+        ]
+    )
+
+
+def test_query_log_config_association_exists_returns_false_when_not_found() -> None:
+    boto = Mock(
+        list_resolver_query_log_config_associations=Mock(
+            return_value=responses.LIST_RESOLVER_QUERY_LOG_CONFIG_ASSOCIATIONS_NO_RESULTS
+        ),
+    )
+
+    assert not AwsResolverClient(boto).query_log_config_association_exists(
+        resolver_query_log_config_id="resolver_query_log_config_id", vpc_id="vpc-id"
+    )
+    boto.list_resolver_query_log_config_associations.assert_called_once_with(
+        Filters=[
+            {"Name": "ResolverQueryLogConfigId", "Values": ["resolver_query_log_config_id"]},
+            {"Name": "ResourceId", "Values": ["vpc-id"]},
+        ]
+    )
+
+
+def test_test_query_log_config_association_exists_failure() -> None:
+    config_id = "someid"
+    vpc_id = "resource_id"
+    boto = Mock(
+        list_resolver_query_log_config_associations=Mock(side_effect=client_error("SomeError", "AccessDenied", "nope")),
+    )
+    with raises(
+        LogsException,
+        match="unable to list_resolver_query_log_config_associations with config id 'someid' and vpc id resource_id",
+    ):
+        AwsResolverClient(boto).query_log_config_association_exists(
+            resolver_query_log_config_id=config_id, vpc_id=vpc_id
+        )
