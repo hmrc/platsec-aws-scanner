@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import boto3
 import os
 import sys
@@ -10,10 +11,19 @@ from typing import Any, Dict, List, Optional
 from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_iam_types import PasswordPolicy
 from src.data.aws_organizations_types import Account
-from src.data.aws_common_types import ServiceName
-from src.data import aws_scanner_exceptions as exceptions
+
 
 CONFIG_FILE = "aws_scanner_config.ini"
+
+
+@dataclass
+class LogGroupConfig:
+    logs_group_name: str
+    logs_log_group_subscription_filter_name: str
+    logs_log_group_pattern: str
+    logs_group_retention_policy_days: int
+    logs_log_group_destination: str
+    log_group_resource_policy_name: str
 
 
 class AwsScannerConfig:
@@ -138,56 +148,38 @@ class AwsScannerConfig:
     def kms_role(self) -> str:
         return self._get_config("kms", "role")
 
-    def logs_group_name(self, service_name: ServiceName) -> str:
+    def route53_resolver_role(self) -> str:
+        return self._get_config("route53resolver", "role")
 
-        if service_name != ServiceName.vpc and service_name != ServiceName.route53:
-            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
+    def logs_vpc_flow_log_group_config(self) -> LogGroupConfig:
+        return LogGroupConfig(
+            logs_group_name=self._get_config("logs", "vpc_log_group_name"),
+            logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'vpc_log_group_name')}_sub_filter",
+            logs_log_group_pattern=self._get_config("logs", "vpc_log_group_pattern"),
+            logs_group_retention_policy_days=int(self._get_config("logs", "vpc_log_group_retention_policy_days")),
+            logs_log_group_destination=self._get_config("logs", "vpc_log_group_destination"),
+            log_group_resource_policy_name="",
+        )
 
-        log_name = ""
-        if service_name == ServiceName.vpc:
-            log_name = self._get_config("logs", "vpc_log_group_name")
-        elif service_name == ServiceName.route53:
-            log_name = self._get_config("logs", "route53_log_group_name")
+    def logs_vpc_dns_log_group_config(self) -> LogGroupConfig:
+        return LogGroupConfig(
+            logs_group_name=self._get_config("logs", "vpc_dns_log_group_name"),
+            logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'vpc_dns_log_group_name')}_sub_filter",
+            logs_log_group_pattern=self._get_config("logs", "vpc_dns_log_group_pattern"),
+            logs_group_retention_policy_days=int(self._get_config("logs", "vpc_dns_log_group_retention_policy_days")),
+            logs_log_group_destination=self._get_config("logs", "vpc_dns_log_group_destination"),
+            log_group_resource_policy_name="",
+        )
 
-        return log_name
-
-    def logs_log_group_subscription_filter_name(self, service_name: ServiceName) -> str:
-
-        if service_name != ServiceName.vpc and service_name != ServiceName.route53:
-            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
-
-        if service_name == ServiceName.vpc:
-            log_group_subscription_filter_name = f"{self.logs_group_name(ServiceName.vpc)}_sub_filter"
-        elif service_name == ServiceName.route53:
-            log_group_subscription_filter_name = f"{self.logs_group_name(ServiceName.route53)}_sub_filter"
-
-        return log_group_subscription_filter_name
-
-    def logs_log_group_pattern(self, service_name: ServiceName) -> str:
-
-        if service_name != ServiceName.vpc and service_name != ServiceName.route53:
-            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
-
-        log_group_pattern = ""
-        if service_name == ServiceName.vpc:
-            log_group_pattern = self._get_config("logs", "vpc_log_group_pattern")
-        elif service_name == ServiceName.route53:
-            log_group_pattern = self._get_config("logs", "route53_log_group_pattern")
-
-        return log_group_pattern
-
-    def logs_log_group_destination(self, service_name: ServiceName) -> str:
-
-        if service_name != ServiceName.vpc and service_name != ServiceName.route53:
-            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
-
-        log_group_destination = ""
-        if service_name == ServiceName.vpc:
-            log_group_destination = self._get_config("logs", "vpc_log_group_destination")
-        elif service_name == ServiceName.route53:
-            log_group_destination = self._get_config("logs", "route53_log_group_destination")
-
-        return log_group_destination
+    def logs_route53_query_log_group_config(self) -> LogGroupConfig:
+        return LogGroupConfig(
+            logs_group_name=self._get_config("logs", "route53_log_group_name"),
+            logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'route53_log_group_name')}_sub_filter",
+            logs_log_group_pattern=self._get_config("logs", "route53_log_group_pattern"),
+            logs_group_retention_policy_days=int(self._get_config("logs", "route53_log_group_retention_policy_days")),
+            logs_log_group_destination=self._get_config("logs", "route53_log_group_destination"),
+            log_group_resource_policy_name=self.logs_route53_log_group_resource_policy_name(),
+        )
 
     def logs_vpc_log_group_delivery_role(self) -> str:
         return self._get_config("logs", "vpc_log_group_delivery_role")
@@ -206,19 +198,6 @@ class AwsScannerConfig:
 
     def logs_vpc_log_group_delivery_role_policy_document(self) -> Dict[str, Any]:
         return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
-
-    def logs_group_retention_policy_days(self, service_name: ServiceName) -> int:
-
-        if service_name != ServiceName.vpc and service_name != ServiceName.route53:
-            raise exceptions.InvalidServiceNameException(f"Invalid service name {service_name}")
-
-        init_config = 0
-        if service_name == ServiceName.vpc:
-            init_config = self._get_int_config("logs", "vpc_log_group_retention_policy_days")
-        elif service_name == ServiceName.route53:
-            init_config = self._get_int_config("logs", "route53_log_group_retention_policy_days")
-
-        return init_config
 
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
@@ -277,6 +256,9 @@ class AwsScannerConfig:
 
     def vpc_peering_role(self) -> str:
         return self._get_config("vpc_peering", "role")
+
+    def resolver_dns_query_log_config_name(self) -> str:
+        return self._get_config("route53resolver", "dns_query_log_config_name")
 
     def _get_config(self, section: str, key: str) -> str:
         try:

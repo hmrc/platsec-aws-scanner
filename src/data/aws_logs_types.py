@@ -15,10 +15,12 @@ class LogGroup:
     stored_bytes: Optional[int]
     subscription_filters: Sequence[SubscriptionFilter]
     tags: Sequence[Tag]
+    arn: Optional[str]
 
     def __init__(
         self,
         name: str,
+        arn: str,
         kms_key_id: Optional[str] = None,
         kms_key: Optional[Key] = None,
         retention_days: Optional[int] = None,
@@ -33,6 +35,7 @@ class LogGroup:
         self.stored_bytes = stored_bytes
         self.subscription_filters = subscription_filters or []
         self.tags = tags or []
+        self.arn = arn
 
     def with_kms_key(self, kms_key: Optional[Key]) -> LogGroup:
         self.kms_key = kms_key
@@ -42,6 +45,7 @@ class LogGroup:
 def to_log_group(lg: Dict[str, Any]) -> LogGroup:
     return LogGroup(
         name=lg["logGroupName"],
+        arn=lg["arn"],
         kms_key_id=lg.get("kmsKeyId"),
         retention_days=lg.get("retentionInDays"),
         stored_bytes=lg.get("storedBytes"),

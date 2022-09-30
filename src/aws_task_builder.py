@@ -16,6 +16,7 @@ from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
+from src.tasks.aws_audit_vpc_dns_logs_task import AwsAuditVPCDnsLogsTask
 from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
 from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
@@ -65,6 +66,11 @@ class AwsTaskBuilder:
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(
                 AwsAuditVPCFlowLogsTask,
+                enforce=self._args.enforce,
+                with_subscription_filter=self._args.with_subscription_filter,
+            ),
+            Cmd.audit_vpc_dns_logs: lambda: self._tasks(
+                AwsAuditVPCDnsLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
             ),

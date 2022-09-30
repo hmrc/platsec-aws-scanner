@@ -14,8 +14,10 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_audit_client import AwsIamAuditClient
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_kms_client import AwsKmsClient
+from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_organizations_client import AwsOrganizationsClient
+from src.clients.aws_resolver_client import AwsResolverClient
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.clients.aws_s3_client import AwsS3Client
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
@@ -86,6 +88,9 @@ class AwsClientFactory:
     def get_kms_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("kms", account, self._config.kms_role())
 
+    def get_route53_resolver_boto_client(self, account: Account) -> BaseClient:
+        return self._get_client("route53resolver", account, self._config.route53_resolver_role())
+
     def get_cloudtrail_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("cloudtrail", account, self._config.cloudtrail_role())
 
@@ -106,8 +111,7 @@ class AwsClientFactory:
             boto_route53=self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account, region="us-east-1"),
-            kms=self.get_kms_client(account),
-            config=self._config,
+            log_group=self.get_log_group_client(account),
         )
 
     def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:
@@ -120,7 +124,9 @@ class AwsClientFactory:
         return AwsSSMClient(self.get_ssm_boto_client(account))
 
     def get_logs_client(self, account: Account, region: Optional[str] = None) -> AwsLogsClient:
-        return AwsLogsClient(self.get_logs_boto_client(account, region))
+        return AwsLogsClient(
+            boto_logs=self.get_logs_boto_client(account, region), kms=self.get_kms_boto_client(account)
+        )
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
         return AwsIamClient(self.get_iam_boto_client(account, self._config.iam_role()))
@@ -131,16 +137,23 @@ class AwsClientFactory:
     def get_kms_client(self, account: Account) -> AwsKmsClient:
         return AwsKmsClient(self.get_kms_boto_client(account))
 
+    def get_route53resolver_client(self, account: Account) -> AwsResolverClient:
+        return AwsResolverClient(self.get_route53_resolver_boto_client(account))
+
     def get_cloudtrail_client(self, account: Account) -> AwsCloudtrailClient:
         return AwsCloudtrailClient(self.get_cloudtrail_boto_client(account), self.get_logs_client(account))
+
+    def get_log_group_client(self, account: Account) -> AwsLogGroupClient:
+        return AwsLogGroupClient(logs=self.get_logs_client(account))
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
             ec2=self.get_ec2_client(account),
             iam=self.get_iam_client(account),
             logs=self.get_logs_client(account),
-            kms=self.get_kms_client(account),
             config=self._config,
+            log_group=self.get_log_group_client(account),
+            resolver=self.get_route53resolver_client(account),
         )
 
     def get_vpc_peering_client(self, account: Account) -> AwsVpcPeeringClient:

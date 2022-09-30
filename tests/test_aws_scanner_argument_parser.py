@@ -186,6 +186,27 @@ def test_parse_cli_args_for_audit_vpc_flow_logs_task() -> None:
         assert args.parent == "Parent OU"
 
 
+def test_parse_cli_args_for_audit_vpc_dns_logs_task() -> None:
+    with patch("sys.argv", ". audit_vpc_dns_logs -t 223344 -a 5,9 -di true -e true -v debug".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch(
+        "sys.argv",
+        ". audit_vpc_dns_logs --token 223344 --accounts 5,9 --disable_account_lookup 1 --enforce True".split(),
+    ):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "audit_vpc_dns_logs"
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "223344"
+        assert args.accounts == ["5", "9"]
+        assert args.enforce is True
+        assert args.disable_account_lookup is True
+        assert args.with_subscription_filter is False
+        assert args.parent == "Parent OU"
+
+
 def test_parse_cli_args_for_enforce_false() -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 --accounts 5,9 --enforce False".split()):
         long_args = AwsScannerArgumentParser().parse_cli_args()

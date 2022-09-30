@@ -14,6 +14,7 @@ from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
+from src.tasks.aws_audit_vpc_dns_logs_task import AwsAuditVPCDnsLogsTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
 from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
@@ -119,6 +120,12 @@ class TestAwsTaskBuilder(TestCase):
             task_builder(
                 args(task=Cmd.audit_vpc_flow_logs, enforce=False, with_subscription_filter=True)
             ).build_tasks(),
+        )
+
+    def test_audit_vpc_dns_logs_tasks(self) -> None:
+        self.assert_tasks_equal(
+            [AwsAuditVPCDnsLogsTask(acct1, False, True), AwsAuditVPCDnsLogsTask(acct2, False, True)],
+            task_builder(args(task=Cmd.audit_vpc_dns_logs, enforce=False, with_subscription_filter=True)).build_tasks(),
         )
 
     def test_audit_iam_tasks(self) -> None:

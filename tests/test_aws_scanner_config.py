@@ -10,8 +10,6 @@ import os
 from src.aws_scanner_config import AwsScannerConfig
 from src.clients.aws_s3_client import AwsS3Client
 from src.data.aws_organizations_types import Account
-from src.data.aws_common_types import ServiceName
-from src.data import aws_scanner_exceptions as exceptions
 
 
 def test_init_config_from_file() -> None:
@@ -48,23 +46,16 @@ def test_init_config_from_file() -> None:
     assert 12 == config.iam_password_policy_password_reuse_prevention()
     assert not config.iam_password_policy_hard_expiry()
     assert "kms_role" == config.kms_role()
-    assert "/vpc/flow_log" == config.logs_group_name(ServiceName.vpc)
-    assert "[version, account_id, interface_id]" == config.logs_log_group_pattern(ServiceName.vpc)
-    assert "arn:aws:logs:::destination:central" == config.logs_log_group_destination(ServiceName.vpc)
+    assert "route53resolver_role" == config.route53_resolver_role()
     assert "vpc_flow_log_role" == config.logs_vpc_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
     assert {
         "Statement": [{"Action": ["logs:*"], "Effect": "Allow", "Resource": "*"}]
     } == config.logs_vpc_log_group_delivery_role_policy_document()
-    assert 14 == config.logs_group_retention_policy_days(ServiceName.vpc)
     assert "logs_role" == config.logs_role()
     assert "route53_query_logs_to_cloudwatch_logs" == config.logs_route53_log_group_resource_policy_name()
-    assert "/aws/route53/query_log" == config.logs_group_name(ServiceName.route53)
-    assert "" == config.logs_log_group_pattern(ServiceName.route53)
-    assert "arn:aws:logs:::destination:central" == config.logs_log_group_destination(ServiceName.route53)
     assert "route53_flow_log_role" == config.logs_route53_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_route53_log_group_delivery_role_assume_policy()
-    assert 14 == config.logs_group_retention_policy_days(ServiceName.route53)
     assert Account("999888777666", "organization") == config.organization_account()
     assert "orgs_role" == config.organization_role()
     assert config.organization_include_root_accounts()
@@ -79,6 +70,13 @@ def test_init_config_from_file() -> None:
     assert 10 == config.tasks_executors()
     assert Account("111222333444", "user") == config.user_account()
     assert "joe.bloggs" == config.user_name()
+    assert "[version, account_id]" == config.logs_vpc_dns_log_group_config().logs_log_group_pattern
+    assert "/vpc/central_dns_log_name" == config.logs_vpc_dns_log_group_config().logs_group_name
+    assert (
+        "arn:aws:logs:::destination:some-dns-central"
+        == config.logs_vpc_dns_log_group_config().logs_log_group_destination
+    )
+    assert 14 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days
 
 
 @patch.dict(
@@ -106,6 +104,7 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_IAM_ROLE": "the_iam_role",
         "AWS_SCANNER_IAM_AUDIT_ROLE": "the_iam_audit_role",
         "AWS_SCANNER_KMS_ROLE": "the_kms_role",
+        "AWS_SCANNER_ROUTE53RESOLVER_ROLE": "the_route53resolver_role",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_NAME": "/vpc/central_flow_log_name",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_PATTERN": "[version, account_id]",
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-central",
@@ -113,6 +112,10 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_ASSUME_POLICY": '{"Statement": [{"Action": "s3:something"}]}',
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_DELIVERY_ROLE_POLICY_DOCUMENT": '{"Statement": [{"Action": ["sts:hi"]}]}',
         "AWS_SCANNER_LOGS_VPC_LOG_GROUP_RETENTION_POLICY_DAYS": "21",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_NAME": "/vpc/central_dns_log_name",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_PATTERN": "[version, account_id]",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_DESTINATION": "arn:aws:logs:::destination:some-dns-central",
+        "AWS_SCANNER_LOGS_VPC_DNS_LOG_GROUP_RETENTION_POLICY_DAYS": "16",
         "AWS_SCANNER_LOGS_ROLE": "some_logs_role",
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_NAME": "/aws/route53/query_log",
         "AWS_SCANNER_LOGS_ROUTE53_LOG_GROUP_PATTERN": "[version, account_id, interface_id]",
@@ -161,22 +164,13 @@ def test_init_config_from_env_vars() -> None:
     assert "the_iam_role" == config.iam_role()
     assert "the_iam_audit_role" == config.iam_audit_role()
     assert "the_kms_role" == config.kms_role()
-    assert "/vpc/central_flow_log_name" == config.logs_group_name(ServiceName.vpc)
-    assert "[version, account_id]" == config.logs_log_group_pattern(ServiceName.vpc)
-    assert "/vpc/central_flow_log_name_sub_filter" == config.logs_log_group_subscription_filter_name(ServiceName.vpc)
-    assert "arn:aws:logs:::destination:some-central" == config.logs_log_group_destination(ServiceName.vpc)
+    assert "the_route53resolver_role" == config.route53_resolver_role()
     assert "the_flow_log_delivery_role" == config.logs_vpc_log_group_delivery_role()
     assert {"Statement": [{"Action": "s3:something"}]} == config.logs_vpc_log_group_delivery_role_assume_policy()
     assert {"Statement": [{"Action": ["sts:hi"]}]} == config.logs_vpc_log_group_delivery_role_policy_document()
-    assert 21 == config.logs_group_retention_policy_days(ServiceName.vpc)
     assert "some_logs_role" == config.logs_role()
-    assert "/aws/route53/query_log" == config.logs_group_name(ServiceName.route53)
-    assert "[version, account_id, interface_id]" == config.logs_log_group_pattern(ServiceName.route53)
-    assert "/aws/route53/query_log_sub_filter" == config.logs_log_group_subscription_filter_name(ServiceName.route53)
-    assert "arn:aws:logs:::destination:some-central" == config.logs_log_group_destination(ServiceName.route53)
     assert "the_query_log_delivery_role" == config.logs_route53_log_group_delivery_role()
     assert {"Statement": [{"Action": "s3:something"}]} == config.logs_route53_log_group_delivery_role_assume_policy()
-    assert 21 == config.logs_group_retention_policy_days(ServiceName.route53)
     assert Account("666777888999", "organization") == config.organization_account()
     assert "the_orgs_role" == config.organization_role()
     assert not config.organization_include_root_accounts()
@@ -245,28 +239,3 @@ def test_load_config_from_s3() -> None:
         side_effect=lambda b, k: conf if b == "conf-buck" and k == "aws_scanner_config.ini" else None,
     ):
         assert AwsScannerConfig().iam_role() == "TheIamRole"
-
-
-def test_log_group_name_invalid_service_name_exception() -> None:
-    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
-        AwsScannerConfig().logs_group_name(ServiceName.default)
-
-
-def test_retention_period_invalid_service_name_exception() -> None:
-    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
-        AwsScannerConfig().logs_group_retention_policy_days(ServiceName.default)
-
-
-def test_log_group_subscription_filter_name_exception() -> None:
-    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
-        AwsScannerConfig().logs_log_group_subscription_filter_name(ServiceName.default)
-
-
-def test_log_group_pattern_exception() -> None:
-    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
-        AwsScannerConfig().logs_log_group_pattern(ServiceName.default)
-
-
-def test_log_group_destination_exception() -> None:
-    with pytest.raises(exceptions.InvalidServiceNameException, match="Invalid service name ServiceName.default"):
-        AwsScannerConfig().logs_log_group_destination(ServiceName.default)

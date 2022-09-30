@@ -2,10 +2,30 @@ from tests.test_types_generator import log_group, subscription_filter, tag
 
 DESCRIBE_LOG_GROUPS = {
     "logGroups": [
-        {"logGroupName": "lg_1", "retentionInDays": 3},
-        {"logGroupName": "lg_2", "kmsKeyId": "9", "storedBytes": 1234},
+        {"logGroupName": "lg_1", "retentionInDays": 3, "arn": "some-arn"},
+        {"logGroupName": "lg_2", "kmsKeyId": "9", "storedBytes": 1234, "arn": "some-arn2"},
     ]
 }
+
+DESCRIBE_LOG_GROUPS_SINGLE_WITH_KMS = {
+    "logGroups": [
+        {"logGroupName": "lg_2", "kmsKeyId": "9", "storedBytes": 1234, "arn": "some-arn2"},
+    ]
+}
+
+DESCRIBE_SUBSCRIPTION_FILTERS_SINGLE = [
+    {
+        "subscriptionFilters": [
+            {
+                "filterName": "SecondFilter",
+                "logGroupName": "/vpc/flow_log_2",
+                "filterPattern": "[account_id]",
+                "destinationArn": "arn:aws:logs:us-east-1:223322332233:destination:OtherDestination",
+            }
+        ]
+    },
+]
+
 
 DESCRIBE_SUBSCRIPTION_FILTERS = [
     {
@@ -56,6 +76,7 @@ EXPECTED_LOG_GROUPS = [
     ),
     log_group(
         name="lg_2",
+        arn="some-arn2",
         kms_key_id="9",
         retention_days=None,
         stored_bytes=1234,

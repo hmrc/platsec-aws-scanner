@@ -1,21 +1,22 @@
 from logging import getLogger
-from typing import Sequence
+from typing import Sequence, Optional
 from functools import partial
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
-from src.aws_scanner_config import AwsScannerConfig as Config
+from src.aws_scanner_config import AwsScannerConfig as Config, LogGroupConfig
+from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_common_types import Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter, to_log_group, to_subscription_filter
 from src.data.aws_scanner_exceptions import LogsException
-from src.data.aws_common_types import ServiceName
 
 
 class AwsLogsClient:
-    def __init__(self, boto_logs: BaseClient):
+    def __init__(self, boto_logs: BaseClient, kms: AwsKmsClient):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._logs = boto_logs
+        self.kms = kms
 
     def describe_log_groups(self, name_prefix: str) -> Sequence[LogGroup]:
         try:
@@ -100,12 +101,20 @@ class AwsLogsClient:
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to put logs resource policy': {err}") from None
 
-    def is_central_log_group(self, log_group: LogGroup, service_name: ServiceName) -> bool:
-        return log_group.name == self._config.logs_group_name(service_name) and any(
-            map(partial(self.is_central_destination_filter, service_name=service_name), log_group.subscription_filters)
+    def is_central_log_group(self, log_group: LogGroup, log_group_config: LogGroupConfig) -> bool:
+        return log_group.name == log_group_config.logs_group_name and any(
+            map(
+                partial(self.is_central_destination_filter, log_group_config=log_group_config),
+                log_group.subscription_filters,
+            )
         )
 
-    def is_central_destination_filter(self, sub_filter: SubscriptionFilter, service_name: ServiceName) -> bool:
-        return sub_filter.filter_pattern == self._config.logs_log_group_pattern(
-            service_name=service_name
-        ) and sub_filter.destination_arn == self._config.logs_log_group_destination(service_name=service_name)
+    def is_central_destination_filter(self, sub_filter: SubscriptionFilter, log_group_config: LogGroupConfig) -> bool:
+        return (sub_filter.filter_pattern == log_group_config.logs_log_group_pattern) and (
+            sub_filter.destination_arn == log_group_config.logs_log_group_destination
+        )
+
+    def find_log_group(self, name: str) -> Optional[LogGroup]:
+        log_group = next(iter(self.describe_log_groups(name)), None)
+        kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
+        return log_group.with_kms_key(kms_key) if log_group else None

@@ -44,6 +44,7 @@ class AwsScannerCommands:
     audit_s3 = "audit_s3"
     audit_iam = "audit_iam"
     audit_vpc_flow_logs = "audit_vpc_flow_logs"
+    audit_vpc_dns_logs = "audit_vpc_dns_logs"
     cost_explorer = "cost_explorer"
     audit_password_policy = "audit_password_policy"
     audit_cloudtrail = "audit_cloudtrail"
@@ -130,6 +131,7 @@ class AwsScannerArgumentParser:
         self._add_audit_s3_command(subparsers)
         self._add_audit_iam_command(subparsers)
         self._add_audit_vpc_flow_logs_command(subparsers)
+        self._add_audit_vpc_dns_logs_command(subparsers)
         self._add_audit_password_policy_command(subparsers)
         self._add_cost_explorer_command(subparsers)
         self._add_audit_cloudtrail_command(subparsers)
@@ -138,7 +140,6 @@ class AwsScannerArgumentParser:
         self._add_audit_vpc_peering_command(subparsers)
         self._add_audit_ec2_instances_command(subparsers)
         self._add_audit_route53_command(subparsers)
-        self._add_enable_route53_logging_command(subparsers)
         self._add_audit_route53_query_logs(subparsers)
         return parser
 
@@ -182,6 +183,15 @@ class AwsScannerArgumentParser:
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
+        self._add_with_subscription_filter_arg(audit_parser)
+        self._add_verbosity_arg(audit_parser)
+
+    def _add_audit_vpc_dns_logs_command(self, subparsers: Any) -> None:
+        desc = "audit VPC dns logs compliance"
+        audit_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_dns_logs, help=desc, description=desc)
+        self._add_auth_args(audit_parser)
+        self._add_accounts_args(audit_parser)
+        self._add_enforce_arg(audit_parser, "add centralised dns logs to VPCs that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
         self._add_verbosity_arg(audit_parser)
 
@@ -253,13 +263,6 @@ class AwsScannerArgumentParser:
     def _add_audit_route53_command(self, subparsers: Any) -> None:
         desc = "list public zones"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
-        self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
-
-    def _add_enable_route53_logging_command(self, subparsers: Any) -> None:
-        desc = "enable route53 logging"
-        audit_parser = subparsers.add_parser(AwsScannerCommands.enable_route53_logging, help=desc, description=desc)
         self._add_auth_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_verbosity_arg(audit_parser)
