@@ -18,7 +18,6 @@ from src.data.aws_compliance_actions import (
     AssociateResolverQueryLogConfig,
     ComplianceAction,
     CreateLogGroupAction,
-    DeleteLogGroupSubscriptionFilterAction,
     DeleteResolverQueryLogConfig,
     DisassociateResolverQueryLogConfig,
     PutLogGroupRetentionPolicyAction,
@@ -47,7 +46,7 @@ from tests.test_types_generator import (
     vpc,
     tag,
     expected_subscription_filter,
-    expected_resolver_query_log_config,
+    resolver_query_log_config,
 )
 
 
@@ -423,9 +422,11 @@ class TestDNSEnforcementActions(TestCase):
         client = AwsVpcClientBuilder()
         client.with_log_groups([None])
         client.with_resolver_query_log_config([])
+        client.with_resolver_associations({})
         vpc_client = client.build()
+        vpcs = [vpc(id="id1")]
 
-        actual_response = vpc_client.enforcement_dns_log_actions([vpc()], with_subscription_filter=True)
+        actual_response = vpc_client.enforcement_dns_log_actions(vpcs, with_subscription_filter=True)
         expected_response = [
             CreateLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
             PutLogGroupRetentionPolicyAction(logs=vpc_client.logs, log_group_config=log_config),
@@ -437,15 +438,15 @@ class TestDNSEnforcementActions(TestCase):
                 log_group_config=log_config,
                 query_log_config_name=config.resolver_dns_query_log_config_name(),
             ),
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id="id1"),
             AssociateResolverQueryLogConfig(
-                resolver=vpc_client.resolver, log_config_name=config.resolver_dns_query_log_config_name(), vpcs=[vpc()]
+                resolver=vpc_client.resolver, log_config_name=config.resolver_dns_query_log_config_name(), vpcs=vpcs
             ),
         ]
         client.resolver.list_resolver_query_log_configs.assert_called_with(
             query_log_config_name=config.resolver_dns_query_log_config_name()
         )
 
-        self.assertEqual(len(expected_response), len(actual_response))
         self.assertEqual(expected_response, actual_response)
 
     def test_crate_do_nothing_when_all_correct(self) -> None:
@@ -470,12 +471,10 @@ class TestDNSEnforcementActions(TestCase):
             ]
         )
         self.maxDiff = None
-        resolver_query_log_config = expected_resolver_query_log_config(
-            log_config, config.resolver_dns_query_log_config_name()
-        )
-        client.with_resolver_query_log_config([resolver_query_log_config])
+        query_log_config = resolver_query_log_config(log_config, config.resolver_dns_query_log_config_name())
+        client.with_resolver_query_log_config([query_log_config])
         expected_vpc = vpc()
-        client.with_resolver_associations({resolver_query_log_config.id: [expected_vpc.id]})
+        client.with_resolver_associations({query_log_config.id: [expected_vpc.id]})
         self.assertEqual([], client.build().enforcement_dns_log_actions([expected_vpc], with_subscription_filter=True))
 
     def test_adding_new_vpc(self) -> None:
@@ -485,7 +484,9 @@ class TestDNSEnforcementActions(TestCase):
         expected_subscription = expected_subscription_filter(log_config)
         vpc1 = vpc(id="vpc-1234")
         vpc2 = vpc(id="vpc-5678")
-        resolver_config = expected_resolver_query_log_config(log_config, config.resolver_dns_query_log_config_name())
+        resolver_config = resolver_query_log_config(
+            log_config, config.resolver_dns_query_log_config_name(), "Different-Config-id"
+        )
 
         client.with_resolver_associations({resolver_config.id: [vpc1.id]})
 
@@ -507,11 +508,12 @@ class TestDNSEnforcementActions(TestCase):
         )
         client.with_resolver_query_log_config([resolver_config])
         expected_actions = [
+            DisassociateResolverQueryLogConfig(resolver=client.resolver, resource_id=vpc2.id),
             AssociateResolverQueryLogConfig(
                 resolver=client.resolver,
                 log_config_name=config.resolver_dns_query_log_config_name(),
                 vpcs=[vpc2],
-            )
+            ),
         ]
         self.assertEqual(
             expected_actions, client.build().enforcement_dns_log_actions([vpc1, vpc2], with_subscription_filter=True)
@@ -531,12 +533,7 @@ class TestDNSEnforcementActions(TestCase):
         client = AwsVpcClientBuilder()
         client.with_log_groups(
             [
-                log_group(
-                    subscription_filters=[expected_subscription],
-                    name=log_config.logs_group_name,
-                    retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
-                ),
+                None,
                 log_group(
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
@@ -546,21 +543,21 @@ class TestDNSEnforcementActions(TestCase):
             ]
         )
         client.with_resolver_query_log_config(
-            [expected_resolver_query_log_config(log_config, config.resolver_dns_query_log_config_name())]
+            [resolver_query_log_config(log_config, config.resolver_dns_query_log_config_name())]
         )
+        client.with_resolver_associations({})
         vpc_client = client.build()
 
         actual_response = vpc_client.enforcement_dns_log_actions(
-            [vpc(id="vpc-1234"), vpc(id="vpc-5678")], with_subscription_filter=False
+            [vpc(id="vpc-1234"), vpc(id="vpc-5678")], with_subscription_filter=True
         )
         expected_response = [
-            DeleteLogGroupSubscriptionFilterAction(logs=client.logs, log_group_config=log_config),
-            DisassociateResolverQueryLogConfig(
-                resolver=vpc_client.resolver, query_log_config_id="some-id", resource_id="vpc-1234"
-            ),
-            DisassociateResolverQueryLogConfig(
-                resolver=vpc_client.resolver, query_log_config_id="some-id", resource_id="vpc-5678"
-            ),
+            CreateLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
+            PutLogGroupRetentionPolicyAction(logs=vpc_client.logs, log_group_config=log_config),
+            TagLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
+            PutLogGroupSubscriptionFilterAction(logs=vpc_client.logs, log_group_config=log_config),
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id="vpc-1234"),
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id="vpc-5678"),
             DeleteResolverQueryLogConfig(resolver=vpc_client.resolver, query_log_config_id="some-id"),
             CreateResolverQueryLogConfig(
                 logs=vpc_client.logs,
@@ -568,6 +565,8 @@ class TestDNSEnforcementActions(TestCase):
                 log_group_config=log_config,
                 query_log_config_name=config.resolver_dns_query_log_config_name(),
             ),
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id="vpc-1234"),
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id="vpc-5678"),
             AssociateResolverQueryLogConfig(
                 resolver=vpc_client.resolver,
                 log_config_name=config.resolver_dns_query_log_config_name(),
@@ -579,7 +578,56 @@ class TestDNSEnforcementActions(TestCase):
             query_log_config_name=config.resolver_dns_query_log_config_name()
         )
 
-        self.assertEqual(len(expected_response), len(actual_response))
+        self.assertEqual(expected_response, actual_response)
+
+    def test_association_of_vpc_with_another_association(self) -> None:
+        config = Config()
+        log_config = config.logs_vpc_dns_log_group_config()
+        expected_subscription = expected_subscription_filter(log_config)
+        client = AwsVpcClientBuilder()
+        client.with_log_groups(
+            [
+                log_group(
+                    subscription_filters=[expected_subscription],
+                    name=log_config.logs_group_name,
+                    retention_days=log_config.logs_group_retention_policy_days,
+                    arn=log_config.logs_log_group_destination,
+                ),
+                log_group(
+                    subscription_filters=[expected_subscription],
+                    name=log_config.logs_group_name,
+                    retention_days=log_config.logs_group_retention_policy_days,
+                    arn=log_config.logs_log_group_destination,
+                ),
+            ]
+        )
+
+        vpcs = [vpc(id="vpc-1234"), vpc(id="vpc-5678")]
+
+        client.with_resolver_query_log_config(
+            [resolver_query_log_config(log_config, config.resolver_dns_query_log_config_name())]
+        )
+        other_config = resolver_query_log_config(log_config, "Different-Config-name", "Different-Config-id")
+        client.with_resolver_associations(
+            {
+                other_config.id: [vpcs[1].id],
+            }
+        )
+        vpc_client = client.build()
+
+        expected_response = [
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id=vpcs[0].id),
+            DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id=vpcs[1].id),
+            AssociateResolverQueryLogConfig(
+                resolver=vpc_client.resolver,
+                log_config_name=config.resolver_dns_query_log_config_name(),
+                vpcs=vpcs,
+            ),
+        ]
+
+        actual_response = vpc_client.enforcement_dns_log_actions(vpcs, with_subscription_filter=True)
+
+        self.maxDiff = None
         self.assertEqual(expected_response, actual_response)
 
 
@@ -663,7 +711,14 @@ class AwsVpcClientBuilder(TestCase):
         def query_log_config_association_exists(vpc_id: str, resolver_query_log_config_id: str) -> bool:
             return vpc_id in association.get(resolver_query_log_config_id, [])
 
+        def get_vpc_query_log_config_association(vpc_id: str) -> Optional[str]:
+            for confid_id, vpcs in association.items():
+                if vpc_id in vpcs:
+                    return confid_id
+            return None
+
         self.resolver.query_log_config_association_exists.side_effect = query_log_config_association_exists
+        self.resolver.get_vpc_query_log_config_association.side_effect = get_vpc_query_log_config_association
         return self
 
     def with_roles(self, roles: Sequence[Role]) -> AwsVpcClientBuilder:

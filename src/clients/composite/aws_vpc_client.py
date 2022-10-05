@@ -112,30 +112,29 @@ class AwsVpcClient:
         self, log_group_config: LogGroupConfig, vpcs: Sequence[Vpc]
     ) -> Sequence[ComplianceAction]:
         actions: List[ComplianceAction] = []
+        association_actions: List[ComplianceAction] = []
         log_config_name: str = self.config.resolver_dns_query_log_config_name()
         resolver_query_log = next(
             iter(self.resolver.list_resolver_query_log_configs(query_log_config_name=log_config_name)), None
         )
-        if not resolver_query_log:
-            actions.append(
-                CreateResolverQueryLogConfig(
-                    logs=self.logs,
-                    log_group_config=log_group_config,
-                    resolver=self.resolver,
-                    query_log_config_name=log_config_name,
-                )
-            )
-            actions.append(self._vpc_log_config_association(vpcs=vpcs, log_config_name=log_config_name))
-        else:
 
+        if resolver_query_log:
             log_group = self.logs.find_log_group(log_group_config.logs_group_name)
-            if log_group is not None and log_group.arn != resolver_query_log.destination_arn:
+            if log_group and resolver_query_log.destination_arn in log_group.arn:  # type: ignore
+                new_vpcs = []
                 for vpc in vpcs:
-                    actions.append(
-                        DisassociateResolverQueryLogConfig(
-                            resolver=self.resolver, query_log_config_id=resolver_query_log.id, resource_id=vpc.id
-                        )
+                    if not self.resolver.query_log_config_association_exists(
+                        vpc_id=vpc.id, resolver_query_log_config_id=resolver_query_log.id
+                    ):
+                        new_vpcs.append(vpc)
+                if new_vpcs:
+                    association_actions = self._vpc_log_config_association(
+                        vpcs=new_vpcs, log_config_name=log_config_name
                     )
+
+            else:
+                for vpc in vpcs:
+                    actions.append(DisassociateResolverQueryLogConfig(resolver=self.resolver, resource_id=vpc.id))
                 actions.append(
                     DeleteResolverQueryLogConfig(resolver=self.resolver, query_log_config_id=resolver_query_log.id)
                 )
@@ -147,21 +146,30 @@ class AwsVpcClient:
                         query_log_config_name=log_config_name,
                     )
                 )
-                actions.append(self._vpc_log_config_association(vpcs=vpcs, log_config_name=log_config_name))
-            else:
-                new_vpcs = []
-                for vpc in vpcs:
-                    if not self.resolver.query_log_config_association_exists(
-                        vpc_id=vpc.id, resolver_query_log_config_id=resolver_query_log.id
-                    ):
-                        new_vpcs.append(vpc)
-                if new_vpcs:
-                    actions.append(self._vpc_log_config_association(vpcs=new_vpcs, log_config_name=log_config_name))
+                association_actions = self._vpc_log_config_association(vpcs=vpcs, log_config_name=log_config_name)
+        else:
 
+            actions.append(
+                CreateResolverQueryLogConfig(
+                    logs=self.logs,
+                    log_group_config=log_group_config,
+                    resolver=self.resolver,
+                    query_log_config_name=log_config_name,
+                )
+            )
+            association_actions = self._vpc_log_config_association(vpcs=vpcs, log_config_name=log_config_name)
+
+        return actions + association_actions
+
+    def _vpc_log_config_association(self, vpcs: Sequence[Vpc], log_config_name: str) -> List[ComplianceAction]:
+        actions: List[ComplianceAction] = []
+        for vpc in vpcs:
+            actions.append(DisassociateResolverQueryLogConfig(resolver=self.resolver, resource_id=vpc.id))
+
+        actions.append(
+            AssociateResolverQueryLogConfig(resolver=self.resolver, log_config_name=log_config_name, vpcs=vpcs)
+        )
         return actions
-
-    def _vpc_log_config_association(self, vpcs: Sequence[Vpc], log_config_name: str) -> AssociateResolverQueryLogConfig:
-        return AssociateResolverQueryLogConfig(resolver=self.resolver, log_config_name=log_config_name, vpcs=vpcs)
 
     def _vpc_flow_enforcement_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
         return list(

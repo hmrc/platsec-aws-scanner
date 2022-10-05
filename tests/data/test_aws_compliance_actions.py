@@ -512,32 +512,28 @@ def test_plan_delete_resolver_query_log_config() -> None:
 
 def test_disassociate_resolver_query_log_config() -> None:
     resolver = Mock(spec_set=AwsResolverClient)
-    query_log_config_id: str = "qid"
     resource_id: str = "rid"
+    resolver_config_id = "id01"
     resolver.disassociate_resolver_query_log_config = Mock()
+    resolver.get_vpc_query_log_config_association = Mock(return_value=resolver_config_id)
 
-    DisassociateResolverQueryLogConfig(
-        resolver=resolver, query_log_config_id=query_log_config_id, resource_id=resource_id
-    )._apply()
+    DisassociateResolverQueryLogConfig(resolver=resolver, resource_id=resource_id)._apply()
 
     resolver.disassociate_resolver_query_log_config.assert_called_once_with(
-        resolver_query_log_config_id=query_log_config_id, resource_id=resource_id
+        resolver_quer_log_config_id=resolver_config_id, resource_id=resource_id
     )
 
 
 def test_plan_disassociate_resolver_query_log_config() -> None:
     resolver = Mock(spec_set=AwsResolverClient)
-    query_log_config_id: str = "id"
     resource_id: str = "rid"
     resolver.delete_resolver_query_log_config = Mock()
 
     expected_report = ComplianceActionReport(
         description="Disassociate Resolver Query Log Config",
-        details=dict(query_log_config_id=query_log_config_id, resource_id=resource_id),
+        details=dict(resource_id=resource_id),
     )
-    actual_report = DisassociateResolverQueryLogConfig(
-        resolver=resolver, query_log_config_id=query_log_config_id, resource_id=resource_id
-    ).plan()
+    actual_report = DisassociateResolverQueryLogConfig(resolver=resolver, resource_id=resource_id).plan()
 
     assert expected_report == actual_report
 
@@ -564,7 +560,7 @@ def test_plan_associate_resolver_query_log_config() -> None:
     vpcs: Sequence[Vpc] = [Vpc(id="id1"), Vpc(id="id2")]
 
     expected_report = ComplianceActionReport(
-        description="Associate Resolver Query Log Config", details=dict(log_config_name=log_config_name)
+        description="Associate Resolver Query Log Config", details=dict(log_config_name=log_config_name, vpcs=vpcs)
     )
     actual_report = AssociateResolverQueryLogConfig(
         resolver=resolver, log_config_name=log_config_name, vpcs=vpcs

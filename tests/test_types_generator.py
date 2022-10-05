@@ -777,7 +777,5 @@ def delete_query_log_action(
     return DeleteQueryLogAction(route53_client=route53_client, hosted_zone_id=hosted_zone_id)
 
 
-def expected_resolver_query_log_config(config: LogGroupConfig, name: str) -> ResolverQueryLogConfig:
-    return ResolverQueryLogConfig(
-        name=name, id="some-id", arn="somearn2", destination_arn=config.logs_log_group_destination
-    )
+def resolver_query_log_config(config: LogGroupConfig, name: str, id: str = "some-id") -> ResolverQueryLogConfig:
+    return ResolverQueryLogConfig(name=name, id=id, arn="somearn2", destination_arn=config.logs_log_group_destination)

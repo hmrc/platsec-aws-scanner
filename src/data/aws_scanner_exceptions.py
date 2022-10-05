@@ -84,6 +84,10 @@ class LogsException(AwsScannerException):
     pass
 
 
+class ResolverException(AwsScannerException):
+    pass
+
+
 class RunQueryException(AwsScannerException):
     pass
 

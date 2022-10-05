@@ -16,6 +16,7 @@ freezegun = "==1.2.1"
 [packages]
 boto3 = "==1.20.52"
 requests = "==2.27.1"
+tenacity = "==8.1.0"
 
 [requires]
 python_version = "3.9.10"

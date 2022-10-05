@@ -143,24 +143,24 @@ class DeleteResolverQueryLogConfig(ComplianceAction):
 @dataclass
 class DisassociateResolverQueryLogConfig(ComplianceAction):
     resolver: AwsResolverClient
-    query_log_config_id: str
     resource_id: str
 
-    def __init__(self, resolver: AwsResolverClient, query_log_config_id: str, resource_id: str):
+    def __init__(self, resolver: AwsResolverClient, resource_id: str):
         super().__init__("Disassociate Resolver Query Log Config")
         self.resolver = resolver
-        self.query_log_config_id = query_log_config_id
         self.resource_id = resource_id
 
     def _apply(self) -> None:
-        self.resolver.disassociate_resolver_query_log_config(
-            resolver_query_log_config_id=self.query_log_config_id, resource_id=self.resource_id
-        )
+        vpc_resolver_query_log_config_id = self.resolver.get_vpc_query_log_config_association(vpc_id=self.resource_id)
+        if vpc_resolver_query_log_config_id:
+            self.resolver.disassociate_resolver_query_log_config(
+                resolver_quer_log_config_id=vpc_resolver_query_log_config_id, resource_id=self.resource_id
+            )
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
-            details=dict(query_log_config_id=self.query_log_config_id, resource_id=self.resource_id),
+            details=dict(resource_id=self.resource_id),
         )
 
 
@@ -183,11 +183,13 @@ class AssociateResolverQueryLogConfig(ComplianceAction):
         if resolver_query_log is not None:
             for vpc in self.vpcs:
                 self.resolver.associate_resolver_query_log_config(
-                    resolver_query_log_config_id=resolver_query_log.id, resource_id=vpc.id
+                    resolver_query_log_config_id=resolver_query_log.id, vpc_id=vpc.id
                 )
 
     def plan(self) -> ComplianceActionReport:
-        return ComplianceActionReport(description=self.description, details=dict(log_config_name=self.log_config_name))
+        return ComplianceActionReport(
+            description=self.description, details=dict(log_config_name=self.log_config_name, vpcs=self.vpcs)
+        )
 
 
 @dataclass
