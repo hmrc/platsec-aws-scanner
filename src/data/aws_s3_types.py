@@ -22,6 +22,7 @@ class Bucket:
     secure_transport: Optional[BucketSecureTransport] = None
     versioning: Optional[BucketVersioning] = None
     policy: Optional[Dict[str, Any]] = None
+    access_logging_tagging: Optional[BucketAccessLoggingTagging] = None
 
 
 @dataclass

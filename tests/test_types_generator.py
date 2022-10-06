@@ -282,6 +282,7 @@ def bucket(
     secure_transport: Optional[BucketSecureTransport] = None,
     versioning: Optional[BucketVersioning] = None,
     policy: Optional[Dict[str, Any]] = None,
+    access_logging_tagging: Optional[BucketAccessLoggingTagging] = None,
 ) -> Bucket:
     return Bucket(
         name=name,
@@ -299,6 +300,7 @@ def bucket(
         secure_transport=secure_transport,
         versioning=versioning,
         policy=policy,
+        access_logging_tagging=access_logging_tagging,
     )
 
 
