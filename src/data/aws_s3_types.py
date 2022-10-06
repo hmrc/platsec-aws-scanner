@@ -147,7 +147,11 @@ def to_bucket_access_logging_tagging(tag_response: Dict[str, List[Dict[str, str]
     ignore_access_logging_check = (
         ignore_access_logging_check_tag
         if ignore_access_logging_check_tag
-        in ["true", "false",] else "unset"
+        in [
+            "true",
+            "false",
+        ]
+        else "unset"
     )
 
     return BucketAccessLoggingTagging(
