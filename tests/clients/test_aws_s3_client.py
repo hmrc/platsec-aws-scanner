@@ -14,6 +14,7 @@ from tests.test_types_generator import (
     bucket_content_deny,
     bucket_cors,
     bucket_data_tagging,
+    bucket_access_logging_tagging,
     bucket_encryption,
     bucket_lifecycle,
     bucket_logging,
@@ -307,6 +308,46 @@ def test_get_bucket_data_sensitivity_tagging_failure(caplog: Any) -> None:
     tagging = bucket_data_tagging(sensitivity="unset")
     with caplog.at_level(logging.WARNING):
         assert tagging == s3_client_sensitivity_tagging().get_bucket_data_tagging("no-tag")
+    assert "NoSuchTagSet" in caplog.text
+
+
+def get_ignore_access_logging_check_tagging(**kwargs: Dict[str, str]) -> Any:
+    ignore_access_logging_check = str(kwargs["Bucket"])
+    if ignore_access_logging_check == "no-tag":
+        raise client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")
+
+    ignore_access_logging: Dict[Any, Any] = {
+        "true": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE,
+        "false": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE,
+        "unknown": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_UNKNOWN,
+        "no-logging": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_NO_LOGGING,
+    }
+    return ignore_access_logging[ignore_access_logging_check]
+
+
+def s3_client_ignore_access_logging_check_tagging() -> AwsS3Client:
+    return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=get_ignore_access_logging_check_tagging)))
+
+
+def test_get_bucket_ignore_access_logging_check_true() -> None:
+    tagging = bucket_access_logging_tagging(ignore_access_logging_check="true")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("true")
+
+
+def test_get_bucket_ignore_access_logging_check_false() -> None:
+    tagging = bucket_access_logging_tagging(ignore_access_logging_check="false")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("false")
+
+
+def test_get_bucket_ignore_access_logging_check_unknown() -> None:
+    tagging = bucket_access_logging_tagging(ignore_access_logging_check="unset")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("unknown")
+
+
+def test_get_bucket_ignore_access_logging_check_failure(caplog: Any) -> None:
+    tagging = bucket_access_logging_tagging(ignore_access_logging_check="unset")
+    with caplog.at_level(logging.WARNING):
+        assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("no-tag")
     assert "NoSuchTagSet" in caplog.text
 
 

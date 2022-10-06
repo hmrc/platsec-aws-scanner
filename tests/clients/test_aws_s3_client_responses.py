@@ -139,6 +139,10 @@ GET_BUCKET_TAGGING_EXPIRY_FOREVER_CONFIG_ONLY = {
 }
 GET_BUCKET_TAGGING_EXPIRY_UNKNOWN = {"TagSet": [{"Key": "data_expiry", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_EXPIRY = {"TagSet": [{"Key": "some_other_tag", "Value": "some_other_value"}]}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE = {"TagSet": [{"Key": "ignore_access_logging_check", "Value": "true"}]}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE = {"TagSet": [{"Key": "ignore_access_logging_check", "Value": "false"}]}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_UNKNOWN = {"TagSet": [{"Key": "ignore_access_logging_check", "Value": "unexpected"}]}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_NO_LOGGING = {"TagSet": [{"Key": "some_tag", "Value": "some_value"}]}
 
 GET_BUCKET_POLICY_DENY_GET_PUT_DELETE_SINGLE_STATEMENT = {
     "Policy": dumps({"Statement": [{"Effect": "Deny", "Action": ["s3:GetObject*", "s3:PutObject", "s3:DeleteObject"]}]})

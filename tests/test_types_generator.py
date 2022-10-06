@@ -47,6 +47,7 @@ from src.data.aws_s3_types import (
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
+    BucketAccessLoggingTagging,
     BucketEncryption,
     BucketLifecycle,
     BucketLogging,
@@ -223,6 +224,10 @@ def bucket_cors(enabled: bool = True) -> BucketCORS:
 
 def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> BucketDataTagging:
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
+
+
+def bucket_access_logging_tagging(ignore_access_logging_check: str = "unset") -> BucketAccessLoggingTagging:
+    return BucketAccessLoggingTagging(ignore_access_logging_check=ignore_access_logging_check)
 
 
 def bucket_encryption(
