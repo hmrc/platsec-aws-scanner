@@ -12,6 +12,7 @@ from src.data.aws_s3_types import (
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
+    BucketAccessLoggingTagging,
     BucketEncryption,
     BucketLifecycle,
     BucketLogging,
@@ -24,6 +25,7 @@ from src.data.aws_s3_types import (
     to_bucket_content_deny,
     to_bucket_cors,
     to_bucket_data_tagging,
+    to_bucket_access_logging_tagging,
     to_bucket_encryption,
     to_bucket_lifecycle,
     to_bucket_logging,
@@ -90,6 +92,14 @@ class AwsS3Client:
             lambda: to_bucket_lifecycle(self._s3.get_bucket_lifecycle_configuration(Bucket=bucket)),
             BucketLifecycle,
             f"unable to fetch lifecycle configuration for bucket '{bucket}'",
+        )
+
+    def get_bucket_access_logging_tagging(self, bucket: str) -> BucketAccessLoggingTagging:
+        self._logger.debug(f"fetching tagging for bucket '{bucket}'")
+        return boto_try(
+            lambda: to_bucket_access_logging_tagging(self._s3.get_bucket_tagging(Bucket=bucket)),
+            BucketAccessLoggingTagging,
+            f"unable to fetch tagging for bucket '{bucket}'",
         )
 
     def get_bucket_logging(self, bucket: str) -> BucketLogging:
