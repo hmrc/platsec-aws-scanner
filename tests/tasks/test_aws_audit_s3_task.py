@@ -79,9 +79,9 @@ class TestAwsAuditS3Task(TestCase):
             bucket_4: bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset"),
         }
         logging_mapping = {
-            bucket_1: bucket_logging(enabled=False),
-            bucket_2: bucket_logging(enabled=False),
-            bucket_3: bucket_logging(enabled=True),
+            bucket_1: bucket_logging(enabled=False, skipped=True),
+            bucket_2: bucket_logging(enabled=False, skipped=False),
+            bucket_3: bucket_logging(enabled=True, skipped=False),
             bucket_4: bucket_logging(enabled=True),
         }
         mfa_delete_mapping = {
@@ -153,12 +153,12 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-1"),
             kms_key=key(id="key-1", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
-            logging=bucket_logging(enabled=False),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="true"),
+            logging=bucket_logging(enabled=False, skipped=True),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=False),
             secure_transport=bucket_secure_transport(enabled=True),
             versioning=bucket_versioning(enabled=True),
-            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="true"),
         )
 
         assert task_report["buckets"][1] == bucket(
@@ -184,12 +184,12 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=False),
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
-            logging=bucket_logging(enabled=False),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="false"),
+            logging=bucket_logging(enabled=False, skipped=False),
             mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True),
             secure_transport=bucket_secure_transport(enabled=True),
             versioning=bucket_versioning(enabled=True),
-            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="false"),
         )
 
         assert task_report["buckets"][2] == bucket(
@@ -215,12 +215,12 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="aes", key_id=None),
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
-            logging=bucket_logging(enabled=True),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check=""),
+            logging=bucket_logging(enabled=True, skipped=False),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=True),
             secure_transport=bucket_secure_transport(enabled=False),
             versioning=bucket_versioning(enabled=False),
-            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check=""),
         )
 
         assert task_report["buckets"][3] == bucket(
@@ -246,10 +246,10 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-4"),
             kms_key=key(id="key-4", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset"),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="some_other_tag"),
             logging=bucket_logging(enabled=True),
             mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True),
             secure_transport=bucket_secure_transport(enabled=True),
             versioning=bucket_versioning(enabled=False),
-            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="some_other_tag"),
         )

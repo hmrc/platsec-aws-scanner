@@ -189,6 +189,7 @@ def bucket_compliancy(
     tagging: bool = False,
     lifecycle: bool = False,
     cors: bool = False,
+    skipped: bool = None,
 ) -> BucketCompliancy:
     return BucketCompliancy(
         content_deny=ComplianceCheck(
@@ -196,12 +197,12 @@ def bucket_compliancy(
         ),
         acl=ComplianceCheck(compliant=acl, message="bucket should not have ACL set"),
         encryption=ComplianceCheck(compliant=encryption, message="bucket should be encrypted"),
-        logging=ComplianceCheck(compliant=logging, message="bucket should have logging enabled"),
+        logging=ComplianceCheck(compliant=logging, skipped=skipped, message="bucket should have logging enabled"),
         public_access_block=ComplianceCheck(
             compliant=public_access_block, message="bucket should not allow public access"
         ),
         secure_transport=ComplianceCheck(
-            compliant=secure_transport, message="bucket should have a resource policy with secure transport enforced"
+            compliant=secure_transport, skipped=skipped, message="bucket should have a resource policy with secure transport enforced"
         ),
         versioning=ComplianceCheck(compliant=versioning, message="bucket should have versioning enabled"),
         mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),
@@ -246,8 +247,8 @@ def bucket_lifecycle(
     )
 
 
-def bucket_logging(enabled: bool = False) -> BucketLogging:
-    return BucketLogging(enabled=enabled)
+def bucket_logging(enabled: bool = False, skipped: Optional[bool] = False) -> BucketLogging:
+    return BucketLogging(enabled=enabled, skipped=skipped)
 
 
 def bucket_mfa_delete(enabled: bool = False) -> BucketMFADelete:
