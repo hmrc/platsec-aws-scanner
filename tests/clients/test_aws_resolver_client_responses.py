@@ -41,3 +41,38 @@ CREATE_QUERY_LOG_CONFIG = {
         "CreationTime": "string",
     }
 }
+
+
+LIST_RESOLVER_QUERY_LOG_CONFIG_ASSOCIATIONS_MANY_RESULTS = {
+    "TotalCount": 10,
+    "TotalFilteredCount": 0,
+    "ResolverQueryLogConfigAssociations": [
+        {
+            "Id": "associations-id",
+            "ResolverQueryLogConfigId": "config-id",
+            "ResourceId": "vpc-id1",
+            "Status": "ACTIVE",
+            "Error": "NONE",
+            "ErrorMessage": "string",
+            "CreationTime": "string",
+        },
+        {
+            "Id": "associations-id",
+            "ResolverQueryLogConfigId": "config-id",
+            "ResourceId": "vpc-id2",
+            "Status": "ACTIVE",
+            "Error": "NONE",
+            "ErrorMessage": "string",
+            "CreationTime": "string",
+        },
+        {
+            "Id": "associations-id",
+            "ResolverQueryLogConfigId": "resolver_query_log_config_id",
+            "ResourceId": "vpc-id3",
+            "Status": "ACTIVE",
+            "Error": "NONE",
+            "ErrorMessage": "string",
+            "CreationTime": "string",
+        },
+    ],
+}

@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from logging import getLogger, Logger
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import AwsScannerConfig as Config
@@ -11,6 +11,7 @@ from src.clients.aws_ec2_client import AwsEC2Client
 from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_resolver_client import AwsResolverClient
+from src.data.aws_ec2_types import Vpc
 from src.data.aws_scanner_exceptions import AwsScannerException, LogsException
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_organizations_types import Account
@@ -113,6 +114,81 @@ class CreateResolverQueryLogConfig(ComplianceAction):
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description, details=dict(log_group_name=self.log_group_config.logs_group_name)
+        )
+
+
+@dataclass
+class DeleteResolverQueryLogConfig(ComplianceAction):
+    resolver: AwsResolverClient
+    query_log_config_id: str
+
+    def __init__(
+        self,
+        resolver: AwsResolverClient,
+        query_log_config_id: str,
+    ):
+        super().__init__("Delete Resolver Query Log Config")
+        self.resolver = resolver
+        self.query_log_config_id = query_log_config_id
+
+    def _apply(self) -> None:
+        self.resolver.delete_resolver_query_log_config(id=self.query_log_config_id)
+
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(
+            description=self.description, details=dict(query_log_config_id=self.query_log_config_id)
+        )
+
+
+@dataclass
+class DisassociateResolverQueryLogConfig(ComplianceAction):
+    resolver: AwsResolverClient
+    resource_id: str
+
+    def __init__(self, resolver: AwsResolverClient, resource_id: str):
+        super().__init__("Disassociate Resolver Query Log Config")
+        self.resolver = resolver
+        self.resource_id = resource_id
+
+    def _apply(self) -> None:
+        vpc_resolver_query_log_config_id = self.resolver.get_vpc_query_log_config_association(vpc_id=self.resource_id)
+        if vpc_resolver_query_log_config_id:
+            self.resolver.disassociate_resolver_query_log_config(
+                resolver_quer_log_config_id=vpc_resolver_query_log_config_id, resource_id=self.resource_id
+            )
+
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(
+            description=self.description,
+            details=dict(resource_id=self.resource_id),
+        )
+
+
+@dataclass
+class AssociateResolverQueryLogConfig(ComplianceAction):
+    resolver: AwsResolverClient
+    log_config_name: str
+    vpcs: Sequence[Vpc]
+
+    def __init__(self, resolver: AwsResolverClient, log_config_name: str, vpcs: Sequence[Vpc]):
+        super().__init__("Associate Resolver Query Log Config")
+        self.resolver = resolver
+        self.log_config_name = log_config_name
+        self.vpcs = vpcs
+
+    def _apply(self) -> None:
+        resolver_query_log = next(
+            iter(self.resolver.list_resolver_query_log_configs(query_log_config_name=self.log_config_name)), None
+        )
+        if resolver_query_log is not None:
+            for vpc in self.vpcs:
+                self.resolver.associate_resolver_query_log_config(
+                    resolver_query_log_config_id=resolver_query_log.id, vpc_id=vpc.id
+                )
+
+    def plan(self) -> ComplianceActionReport:
+        return ComplianceActionReport(
+            description=self.description, details=dict(log_config_name=self.log_config_name, vpcs=self.vpcs)
         )
 
 

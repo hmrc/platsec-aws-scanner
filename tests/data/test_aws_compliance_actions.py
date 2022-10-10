@@ -1,5 +1,5 @@
 from logging import ERROR
-from typing import Any
+from typing import Any, Sequence
 from unittest.mock import Mock, call
 
 import pytest
@@ -10,12 +10,16 @@ from src.clients.aws_iam_client import AwsIamClient
 from src.clients.aws_logs_client import AwsLogsClient
 from src.aws_scanner_config import AwsScannerConfig as Config
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
-from src.clients.aws_resolver_client import AwsResolverClient
+from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfig
 from src.data.aws_compliance_actions import (
+    AssociateResolverQueryLogConfig,
     ComplianceAction,
     ComplianceActionReport,
     CreateResolverQueryLogConfig,
+    DeleteResolverQueryLogConfig,
+    DisassociateResolverQueryLogConfig,
 )
+from src.data.aws_ec2_types import Vpc
 from src.data.aws_scanner_exceptions import AwsScannerException, LogsException
 from tests import _raise
 from tests.clients.composite.test_aws_vpc_client import AwsVpcClientBuilder
@@ -481,3 +485,85 @@ def test_plan_create_resolver_query_log_config() -> None:
             logs=log, resolver=resolver, log_group_config=log_group_config, query_log_config_name="foo"
         ).plan()
     )
+
+
+def test_apply_delete_resolver_query_log_config() -> None:
+    resolver = Mock(spec_set=AwsResolverClient)
+    query_log_config_id: str = "id"
+    resolver.delete_resolver_query_log_config = Mock()
+
+    DeleteResolverQueryLogConfig(resolver=resolver, query_log_config_id=query_log_config_id)._apply()
+
+    resolver.delete_resolver_query_log_config.assert_called_once_with(id=query_log_config_id)
+
+
+def test_plan_delete_resolver_query_log_config() -> None:
+    resolver = Mock(spec_set=AwsResolverClient)
+    query_log_config_id: str = "id"
+    resolver.delete_resolver_query_log_config = Mock()
+
+    expected_report = ComplianceActionReport(
+        description="Delete Resolver Query Log Config", details=dict(query_log_config_id=query_log_config_id)
+    )
+    actual_report = DeleteResolverQueryLogConfig(resolver=resolver, query_log_config_id=query_log_config_id).plan()
+
+    assert expected_report == actual_report
+
+
+def test_disassociate_resolver_query_log_config() -> None:
+    resolver = Mock(spec_set=AwsResolverClient)
+    resource_id: str = "rid"
+    resolver_config_id = "id01"
+    resolver.disassociate_resolver_query_log_config = Mock()
+    resolver.get_vpc_query_log_config_association = Mock(return_value=resolver_config_id)
+
+    DisassociateResolverQueryLogConfig(resolver=resolver, resource_id=resource_id)._apply()
+
+    resolver.disassociate_resolver_query_log_config.assert_called_once_with(
+        resolver_quer_log_config_id=resolver_config_id, resource_id=resource_id
+    )
+
+
+def test_plan_disassociate_resolver_query_log_config() -> None:
+    resolver = Mock(spec_set=AwsResolverClient)
+    resource_id: str = "rid"
+    resolver.delete_resolver_query_log_config = Mock()
+
+    expected_report = ComplianceActionReport(
+        description="Disassociate Resolver Query Log Config",
+        details=dict(resource_id=resource_id),
+    )
+    actual_report = DisassociateResolverQueryLogConfig(resolver=resolver, resource_id=resource_id).plan()
+
+    assert expected_report == actual_report
+
+
+def test_associate_resolver_query_log_config() -> None:
+    resolver = Mock(spec_set=AwsResolverClient)
+    log_config_name: str = "query_log_config_name"
+    vpcs: Sequence[Vpc] = [Vpc(id="id1"), Vpc(id="id2")]
+    resolver.list_resolver_query_log_configs = Mock(
+        return_value=[ResolverQueryLogConfig(id="id1", name=log_config_name, arn="", destination_arn="")]
+    )
+    resolver.disassociate_resolver_query_log_config = Mock()
+
+    AssociateResolverQueryLogConfig(resolver=resolver, log_config_name=log_config_name, vpcs=vpcs)._apply()
+
+    resolver.list_resolver_query_log_configs.assert_called_once_with(query_log_config_name=log_config_name)
+
+    resolver.list_resolver_query_log_configs.call_count == 2
+
+
+def test_plan_associate_resolver_query_log_config() -> None:
+    resolver = Mock(spec_set=AwsResolverClient)
+    log_config_name: str = "query_log_config_name"
+    vpcs: Sequence[Vpc] = [Vpc(id="id1"), Vpc(id="id2")]
+
+    expected_report = ComplianceActionReport(
+        description="Associate Resolver Query Log Config", details=dict(log_config_name=log_config_name, vpcs=vpcs)
+    )
+    actual_report = AssociateResolverQueryLogConfig(
+        resolver=resolver, log_config_name=log_config_name, vpcs=vpcs
+    ).plan()
+
+    assert expected_report == actual_report

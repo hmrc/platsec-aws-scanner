@@ -22,9 +22,7 @@ class AwsLogGroupClient:
     ) -> List[ComplianceAction]:
 
         log_group = self.logs.find_log_group(log_group_config.logs_group_name)
-
         actions: List[Any] = []
-
         if log_group:
             if (
                 self.logs.is_central_log_group(log_group=log_group, log_group_config=log_group_config)
