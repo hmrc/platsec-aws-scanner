@@ -202,7 +202,8 @@ def bucket_compliancy(
             compliant=public_access_block, message="bucket should not allow public access"
         ),
         secure_transport=ComplianceCheck(
-            compliant=secure_transport, skipped=skipped, message="bucket should have a resource policy with secure transport enforced"
+            compliant=secure_transport,
+            message="bucket should have a resource policy with secure transport enforced",
         ),
         versioning=ComplianceCheck(compliant=versioning, message="bucket should have versioning enabled"),
         mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),

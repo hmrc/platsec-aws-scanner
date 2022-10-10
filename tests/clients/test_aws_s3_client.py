@@ -428,7 +428,7 @@ def test_get_bucket_logging_disabled() -> None:
 
 def test_get_bucket_logging_failure(caplog: Any) -> None:
     with caplog.at_level(logging.WARNING):
-        assert bucket_logging(enabled=False) == s3_client_logging().get_bucket_logging("denied-bucket")
+        assert bucket_logging(enabled=False, skipped=False) == s3_client_logging().get_bucket_logging("denied-bucket")
         assert "AccessDenied" in caplog.text
 
 

@@ -209,18 +209,11 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
 @dataclass
 class BucketLogging:
     enabled: bool = False
-    skipped: Optional[bool] = False
+    skipped: bool = False
 
 
-def to_bucket_logging(logging_dict: Dict[Any, Any], skipped: bool,) -> BucketLogging:
-    skipped = ( skipped = True
-                if access_logging_tagging = True
-                else False
-            )
-    return BucketLogging(
-        enabled="LoggingEnabled" in logging_dict,
-        skipped=skipped,
-    )
+def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:
+    return BucketLogging(enabled="LoggingEnabled" in logging_dict)
 
 
 @dataclass
