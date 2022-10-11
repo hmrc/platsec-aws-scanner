@@ -79,9 +79,9 @@ class TestAwsAuditS3Task(TestCase):
             bucket_4: bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset"),
         }
         logging_mapping = {
-            bucket_1: bucket_logging(enabled=False, skipped=True),
-            bucket_2: bucket_logging(enabled=False, skipped=False),
-            bucket_3: bucket_logging(enabled=True, skipped=False),
+            bucket_1: bucket_logging(enabled=False),
+            bucket_2: bucket_logging(enabled=False),
+            bucket_3: bucket_logging(enabled=True),
             bucket_4: bucket_logging(enabled=True),
         }
         mfa_delete_mapping = {
@@ -154,7 +154,7 @@ class TestAwsAuditS3Task(TestCase):
             kms_key=key(id="key-1", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
             access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="true"),
-            logging=bucket_logging(enabled=False, skipped=True),
+            logging=bucket_logging(enabled=False),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=False),
             secure_transport=bucket_secure_transport(enabled=True),
@@ -185,7 +185,7 @@ class TestAwsAuditS3Task(TestCase):
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
             access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="false"),
-            logging=bucket_logging(enabled=False, skipped=False),
+            logging=bucket_logging(enabled=False),
             mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True),
             secure_transport=bucket_secure_transport(enabled=True),
@@ -216,7 +216,7 @@ class TestAwsAuditS3Task(TestCase):
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
             access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check=""),
-            logging=bucket_logging(enabled=True, skipped=False),
+            logging=bucket_logging(enabled=True),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=True),
             secure_transport=bucket_secure_transport(enabled=False),

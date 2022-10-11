@@ -56,7 +56,6 @@ class AwsAuditS3Task(AwsS3Task):
             message="bucket should have logging enabled",
         )
 
-
     def _is_public_access_block_compliant(self, bucket: Bucket) -> ComplianceCheck:
         return ComplianceCheck(
             compliant=bucket.public_access_block.enabled if bucket.public_access_block else False,
