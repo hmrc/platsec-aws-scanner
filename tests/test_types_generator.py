@@ -189,7 +189,7 @@ def bucket_compliancy(
     tagging: bool = False,
     lifecycle: bool = False,
     cors: bool = False,
-    # skipped: bool = None,
+    skipped: bool = False,
 ) -> BucketCompliancy:
     return BucketCompliancy(
         content_deny=ComplianceCheck(
@@ -197,7 +197,7 @@ def bucket_compliancy(
         ),
         acl=ComplianceCheck(compliant=acl, message="bucket should not have ACL set"),
         encryption=ComplianceCheck(compliant=encryption, message="bucket should be encrypted"),
-        logging=ComplianceCheck(compliant=logging, skipped=False, message="bucket should have logging enabled"),
+        logging=ComplianceCheck(compliant=logging, skipped=skipped, message="bucket should have logging enabled"),
         public_access_block=ComplianceCheck(
             compliant=public_access_block, message="bucket should not allow public access"
         ),
