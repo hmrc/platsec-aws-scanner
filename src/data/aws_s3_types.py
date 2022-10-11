@@ -209,7 +209,6 @@ def to_bucket_lifecycle(lifecycle_config: Dict[Any, Any]) -> BucketLifecycle:
 @dataclass
 class BucketLogging:
     enabled: bool = False
-    skipped: bool = False
 
 
 def to_bucket_logging(logging_dict: Dict[Any, Any]) -> BucketLogging:

@@ -44,15 +44,12 @@ class AwsAuditS3Task(AwsS3Task):
 
     def _is_logging_compliant(self, bucket: Bucket) -> ComplianceCheck:
         # compliant = False
-        if bucket.access_logging_tagging == True:
+        if bucket.access_logging_tagging == "true":
             compliant = False
             skipped = True
-        if bucket.access_logging_tagging == False:
-            compliant = bucket.logging.enabled if bucket.logging else False
-            skipped = False
         else:
             compliant = bucket.logging.enabled if bucket.logging else False
-            skipped = None
+            skipped = False
         return ComplianceCheck(
             compliant=compliant,
             skipped=skipped,
