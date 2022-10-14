@@ -317,8 +317,12 @@ def get_ignore_access_logging_check_tagging(**kwargs: Dict[str, str]) -> Any:
         raise client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")
 
     ignore_access_logging: Dict[Any, Any] = {
-        "true": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE,
-        "false": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE,
+        "true": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE_LOWER,
+        "True": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE_CAMEL,
+        "TRUE": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE_UPPER,
+        "false": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE_LOWER,
+        "False": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE_CAMEL,
+        "FALSE": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE_UPPER,
         "unknown": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_UNKNOWN,
         "no-logging": responses.GET_BUCKET_TAGGING_IGNORE_ACCESS_NO_LOGGING,
     }
@@ -332,11 +336,15 @@ def s3_client_ignore_access_logging_check_tagging() -> AwsS3Client:
 def test_get_bucket_ignore_access_logging_check_true() -> None:
     tagging = bucket_access_logging_tagging(ignore_access_logging_check="true")
     assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("true")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("True")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("TRUE")
 
 
 def test_get_bucket_ignore_access_logging_check_false() -> None:
     tagging = bucket_access_logging_tagging(ignore_access_logging_check="false")
     assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("false")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("False")
+    assert tagging == s3_client_ignore_access_logging_check_tagging().get_bucket_access_logging_tagging("FALSE")
 
 
 def test_get_bucket_ignore_access_logging_check_unknown() -> None:

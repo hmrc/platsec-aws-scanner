@@ -147,12 +147,8 @@ def to_bucket_access_logging_tagging(tag_response: Dict[str, List[Dict[str, str]
     tags = {tag["Key"]: tag["Value"] for tag in tag_response["TagSet"]}
     ignore_access_logging_check_tag = tags.get("ignore_access_logging_check")
     ignore_access_logging_check = (
-        ignore_access_logging_check_tag
-        if ignore_access_logging_check_tag
-        in [
-            "true",
-            "false",
-        ]
+        ignore_access_logging_check_tag.lower()
+        if ignore_access_logging_check_tag and ignore_access_logging_check_tag.lower() in ["true", "false"]
         else "unset"
     )
 

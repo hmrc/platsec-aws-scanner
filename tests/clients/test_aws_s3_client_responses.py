@@ -139,8 +139,24 @@ GET_BUCKET_TAGGING_EXPIRY_FOREVER_CONFIG_ONLY = {
 }
 GET_BUCKET_TAGGING_EXPIRY_UNKNOWN = {"TagSet": [{"Key": "data_expiry", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_EXPIRY = {"TagSet": [{"Key": "some_other_tag", "Value": "some_other_value"}]}
-GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE = {"TagSet": [{"Key": "ignore_access_logging_check", "Value": "true"}]}
-GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE = {"TagSet": [{"Key": "ignore_access_logging_check", "Value": "false"}]}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE_LOWER = {
+    "TagSet": [{"Key": "ignore_access_logging_check", "Value": "true"}]
+}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE_CAMEL = {
+    "TagSet": [{"Key": "ignore_access_logging_check", "Value": "True"}]
+}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_TRUE_UPPER = {
+    "TagSet": [{"Key": "ignore_access_logging_check", "Value": "true"}]
+}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE_LOWER = {
+    "TagSet": [{"Key": "ignore_access_logging_check", "Value": "false"}]
+}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE_CAMEL = {
+    "TagSet": [{"Key": "ignore_access_logging_check", "Value": "false"}]
+}
+GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_FALSE_UPPER = {
+    "TagSet": [{"Key": "ignore_access_logging_check", "Value": "false"}]
+}
 GET_BUCKET_TAGGING_IGNORE_ACCESS_LOGGING_UNKNOWN = {
     "TagSet": [{"Key": "ignore_access_logging_check", "Value": "unexpected"}]
 }
