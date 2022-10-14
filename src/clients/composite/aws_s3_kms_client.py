@@ -32,5 +32,6 @@ class AwsS3KmsClient:
         bucket.secure_transport = self._s3.get_bucket_secure_transport(bucket.name)
         bucket.versioning = self._s3.get_bucket_versioning(bucket.name)
         bucket.kms_key = self._kms.find_key(bucket.encryption.key_id) if bucket.encryption.key_id else None
+        bucket.access_logging_tagging = self._s3.get_bucket_access_logging_tagging(bucket.name)
 
         return bucket

@@ -47,6 +47,7 @@ from src.data.aws_s3_types import (
     BucketContentDeny,
     BucketCORS,
     BucketDataTagging,
+    BucketAccessLoggingTagging,
     BucketEncryption,
     BucketLifecycle,
     BucketLogging,
@@ -188,6 +189,7 @@ def bucket_compliancy(
     tagging: bool = False,
     lifecycle: bool = False,
     cors: bool = False,
+    skipped: bool = False,
 ) -> BucketCompliancy:
     return BucketCompliancy(
         content_deny=ComplianceCheck(
@@ -195,12 +197,13 @@ def bucket_compliancy(
         ),
         acl=ComplianceCheck(compliant=acl, message="bucket should not have ACL set"),
         encryption=ComplianceCheck(compliant=encryption, message="bucket should be encrypted"),
-        logging=ComplianceCheck(compliant=logging, message="bucket should have logging enabled"),
+        logging=ComplianceCheck(compliant=logging, skipped=skipped, message="bucket should have logging enabled"),
         public_access_block=ComplianceCheck(
             compliant=public_access_block, message="bucket should not allow public access"
         ),
         secure_transport=ComplianceCheck(
-            compliant=secure_transport, message="bucket should have a resource policy with secure transport enforced"
+            compliant=secure_transport,
+            message="bucket should have a resource policy with secure transport enforced",
         ),
         versioning=ComplianceCheck(compliant=versioning, message="bucket should have versioning enabled"),
         mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),
@@ -223,6 +226,10 @@ def bucket_cors(enabled: bool = True) -> BucketCORS:
 
 def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> BucketDataTagging:
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
+
+
+def bucket_access_logging_tagging(ignore_access_logging_check: str = "unset") -> BucketAccessLoggingTagging:
+    return BucketAccessLoggingTagging(ignore_access_logging_check=ignore_access_logging_check)
 
 
 def bucket_encryption(
@@ -277,6 +284,7 @@ def bucket(
     secure_transport: Optional[BucketSecureTransport] = None,
     versioning: Optional[BucketVersioning] = None,
     policy: Optional[Dict[str, Any]] = None,
+    access_logging_tagging: Optional[BucketAccessLoggingTagging] = None,
 ) -> Bucket:
     return Bucket(
         name=name,
@@ -294,6 +302,7 @@ def bucket(
         secure_transport=secure_transport,
         versioning=versioning,
         policy=policy,
+        access_logging_tagging=access_logging_tagging,
     )
 
 

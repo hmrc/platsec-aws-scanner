@@ -12,6 +12,7 @@ from tests.test_types_generator import (
     bucket_content_deny,
     bucket_cors,
     bucket_data_tagging,
+    bucket_access_logging_tagging,
     bucket_encryption,
     bucket_lifecycle,
     bucket_logging,
@@ -52,6 +53,12 @@ class TestAwsAuditS3Task(TestCase):
             bucket_2: bucket_data_tagging(expiry="1-month", sensitivity="high"),
             bucket_3: bucket_data_tagging(expiry="1-week", sensitivity="high"),
             bucket_4: bucket_data_tagging(expiry="forever-config-only", sensitivity="low"),
+        }
+        access_logging_tagging = {
+            bucket_1: bucket_access_logging_tagging(ignore_access_logging_check="true"),
+            bucket_2: bucket_access_logging_tagging(ignore_access_logging_check="false"),
+            bucket_3: bucket_access_logging_tagging(ignore_access_logging_check=""),
+            bucket_4: bucket_access_logging_tagging(ignore_access_logging_check="some_other_tag"),
         }
         encryption_mapping = {
             bucket_1: bucket_encryption(enabled=True, type="cmk", key_id="key-1"),
@@ -115,6 +122,7 @@ class TestAwsAuditS3Task(TestCase):
             get_bucket_public_access_block=Mock(side_effect=lambda b: public_access_block_mapping[b]),
             get_bucket_secure_transport=Mock(side_effect=lambda b: secure_transport_mapping[b]),
             get_bucket_versioning=Mock(side_effect=lambda b: versioning_mapping[b]),
+            get_bucket_access_logging_tagging=Mock(side_effect=lambda b: access_logging_tagging[b]),
         )
         kms_client = Mock(find_key=Mock(side_effect=lambda b: kms_key_mapping[b]))
         s3_kms_client = AwsS3KmsClient(s3=s3_client, kms=kms_client)
@@ -137,6 +145,7 @@ class TestAwsAuditS3Task(TestCase):
                 tagging=True,
                 lifecycle=True,
                 cors=False,
+                skipped=True,
             ),
             acl=bucket_acl(all_users_enabled=True, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=False),
@@ -145,6 +154,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-1"),
             kms_key=key(id="key-1", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry=7, previous_version_deletion=14),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="true"),
             logging=bucket_logging(enabled=False),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=False),
@@ -167,6 +177,7 @@ class TestAwsAuditS3Task(TestCase):
                 tagging=True,
                 lifecycle=False,
                 cors=True,
+                skipped=False,
             ),
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=True),
             content_deny=bucket_content_deny(enabled=True),
@@ -175,6 +186,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=False),
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry=31, previous_version_deletion="unset"),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="false"),
             logging=bucket_logging(enabled=False),
             mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True),
@@ -197,6 +209,7 @@ class TestAwsAuditS3Task(TestCase):
                 tagging=True,
                 lifecycle=False,
                 cors=True,
+                skipped=False,
             ),
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=True),
@@ -205,6 +218,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="aes", key_id=None),
             kms_key=None,
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion=366),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check=""),
             logging=bucket_logging(enabled=True),
             mfa_delete=bucket_mfa_delete(enabled=True),
             public_access_block=bucket_public_access_block(enabled=True),
@@ -227,6 +241,7 @@ class TestAwsAuditS3Task(TestCase):
                 tagging=True,
                 lifecycle=True,
                 cors=True,
+                skipped=False,
             ),
             acl=bucket_acl(all_users_enabled=False, authenticated_users_enabled=False),
             content_deny=bucket_content_deny(enabled=True),
@@ -235,6 +250,7 @@ class TestAwsAuditS3Task(TestCase):
             encryption=bucket_encryption(enabled=True, type="cmk", key_id="key-4"),
             kms_key=key(id="key-4", rotation_enabled=True),
             lifecycle=bucket_lifecycle(current_version_expiry="unset", previous_version_deletion="unset"),
+            access_logging_tagging=bucket_access_logging_tagging(ignore_access_logging_check="some_other_tag"),
             logging=bucket_logging(enabled=True),
             mfa_delete=bucket_mfa_delete(enabled=False),
             public_access_block=bucket_public_access_block(enabled=True),
