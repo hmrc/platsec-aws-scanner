@@ -548,6 +548,19 @@ def log_group(
     )
 
 
+def expected_log_group(config: LogGroupConfig) -> LogGroup:
+    return LogGroup(
+        name=config.logs_group_name,
+        kms_key_id=None,
+        kms_key=None,
+        retention_days=config.logs_group_retention_policy_days,
+        stored_bytes=None,
+        subscription_filters=[expected_subscription_filter(config)],
+        tags=PLATSEC_SCANNER_TAGS,
+        arn="some arn",
+    )
+
+
 def subscription_filter(
     log_group_name: str = "/vpc/central_flow_log",
     filter_name: str = "VpcFlowLogsForward",

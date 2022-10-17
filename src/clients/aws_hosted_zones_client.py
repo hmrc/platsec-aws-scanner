@@ -31,7 +31,7 @@ class AwsHostedZonesClient:
 
         return public_zones
 
-    def list_query_logging_configs(self, id: str) -> Any:
+    def list_query_logging_configs(self, id: str) -> Dict[str, Any]:
         try:
             return self._route53.list_query_logging_configs(HostedZoneId=id)
         except (BotoCoreError, ClientError) as err:

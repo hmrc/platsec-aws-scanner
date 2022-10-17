@@ -137,3 +137,6 @@ class AwsLogsClient:
                 ],
             }
         )
+
+    def get_resource_policy(self, policy_name: str) -> Optional[str]:
+        raise Exception("not implemented!")

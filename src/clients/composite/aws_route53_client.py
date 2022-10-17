@@ -74,13 +74,18 @@ class AwsRoute53Client:
         self, account: Account, hostedZone: route53Type.Route53Zone
     ) -> Sequence[ComplianceAction]:
         queryLogActionList = []
-        queryLogActionList.append(
-            CreateQueryLogAction(
-                account=account,
-                route53_client=self._route53,
-                iam=self._iam,
-                log_group_config=self.log_group_config,
-                zone_id=hostedZone.id,
+        hosted_zone_query_log = self._route53.list_query_logging_configs(id=hostedZone.id)
+        if (
+            len(hosted_zone_query_log["QueryLoggingConfigs"]) == 0
+            or hosted_zone_query_log["QueryLoggingConfigs"][0]["CloudWatchLogsLogGroupArn"] == ""
+        ):
+            queryLogActionList.append(
+                CreateQueryLogAction(
+                    account=account,
+                    route53_client=self._route53,
+                    iam=self._iam,
+                    log_group_config=self.log_group_config,
+                    zone_id=hostedZone.id,
+                )
             )
-        )
         return queryLogActionList
