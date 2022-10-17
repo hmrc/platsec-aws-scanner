@@ -139,4 +139,11 @@ class AwsLogsClient:
         )
 
     def get_resource_policy(self, policy_name: str) -> Optional[str]:
-        raise Exception("not implemented!")
+        try:
+            policies_list = self._logs.describe_resource_policies()
+        except (BotoCoreError, ClientError) as err:
+            raise LogsException(f"unable to describe_resource_policies: {err}") from err
+        for policy in policies_list["resourcePolicies"]:
+            if policy["policyName"] == policy_name:
+                return str(policy["policyDocument"])
+        return None

@@ -160,3 +160,38 @@ def test_put_resource_policy_failure() -> None:
     boto = Mock(put_resource_policy=Mock(side_effect=client_error("PutResourcePolicy", "some_error", "boom!")))
     with raises(LogsException, match="logs resource policy"):
         AwsLogsClient(boto, Mock(), account()).put_resource_policy("a_policy_name", "a_policy_document")
+
+
+def test_get_resource_policy() -> None:
+    boto = Mock(describe_resource_policies=Mock(return_value=responses.DESCRIBE_RESOURCE_POLICIES))
+    response = AwsLogsClient(boto, Mock(), account()).get_resource_policy(policy_name="a_policy_name")
+
+    boto.describe_resource_policies.assert_called_once()
+
+    assert response == "my favorite policy statement"
+
+
+def test_get_resource_policy_returns_none_when_not_found() -> None:
+    boto = Mock(describe_resource_policies=Mock(return_value=responses.DESCRIBE_RESOURCE_POLICIES))
+    response = AwsLogsClient(boto, Mock(), account()).get_resource_policy(policy_name="you will never find this policy")
+
+    boto.describe_resource_policies.assert_called_once()
+
+    assert response is None
+
+
+def test_get_resource_policy_returns_none_when_no_policy_returned() -> None:
+    boto = Mock(describe_resource_policies=Mock(return_value=responses.DESCRIBE_RESOURCE_POLICIES_NONE))
+    response = AwsLogsClient(boto, Mock(), account()).get_resource_policy(policy_name="you will never find this policy")
+
+    boto.describe_resource_policies.assert_called_once()
+
+    assert response is None
+
+
+def test_get_resource_policy_failure() -> None:
+    boto = Mock(
+        describe_resource_policies=Mock(side_effect=client_error("DESCRIBE_RESOURCE_POLICIES_ERROR", "Error", "nope"))
+    )
+    with raises(LogsException, match="unable to describe_resource_policies"):
+        AwsLogsClient(boto, Mock(), account()).get_resource_policy(policy_name="you will never find this policy")

@@ -64,4 +64,4 @@ class AwsLogGroupClient:
 
     def _is_log_group_resource_policy_compliant(self, log_group_config: LogGroupConfig, policy: str) -> bool:
         existing_policy = self.logs.get_resource_policy(policy_name=log_group_config.log_group_resource_policy_name)
-        return existing_policy and existing_policy == policy
+        return (existing_policy and existing_policy == policy)
