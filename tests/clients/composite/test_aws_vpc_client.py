@@ -48,7 +48,7 @@ from tests.test_types_generator import (
     expected_subscription_filter,
     resolver_query_log_config,
     account,
-    put_route53_log_group_resource_policy_action,
+    put_log_group_resource_policy_action,
     resource_policy_document,
 )
 
@@ -160,7 +160,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         client.with_roles([role()])
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -176,7 +176,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -193,7 +193,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -223,7 +223,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -244,7 +244,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -263,7 +263,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -348,7 +348,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     log_group_config=log_group_config,
                     logs=client.logs,
                 ),
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=log_group_config, logs=client.logs, policy_document=resource_policy_document()
                 ),
             ],
@@ -371,7 +371,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                 logs=client.logs,
             ),
             tag_log_group_action(log_group_config=log_group_config, logs=client.logs),
-            put_route53_log_group_resource_policy_action(
+            put_log_group_resource_policy_action(
                 log_group_config=log_group_config, logs=client.logs, policy_document=resource_policy_document()
             ),
         ]
@@ -390,7 +390,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         self.assertEqual(
             [
                 put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=client.logs),
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -411,7 +411,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     log_group_config=log_group_config,
                     logs=client.logs,
                 ),
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -432,7 +432,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     log_group_config=log_group_config,
                     logs=client.logs,
                 ),
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -453,7 +453,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     log_group_config=log_group_config,
                     logs=client.logs,
                 ),
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -470,7 +470,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         log_group_config = Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -488,7 +488,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         self.assertEqual(
             [
                 delete_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=client.logs),
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -523,7 +523,7 @@ class TestDNSEnforcementActions(TestCase):
             PutLogGroupRetentionPolicyAction(logs=vpc_client.logs, log_group_config=log_config),
             TagLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
             PutLogGroupSubscriptionFilterAction(logs=vpc_client.logs, log_group_config=log_config),
-            put_route53_log_group_resource_policy_action(
+            put_log_group_resource_policy_action(
                 log_group_config=Config().logs_route53_query_log_group_config(),
                 logs=client.logs,
                 policy_document=resource_policy_document(),
@@ -573,7 +573,7 @@ class TestDNSEnforcementActions(TestCase):
         client.with_resolver_associations({query_log_config.id: [expected_vpc.id]})
         self.assertEqual(
             [
-                put_route53_log_group_resource_policy_action(
+                put_log_group_resource_policy_action(
                     log_group_config=Config().logs_route53_query_log_group_config(),
                     logs=client.logs,
                     policy_document=resource_policy_document(),
@@ -613,7 +613,7 @@ class TestDNSEnforcementActions(TestCase):
         )
         client.with_resolver_query_log_config([resolver_config])
         expected_actions = [
-            put_route53_log_group_resource_policy_action(
+            put_log_group_resource_policy_action(
                 log_group_config=Config().logs_route53_query_log_group_config(),
                 logs=client.logs,
                 policy_document=resource_policy_document(),
@@ -666,7 +666,7 @@ class TestDNSEnforcementActions(TestCase):
             PutLogGroupRetentionPolicyAction(logs=vpc_client.logs, log_group_config=log_config),
             TagLogGroupAction(logs=vpc_client.logs, log_group_config=log_config),
             PutLogGroupSubscriptionFilterAction(logs=vpc_client.logs, log_group_config=log_config),
-            put_route53_log_group_resource_policy_action(
+            put_log_group_resource_policy_action(
                 log_group_config=Config().logs_route53_query_log_group_config(),
                 logs=client.logs,
                 policy_document=resource_policy_document(),
@@ -731,7 +731,7 @@ class TestDNSEnforcementActions(TestCase):
         vpc_client = client.build()
 
         expected_response = [
-            put_route53_log_group_resource_policy_action(
+            put_log_group_resource_policy_action(
                 log_group_config=Config().logs_route53_query_log_group_config(),
                 logs=client.logs,
                 policy_document=resource_policy_document(),

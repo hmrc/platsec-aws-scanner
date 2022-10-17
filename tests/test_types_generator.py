@@ -496,7 +496,7 @@ def resource_policy_document() -> str:
     """
 
 
-def put_route53_log_group_resource_policy_action(
+def put_log_group_resource_policy_action(
     log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
     policy_document: str = resource_policy_document(),

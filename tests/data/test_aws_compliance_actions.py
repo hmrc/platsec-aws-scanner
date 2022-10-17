@@ -43,7 +43,7 @@ from tests.test_types_generator import (
     update_password_policy_action,
     create_query_log_action,
     resource_policy_document,
-    put_route53_log_group_resource_policy_action,
+    put_log_group_resource_policy_action,
     log_group,
 )
 
@@ -139,7 +139,7 @@ def test_apply_create_query_log_action() -> None:
 
 def test_apply_put_resource_policy_action() -> None:
     logs = Mock(spec=AwsLogsClient)
-    put_route53_log_group_resource_policy_action(
+    put_log_group_resource_policy_action(
         log_group_config=Config().logs_route53_query_log_group_config(), logs=logs
     )._apply()
     logs.put_resource_policy.assert_called_once_with(
@@ -172,9 +172,7 @@ def test_plan_put_resource_policy_action() -> None:
     )
     assert (
         expected
-        == put_route53_log_group_resource_policy_action(
-            log_group_config=Config().logs_route53_query_log_group_config()
-        ).plan()
+        == put_log_group_resource_policy_action(log_group_config=Config().logs_route53_query_log_group_config()).plan()
     )
 
 
