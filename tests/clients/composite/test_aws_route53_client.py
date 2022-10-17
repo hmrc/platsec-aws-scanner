@@ -18,7 +18,7 @@ from src.data.aws_compliance_actions import (
     CreateLogGroupAction,
     PutLogGroupSubscriptionFilterAction,
     DeleteLogGroupSubscriptionFilterAction,
-    PutRoute53LogGroupResourcePolicyAction,
+    PutLogGroupResourcePolicyAction,
 )
 
 
@@ -83,7 +83,7 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
         expectedQueryLogActionList.append(
-            PutRoute53LogGroupResourcePolicyAction(
+            PutLogGroupResourcePolicyAction(
                 logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
             )
         )
@@ -155,7 +155,7 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
         expectedQueryLogActionList.append(
-            PutRoute53LogGroupResourcePolicyAction(
+            PutLogGroupResourcePolicyAction(
                 logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
             )
         )
@@ -222,7 +222,7 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
         expectedQueryLogActionList.append(
-            PutRoute53LogGroupResourcePolicyAction(
+            PutLogGroupResourcePolicyAction(
                 logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
             )
         )
@@ -294,7 +294,7 @@ class TestAwsRoute53Client(TestCase):
             PutLogGroupSubscriptionFilterAction(log_group_config=log_group_config, logs=logs)
         )
         expectedQueryLogActionList.append(
-            PutRoute53LogGroupResourcePolicyAction(
+            PutLogGroupResourcePolicyAction(
                 logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
             )
         )

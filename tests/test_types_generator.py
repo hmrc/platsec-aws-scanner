@@ -24,7 +24,7 @@ from src.data.aws_compliance_actions import (
     DeleteLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     PutLogGroupSubscriptionFilterAction,
-    PutRoute53LogGroupResourcePolicyAction,
+    PutLogGroupResourcePolicyAction,
     TagFlowLogDeliveryRoleAction,
     UpdatePasswordPolicyAction,
     DeleteQueryLogAction,
@@ -500,8 +500,8 @@ def put_route53_log_group_resource_policy_action(
     log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
     policy_document: str = resource_policy_document(),
-) -> PutRoute53LogGroupResourcePolicyAction:
-    return PutRoute53LogGroupResourcePolicyAction(
+) -> PutLogGroupResourcePolicyAction:
+    return PutLogGroupResourcePolicyAction(
         logs=logs, log_group_config=log_group_config, policy_document=policy_document
     )
 

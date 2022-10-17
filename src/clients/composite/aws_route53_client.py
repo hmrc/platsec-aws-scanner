@@ -16,7 +16,7 @@ from src.data.aws_compliance_actions import (
     ComplianceAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
-    PutRoute53LogGroupResourcePolicyAction,
+    PutLogGroupResourcePolicyAction,
 )
 
 
@@ -37,12 +37,12 @@ class AwsRoute53Client:
         if not hostedZones:
             return list()
 
-        policy_document: str = self._route53_query_logs_resource_policy_document(account)
+        policy_document: str = self._logs_resource_policy_document(account)
         log_group_actions: List[ComplianceAction] = self.log_group.log_group_enforcement_actions(
             log_group_config=self.log_group_config, with_subscription_filter=with_subscription_filter
         )
         log_group_actions.append(
-            PutRoute53LogGroupResourcePolicyAction(
+            PutLogGroupResourcePolicyAction(
                 logs=self._logs, log_group_config=self.log_group_config, policy_document=policy_document
             )
         )
@@ -92,7 +92,7 @@ class AwsRoute53Client:
         )
         return queryLogActionList
 
-    def _route53_query_logs_resource_policy_document(self, account: Account) -> str:
+    def _logs_resource_policy_document(self, account: Account) -> str:
         return dumps(
             {
                 "Version": "2012-10-17",
@@ -100,7 +100,7 @@ class AwsRoute53Client:
                     {
                         "Sid": "",
                         "Effect": "Allow",
-                        "Principal": {"Service": ["route53.amazonaws.com"]},
+                        "Principal": {"Service": ["route53.amazonaws.com", "delivery.logs.amazonaws.com"]},
                         "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
                         "Resource": f"arn:aws:logs:us-east-1:{account.identifier}:log-group:*",
                     }
