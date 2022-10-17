@@ -112,8 +112,11 @@ class TestAwsRoute53Client(TestCase):
             )
         )
         client = AwsRoute53Client(boto_route53, iam, logs, log_group)
+        actual = client.enforcement_actions(account, hostedZones, False)
+        print(">>>>>>>>>>>>: ", expectedQueryLogActionList)
+        print(">>>>>>>>>>>>: ", actual)
 
-        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
+        assert expectedQueryLogActionList == actual
 
     def test_enforcement_actions_with_existing_LogGroup_with_subscription_filter(self) -> None:
 

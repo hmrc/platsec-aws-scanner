@@ -1,4 +1,3 @@
-from json import dumps
 from logging import getLogger
 from typing import Any, List, Sequence, Dict
 from itertools import chain
@@ -16,7 +15,6 @@ from src.data.aws_compliance_actions import (
     ComplianceAction,
     DeleteQueryLogAction,
     CreateQueryLogAction,
-    PutLogGroupResourcePolicyAction,
 )
 
 
@@ -37,15 +35,10 @@ class AwsRoute53Client:
         if not hostedZones:
             return list()
 
-        policy_document: str = self._logs_resource_policy_document(account)
         log_group_actions: List[ComplianceAction] = self.log_group.log_group_enforcement_actions(
             log_group_config=self.log_group_config, with_subscription_filter=with_subscription_filter
         )
-        log_group_actions.append(
-            PutLogGroupResourcePolicyAction(
-                logs=self._logs, log_group_config=self.log_group_config, policy_document=policy_document
-            )
-        )
+
         route53_actions: List[ComplianceAction] = [
             action
             for zone in hostedZones
@@ -91,19 +84,3 @@ class AwsRoute53Client:
             )
         )
         return queryLogActionList
-
-    def _logs_resource_policy_document(self, account: Account) -> str:
-        return dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Sid": "",
-                        "Effect": "Allow",
-                        "Principal": {"Service": ["route53.amazonaws.com", "delivery.logs.amazonaws.com"]},
-                        "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
-                        "Resource": f"arn:aws:logs:us-east-1:{account.identifier}:log-group:*",
-                    }
-                ],
-            }
-        )

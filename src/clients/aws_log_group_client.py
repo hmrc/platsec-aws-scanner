@@ -7,6 +7,7 @@ from src.data.aws_compliance_actions import (
     ComplianceAction,
     CreateLogGroupAction,
     DeleteLogGroupSubscriptionFilterAction,
+    PutLogGroupResourcePolicyAction,
     PutLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     TagLogGroupAction,
@@ -51,5 +52,12 @@ class AwsLogGroupClient:
 
             if with_subscription_filter:
                 actions.append(PutLogGroupSubscriptionFilterAction(logs=self.logs, log_group_config=log_group_config))
+
+        policy_document: str = self.logs.logs_resource_policy_document()
+        actions.append(
+            PutLogGroupResourcePolicyAction(
+                logs=self.logs, log_group_config=log_group_config, policy_document=policy_document
+            )
+        )
 
         return actions

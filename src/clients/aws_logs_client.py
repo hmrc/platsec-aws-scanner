@@ -1,3 +1,4 @@
+from json import dumps
 from logging import getLogger
 from typing import Sequence, Optional
 from functools import partial
@@ -8,15 +9,17 @@ from src.aws_scanner_config import AwsScannerConfig as Config, LogGroupConfig
 from src.clients.aws_kms_client import AwsKmsClient
 from src.data.aws_common_types import Tag
 from src.data.aws_logs_types import LogGroup, SubscriptionFilter, to_log_group, to_subscription_filter
+from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import LogsException
 
 
 class AwsLogsClient:
-    def __init__(self, boto_logs: BaseClient, kms: AwsKmsClient):
+    def __init__(self, boto_logs: BaseClient, kms: AwsKmsClient, account: Account):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._logs = boto_logs
         self.kms = kms
+        self.account = account
 
     def describe_log_groups(self, name_prefix: str) -> Sequence[LogGroup]:
         try:
@@ -118,3 +121,19 @@ class AwsLogsClient:
         log_group = next(iter(self.describe_log_groups(name)), None)
         kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
         return log_group.with_kms_key(kms_key) if log_group else None
+
+    def logs_resource_policy_document(self) -> str:
+        return dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "",
+                        "Effect": "Allow",
+                        "Principal": {"Service": ["route53.amazonaws.com", "delivery.logs.amazonaws.com"]},
+                        "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                        "Resource": f"arn:aws:logs:us-east-1:{self.account.identifier}:log-group:*",
+                    }
+                ],
+            }
+        )
