@@ -83,11 +83,6 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
         expectedQueryLogActionList.append(
-            PutLogGroupResourcePolicyAction(
-                logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
-            )
-        )
-        expectedQueryLogActionList.append(
             DeleteQueryLogAction(route53_client=boto_route53, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD")
         )
         expectedQueryLogActionList.append(
@@ -113,8 +108,6 @@ class TestAwsRoute53Client(TestCase):
         )
         client = AwsRoute53Client(boto_route53, iam, logs, log_group)
         actual = client.enforcement_actions(account, hostedZones, False)
-        print(">>>>>>>>>>>>: ", expectedQueryLogActionList)
-        print(">>>>>>>>>>>>: ", actual)
 
         assert expectedQueryLogActionList == actual
 
@@ -157,11 +150,6 @@ class TestAwsRoute53Client(TestCase):
             PutLogGroupRetentionPolicyAction(logs=logs, log_group_config=log_group_config)
         )
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
-        expectedQueryLogActionList.append(
-            PutLogGroupResourcePolicyAction(
-                logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
-            )
-        )
         expectedQueryLogActionList.append(
             DeleteQueryLogAction(route53_client=boto_route53, hosted_zone_id="/hostedzone/AAAABBBBCCCCDD")
         )

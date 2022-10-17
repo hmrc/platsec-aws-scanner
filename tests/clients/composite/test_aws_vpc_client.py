@@ -159,13 +159,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         client.with_default_log_group()
         client.with_roles([role()])
         self.assertEqual(
-            [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                )
-            ],
+            [],
             client.build().enforcement_flow_log_actions([vpc()], with_subscription_filter=True),
         )
 
@@ -176,28 +170,18 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
                 create_flow_log_action(vpc_id="vpc-1234"),
             ],
             client.build().enforcement_flow_log_actions([vpc(flow_logs=[])], with_subscription_filter=True),
         )
 
-    def test_vpc_delete_redundant_centralised(self) -> None:
+    def test_vpc_delete_redundant_actions(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_log_group()
         client.with_roles([role()])
 
         self.assertEqual(
             [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
                 delete_flow_log_action(flow_log_id="2"),
                 delete_flow_log_action(flow_log_id="3"),
             ],
@@ -223,11 +207,6 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
                 delete_flow_log_action(flow_log_id="1"),
                 delete_flow_log_action(flow_log_id="3"),
             ],
@@ -237,18 +216,13 @@ class TestVPCFlowLogEnforcementActions(TestCase):
             ),
         )
 
-    def test_vpc_create_centralised(self) -> None:
+    def test_vpc_create_centralised_flow_log(self) -> None:
         client = AwsVpcClientBuilder()
         client.with_default_log_group()
         client.with_roles([role()])
 
         self.assertEqual(
             [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
                 create_flow_log_action(vpc_id="vpc-1"),
             ],
             client.build().enforcement_flow_log_actions(
@@ -263,11 +237,6 @@ class TestVPCFlowLogEnforcementActions(TestCase):
 
         self.assertEqual(
             [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
                 delete_flow_log_action(flow_log_id="1"),
                 create_flow_log_action(vpc_id="vpc-a"),
             ],
@@ -390,11 +359,6 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         self.assertEqual(
             [
                 put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=client.logs),
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
             ],
             client.build().log_group.log_group_enforcement_actions(
                 log_group_config=log_group_config, with_subscription_filter=True
@@ -410,11 +374,6 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                 put_log_group_retention_policy_action(
                     log_group_config=log_group_config,
                     logs=client.logs,
-                ),
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
                 ),
             ],
             client.build().log_group.log_group_enforcement_actions(
@@ -432,11 +391,6 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     log_group_config=log_group_config,
                     logs=client.logs,
                 ),
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
             ],
             client.build().log_group.log_group_enforcement_actions(
                 log_group_config=log_group_config, with_subscription_filter=True
@@ -453,11 +407,6 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     log_group_config=log_group_config,
                     logs=client.logs,
                 ),
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
             ],
             client.build().log_group.log_group_enforcement_actions(
                 log_group_config=log_group_config, with_subscription_filter=True
@@ -469,13 +418,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         client.with_default_log_group()
         log_group_config = Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
-            [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                )
-            ],
+            [],
             client.build().log_group.log_group_enforcement_actions(
                 log_group_config=log_group_config, with_subscription_filter=True
             ),
@@ -486,14 +429,7 @@ class TestVPCFlowLogEnforcementActions(TestCase):
         client.with_default_log_group()
         log_group_config = Config().logs_vpc_flow_log_group_config()
         self.assertEqual(
-            [
-                delete_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=client.logs),
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                ),
-            ],
+            [delete_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=client.logs)],
             client.build().log_group.log_group_enforcement_actions(
                 log_group_config=log_group_config, with_subscription_filter=False
             ),
@@ -572,13 +508,7 @@ class TestDNSEnforcementActions(TestCase):
         expected_vpc = vpc()
         client.with_resolver_associations({query_log_config.id: [expected_vpc.id]})
         self.assertEqual(
-            [
-                put_log_group_resource_policy_action(
-                    log_group_config=Config().logs_route53_query_log_group_config(),
-                    logs=client.logs,
-                    policy_document=resource_policy_document(),
-                )
-            ],
+            [],
             client.build().enforcement_dns_log_actions([expected_vpc], with_subscription_filter=True),
         )
 
@@ -613,11 +543,6 @@ class TestDNSEnforcementActions(TestCase):
         )
         client.with_resolver_query_log_config([resolver_config])
         expected_actions = [
-            put_log_group_resource_policy_action(
-                log_group_config=Config().logs_route53_query_log_group_config(),
-                logs=client.logs,
-                policy_document=resource_policy_document(),
-            ),
             DisassociateResolverQueryLogConfig(resolver=client.resolver, resource_id=vpc2.id),
             AssociateResolverQueryLogConfig(
                 resolver=client.resolver,
@@ -731,11 +656,6 @@ class TestDNSEnforcementActions(TestCase):
         vpc_client = client.build()
 
         expected_response = [
-            put_log_group_resource_policy_action(
-                log_group_config=Config().logs_route53_query_log_group_config(),
-                logs=client.logs,
-                policy_document=resource_policy_document(),
-            ),
             DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id=vpcs[0].id),
             DisassociateResolverQueryLogConfig(resolver=vpc_client.resolver, resource_id=vpcs[1].id),
             AssociateResolverQueryLogConfig(

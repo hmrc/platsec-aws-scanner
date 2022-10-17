@@ -49,15 +49,14 @@ class AwsLogGroupClient:
                     TagLogGroupAction(logs=self.logs, log_group_config=log_group_config),
                 ]
             )
-
             if with_subscription_filter:
                 actions.append(PutLogGroupSubscriptionFilterAction(logs=self.logs, log_group_config=log_group_config))
 
-        policy_document: str = self.logs.logs_resource_policy_document()
-        actions.append(
-            PutLogGroupResourcePolicyAction(
-                logs=self.logs, log_group_config=log_group_config, policy_document=policy_document
+            policy_document: str = self.logs.logs_resource_policy_document()
+            actions.append(
+                PutLogGroupResourcePolicyAction(
+                    logs=self.logs, log_group_config=log_group_config, policy_document=policy_document
+                )
             )
-        )
 
         return actions
