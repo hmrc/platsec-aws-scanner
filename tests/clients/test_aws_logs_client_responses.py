@@ -64,7 +64,11 @@ LIST_TAGS_LOG_GROUP = [
 
 DESCRIBE_RESOURCE_POLICIES = {
     "resourcePolicies": [
-        {"policyName": "a_policy_name", "policyDocument": "my favorite policy statement", "lastUpdatedTime": 123},
+        {
+            "policyName": "a_policy_name",
+            "policyDocument": '{"text": "my favorite policy statement"}',
+            "lastUpdatedTime": 123,
+        },
     ],
 }
 

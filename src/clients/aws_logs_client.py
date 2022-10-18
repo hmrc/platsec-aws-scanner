@@ -1,6 +1,6 @@
-from json import dumps
+import json
 from logging import getLogger
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Any, Dict
 from functools import partial
 from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
@@ -98,9 +98,10 @@ class AwsLogsClient:
                 f"unable to put {retention_days} days retention policy for log group '{log_group_name}': {err}"
             ) from None
 
-    def put_resource_policy(self, policy_name: str, policy_document: str) -> None:
+    def put_resource_policy(self, policy_name: str, policy_document: Dict[str, Any]) -> None:
+        policy_document_string = json.dumps(policy_document)
         try:
-            self._logs.put_resource_policy(policyName=policy_name, policyDocument=policy_document)
+            self._logs.put_resource_policy(policyName=policy_name, policyDocument=policy_document_string)
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to put logs resource policy': {err}") from None
 
@@ -122,35 +123,33 @@ class AwsLogsClient:
         kms_key = self.kms.get_key(log_group.kms_key_id) if log_group and log_group.kms_key_id else None
         return log_group.with_kms_key(kms_key) if log_group else None
 
-    def logs_resource_policy_document(self) -> str:
-        return dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Sid": "route53QueryLogs",
-                        "Effect": "Allow",
-                        "Principal": {"Service": ["route53.amazonaws.com"]},
-                        "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
-                        "Resource": f"arn:aws:logs:us-east-1:{self.account.identifier}:log-group:*",
-                    },
-                    {
-                        "Sid": "route53ResolverVpcDnsLogs",
-                        "Effect": "Allow",
-                        "Principal": {"Service": ["delivery.logs.amazonaws.com"]},
-                        "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
-                        "Resource": f"arn:aws:logs::{self.account.identifier}:log-group:*",
-                    },
-                ],
-            }
-        )
+    def logs_resource_policy_document(self) -> Dict[str, Any]:
+        return {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "route53QueryLogs",
+                    "Effect": "Allow",
+                    "Principal": {"Service": "route53.amazonaws.com"},
+                    "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                    "Resource": f"arn:aws:logs:us-east-1:{self.account.identifier}:log-group:*",
+                },
+                {
+                    "Sid": "route53ResolverVpcDnsLogs",
+                    "Effect": "Allow",
+                    "Principal": {"Service": "delivery.logs.amazonaws.com"},
+                    "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                    "Resource": f"arn:aws:logs::{self.account.identifier}:log-group:*",
+                },
+            ],
+        }
 
-    def get_resource_policy(self, policy_name: str) -> Optional[str]:
+    def get_resource_policy(self, policy_name: str) -> Optional[Any]:
         try:
             policies_list = self._logs.describe_resource_policies()
         except (BotoCoreError, ClientError) as err:
             raise LogsException(f"unable to describe_resource_policies: {err}") from err
         for policy in policies_list["resourcePolicies"]:
             if policy["policyName"] == policy_name:
-                return str(policy["policyDocument"])
+                return json.loads(policy["policyDocument"])
         return None

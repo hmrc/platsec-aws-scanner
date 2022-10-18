@@ -122,7 +122,7 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
         expectedQueryLogActionList.append(
             PutLogGroupResourcePolicyAction(
-                logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
+                logs=logs, log_group_config=log_group_config, policy_document={"a_policy_document": 1}
             )
         )
         expectedQueryLogActionList.append(
@@ -233,7 +233,7 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(TagLogGroupAction(logs=logs, log_group_config=log_group_config))
         expectedQueryLogActionList.append(
             PutLogGroupResourcePolicyAction(
-                logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
+                logs=logs, log_group_config=log_group_config, policy_document={"a_policy_document": 1}
             )
         )
         expectedQueryLogActionList.append(
@@ -306,7 +306,7 @@ class TestAwsRoute53Client(TestCase):
         )
         expectedQueryLogActionList.append(
             PutLogGroupResourcePolicyAction(
-                logs=logs, log_group_config=log_group_config, policy_document="a_policy_document"
+                logs=logs, log_group_config=log_group_config, policy_document={"a_policy_document": 1}
             )
         )
         expectedQueryLogActionList.append(

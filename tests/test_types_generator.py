@@ -477,29 +477,25 @@ def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient
     return TagFlowLogDeliveryRoleAction(iam=iam)
 
 
-def resource_policy_document() -> str:
-    return """
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "",
-                    "Effect": "Allow",
-                    "Principal": {
-                        "Service": [ "route53.amazonaws.com" ]
-                    },
-                    "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
-                    "Resource": "arn:aws:logs:us-east-1:1234567890:log-group:*"
-                }
-            ]
-        }
-    """
+def resource_policy_document() -> Dict[str, Any]:
+    return {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "",
+                "Effect": "Allow",
+                "Principal": {"Service": "route53.amazonaws.com"},
+                "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                "Resource": "arn:aws:logs:us-east-1:1234567890:log-group:*",
+            }
+        ],
+    }
 
 
 def put_log_group_resource_policy_action(
     log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
-    policy_document: str = resource_policy_document(),
+    policy_document: Dict[str, Any] = resource_policy_document(),
 ) -> PutLogGroupResourcePolicyAction:
     return PutLogGroupResourcePolicyAction(
         logs=logs, log_group_config=log_group_config, policy_document=policy_document
