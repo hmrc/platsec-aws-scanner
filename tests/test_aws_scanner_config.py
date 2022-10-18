@@ -53,7 +53,7 @@ def test_init_config_from_file() -> None:
         "Statement": [{"Action": ["logs:*"], "Effect": "Allow", "Resource": "*"}]
     } == config.logs_vpc_log_group_delivery_role_policy_document()
     assert "logs_role" == config.logs_role()
-    assert "route53_query_logs_to_cloudwatch_logs" == config.logs_route53_log_group_resource_policy_name()
+    assert "query_logs_to_cloudwatch_logs" == config.logs_log_group_resource_policy_name()
     assert "route53_flow_log_role" == config.logs_route53_log_group_delivery_role()
     assert {"Statement": [{"Action": "sts:AssumeRole"}]} == config.logs_route53_log_group_delivery_role_assume_policy()
     assert Account("999888777666", "organization") == config.organization_account()
