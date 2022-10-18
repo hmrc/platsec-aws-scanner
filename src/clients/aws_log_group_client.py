@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Dict
 
 from src import PLATSEC_SCANNER_TAGS
 from src.aws_scanner_config import LogGroupConfig
@@ -52,7 +52,7 @@ class AwsLogGroupClient:
             if with_subscription_filter:
                 actions.append(PutLogGroupSubscriptionFilterAction(logs=self.logs, log_group_config=log_group_config))
 
-        policy_document: str = self.logs.logs_resource_policy_document()
+        policy_document = self.logs.logs_resource_policy_document()
         if not self._is_log_group_resource_policy_compliant(log_group_config=log_group_config, policy=policy_document):
             actions.append(
                 PutLogGroupResourcePolicyAction(
@@ -62,6 +62,6 @@ class AwsLogGroupClient:
 
         return actions
 
-    def _is_log_group_resource_policy_compliant(self, log_group_config: LogGroupConfig, policy: str) -> bool:
+    def _is_log_group_resource_policy_compliant(self, log_group_config: LogGroupConfig, policy: Dict[str, Any]) -> bool:
         existing_policy = self.logs.get_resource_policy(policy_name=log_group_config.log_group_resource_policy_name)
         return existing_policy == policy

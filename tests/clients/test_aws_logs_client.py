@@ -151,15 +151,17 @@ def test_delete_subscription_filter_failure() -> None:
 def test_put_resource_policy() -> None:
     boto = Mock()
     AwsLogsClient(boto, Mock(), account()).put_resource_policy(
-        policy_name="a_policy_name", policy_document="a_policy_document"
+        policy_name="a_policy_name", policy_document={"a_policy_document": 1}
     )
-    boto.put_resource_policy.assert_called_once_with(policyName="a_policy_name", policyDocument="a_policy_document")
+    boto.put_resource_policy.assert_called_once_with(
+        policyName="a_policy_name", policyDocument='{"a_policy_document": 1}'
+    )
 
 
 def test_put_resource_policy_failure() -> None:
     boto = Mock(put_resource_policy=Mock(side_effect=client_error("PutResourcePolicy", "some_error", "boom!")))
     with raises(LogsException, match="logs resource policy"):
-        AwsLogsClient(boto, Mock(), account()).put_resource_policy("a_policy_name", "a_policy_document")
+        AwsLogsClient(boto, Mock(), account()).put_resource_policy("a_policy_name", {"a_policy_document": 1})
 
 
 def test_get_resource_policy() -> None:
@@ -168,7 +170,7 @@ def test_get_resource_policy() -> None:
 
     boto.describe_resource_policies.assert_called_once()
 
-    assert response == "my favorite policy statement"
+    assert response == {"text": "my favorite policy statement"}
 
 
 def test_get_resource_policy_returns_none_when_not_found() -> None:
