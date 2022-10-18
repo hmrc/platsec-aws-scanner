@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from tests.test_types_generator import log_group, subscription_filter, tag
 
 DESCRIBE_LOG_GROUPS = {
@@ -66,9 +68,7 @@ DESCRIBE_RESOURCE_POLICIES = {
     ],
 }
 
-DESCRIBE_RESOURCE_POLICIES_NONE = {
-    "resourcePolicies": [],
-}
+DESCRIBE_RESOURCE_POLICIES_NONE: Dict[str, Any] = {"resourcePolicies": []}
 
 
 EXPECTED_LOG_GROUPS = [

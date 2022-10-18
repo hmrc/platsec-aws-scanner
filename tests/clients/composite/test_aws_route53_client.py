@@ -183,7 +183,7 @@ class TestAwsRoute53Client(TestCase):
         logs.get_resource_policy = Mock(return_value=test_policy)
 
         log_group = expected_log_group(log_group_config)
-        log_group.subscription_filters = None
+        log_group.subscription_filters = []
         logs.find_log_group = Mock(return_value=log_group)
 
         expectedQueryLogActionList: List[ComplianceAction] = []

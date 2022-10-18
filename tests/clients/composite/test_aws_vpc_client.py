@@ -903,13 +903,13 @@ class AwsVpcClientBuilder(TestCase):
         self.resolver.list_resolver_query_log_configs.side_effect = list_resolver_query_log_configs
         return self
 
-    def with_resource_policy(self, policy):
+    def with_resource_policy(self, policy: Optional[str]) -> AwsVpcClientBuilder:
         def get_resource_policy(policy_name: str) -> Optional[str]:
             return policy
 
         self.logs.get_resource_policy.side_effect = get_resource_policy
         return self
 
-    def with_default_resource_policy(self):
+    def with_default_resource_policy(self) -> AwsVpcClientBuilder:
         self.with_resource_policy(self.logs.logs_resource_policy_document())
         return self
