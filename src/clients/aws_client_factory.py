@@ -125,7 +125,7 @@ class AwsClientFactory:
 
     def get_logs_client(self, account: Account, region: Optional[str] = None) -> AwsLogsClient:
         return AwsLogsClient(
-            boto_logs=self.get_logs_boto_client(account, region), kms=self.get_kms_boto_client(account)
+            boto_logs=self.get_logs_boto_client(account, region), kms=self.get_kms_boto_client(account), account=account
         )
 
     def get_iam_client(self, account: Account) -> AwsIamClient:

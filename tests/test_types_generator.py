@@ -24,7 +24,7 @@ from src.data.aws_compliance_actions import (
     DeleteLogGroupSubscriptionFilterAction,
     PutLogGroupRetentionPolicyAction,
     PutLogGroupSubscriptionFilterAction,
-    PutRoute53LogGroupResourcePolicyAction,
+    PutLogGroupResourcePolicyAction,
     TagFlowLogDeliveryRoleAction,
     UpdatePasswordPolicyAction,
     DeleteQueryLogAction,
@@ -496,12 +496,12 @@ def resource_policy_document() -> str:
     """
 
 
-def put_route53_log_group_resource_policy_action(
+def put_log_group_resource_policy_action(
     log_group_config: LogGroupConfig,
     logs: AwsLogsClient = Mock(spec=AwsLogsClient),
     policy_document: str = resource_policy_document(),
-) -> PutRoute53LogGroupResourcePolicyAction:
-    return PutRoute53LogGroupResourcePolicyAction(
+) -> PutLogGroupResourcePolicyAction:
+    return PutLogGroupResourcePolicyAction(
         logs=logs, log_group_config=log_group_config, policy_document=policy_document
     )
 
@@ -545,6 +545,19 @@ def log_group(
         subscription_filters=subscription_filters if subscription_filters is not None else [subscription_filter()],
         tags=tags,
         arn=arn,
+    )
+
+
+def expected_log_group(config: LogGroupConfig) -> LogGroup:
+    return LogGroup(
+        name=config.logs_group_name,
+        kms_key_id=None,
+        kms_key=None,
+        retention_days=config.logs_group_retention_policy_days,
+        stored_bytes=None,
+        subscription_filters=[expected_subscription_filter(config)],
+        tags=PLATSEC_SCANNER_TAGS,
+        arn="some arn",
     )
 
 
