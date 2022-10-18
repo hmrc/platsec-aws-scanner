@@ -143,7 +143,7 @@ def test_apply_put_resource_policy_action() -> None:
         log_group_config=Config().logs_route53_query_log_group_config(), logs=logs
     )._apply()
     logs.put_resource_policy.assert_called_once_with(
-        policy_name="route53_query_logs_to_cloudwatch_logs",
+        policy_name="query_logs_to_cloudwatch_logs",
         policy_document=resource_policy_document(),
     )
 
@@ -167,8 +167,8 @@ def test_plan_create_query_log_action() -> None:
 
 def test_plan_put_resource_policy_action() -> None:
     expected = compliance_action_report(
-        description="Put route53 log group resource policy",
-        details={"policy_name": "route53_query_logs_to_cloudwatch_logs"},
+        description="Put log group resource policy",
+        details={"policy_name": "query_logs_to_cloudwatch_logs"},
     )
     assert (
         expected

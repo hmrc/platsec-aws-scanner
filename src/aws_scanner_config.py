@@ -158,7 +158,7 @@ class AwsScannerConfig:
             logs_log_group_pattern=self._get_config("logs", "vpc_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "vpc_log_group_retention_policy_days")),
             logs_log_group_destination=self._get_config("logs", "vpc_log_group_destination"),
-            log_group_resource_policy_name="",
+            log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 
     def logs_vpc_dns_log_group_config(self) -> LogGroupConfig:
@@ -168,7 +168,7 @@ class AwsScannerConfig:
             logs_log_group_pattern=self._get_config("logs", "vpc_dns_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "vpc_dns_log_group_retention_policy_days")),
             logs_log_group_destination=self._get_config("logs", "vpc_dns_log_group_destination"),
-            log_group_resource_policy_name="",
+            log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 
     def logs_route53_query_log_group_config(self) -> LogGroupConfig:
@@ -178,7 +178,7 @@ class AwsScannerConfig:
             logs_log_group_pattern=self._get_config("logs", "route53_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "route53_log_group_retention_policy_days")),
             logs_log_group_destination=self._get_config("logs", "route53_log_group_destination"),
-            log_group_resource_policy_name=self.logs_route53_log_group_resource_policy_name(),
+            log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 
     def logs_vpc_log_group_delivery_role(self) -> str:
@@ -202,8 +202,8 @@ class AwsScannerConfig:
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
 
-    def logs_route53_log_group_resource_policy_name(self) -> str:
-        return self._get_config("logs", "route53_log_group_resource_policy_name")
+    def logs_log_group_resource_policy_name(self) -> str:
+        return self._get_config("logs", "log_group_resource_policy_name")
 
     def organization_account(self) -> Account:
         return Account(self._get_config("organization", "account"), "organization")

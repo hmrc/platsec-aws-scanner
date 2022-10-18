@@ -434,7 +434,7 @@ class PutLogGroupRetentionPolicyAction(ComplianceAction):
 @dataclass
 class PutLogGroupResourcePolicyAction(ComplianceAction):
     def __init__(self, logs: AwsLogsClient, log_group_config: LogGroupConfig, policy_document: str) -> None:
-        super().__init__("Put route53 log group resource policy")
+        super().__init__("Put log group resource policy")
         self.logs = logs
         self.log_group_config = log_group_config
         self.policy_document = policy_document
