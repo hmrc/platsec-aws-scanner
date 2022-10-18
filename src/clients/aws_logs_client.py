@@ -128,12 +128,19 @@ class AwsLogsClient:
                 "Version": "2012-10-17",
                 "Statement": [
                     {
-                        "Sid": "",
+                        "Sid": "route53QueryLogs",
                         "Effect": "Allow",
-                        "Principal": {"Service": ["route53.amazonaws.com", "delivery.logs.amazonaws.com"]},
+                        "Principal": {"Service": ["route53.amazonaws.com"]},
                         "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
                         "Resource": f"arn:aws:logs:us-east-1:{self.account.identifier}:log-group:*",
-                    }
+                    },
+                    {
+                        "Sid": "route53ResolverVpcDnsLogs",
+                        "Effect": "Allow",
+                        "Principal": {"Service": ["delivery.logs.amazonaws.com"]},
+                        "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+                        "Resource": f"arn:aws:logs::{self.account.identifier}:log-group:*",
+                    },
                 ],
             }
         )
