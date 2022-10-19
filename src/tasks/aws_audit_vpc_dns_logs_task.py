@@ -18,7 +18,9 @@ class AwsAuditVPCDnsLogsTask(AwsTask):
         actions = client.enforcement_dns_log_actions(vpcs, self.with_subscription_filter)
         if self.enforce:
             apply = [a.apply() for a in actions]
-            return {"vpcs": vpcs, "enforcement_actions": apply}
+            associations = client.resolver.list_config_associations()
+            return {"associations": associations, "enforcement_actions": apply}
         else:
+            associations = client.resolver.list_config_associations()
             plans = [a.plan() for a in actions]
-            return {"vpcs": vpcs, "enforcement_actions": plans}
+            return {"associations": associations, "enforcement_actions": plans}

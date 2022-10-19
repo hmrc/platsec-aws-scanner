@@ -98,7 +98,7 @@ class AwsResolverClient:
             )
 
     def query_log_config_association_exists(self, vpc_id: str, resolver_query_log_config_id: str) -> bool:
-        association = self.__list_config_associations(vpc_id=vpc_id)
+        association = self.list_config_associations(vpc_id=vpc_id)
 
         for item in association["ResolverQueryLogConfigAssociations"]:
             if item["ResolverQueryLogConfigId"] == resolver_query_log_config_id:
@@ -106,18 +106,19 @@ class AwsResolverClient:
         return False
 
     def get_vpc_query_log_config_association(self, vpc_id: str) -> Optional[str]:
-        association = self.__list_config_associations(vpc_id=vpc_id)
+        association = self.list_config_associations(vpc_id=vpc_id)
 
         if association and len(association["ResolverQueryLogConfigAssociations"]) > 0:
             return str(association["ResolverQueryLogConfigAssociations"][0]["ResolverQueryLogConfigId"])
         else:
             return None
 
-    def __list_config_associations(self, vpc_id: str) -> Dict[str, Any]:
+    def list_config_associations(self, vpc_id: Optional[str] = None) -> Dict[str, Any]:
         try:
-            association: Dict[str, Any] = self.resolver.list_resolver_query_log_config_associations(
-                Filters=[{"Name": "ResourceId", "Values": [vpc_id]}]
-            )
+            filters = []
+            if vpc_id:
+                filters = [{"Name": "ResourceId", "Values": [vpc_id]}]
+            association: Dict[str, Any] = self.resolver.list_resolver_query_log_config_associations(Filters=filters)
 
         except (BotoCoreError, ClientError) as err:
             raise ResolverException(
