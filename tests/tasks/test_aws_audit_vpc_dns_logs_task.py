@@ -1,3 +1,5 @@
+from src.clients.aws_resolver_client import AwsResolverClient
+from src.clients.composite.aws_vpc_client import AwsVpcClient
 from src.data.aws_task_report import AwsTaskReport
 from unittest.mock import Mock
 
@@ -28,7 +30,10 @@ def enforcement_actions(v: Sequence[Vpc], with_sub_filter: bool) -> Sequence[Com
 
 def test_run_plan_task() -> None:
     actions = enforcement_actions(vpcs, False)
-    vpc_client = Mock()
+    resolver = Mock(spec=AwsResolverClient)
+    resolver.list_config_associations = Mock(return_value={})
+    vpc_client = Mock(spec=AwsVpcClient)
+    vpc_client.resolver = resolver
     vpc_client.enforcement_dns_log_actions = Mock(return_value=actions)
     vpc_client.list_vpcs = Mock(return_value=vpcs)
 
@@ -38,14 +43,16 @@ def test_run_plan_task() -> None:
 
 
 def expected_report(action_reports: Sequence[ComplianceActionReport]) -> AwsTaskReport:
-    results = {"vpcs": vpcs, "enforcement_actions": action_reports}
+    results = {"associations": {}, "enforcement_actions": action_reports}
     report = task_report(description="audit VPC dns logs compliance", partition=None, results=results)
     return report
 
 
 def test_run_apply_task() -> None:
-
-    vpc_client = Mock()
+    resolver = Mock(spec=AwsResolverClient)
+    resolver.list_config_associations = Mock(return_value={})
+    vpc_client = Mock(spec=AwsVpcClient)
+    vpc_client.resolver = resolver
     vpc_client.enforcement_dns_log_actions = Mock(return_value=[])
     vpc_client.list_vpcs = Mock(return_value=vpcs)
 
