@@ -39,7 +39,7 @@ class TestAwsRoute53Client(TestCase):
 
         expectedQueryLogActionList: List[ComplianceAction] = []
 
-        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
+        client = AwsRoute53Client(boto_route53, iam, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
@@ -74,7 +74,7 @@ class TestAwsRoute53Client(TestCase):
 
         logs.find_log_group = Mock(return_value=expected_log_group(log_group_config))
 
-        client = AwsRoute53Client(boto_route53, iam, logs, log_group_client)
+        client = AwsRoute53Client(boto_route53, iam, log_group_client)
 
         assert [] == client.enforcement_actions(account, hostedZones, True)
 
@@ -149,7 +149,7 @@ class TestAwsRoute53Client(TestCase):
                 zone_id="/hostedzone/IIIIIIILLLLLLL",
             )
         )
-        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
+        client = AwsRoute53Client(boto_route53, iam, log_group)
         actual = client.enforcement_actions(account, hostedZones, False)
 
         assert expectedQueryLogActionList == actual
@@ -191,7 +191,7 @@ class TestAwsRoute53Client(TestCase):
         expectedQueryLogActionList.append(
             PutLogGroupSubscriptionFilterAction(log_group_config=log_group_config, logs=logs)
         )
-        client = AwsRoute53Client(boto_route53, iam, logs, log_group_client)
+        client = AwsRoute53Client(boto_route53, iam, log_group_client)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)
 
@@ -260,7 +260,7 @@ class TestAwsRoute53Client(TestCase):
                 zone_id="/hostedzone/IIIIIIILLLLLLL",
             )
         )
-        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
+        client = AwsRoute53Client(boto_route53, iam, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
 
@@ -334,6 +334,6 @@ class TestAwsRoute53Client(TestCase):
             )
         )
 
-        client = AwsRoute53Client(boto_route53, iam, logs, log_group)
+        client = AwsRoute53Client(boto_route53, iam, log_group)
 
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)
