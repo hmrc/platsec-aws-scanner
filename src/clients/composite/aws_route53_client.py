@@ -7,7 +7,6 @@ import src.data.aws_route53_types as route53Type
 from src.aws_scanner_config import AwsScannerConfig as Config
 
 from src.clients.aws_iam_client import AwsIamClient
-from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_hosted_zones_client import AwsHostedZonesClient
 from src.data.aws_organizations_types import Account
 
@@ -19,13 +18,10 @@ from src.data.aws_compliance_actions import (
 
 
 class AwsRoute53Client:
-    def __init__(
-        self, boto_route53: AwsHostedZonesClient, iam: AwsIamClient, logs: AwsLogsClient, log_group: AwsLogGroupClient
-    ):
+    def __init__(self, boto_route53: AwsHostedZonesClient, iam: AwsIamClient, log_group: AwsLogGroupClient):
         self._logger = getLogger(self.__class__.__name__)
         self._route53 = boto_route53
         self._iam = iam
-        self._logs = logs
         self.log_group = log_group
         self.log_group_config = Config().logs_route53_query_log_group_config()
 

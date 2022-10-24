@@ -110,8 +110,7 @@ class AwsClientFactory:
         return AwsRoute53Client(
             boto_route53=self.get_hosted_zones_client(account),
             iam=self.get_iam_client(account),
-            logs=self.get_logs_client(account, region="us-east-1"),
-            log_group=self.get_log_group_client(account),
+            log_group=self.get_log_group_client(account, region="us-east-1"),
         )
 
     def get_hosted_zones_client(self, account: Account, role: Optional[str] = None) -> AwsHostedZonesClient:
@@ -143,8 +142,8 @@ class AwsClientFactory:
     def get_cloudtrail_client(self, account: Account) -> AwsCloudtrailClient:
         return AwsCloudtrailClient(self.get_cloudtrail_boto_client(account), self.get_logs_client(account))
 
-    def get_log_group_client(self, account: Account) -> AwsLogGroupClient:
-        return AwsLogGroupClient(logs=self.get_logs_client(account))
+    def get_log_group_client(self, account: Account, region: Optional[str] = None) -> AwsLogGroupClient:
+        return AwsLogGroupClient(logs=self.get_logs_client(account, region))
 
     def get_vpc_client(self, account: Account) -> AwsVpcClient:
         return AwsVpcClient(
