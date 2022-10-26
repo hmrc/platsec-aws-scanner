@@ -79,27 +79,27 @@ class AwsVpcClient:
         )
 
     def enforcement_flow_log_actions(
-        self, vpcs: Sequence[Vpc], with_subscription_filter: bool
+        self, vpcs: Sequence[Vpc], with_subscription_filter: bool, skip_tags: bool
     ) -> Sequence[ComplianceAction]:
         if not vpcs:
             return list()
         log_group_config = self.config.logs_vpc_flow_log_group_config()
         log_group_actions = self.log_group.log_group_enforcement_actions(
-            log_group_config=log_group_config, with_subscription_filter=with_subscription_filter
+            log_group_config=log_group_config, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
         )
-        delivery_role_actions = self._delivery_role_enforcement_actions()
+        delivery_role_actions = self._delivery_role_enforcement_actions(skip_tags)
         vpc_actions = [action for vpc in vpcs for action in self._vpc_flow_enforcement_actions(vpc)]
         return list(chain(log_group_actions, delivery_role_actions, vpc_actions))
 
     def enforcement_dns_log_actions(
-        self, vpcs: Sequence[Vpc], with_subscription_filter: bool
+        self, vpcs: Sequence[Vpc], with_subscription_filter: bool, skip_tags: bool
     ) -> Sequence[ComplianceAction]:
         if not vpcs:
             return []
 
         log_group_config = self.config.logs_vpc_dns_log_group_config()
         log_group_actions = self.log_group.log_group_enforcement_actions(
-            log_group_config=log_group_config, with_subscription_filter=with_subscription_filter
+            log_group_config=log_group_config, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
         )
 
         resolver_config = self._resolver_query_log_config_enforcement_actions(
@@ -211,9 +211,9 @@ class AwsVpcClient:
             else []
         )
 
-    def _delivery_role_enforcement_actions(self) -> Sequence[ComplianceAction]:
+    def _delivery_role_enforcement_actions(self, skip_tags: bool) -> Sequence[ComplianceAction]:
         recreate_role_actions = list(chain(self._delete_delivery_role_action(), self._create_delivery_role_action()))
-        return recreate_role_actions or self._tag_delivery_role_action()
+        return recreate_role_actions or (self._tag_delivery_role_action(skip_tags))
 
     def _delete_delivery_role_action(self) -> Sequence[ComplianceAction]:
         delivery_role = self._find_flow_log_delivery_role()
@@ -232,10 +232,11 @@ class AwsVpcClient:
             else []
         )
 
-    def _tag_delivery_role_action(self) -> Sequence[ComplianceAction]:
-        delivery_role = self._find_flow_log_delivery_role()
-        if delivery_role and not set(PLATSEC_SCANNER_TAGS).issubset(delivery_role.tags):
-            return [TagFlowLogDeliveryRoleAction(iam=self.iam)]
+    def _tag_delivery_role_action(self, skip_tags: bool) -> Sequence[ComplianceAction]:
+        if not skip_tags:
+            delivery_role = self._find_flow_log_delivery_role()
+            if delivery_role and not set(PLATSEC_SCANNER_TAGS).issubset(delivery_role.tags):
+                return [TagFlowLogDeliveryRoleAction(iam=self.iam)]
         return []
 
     def _delivery_role_policy_exists(self) -> bool:

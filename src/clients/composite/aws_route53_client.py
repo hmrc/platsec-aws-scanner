@@ -26,13 +26,15 @@ class AwsRoute53Client:
         self.log_group_config = Config().logs_route53_query_log_group_config()
 
     def enforcement_actions(
-        self, account: Account, hostedZones: Dict[Any, Any], with_subscription_filter: bool
+        self, account: Account, hostedZones: Dict[Any, Any], with_subscription_filter: bool, skip_tags: bool
     ) -> Sequence[ComplianceAction]:
         if not hostedZones:
             return list()
 
         log_group_actions: List[ComplianceAction] = self.log_group.log_group_enforcement_actions(
-            log_group_config=self.log_group_config, with_subscription_filter=with_subscription_filter
+            log_group_config=self.log_group_config,
+            with_subscription_filter=with_subscription_filter,
+            skip_tags=skip_tags,
         )
 
         route53_actions: List[ComplianceAction] = [

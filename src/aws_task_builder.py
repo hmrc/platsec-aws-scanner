@@ -68,11 +68,13 @@ class AwsTaskBuilder:
                 AwsAuditVPCFlowLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
+                skip_tags=self._args.skip_tags,
             ),
             Cmd.audit_vpc_dns_logs: lambda: self._tasks(
                 AwsAuditVPCDnsLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
+                skip_tags=self._args.skip_tags,
             ),
             Cmd.audit_password_policy: lambda: self._tasks(AwsAuditPasswordPolicyTask, enforce=self._args.enforce),
             Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask),
@@ -86,6 +88,7 @@ class AwsTaskBuilder:
                 AwsAuditRoute53QueryLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
+                skip_tags=self._args.skip_tags,
             ),
         }
         try:

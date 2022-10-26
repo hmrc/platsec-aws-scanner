@@ -37,9 +37,9 @@ def test_run_plan_task() -> None:
     vpc_client.enforcement_dns_log_actions = Mock(return_value=actions)
     vpc_client.list_vpcs = Mock(return_value=vpcs)
 
-    assert expected_report([]) == aws_audit_vpc_dns_logs_task(enforce=False, with_subscription_filter=True).run(
-        vpc_client
-    )
+    assert expected_report([]) == aws_audit_vpc_dns_logs_task(
+        enforce=False, with_subscription_filter=True, skip_tags=False
+    ).run(vpc_client)
 
 
 def expected_report(action_reports: Sequence[ComplianceActionReport]) -> AwsTaskReport:
@@ -56,6 +56,6 @@ def test_run_apply_task() -> None:
     vpc_client.enforcement_dns_log_actions = Mock(return_value=[])
     vpc_client.list_vpcs = Mock(return_value=vpcs)
 
-    assert expected_report([]) == aws_audit_vpc_dns_logs_task(enforce=True, with_subscription_filter=True).run(
-        vpc_client
-    )
+    assert expected_report([]) == aws_audit_vpc_dns_logs_task(
+        enforce=True, with_subscription_filter=True, skip_tags=False
+    ).run(vpc_client)

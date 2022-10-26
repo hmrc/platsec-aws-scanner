@@ -105,9 +105,11 @@ def athena_task(
 
 
 def vpc_flow_logs_task(
-    account: Account = account(), enforce: bool = True, with_subscription_filter: bool = False
+    account: Account = account(), enforce: bool = True, with_subscription_filter: bool = False, skip_tags: bool = False
 ) -> AwsAuditVPCFlowLogsTask:
-    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
+    return AwsAuditVPCFlowLogsTask(
+        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+    )
 
 
 def s3_task(account: Account = account(), description: str = "s3_task") -> AwsS3Task:
@@ -323,6 +325,7 @@ def aws_scanner_arguments(
     with_subscription_filter: bool = False,
     parent: str = "Parent OU",
     day: Optional[int] = None,
+    skip_tags: bool = False,
 ) -> AwsScannerArguments:
     return AwsScannerArguments(
         username=username,
@@ -341,6 +344,7 @@ def aws_scanner_arguments(
         with_subscription_filter=with_subscription_filter,
         parent=parent,
         day=day,
+        skip_tags=skip_tags,
     )
 
 
@@ -507,15 +511,19 @@ def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -
 
 
 def aws_audit_vpc_flow_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False, skip_tags: bool = False
 ) -> AwsAuditVPCFlowLogsTask:
-    return AwsAuditVPCFlowLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
+    return AwsAuditVPCFlowLogsTask(
+        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+    )
 
 
 def aws_audit_vpc_dns_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False, skip_tags: bool = False
 ) -> AwsAuditVPCDnsLogsTask:
-    return AwsAuditVPCDnsLogsTask(account=account, enforce=enforce, with_subscription_filter=with_subscription_filter)
+    return AwsAuditVPCDnsLogsTask(
+        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+    )
 
 
 def log_group(
@@ -771,10 +779,10 @@ def route53Zone(
 
 
 def aws_audit_route53_query_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False
+    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False, skip_tags: bool = False
 ) -> AwsAuditRoute53QueryLogsTask:
     return AwsAuditRoute53QueryLogsTask(
-        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter
+        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
     )
 
 

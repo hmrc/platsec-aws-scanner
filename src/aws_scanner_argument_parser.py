@@ -27,6 +27,7 @@ class AwsScannerArguments:
     disable_account_lookup: bool
     with_subscription_filter: bool
     parent: str
+    skip_tags: bool
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
@@ -83,6 +84,16 @@ class AwsScannerArgumentParser:
             type=lambda x: (str(x).lower() == "true"),
             choices=[True, False],
             help="create subscription filter",
+        )
+
+    @staticmethod
+    def _add_skip_tags_arg(parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "-tg",
+            "--skip_tags",
+            type=lambda x: (str(x).lower() == "true"),
+            choices=[True, False],
+            help="skip applying tags",
         )
 
     @staticmethod
@@ -184,6 +195,7 @@ class AwsScannerArgumentParser:
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
+        self._add_skip_tags_arg(audit_parser)
         self._add_verbosity_arg(audit_parser)
 
     def _add_audit_vpc_dns_logs_command(self, subparsers: Any) -> None:
@@ -193,6 +205,7 @@ class AwsScannerArgumentParser:
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised dns logs to VPCs that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
+        self._add_skip_tags_arg(audit_parser)
         self._add_verbosity_arg(audit_parser)
 
     def _add_audit_password_policy_command(self, subparsers: Any) -> None:
@@ -275,6 +288,7 @@ class AwsScannerArgumentParser:
         self._add_verbosity_arg(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised query logs to Route53 Zones that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
+        self._add_skip_tags_arg(audit_parser)
 
     def _add_create_flow_logs_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table for flow logs querying"
@@ -322,4 +336,5 @@ class AwsScannerArgumentParser:
             with_subscription_filter=bool(args.get("with_subscription_filter")),
             parent=args.get("parent") or Config().organization_parent(),
             day=int(args["day"]) if args.get("day") else None,
+            skip_tags=bool(args.get("skip_tags")),
         )
