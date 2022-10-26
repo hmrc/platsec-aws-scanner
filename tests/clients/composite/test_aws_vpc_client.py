@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Sequence, Optional, Type, Dict, Any, List
 from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.clients.aws_resolver_client import AwsResolverClient, ResolverQueryLogConfig
+from src.data.aws_common_types import Tag
 
 from src.data.aws_iam_types import Role, Policy
 from src.data.aws_logs_types import LogGroup
@@ -333,6 +334,25 @@ class TestVPCFlowLogEnforcementActions(TestCase):
                     logs=client.logs,
                 ),
             ],
+            actions,
+        )
+
+    def test_create_central_vpc_log_group_when_skip_tags_is_true(self) -> None:
+
+        log_group_config = Config().logs_vpc_flow_log_group_config()
+
+        client = AwsVpcClientBuilder()
+        client.with_default_resource_policy()
+        client.logs.find_log_group.side_effect = [
+            log_group(subscription_filters=[], default_kms_key=True, tags=[Tag(key="Bad_tag", value="true")])
+        ]
+
+        actions = client.build().log_group.log_group_enforcement_actions(
+            log_group_config=log_group_config, with_subscription_filter=False, skip_tags=True
+        )
+
+        self.assertEqual(
+            [],
             actions,
         )
 
