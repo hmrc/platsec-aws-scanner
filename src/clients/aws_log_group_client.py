@@ -41,7 +41,7 @@ class AwsLogGroupClient:
             if log_group.retention_days != log_group_config.logs_group_retention_policy_days:
                 actions.append(PutLogGroupRetentionPolicyAction(logs=self.logs, log_group_config=log_group_config))
 
-            if not (skip_tags and set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags)):
+            if not skip_tags and not set(PLATSEC_SCANNER_TAGS).issubset(log_group.tags):
                 actions.append(TagLogGroupAction(logs=self.logs, log_group_config=log_group_config))
         else:
             actions.extend(
