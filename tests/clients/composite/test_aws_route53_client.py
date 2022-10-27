@@ -41,7 +41,7 @@ class TestAwsRoute53Client(TestCase):
 
         client = AwsRoute53Client(boto_route53, iam, log_group)
 
-        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
+        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False, False)
 
     def test_route_53_does_nothing_when_all_correct(self) -> None:
         log_group_config = Config().logs_route53_query_log_group_config()
@@ -76,7 +76,7 @@ class TestAwsRoute53Client(TestCase):
 
         client = AwsRoute53Client(boto_route53, iam, log_group_client)
 
-        assert [] == client.enforcement_actions(account, hostedZones, True)
+        assert [] == client.enforcement_actions(account, hostedZones, True, False)
 
     def test_enforcement_actions_with_existing_LogGroup_no_subscription_filter(self) -> None:
 
@@ -150,7 +150,7 @@ class TestAwsRoute53Client(TestCase):
             )
         )
         client = AwsRoute53Client(boto_route53, iam, log_group)
-        actual = client.enforcement_actions(account, hostedZones, False)
+        actual = client.enforcement_actions(account, hostedZones, False, False)
 
         assert expectedQueryLogActionList == actual
 
@@ -193,7 +193,7 @@ class TestAwsRoute53Client(TestCase):
         )
         client = AwsRoute53Client(boto_route53, iam, log_group_client)
 
-        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)
+        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True, False)
 
     def test_enforcement_actions_with_new_LogGroup_no_subscription_filter(self) -> None:
 
@@ -262,7 +262,7 @@ class TestAwsRoute53Client(TestCase):
         )
         client = AwsRoute53Client(boto_route53, iam, log_group)
 
-        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False)
+        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False, False)
 
     def test_enforcement_actions_with_new_LogGroup_with_subscription_filter(self) -> None:
 
@@ -336,4 +336,4 @@ class TestAwsRoute53Client(TestCase):
 
         client = AwsRoute53Client(boto_route53, iam, log_group)
 
-        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True)
+        assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, True, False)

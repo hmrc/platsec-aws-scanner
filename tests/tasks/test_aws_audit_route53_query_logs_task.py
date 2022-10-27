@@ -30,7 +30,7 @@ class TestAwsAuditRoute53QueryLogsTask(TestCase):
         aws_audit_route53_query_logs_task(enforce=True, with_subscription_filter=True).run(route53_client)
 
         _route53.list_hosted_zones.assert_called_once()
-        route53_client.enforcement_actions.assert_called_once_with(account(), hostedZones, True)
+        route53_client.enforcement_actions.assert_called_once_with(account(), hostedZones, True, False)
         compliance_action_report1.apply.assert_called_once()
         compliance_action_report2.apply.assert_called_once()
 
@@ -55,6 +55,6 @@ class TestAwsAuditRoute53QueryLogsTask(TestCase):
         aws_audit_route53_query_logs_task(enforce=False, with_subscription_filter=True).run(route53_client)
 
         _route53.list_hosted_zones.assert_called_once()
-        route53_client.enforcement_actions.assert_called_once_with(account(), hostedZones, True)
+        route53_client.enforcement_actions.assert_called_once_with(account(), hostedZones, True, False)
         compliance_action_report1.plan.assert_called_once()
         compliance_action_report2.plan.assert_called_once()
