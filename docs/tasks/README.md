@@ -11,3 +11,4 @@ These are the different tasks that are offered in PlatSec AWS Scanner:
 1. [List SSM parameters](list-ssm-parameters.md)
 1. [Role usage](role-usage.md)
 1. [Service usage](service-usage.md)
+1. [Audit VPC DNS logs](audit-vpc-dns-logs.md)
