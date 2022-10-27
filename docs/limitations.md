@@ -9,12 +9,4 @@ recreated/partitioned because the data source of truth isn't affected as it live
 
 ## Missing pagination
 
-Pagination has not been implemented yet on the following resources:
-
-- `aws_athena_async_client.AwsAthenaAsyncClient.list_databases` ([max page size 50][1])
-- `aws_organizations_client.AwsOrganizationsClient._list_roots` ([max page size 20][2])
-- `aws_organizations_client.AwsOrganizationsClient._list_org_units_for_parent` ([max page size 20][3])
-
-[1]: https://docs.aws.amazon.com/athena/latest/APIReference/API_ListDatabases.html
-[2]: https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListRoots.html
-[3]: https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListOrganizationalUnitsForParent.html
+Pagination has not been implemented yet on resources where there is not a likelihood of hitting these limits in our usecases. 
