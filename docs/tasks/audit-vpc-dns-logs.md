@@ -1,6 +1,7 @@
 # Audit/Enforce VPC DNS log collection
 
-The `audit_vpc_dns_logs` task can audit (or optionally create and update) AWS route53 and Cloudwatch resources needed to send logs of DNS queries to a central destination.
+The `audit_vpc_dns_logs` task audits (or optionally create/updates) 
+sending logs DNS query logs to a central destination.
 
 ## Usage
 
