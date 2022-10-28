@@ -41,7 +41,7 @@ class TestGetBotoClients(TestCase):
             if method_under_test == "get_logs_boto_client":
                 mock_get_client.assert_called_once_with(service, target_account, role, "us-east-1")
             else:
-                mock_get_client.assert_called_once_with(service, target_account, role, "eu-west-2")
+                mock_get_client.assert_called_once_with(service, target_account, role)
 
     def test_get_athena_boto_client(self) -> None:
         self.assert_get_client(
@@ -476,6 +476,7 @@ class TestAwsClientFactory(TestCase):
             aws_access_key_id="access",
             aws_secret_access_key="secret",
             aws_session_token="session",
+            region_name="eu-west-2",
         )
 
     def test_get_client_with_region(self) -> None:

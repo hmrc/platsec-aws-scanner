@@ -47,10 +47,10 @@ class AwsClientFactory:
         self._region = region
 
     def get_athena_boto_client(self) -> BaseClient:
-        return self._get_client("athena", self._config.athena_account(), self._config.athena_role(), self._region)
+        return self._get_client("athena", self._config.athena_account(), self._config.athena_role())
 
     def get_s3_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("s3", account, role, self._region)
+        return self._get_client("s3", account, role)
 
     def get_s3_client(self, account: Account, role: Optional[str] = None) -> AwsS3Client:
         return AwsS3Client(self.get_s3_boto_client(account, role or self._config.s3_role()))
@@ -69,45 +69,43 @@ class AwsClientFactory:
         )
 
     def get_cost_explorer_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("ce", account, self._config.cost_explorer_role(), self._region)
+        return self._get_client("ce", account, self._config.cost_explorer_role())
 
     def get_cost_explorer_client(self, account: Account) -> AwsCostExplorerClient:
         return AwsCostExplorerClient(self.get_cost_explorer_boto_client(account))
 
     def get_organizations_boto_client(self) -> BaseClient:
-        return self._get_client(
-            "organizations", self._config.organization_account(), self._config.organization_role(), self._region
-        )
+        return self._get_client("organizations", self._config.organization_account(), self._config.organization_role())
 
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("ssm", account, self._config.ssm_role(), self._region)
+        return self._get_client("ssm", account, self._config.ssm_role())
 
     def get_logs_boto_client(self, account: Account, region: Optional[str] = None) -> BaseClient:
         return self._get_client("logs", account, self._config.logs_role(), region)
 
     def get_iam_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("iam", account, role, self._region)
+        return self._get_client("iam", account, role)
 
     def get_kms_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("kms", account, self._config.kms_role(), self._region)
+        return self._get_client("kms", account, self._config.kms_role())
 
     def get_route53_resolver_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("route53resolver", account, self._config.route53_resolver_role(), self._region)
+        return self._get_client("route53resolver", account, self._config.route53_resolver_role())
 
     def get_cloudtrail_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("cloudtrail", account, self._config.cloudtrail_role(), self._region)
+        return self._get_client("cloudtrail", account, self._config.cloudtrail_role())
 
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
 
     def get_ec2_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("ec2", account, role, self._region)
+        return self._get_client("ec2", account, role)
 
     def get_ec2_client(self, account: Account, role: Optional[str] = None) -> AwsEC2Client:
         return AwsEC2Client(self.get_ec2_boto_client(account, role or self._config.ec2_role()))
 
     def get_route53_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("route53", account, role, self._region)
+        return self._get_client("route53", account, role)
 
     def get_route53_client(self, account: Account) -> AwsRoute53Client:
         return AwsRoute53Client(
@@ -194,6 +192,10 @@ class AwsClientFactory:
         assumed_role = self._assume_role(account, role)
         self._logger.info(f"creating {service_name} client for {role} in {account}")
         if region is not None:
+            if region != self._region:
+                self._logger.info(
+                    f"{service_name} client region: {region} does not match region parameter: {self._region} "
+                )
             return boto3.client(
                 service_name=service_name,
                 aws_access_key_id=assumed_role.accessKeyId,
@@ -206,6 +208,7 @@ class AwsClientFactory:
             aws_access_key_id=assumed_role.accessKeyId,
             aws_secret_access_key=assumed_role.secretAccessKey,
             aws_session_token=assumed_role.sessionToken,
+            region_name=self._region,
         )
 
     def _assume_role(self, account: Account, role: str) -> AwsCredentials:

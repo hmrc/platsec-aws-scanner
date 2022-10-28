@@ -120,7 +120,7 @@ class TestAwsTaskRunner(TestCase):
 
         AwsTaskRunner(AwsClientFactory("1234456", "username", "eu-west-2"))._run_task(task)
 
-        _get_client.assert_called_once_with("iam", task.account, "iam_audit_role", "eu-west-2")
+        _get_client.assert_called_once_with("iam", task.account, "iam_audit_role")
         task_run.assert_called_once()
         self.assertIs(boto_client, task_run.call_args.args[0]._iam)
 
