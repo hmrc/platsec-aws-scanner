@@ -40,7 +40,7 @@ class AwsCredentials:
 
 
 class AwsClientFactory:
-    def __init__(self, mfa: str, username: str):
+    def __init__(self, mfa: str, username: str, region: str):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._session_token = self._get_session_token(mfa, username)

@@ -118,7 +118,7 @@ class TestAwsTaskRunner(TestCase):
         _get_client.return_value = boto_client
         task = audit_iam_task()
 
-        AwsTaskRunner(AwsClientFactory("1234456", "username"))._run_task(task)
+        AwsTaskRunner(AwsClientFactory("1234456", "username", "eu-west-2"))._run_task(task)
 
         _get_client.assert_called_once_with("iam", task.account, "iam_audit_role")
         task_run.assert_called_once()

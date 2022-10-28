@@ -15,7 +15,7 @@ class AwsScannerMain:
     def _main(self, args: AwsScannerArguments) -> None:
         logger = self._configure_logging(args)
         try:
-            factory = AwsClientFactory(mfa=args.mfa_token, username=args.username)
+            factory = AwsClientFactory(mfa=args.mfa_token, username=args.username, region=args.region)
             tasks = AwsTaskBuilder(factory, args).build_tasks()
             reports = AwsParallelTaskRunner(factory).run(tasks)
             AwsScannerOutput(factory).write(args.task, reports)
