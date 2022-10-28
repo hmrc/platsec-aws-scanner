@@ -24,12 +24,15 @@ def test_parse_cli_args_for_cost_usage_task() -> None:
 
 
 def test_parse_cli_args_for_service_usage_task() -> None:
-    with patch("sys.argv", ". service_usage -u bob -t 666666 -y 2020 -m 9 -re eu -s ssm,s3 -v info".split()):
+    with patch(
+        "sys.argv", ". service_usage -u bob -t 666666 -y 2020 -m 9 -apr eu -re eu-west-2 -s ssm,s3 -v info".split()
+    ):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
     with patch(
         "sys.argv",
-        ". service_usage --username bob --token 666666 --year 2020 --month 9 --region eu --services ssm,s3".split(),
+        ". service_usage --username bob --token 666666 --year 2020 --month 9 \
+        --athena_partition_region eu --region eu-west-2 --services ssm,s3".split(),
     ):
         long_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -40,17 +43,19 @@ def test_parse_cli_args_for_service_usage_task() -> None:
         assert args.partition.year == "2020"
         assert args.partition.month == "09"
         assert args.partition.region == "eu"
+        assert args.region == "eu-west-2"
         assert args.accounts is None
         assert args.services == ["ssm", "s3"]
 
 
 def test_parse_cli_args_for_role_usage_task() -> None:
-    with patch("sys.argv", ". role_usage -u tom -t 654321 -y 2020 -m 10 -r TheRole -re us -v info".split()):
+    with patch("sys.argv", ". role_usage -u tom -t 654321 -y 2020 -m 10 -r TheRole -apr us -v info".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
     with patch(
         "sys.argv",
-        ". role_usage --username tom --token 654321 --year 2020 --month 10 --role TheRole --region us".split(),
+        ". role_usage --username tom --token 654321 --year 2020 --month 10 --role TheRole \
+        --athena_partition_region us".split(),
     ):
         long_args = AwsScannerArgumentParser().parse_cli_args()
 
@@ -66,7 +71,7 @@ def test_parse_cli_args_for_role_usage_task() -> None:
 
 
 def test_parse_cli_args_for_principal_task() -> None:
-    with patch("sys.argv", ". find_principal -u tom -t 987654 -y 2020 -m 11 -i 127.0.0.1 -re eu -v info".split()):
+    with patch("sys.argv", ". find_principal -u tom -t 987654 -y 2020 -m 11 -i 127.0.0.1 -apr eu -v info".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()
 
     with patch(
