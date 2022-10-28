@@ -44,12 +44,13 @@ class AwsClientFactory:
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._session_token = self._get_session_token(mfa, username)
+        self._region = region
 
     def get_athena_boto_client(self) -> BaseClient:
-        return self._get_client("athena", self._config.athena_account(), self._config.athena_role())
+        return self._get_client("athena", self._config.athena_account(), self._config.athena_role(), self._region)
 
     def get_s3_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("s3", account, role)
+        return self._get_client("s3", account, role, self._region)
 
     def get_s3_client(self, account: Account, role: Optional[str] = None) -> AwsS3Client:
         return AwsS3Client(self.get_s3_boto_client(account, role or self._config.s3_role()))
@@ -68,43 +69,45 @@ class AwsClientFactory:
         )
 
     def get_cost_explorer_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("ce", account, self._config.cost_explorer_role())
+        return self._get_client("ce", account, self._config.cost_explorer_role(), self._region)
 
     def get_cost_explorer_client(self, account: Account) -> AwsCostExplorerClient:
         return AwsCostExplorerClient(self.get_cost_explorer_boto_client(account))
 
     def get_organizations_boto_client(self) -> BaseClient:
-        return self._get_client("organizations", self._config.organization_account(), self._config.organization_role())
+        return self._get_client(
+            "organizations", self._config.organization_account(), self._config.organization_role(), self._region
+        )
 
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("ssm", account, self._config.ssm_role())
+        return self._get_client("ssm", account, self._config.ssm_role(), self._region)
 
     def get_logs_boto_client(self, account: Account, region: Optional[str] = None) -> BaseClient:
         return self._get_client("logs", account, self._config.logs_role(), region)
 
     def get_iam_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("iam", account, role)
+        return self._get_client("iam", account, role, self._region)
 
     def get_kms_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("kms", account, self._config.kms_role())
+        return self._get_client("kms", account, self._config.kms_role(), self._region)
 
     def get_route53_resolver_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("route53resolver", account, self._config.route53_resolver_role())
+        return self._get_client("route53resolver", account, self._config.route53_resolver_role(), self._region)
 
     def get_cloudtrail_boto_client(self, account: Account) -> BaseClient:
-        return self._get_client("cloudtrail", account, self._config.cloudtrail_role())
+        return self._get_client("cloudtrail", account, self._config.cloudtrail_role(), self._region)
 
     def get_athena_client(self) -> AwsAthenaClient:
         return AwsAthenaClient(self.get_athena_boto_client())
 
     def get_ec2_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("ec2", account, role)
+        return self._get_client("ec2", account, role, self._region)
 
     def get_ec2_client(self, account: Account, role: Optional[str] = None) -> AwsEC2Client:
         return AwsEC2Client(self.get_ec2_boto_client(account, role or self._config.ec2_role()))
 
     def get_route53_boto_client(self, account: Account, role: str) -> BaseClient:
-        return self._get_client("route53", account, role)
+        return self._get_client("route53", account, role, self._region)
 
     def get_route53_client(self, account: Account) -> AwsRoute53Client:
         return AwsRoute53Client(
