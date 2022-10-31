@@ -238,7 +238,10 @@ def test_apply_create_route53_log_group_action() -> None:
 
 
 def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
-    logs = Mock(spec=AwsLogsClient)
+    logs = Mock(
+        spec=AwsLogsClient,
+        destination_arn=Mock(return_value="arn:aws:logs:some-test-aws-region:555666777888:destination:central"),
+    )
 
     log_group_config = Config().logs_vpc_flow_log_group_config()
     put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config, logs=logs)._apply()
@@ -246,7 +249,7 @@ def test_apply_put_central_vpc_log_group_subscription_filter_action() -> None:
         log_group_name="/vpc/flow_log",
         filter_name="/vpc/flow_log_sub_filter",
         filter_pattern="[version, account_id, interface_id]",
-        destination_arn="arn:aws:logs:::destination:central",
+        destination_arn="arn:aws:logs:some-test-aws-region:555666777888:destination:central",
     )
 
 
@@ -254,7 +257,10 @@ def test_plan_put_central_vpc_log_group_subscription_filter_action() -> None:
     log_group_config = Config().logs_vpc_flow_log_group_config()
     expected = compliance_action_report(
         description="Put central /vpc/flow_log log group subscription filter",
-        details={"log_group_name": "/vpc/flow_log", "destination_arn": "arn:aws:logs:::destination:central"},
+        details={
+            "log_group_name": "/vpc/flow_log",
+            "destination_arn": "arn:aws:logs:some-test-aws-region:555666777888:destination:central",
+        },
     )
     assert expected == put_vpc_log_group_subscription_filter_action(log_group_config=log_group_config).plan()
 

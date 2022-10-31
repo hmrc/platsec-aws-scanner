@@ -27,12 +27,16 @@ vpcs = [vpc(id="vpc-1"), vpc(id="vpc-2")]
 
 
 def enforcement_actions(v: Sequence[Vpc], with_sub_filter: bool) -> Sequence[ComplianceAction]:
+    logs_mock = Mock(
+        spec=AwsLogsClient,
+        destination_arn=Mock(
+            return_value="arn:aws:logs:some-test-aws-region:555666777888:destination:some-dns-central"
+        ),
+    )
     return [
         delete_flow_log_action(flow_log_id="fl-4"),
         create_flow_log_action(vpc_id="vpc-7"),
-        PutLogGroupSubscriptionFilterAction(
-            Mock(spec=AwsLogsClient), AwsScannerConfig().logs_vpc_dns_log_group_config()
-        ),
+        PutLogGroupSubscriptionFilterAction(logs_mock, AwsScannerConfig().logs_vpc_dns_log_group_config()),
     ]
 
 
@@ -56,7 +60,7 @@ def test_run_plan_task() -> None:
             status=None,
             details={
                 "log_group_name": "/vpc/central_dns_log_name",
-                "destination_arn": "arn:aws:logs:::destination:some-dns-central",
+                "destination_arn": "arn:aws:logs:some-test-aws-region:555666777888:destination:some-dns-central",
             },
         ),
     ]
@@ -92,7 +96,7 @@ def test_run_apply_task() -> None:
             status="applied",
             details={
                 "log_group_name": "/vpc/central_dns_log_name",
-                "destination_arn": "arn:aws:logs:::destination:some-dns-central",
+                "destination_arn": "arn:aws:logs:some-test-aws-region:555666777888:destination:some-dns-central",
             },
         ),
     ]

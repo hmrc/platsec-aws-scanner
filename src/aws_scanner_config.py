@@ -22,7 +22,8 @@ class LogGroupConfig:
     logs_log_group_subscription_filter_name: str
     logs_log_group_pattern: str
     logs_group_retention_policy_days: int
-    logs_log_group_destination: str
+    logs_log_group_destination_name: str
+    logs_log_group_target_account: str
     log_group_resource_policy_name: str
 
 
@@ -157,7 +158,8 @@ class AwsScannerConfig:
             logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'vpc_log_group_name')}_sub_filter",
             logs_log_group_pattern=self._get_config("logs", "vpc_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "vpc_log_group_retention_policy_days")),
-            logs_log_group_destination=self._get_config("logs", "vpc_log_group_destination"),
+            logs_log_group_destination_name=self._get_config("logs", "vpc_log_group_destination_name"),
+            logs_log_group_target_account=self._get_config("logs", "vpc_log_group_target_account"),
             log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 
@@ -167,7 +169,8 @@ class AwsScannerConfig:
             logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'vpc_dns_log_group_name')}_sub_filter",
             logs_log_group_pattern=self._get_config("logs", "vpc_dns_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "vpc_dns_log_group_retention_policy_days")),
-            logs_log_group_destination=self._get_config("logs", "vpc_dns_log_group_destination"),
+            logs_log_group_destination_name=self._get_config("logs", "vpc_dns_log_group_destination_name"),
+            logs_log_group_target_account=self._get_config("logs", "vpc_dns_log_group_target_account"),
             log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 
@@ -177,7 +180,8 @@ class AwsScannerConfig:
             logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'route53_log_group_name')}_sub_filter",
             logs_log_group_pattern=self._get_config("logs", "route53_log_group_pattern"),
             logs_group_retention_policy_days=int(self._get_config("logs", "route53_log_group_retention_policy_days")),
-            logs_log_group_destination=self._get_config("logs", "route53_log_group_destination"),
+            logs_log_group_destination_name=self._get_config("logs", "route53_log_group_destination_name"),
+            logs_log_group_target_account=self._get_config("logs", "route53_log_group_target_account"),
             log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 

@@ -445,31 +445,49 @@ def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient))
     return DeleteFlowLogDeliveryRoleAction(iam=iam)
 
 
+def __logs_client_mock(log_group_config: LogGroupConfig) -> Mock:
+    return Mock(
+        spec=AwsLogsClient,
+        destination_arn=Mock(
+            return_value=f"arn:aws:logs:some-test-aws-region:555666777888"
+            f":destination:{log_group_config.logs_log_group_destination_name}"
+        ),
+    )
+
+
 def create_log_group_action(
     log_group_config: LogGroupConfig,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    logs: Optional[AwsLogsClient] = None,
 ) -> CreateLogGroupAction:
+    if not logs:
+        logs = __logs_client_mock(log_group_config)
     return CreateLogGroupAction(logs=logs, log_group_config=log_group_config)
 
 
 def put_vpc_log_group_subscription_filter_action(
     log_group_config: LogGroupConfig,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    logs: Optional[AwsLogsClient] = None,
 ) -> PutLogGroupSubscriptionFilterAction:
+    if not logs:
+        logs = __logs_client_mock(log_group_config)
     return PutLogGroupSubscriptionFilterAction(logs=logs, log_group_config=log_group_config)
 
 
 def delete_vpc_log_group_subscription_filter_action(
     log_group_config: LogGroupConfig,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    logs: Optional[AwsLogsClient] = None,
 ) -> DeleteLogGroupSubscriptionFilterAction:
+    if not logs:
+        logs = __logs_client_mock(log_group_config)
     return DeleteLogGroupSubscriptionFilterAction(logs=logs, log_group_config=log_group_config)
 
 
 def put_log_group_retention_policy_action(
     log_group_config: LogGroupConfig,
-    logs: AwsLogsClient = Mock(spec=AwsLogsClient),
+    logs: Optional[AwsLogsClient] = None,
 ) -> PutLogGroupRetentionPolicyAction:
+    if not logs:
+        logs = __logs_client_mock(log_group_config)
     return PutLogGroupRetentionPolicyAction(logs=logs, log_group_config=log_group_config)
 
 
@@ -571,7 +589,7 @@ def subscription_filter(
     log_group_name: str = "/vpc/central_flow_log",
     filter_name: str = "VpcFlowLogsForward",
     filter_pattern: str = "[version, account_id, interface_id]",
-    destination_arn: str = "arn:aws:logs:::destination:central",
+    destination_arn: str = "arn:aws:logs:some-test-aws-region:555666777888:destination:central",
 ) -> SubscriptionFilter:
     return SubscriptionFilter(
         log_group_name=log_group_name,
@@ -586,7 +604,8 @@ def expected_subscription_filter(config: LogGroupConfig) -> SubscriptionFilter:
         log_group_name=config.logs_log_group_subscription_filter_name,
         filter_name=config.logs_log_group_subscription_filter_name,
         filter_pattern=config.logs_log_group_pattern,
-        destination_arn=config.logs_log_group_destination,
+        destination_arn=f"arn:aws:logs:some-test-aws-region:555666777888"
+        f":destination:{config.logs_log_group_destination_name}",
     )
 
 
@@ -806,4 +825,4 @@ def delete_query_log_action(
 
 
 def resolver_query_log_config(config: LogGroupConfig, name: str, id: str = "some-id") -> ResolverQueryLogConfig:
-    return ResolverQueryLogConfig(name=name, id=id, arn="somearn2", destination_arn=config.logs_log_group_destination)
+    return ResolverQueryLogConfig(name=name, id=id, arn="somearn2", destination_arn="some-arn")

@@ -72,10 +72,8 @@ def test_init_config_from_file() -> None:
     assert "joe.bloggs" == config.user_name()
     assert "[version, account_id]" == config.logs_vpc_dns_log_group_config().logs_log_group_pattern
     assert "/vpc/central_dns_log_name" == config.logs_vpc_dns_log_group_config().logs_group_name
-    assert (
-        "arn:aws:logs:::destination:some-dns-central"
-        == config.logs_vpc_dns_log_group_config().logs_log_group_destination
-    )
+    assert "some-dns-central" == config.logs_vpc_dns_log_group_config().logs_log_group_destination_name
+    assert "555666777888" == config.logs_vpc_dns_log_group_config().logs_log_group_target_account
     assert 14 == config.logs_vpc_dns_log_group_config().logs_group_retention_policy_days
 
 

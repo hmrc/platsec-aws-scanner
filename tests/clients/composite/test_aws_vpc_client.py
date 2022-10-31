@@ -534,13 +534,11 @@ class TestDNSEnforcementActions(TestCase):
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
                 log_group(
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
             ]
         )
@@ -565,13 +563,11 @@ class TestDNSEnforcementActions(TestCase):
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
                 log_group(
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
             ]
         )
@@ -611,13 +607,11 @@ class TestDNSEnforcementActions(TestCase):
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
                 log_group(
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
             ]
         )
@@ -718,13 +712,11 @@ class TestDNSEnforcementActions(TestCase):
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
                 log_group(
                     subscription_filters=[expected_subscription],
                     name=log_config.logs_group_name,
                     retention_days=log_config.logs_group_retention_policy_days,
-                    arn=log_config.logs_log_group_destination,
                 ),
             ]
         )
@@ -762,13 +754,13 @@ class TestLogGroupCompliance(TestCase):
     def test_central_vpc_log_group(self) -> None:
         log_group_config = Config().logs_vpc_flow_log_group_config()
         self.assertTrue(
-            AwsLogsClient(Mock(), Mock(), account=account()).is_central_log_group(
+            AwsLogsClient(Mock(region="some-test-aws-region"), Mock(), account=account()).is_central_log_group(
                 log_group=log_group(
                     name="/vpc/flow_log",
                     subscription_filters=[
                         subscription_filter(
                             filter_pattern="[version, account_id, interface_id]",
-                            destination_arn="arn:aws:logs:::destination:central",
+                            destination_arn="arn:aws:logs:some-test-aws-region:555666777888:destination:central",
                         )
                     ],
                 ),
@@ -809,7 +801,15 @@ class AwsVpcClientBuilder(TestCase):
         super().__init__()
         self.ec2 = Mock(spec=AwsEC2Client, wraps=AwsEC2Client(Mock()))
         self.iam = Mock(spec=AwsIamClient, wraps=AwsIamClient(Mock()))
-        self.logs = Mock(spec=AwsLogsClient, wraps=AwsLogsClient(boto_logs=Mock(), kms=Mock(), account=account()))
+        self.logs = Mock(
+            spec=AwsLogsClient,
+            wraps=AwsLogsClient(
+                boto_logs=Mock(region="some-test-aws-region"),
+                kms=Mock(),
+                account=account(),
+            ),
+            destination_arn=Mock(return_value="arn:aws:logs:some-test-aws-region:555666777888:destination:central"),
+        )
         self.config = Config()
         self.log_group = AwsLogGroupClient(logs=self.logs)
         self.resolver = Mock(spec=AwsResolverClient, wraps=AwsResolverClient(Mock()))

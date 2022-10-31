@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 from unittest import TestCase
 from typing import List
+from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.data.aws_logs_types import LogGroup
@@ -285,7 +286,10 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         boto_route53.list_query_logging_configs = Mock(return_value={"QueryLoggingConfigs": []})
         iam = Mock()
-        logs = Mock()
+        logs = Mock(
+            spec=AwsLogsClient,
+            destination_arn=Mock(return_value="arn:aws:logs:some-test-aws-region:555666777888:destination:central"),
+        )
         logs.is_central_log_group = Mock(return_value=True)
         log_group = AwsLogGroupClient(logs=logs)
 

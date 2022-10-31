@@ -105,7 +105,7 @@ def test_put_subscription_filter() -> None:
     log_group_name = "/vpc/central_flow_log"
     filter_name = "VpcFlowLogsForward"
     filter_pattern = "[version, account_id, interface_id]"
-    destination_arn = "arn:aws:logs:::destination:central"
+    destination_arn = "arn:aws:logs:some-test-aws-region:555666777888:destination:central"
     boto = Mock()
     AwsLogsClient(boto, Mock(), account()).put_subscription_filter(
         log_group_name, filter_name, filter_pattern, destination_arn

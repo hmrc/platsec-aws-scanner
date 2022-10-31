@@ -358,13 +358,14 @@ class PutLogGroupSubscriptionFilterAction(ComplianceAction):
         super().__init__(f"Put central {log_group_config.logs_group_name} log group subscription filter")
         self.logs = logs
         self.log_group_config = log_group_config
+        self.destination_arn = logs.destination_arn(config=log_group_config)
 
     def plan(self) -> ComplianceActionReport:
         return ComplianceActionReport(
             description=self.description,
             details=dict(
                 log_group_name=self.log_group_config.logs_group_name,
-                destination_arn=self.log_group_config.logs_log_group_destination,
+                destination_arn=self.destination_arn,
             ),
         )
 
@@ -373,7 +374,7 @@ class PutLogGroupSubscriptionFilterAction(ComplianceAction):
             log_group_name=self.log_group_config.logs_group_name,
             filter_name=self.log_group_config.logs_log_group_subscription_filter_name,
             filter_pattern=self.log_group_config.logs_log_group_pattern,
-            destination_arn=self.log_group_config.logs_log_group_destination,
+            destination_arn=self.destination_arn,
         )
 
 
