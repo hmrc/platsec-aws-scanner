@@ -6,11 +6,13 @@ from botocore.exceptions import NoCredentialsError
 
 from src.clients.aws_client_factory import AwsClientFactory, AwsCredentials
 from src.clients.aws_iam_audit_client import AwsIamAuditClient
-from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, DEFAULT_REGION
+from src.data import SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER
 from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import ClientFactoryException
 
 from tests.test_types_generator import account
+
+TEST_REGION = "eu-west-2"
 
 
 class TestGetBotoClients(TestCase):
@@ -453,9 +455,7 @@ class TestAwsClientFactory(TestCase):
 
     def test_get_session_token_service_account(self) -> None:
         with patch("src.clients.aws_client_factory.boto3") as mock_boto3:
-            self.assertIsNone(
-                AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, DEFAULT_REGION)._session_token
-            )
+            self.assertIsNone(AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, TEST_REGION)._session_token)
         mock_boto3.client.assert_not_called()
 
     def test_get_client(self) -> None:
@@ -540,7 +540,7 @@ class TestAwsClientFactory(TestCase):
         mock_boto = Mock(client=Mock(return_value=mock_sts_client))
 
         with patch("src.clients.aws_client_factory.boto3", mock_boto):
-            creds = AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, DEFAULT_REGION)._assume_role(
+            creds = AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, TEST_REGION)._assume_role(
                 account(), self.role
             )
         self.assertEqual(creds, AwsCredentials("some_access_key", "some_secret_access_key", "some_session_token"))
