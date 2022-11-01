@@ -9,7 +9,8 @@ from typing import Any
 
 
 EXPECTED_JSON_REPORT = (
-    '[{"account": {"identifier": "account_id", "name": "account_name"}, "region": "test-region", "description": "task", "partition": '
+    '[{"account": {"identifier": "account_id", "name": "account_name"}, '
+    '"region": "test-region", "description": "task", "partition": '
     '{"year": "2020", "month": "11", "region": "eu"}, "results": {"key": "val"}}]'
 )
 
