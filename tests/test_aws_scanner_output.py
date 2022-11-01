@@ -9,7 +9,7 @@ from typing import Any
 
 
 EXPECTED_JSON_REPORT = (
-    '[{"account": {"identifier": "account_id", "name": "account_name"}, "description": "task", "partition": '
+    '[{"account": {"identifier": "account_id", "name": "account_name"}, "region": "test-region", "description": "task", "partition": '
     '{"year": "2020", "month": "11", "region": "eu"}, "results": {"key": "val"}}]'
 )
 
@@ -41,5 +41,7 @@ def test_s3_output() -> None:
     )
     AwsScannerOutput(factory).write("some_task", [task_report(partition=partition())])
     mock_s3.put_object.assert_called_once_with(
-        bucket="reports_bucket", object_name="some_task.json", object_content=EXPECTED_JSON_REPORT
+        bucket="reports_bucket",
+        object_name="some_task.json",
+        object_content=EXPECTED_JSON_REPORT,
     )

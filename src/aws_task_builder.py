@@ -45,50 +45,69 @@ class AwsTaskBuilder:
                 AwsServiceUsageScannerTask,
                 services=self._args.services,
                 partition=self._args.partition,
+                region=self._args.region,
             ),
             Cmd.role_usage: lambda: self._tasks(
-                AwsRoleUsageScannerTask, partition=self._args.partition, role=self._args.role
+                AwsRoleUsageScannerTask,
+                partition=self._args.partition,
+                role=self._args.role,
+                region=self._args.region,
             ),
             Cmd.find_principal: lambda: self._tasks(
                 AwsPrincipalByIPFinderTask,
                 partition=self._args.partition,
                 source_ip=self._args.source_ip,
+                region=self._args.region,
             ),
-            Cmd.create_table: lambda: self._tasks(AwsCreateAthenaTableTask, partition=self._args.partition),
-            Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask),
-            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask),
-            Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask),
-            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task),
-            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask),
+            Cmd.create_table: lambda: self._tasks(
+                AwsCreateAthenaTableTask,
+                partition=self._args.partition,
+                region=self._args.region,
+            ),
+            Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask, region=self._args.region),
+            Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, region=self._args.region),
+            Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask, region=self._args.region),
+            Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, region=self._args.region),
+            Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask, region=self._args.region),
             Cmd.cost_explorer: lambda: self._tasks(
-                AwsAuditCostExplorerTask,
-                today=date.today(),
+                AwsAuditCostExplorerTask, today=date.today(), region=self._args.region
             ),
             Cmd.audit_vpc_flow_logs: lambda: self._tasks(
                 AwsAuditVPCFlowLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
                 skip_tags=self._args.skip_tags,
+                region=self._args.region,
             ),
             Cmd.audit_vpc_dns_logs: lambda: self._tasks(
                 AwsAuditVPCDnsLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
                 skip_tags=self._args.skip_tags,
+                region=self._args.region,
             ),
-            Cmd.audit_password_policy: lambda: self._tasks(AwsAuditPasswordPolicyTask, enforce=self._args.enforce),
-            Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask),
-            Cmd.audit_central_logging: lambda: self._standalone_task(AwsAuditCentralLoggingTask),
+            Cmd.audit_password_policy: lambda: self._tasks(
+                AwsAuditPasswordPolicyTask,
+                enforce=self._args.enforce,
+                region=self._args.region,
+            ),
+            Cmd.audit_cloudtrail: lambda: self._tasks(AwsAuditCloudtrailTask, region=self._args.region),
+            Cmd.audit_central_logging: lambda: self._standalone_task(
+                AwsAuditCentralLoggingTask, region=self._args.region
+            ),
             Cmd.create_flow_logs_table: lambda: self._standalone_task(
-                AwsCreateFlowLogsTableTask, partition=self._args.partition
+                AwsCreateFlowLogsTableTask,
+                partition=self._args.partition,
+                region=self._args.region,
             ),
-            Cmd.audit_vpc_peering: lambda: self._tasks(AwsAuditVpcPeeringTask),
-            Cmd.audit_ec2_instances: lambda: self._tasks(AwsAuditEc2InstancesTask),
+            Cmd.audit_vpc_peering: lambda: self._tasks(AwsAuditVpcPeeringTask, region=self._args.region),
+            Cmd.audit_ec2_instances: lambda: self._tasks(AwsAuditEc2InstancesTask, region=self._args.region),
             Cmd.audit_route53_query_logs: lambda: self._tasks(
                 AwsAuditRoute53QueryLogsTask,
                 enforce=self._args.enforce,
                 with_subscription_filter=self._args.with_subscription_filter,
                 skip_tags=self._args.skip_tags,
+                region=self._args.region,
             ),
         }
         try:

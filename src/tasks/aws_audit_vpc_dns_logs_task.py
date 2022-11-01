@@ -8,8 +8,15 @@ from src.tasks.aws_task import AwsTask
 
 @dataclass
 class AwsAuditVPCDnsLogsTask(AwsTask):
-    def __init__(self, account: Account, enforce: bool, with_subscription_filter: bool, skip_tags: bool) -> None:
-        super().__init__("audit VPC dns logs compliance", account)
+    def __init__(
+        self,
+        account: Account,
+        enforce: bool,
+        with_subscription_filter: bool,
+        skip_tags: bool,
+        region: str,
+    ) -> None:
+        super().__init__(description="audit VPC dns logs compliance", account=account, region=region)
         self.with_subscription_filter = with_subscription_filter
         self.enforce = enforce
         self.skip_tags = skip_tags

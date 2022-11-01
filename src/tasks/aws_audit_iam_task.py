@@ -6,8 +6,8 @@ from src.tasks.aws_task import AwsTask
 
 
 class AwsAuditIamTask(AwsTask):
-    def __init__(self, account: Account) -> None:
-        super().__init__("audit iam compliance", account)
+    def __init__(self, account: Account, region: str) -> None:
+        super().__init__(description="audit iam compliance", account=account, region=region)
 
     def _run_task(self, client: AwsIamAuditClient) -> Dict[Any, Any]:
         keys = []

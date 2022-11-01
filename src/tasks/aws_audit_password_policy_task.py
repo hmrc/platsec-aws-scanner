@@ -8,8 +8,12 @@ from src.tasks.aws_task import AwsTask
 
 
 class AwsAuditPasswordPolicyTask(AwsTask):
-    def __init__(self, account: Account, enforce: bool) -> None:
-        super().__init__("audit password policy compliance", account)
+    def __init__(self, account: Account, enforce: bool, region: str) -> None:
+        super().__init__(
+            description="audit password policy compliance",
+            account=account,
+            region=region,
+        )
         self.enforce = enforce
 
     def _run_task(self, client: AwsIamClient) -> Dict[Any, Any]:
@@ -17,4 +21,7 @@ class AwsAuditPasswordPolicyTask(AwsTask):
         current_policy = client.get_account_password_policy()
         actions = [] if current_policy == reference_policy else [UpdatePasswordPolicyAction(iam=client)]
         action_reports = list(map(lambda a: a.apply() if self.enforce else a.plan(), actions))
-        return {"password_policy": current_policy, "enforcement_actions": action_reports}
+        return {
+            "password_policy": current_policy,
+            "enforcement_actions": action_reports,
+        }

@@ -6,8 +6,12 @@ from src.tasks.aws_task import AwsTask
 
 
 class AwsAuditCentralLoggingTask(AwsTask):
-    def __init__(self) -> None:
-        super().__init__("audit central logging account", Config().cloudtrail_account())
+    def __init__(self, region: str) -> None:
+        super().__init__(
+            description="audit central logging account",
+            account=Config().cloudtrail_account(),
+            region=region,
+        )
 
     def _run_task(self, client: AwsCentralLoggingClient) -> Dict[Any, Any]:
         return {

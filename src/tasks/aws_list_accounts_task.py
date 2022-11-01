@@ -8,8 +8,12 @@ from src.aws_scanner_config import AwsScannerConfig as Config
 
 @dataclass
 class AwsListAccountsTask(AwsOrganizationsTask):
-    def __init__(self) -> None:
-        super().__init__("list accounts in organization", Config().organization_account())
+    def __init__(self, region: str) -> None:
+        super().__init__(
+            description="list accounts in organization",
+            account=Config().organization_account(),
+            region=region,
+        )
 
     def _run_task(self, client: AwsOrganizationsClient) -> Dict[Any, Any]:
         return {"accounts": (client.get_all_accounts())}

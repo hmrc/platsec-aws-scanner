@@ -6,8 +6,8 @@ from src.tasks.aws_task import AwsTask
 
 
 class AwsAuditVpcPeeringTask(AwsTask):
-    def __init__(self, account: Account):
-        super().__init__("audit VPC peering connections", account)
+    def __init__(self, account: Account, region: str):
+        super().__init__(description="audit VPC peering connections", account=account, region=region)
 
     def _run_task(self, client: AwsVpcPeeringClient) -> Dict[Any, Any]:
         return {"vpc_peering_connections": client.list_vpc_peering_connections()}

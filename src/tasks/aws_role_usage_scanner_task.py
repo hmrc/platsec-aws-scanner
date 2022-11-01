@@ -10,15 +10,28 @@ from src.data.aws_organizations_types import Account
 
 
 class AwsRoleUsageScannerTask(AwsCloudTrailTask):
-    def __init__(self, account: Account, partition: AwsAthenaDataPartition, role: str):
-        super().__init__(f"AWS {role} usage scan", account, partition)
+    def __init__(
+        self,
+        account: Account,
+        partition: AwsAthenaDataPartition,
+        role: str,
+        region: str,
+    ):
+        super().__init__(
+            description=f"AWS {role} usage scan",
+            account=account,
+            partition=partition,
+            region=region,
+        )
         self._role = role
 
     def _run_task(self, client: AwsAthenaClient) -> Dict[Any, Any]:
         results = self._run_query(
             client,
             Template(queries.SCAN_ROLE_USAGE).substitute(
-                database=self._database, account=self._account.identifier, role=self._role
+                database=self._database,
+                account=self._account.identifier,
+                role=self._role,
             ),
         )
         return {

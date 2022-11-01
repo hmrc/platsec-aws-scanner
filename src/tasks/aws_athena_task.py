@@ -10,8 +10,15 @@ from src.tasks.aws_task import AwsTask
 
 
 class AwsAthenaTask(AwsTask):
-    def __init__(self, description: str, account: Account, partition: AwsAthenaDataPartition):
-        super().__init__(description, account)
+    def __init__(
+        self,
+        description: str,
+        account: Account,
+        partition: AwsAthenaDataPartition,
+        region: str,
+    ):
+        super().__init__(description=description, account=account, region=region)
+        self._region = region
         self._database = self._randomise_name(account.identifier)
         self._partition = partition
 
@@ -22,7 +29,13 @@ class AwsAthenaTask(AwsTask):
             results = self._run_task(client)
         finally:
             self._teardown(client)
-        return AwsTaskReport(self._account, self._description, self._partition, results)
+        return AwsTaskReport(
+            account=self._account,
+            description=self._description,
+            partition=self._partition,
+            results=results,
+            region=self._region,
+        )
 
     def _setup(self, client: AwsAthenaClient) -> None:
         self._logger.info(f"setting up {self}")

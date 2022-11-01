@@ -3,11 +3,14 @@ from unittest.mock import Mock
 
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
 
-from tests.test_types_generator import account
+from tests.test_types_generator import account, TEST_REGION
 
 
 class TestAwsListAccountsTask(TestCase):
     def test_run_task(self) -> None:
         accounts = [account(), account()]
         mock_orgs_client = Mock(get_all_accounts=Mock(return_value=accounts))
-        self.assertEqual({"accounts": accounts}, AwsListAccountsTask()._run_task(mock_orgs_client))
+        self.assertEqual(
+            {"accounts": accounts},
+            AwsListAccountsTask(region=TEST_REGION)._run_task(mock_orgs_client),
+        )

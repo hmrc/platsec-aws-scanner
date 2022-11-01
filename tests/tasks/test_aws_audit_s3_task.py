@@ -21,13 +21,24 @@ from tests.test_types_generator import (
     bucket_secure_transport,
     bucket_versioning,
     key,
+    TEST_REGION,
 )
 
 
 class TestAwsAuditS3Task(TestCase):
     def test_run_task(self) -> None:
-        bucket_1, bucket_2, bucket_3, bucket_4 = "bucket-1", "bucket-2", "another_bucket", "forever-config-bucket"
-        buckets = [bucket(bucket_1), bucket(bucket_2), bucket(bucket_3), bucket(bucket_4)]
+        bucket_1, bucket_2, bucket_3, bucket_4 = (
+            "bucket-1",
+            "bucket-2",
+            "another_bucket",
+            "forever-config-bucket",
+        )
+        buckets = [
+            bucket(bucket_1),
+            bucket(bucket_2),
+            bucket(bucket_3),
+            bucket(bucket_4),
+        ]
         key_1, key_2, key_3, key_4 = "key-1", "key-2", "key-3", "key-4"
 
         acl_mapping = {
@@ -127,7 +138,7 @@ class TestAwsAuditS3Task(TestCase):
         kms_client = Mock(find_key=Mock(side_effect=lambda b: kms_key_mapping[b]))
         s3_kms_client = AwsS3KmsClient(s3=s3_client, kms=kms_client)
 
-        task_report = AwsAuditS3Task(account())._run_task(s3_kms_client)
+        task_report = AwsAuditS3Task(account=account(), region=TEST_REGION)._run_task(s3_kms_client)
         self.maxDiff = None
 
         assert task_report["buckets"][0] == bucket(

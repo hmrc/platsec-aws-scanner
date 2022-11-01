@@ -77,6 +77,8 @@ from src.tasks.aws_s3_task import AwsS3Task
 from src.tasks.aws_task import AwsTask
 from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
 
+TEST_REGION: str = "test-region"
+
 
 def partition(
     year: int = 2020, month: int = 11, region: str = "eu", day: Optional[int] = None
@@ -89,61 +91,92 @@ def account(identifier: str = "account_id", name: str = "account_name") -> Accou
 
 
 def organizational_unit(
-    identifier: str, name: str, accounts: List[Account], org_units: List[OrganizationalUnit], root: bool = False
+    identifier: str,
+    name: str,
+    accounts: List[Account],
+    org_units: List[OrganizationalUnit],
+    root: bool = False,
 ) -> OrganizationalUnit:
-    return OrganizationalUnit(identifier=identifier, name=name, root=root, accounts=accounts, org_units=org_units)
+    return OrganizationalUnit(
+        identifier=identifier,
+        name=name,
+        root=root,
+        accounts=accounts,
+        org_units=org_units,
+    )
 
 
 def aws_task(account: Account = account(), description: str = "task") -> AwsTask:
-    return AwsTask(description=description, account=account)
+    return AwsTask(description=description, account=account, region=TEST_REGION)
 
 
 def athena_task(
-    account: Account = account(), description: str = "athena_task", partition: AwsAthenaDataPartition = partition()
+    account: Account = account(),
+    description: str = "athena_task",
+    partition: AwsAthenaDataPartition = partition(),
 ) -> AwsAthenaTask:
-    return AwsAthenaTask(description=description, account=account, partition=partition)
+    return AwsAthenaTask(
+        description=description,
+        account=account,
+        partition=partition,
+        region=TEST_REGION,
+    )
 
 
 def vpc_flow_logs_task(
-    account: Account = account(), enforce: bool = True, with_subscription_filter: bool = False, skip_tags: bool = False
+    account: Account = account(),
+    enforce: bool = True,
+    with_subscription_filter: bool = False,
+    skip_tags: bool = False,
 ) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(
-        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+        account=account,
+        enforce=enforce,
+        with_subscription_filter=with_subscription_filter,
+        skip_tags=skip_tags,
+        region=TEST_REGION,
     )
 
 
 def s3_task(account: Account = account(), description: str = "s3_task") -> AwsS3Task:
-    return AwsS3Task(description=description, account=account)
+    return AwsS3Task(description=description, account=account, region=TEST_REGION)
 
 
 def ssm_task(account: Account = account(), description: str = "ssm_task") -> AwsSSMTask:
-    return AwsSSMTask(description=description, account=account)
+    return AwsSSMTask(description=description, account=account, region=TEST_REGION)
 
 
 def organizations_task(account: Account = account(), description: str = "org_task") -> AwsOrganizationsTask:
-    return AwsOrganizationsTask(description=description, account=account)
+    return AwsOrganizationsTask(description=description, account=account, region=TEST_REGION)
 
 
 def cost_explorer_task(account: Account = account(), year: int = 2021, month: int = 4) -> AwsAuditCostExplorerTask:
-    return AwsAuditCostExplorerTask(account=account, today=date(year, month, 2))
+    return AwsAuditCostExplorerTask(account=account, today=date(year, month, 2), region=TEST_REGION)
 
 
 def cloudtrail_task(
-    account: Account = account(), description: str = "task", partition: AwsAthenaDataPartition = partition()
+    account: Account = account(),
+    description: str = "task",
+    partition: AwsAthenaDataPartition = partition(),
 ) -> AwsCloudTrailTask:
-    return AwsCloudTrailTask(description=description, account=account, partition=partition)
+    return AwsCloudTrailTask(
+        description=description,
+        account=account,
+        partition=partition,
+        region=TEST_REGION,
+    )
 
 
 def audit_cloudtrail_task(account: Account = account()) -> AwsAuditCloudtrailTask:
-    return AwsAuditCloudtrailTask(account=account)
+    return AwsAuditCloudtrailTask(account=account, region=TEST_REGION)
 
 
 def audit_iam_task(account: Account = account()) -> AwsAuditIamTask:
-    return AwsAuditIamTask(account=account)
+    return AwsAuditIamTask(account=account, region=TEST_REGION)
 
 
 def audit_password_policy_task(account: Account = account(), enforce: bool = False) -> AwsAuditPasswordPolicyTask:
-    return AwsAuditPasswordPolicyTask(account=account, enforce=enforce)
+    return AwsAuditPasswordPolicyTask(account=account, enforce=enforce, region=TEST_REGION)
 
 
 def task_report(
@@ -152,7 +185,13 @@ def task_report(
     partition: Optional[AwsAthenaDataPartition] = partition(),
     results: Dict[Any, Any] = {"key": "val"},
 ) -> AwsTaskReport:
-    return AwsTaskReport(account, description, partition, results)
+    return AwsTaskReport(
+        account=account,
+        description=description,
+        partition=partition,
+        results=results,
+        region=TEST_REGION,
+    )
 
 
 def secure_string_parameter(name: str) -> Parameter:
@@ -195,13 +234,19 @@ def bucket_compliancy(
 ) -> BucketCompliancy:
     return BucketCompliancy(
         content_deny=ComplianceCheck(
-            compliant=content_deny, message="bucket should have a resource policy with a default deny action"
+            compliant=content_deny,
+            message="bucket should have a resource policy with a default deny action",
         ),
         acl=ComplianceCheck(compliant=acl, message="bucket should not have ACL set"),
         encryption=ComplianceCheck(compliant=encryption, message="bucket should be encrypted"),
-        logging=ComplianceCheck(compliant=logging, skipped=skipped, message="bucket should have logging enabled"),
+        logging=ComplianceCheck(
+            compliant=logging,
+            skipped=skipped,
+            message="bucket should have logging enabled",
+        ),
         public_access_block=ComplianceCheck(
-            compliant=public_access_block, message="bucket should not allow public access"
+            compliant=public_access_block,
+            message="bucket should not allow public access",
         ),
         secure_transport=ComplianceCheck(
             compliant=secure_transport,
@@ -210,9 +255,13 @@ def bucket_compliancy(
         versioning=ComplianceCheck(compliant=versioning, message="bucket should have versioning enabled"),
         mfa_delete=ComplianceCheck(compliant=mfa_delete, message="MFA delete should be disabled"),
         kms_key=ComplianceCheck(compliant=kms_key, message="bucket kms key should have rotation enabled"),
-        tagging=ComplianceCheck(compliant=tagging, message="bucket should have tags for expiry and sensitivity"),
+        tagging=ComplianceCheck(
+            compliant=tagging,
+            message="bucket should have tags for expiry and sensitivity",
+        ),
         lifecycle=ComplianceCheck(
-            compliant=lifecycle, message="bucket should have a lifecycle configuration set for current/previous version"
+            compliant=lifecycle,
+            message="bucket should have a lifecycle configuration set for current/previous version",
         ),
         cors=ComplianceCheck(compliant=cors, message="bucket should not have CORS set"),
     )
@@ -230,7 +279,9 @@ def bucket_data_tagging(expiry: str = "unset", sensitivity: str = "unset") -> Bu
     return BucketDataTagging(expiry=expiry, sensitivity=sensitivity)
 
 
-def bucket_access_logging_tagging(ignore_access_logging_check: str = "unset") -> BucketAccessLoggingTagging:
+def bucket_access_logging_tagging(
+    ignore_access_logging_check: str = "unset",
+) -> BucketAccessLoggingTagging:
     return BucketAccessLoggingTagging(ignore_access_logging_check=ignore_access_logging_check)
 
 
@@ -351,7 +402,10 @@ def aws_scanner_arguments(
 
 
 def vpc(id: str = "vpc-1234", flow_logs: Optional[List[FlowLog]] = None) -> Vpc:
-    return Vpc(id=id, flow_logs=flow_logs if flow_logs is not None else [flow_log(id="fl-1234")])
+    return Vpc(
+        id=id,
+        flow_logs=flow_logs if flow_logs is not None else [flow_log(id="fl-1234")],
+    )
 
 
 def policy(
@@ -425,7 +479,11 @@ def create_flow_log_action(
     log_group_config: LogGroupConfig = AwsScannerConfig().logs_vpc_flow_log_group_config(),
 ) -> CreateFlowLogAction:
     return CreateFlowLogAction(
-        ec2_client=ec2_client, iam=iam, config=AwsScannerConfig(), log_group_config=log_group_config, vpc_id=vpc_id
+        ec2_client=ec2_client,
+        iam=iam,
+        config=AwsScannerConfig(),
+        log_group_config=log_group_config,
+        vpc_id=vpc_id,
     )
 
 
@@ -441,7 +499,9 @@ def create_flow_log_delivery_role_action(
     return CreateFlowLogDeliveryRoleAction(iam=iam)
 
 
-def delete_flow_log_delivery_role_action(iam: AwsIamClient = Mock(AwsIamClient)) -> DeleteFlowLogDeliveryRoleAction:
+def delete_flow_log_delivery_role_action(
+    iam: AwsIamClient = Mock(AwsIamClient),
+) -> DeleteFlowLogDeliveryRoleAction:
     return DeleteFlowLogDeliveryRoleAction(iam=iam)
 
 
@@ -497,7 +557,9 @@ def tag_log_group_action(
     return TagLogGroupAction(logs=logs, log_group_config=log_group_config)
 
 
-def tag_flow_log_delivery_role_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> TagFlowLogDeliveryRoleAction:
+def tag_flow_log_delivery_role_action(
+    iam: AwsIamClient = Mock(spec=AwsIamClient),
+) -> TagFlowLogDeliveryRoleAction:
     return TagFlowLogDeliveryRoleAction(iam=iam)
 
 
@@ -526,23 +588,39 @@ def put_log_group_resource_policy_action(
     )
 
 
-def update_password_policy_action(iam: AwsIamClient = Mock(spec=AwsIamClient)) -> UpdatePasswordPolicyAction:
+def update_password_policy_action(
+    iam: AwsIamClient = Mock(spec=AwsIamClient),
+) -> UpdatePasswordPolicyAction:
     return UpdatePasswordPolicyAction(iam=iam)
 
 
 def aws_audit_vpc_flow_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False, skip_tags: bool = False
+    account: Account = account(),
+    enforce: bool = False,
+    with_subscription_filter: bool = False,
+    skip_tags: bool = False,
 ) -> AwsAuditVPCFlowLogsTask:
     return AwsAuditVPCFlowLogsTask(
-        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+        account=account,
+        enforce=enforce,
+        with_subscription_filter=with_subscription_filter,
+        skip_tags=skip_tags,
+        region=TEST_REGION,
     )
 
 
 def aws_audit_vpc_dns_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False, skip_tags: bool = False
+    account: Account = account(),
+    enforce: bool = False,
+    with_subscription_filter: bool = False,
+    skip_tags: bool = False,
 ) -> AwsAuditVPCDnsLogsTask:
     return AwsAuditVPCDnsLogsTask(
-        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+        account=account,
+        enforce=enforce,
+        with_subscription_filter=with_subscription_filter,
+        skip_tags=skip_tags,
+        region=TEST_REGION,
     )
 
 
@@ -636,7 +714,9 @@ def key(
 
 
 def compliance_action_report(
-    description: Optional[str] = None, status: Optional[str] = None, details: Optional[Dict[str, Any]] = None
+    description: Optional[str] = None,
+    status: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None,
 ) -> ComplianceActionReport:
     return ComplianceActionReport(status=status, description=description, details=details or dict())
 
@@ -710,11 +790,13 @@ def event_selector(
 
 
 def audit_central_logging_task() -> AwsAuditCentralLoggingTask:
-    return AwsAuditCentralLoggingTask()
+    return AwsAuditCentralLoggingTask(region=TEST_REGION)
 
 
-def create_flow_logs_table_task(partition: AwsAthenaDataPartition = partition()) -> AwsCreateFlowLogsTableTask:
-    return AwsCreateFlowLogsTableTask(partition=partition)
+def create_flow_logs_table_task(
+    partition: AwsAthenaDataPartition = partition(),
+) -> AwsCreateFlowLogsTableTask:
+    return AwsCreateFlowLogsTableTask(partition=partition, region=TEST_REGION)
 
 
 def vpc_peering_connection(
@@ -740,11 +822,11 @@ def vpc_peering_connection(
 
 
 def audit_vpc_peering_task(account: Account = account()) -> AwsAuditVpcPeeringTask:
-    return AwsAuditVpcPeeringTask(account)
+    return AwsAuditVpcPeeringTask(account=account, region=TEST_REGION)
 
 
 def audit_ec2_instances_task(account: Account = account()) -> AwsAuditEc2InstancesTask:
-    return AwsAuditEc2InstancesTask(account)
+    return AwsAuditEc2InstancesTask(account=account, region=TEST_REGION)
 
 
 def instance(
@@ -800,10 +882,17 @@ def route53Zone(
 
 
 def aws_audit_route53_query_logs_task(
-    account: Account = account(), enforce: bool = False, with_subscription_filter: bool = False, skip_tags: bool = False
+    account: Account = account(),
+    enforce: bool = False,
+    with_subscription_filter: bool = False,
+    skip_tags: bool = False,
 ) -> AwsAuditRoute53QueryLogsTask:
     return AwsAuditRoute53QueryLogsTask(
-        account=account, enforce=enforce, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
+        account=account,
+        enforce=enforce,
+        with_subscription_filter=with_subscription_filter,
+        skip_tags=skip_tags,
+        region=TEST_REGION,
     )
 
 
@@ -814,12 +903,17 @@ def create_query_log_action(
     zone_id: str = "zoneId",
 ) -> CreateQueryLogAction:
     return CreateQueryLogAction(
-        account=account(), route53_client=route53_client, iam=iam, log_group_config=log_group_config, zone_id=zone_id
+        account=account(),
+        route53_client=route53_client,
+        iam=iam,
+        log_group_config=log_group_config,
+        zone_id=zone_id,
     )
 
 
 def delete_query_log_action(
-    route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient), hosted_zone_id: str = "hosted_zone_id"
+    route53_client: AwsHostedZonesClient = Mock(spec=AwsHostedZonesClient),
+    hosted_zone_id: str = "hosted_zone_id",
 ) -> DeleteQueryLogAction:
     return DeleteQueryLogAction(route53_client=route53_client, hosted_zone_id=hosted_zone_id)
 
