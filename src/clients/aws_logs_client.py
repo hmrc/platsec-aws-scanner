@@ -161,4 +161,4 @@ class AwsLogsClient:
         return None
 
     def region(self) -> str:
-        return str(self._logs.region)
+        return str(self._logs.meta.region_name)
