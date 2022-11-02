@@ -27,3 +27,4 @@ aws_scanner_config.ini
 coverage.xml
 __pycache__
 .vscode
+.DS_Store
