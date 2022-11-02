@@ -264,6 +264,9 @@ class AwsScannerConfig:
     def resolver_dns_query_log_config_name(self) -> str:
         return self._get_config("route53resolver", "dns_query_log_config_name")
 
+    def default_region(self) -> str:
+        return self._get_config("common", "default_region")
+
     def _get_config(self, section: str, key: str) -> str:
         try:
             return os.environ.get(f"AWS_SCANNER_{section.upper()}_{key.upper()}") or self._config[section][key]

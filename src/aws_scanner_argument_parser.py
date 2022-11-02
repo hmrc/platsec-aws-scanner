@@ -330,7 +330,7 @@ class AwsScannerArgumentParser:
             year=args.get("year") or date.today().year,
             month=args.get("month") or date.today().month,
             athena_partition_region=args.get("athena_partition_region") or Config().cloudtrail_region(),
-            region=args.get("region") or Config().cloudtrail_region(),
+            region=args.get("region") or Config().default_region(),
             accounts=args.get("accounts", "").split(",") if args.get("accounts") else None,
             services=args.get("services", "").split(",") if args.get("services") else [],
             role=str(args.get("role")),

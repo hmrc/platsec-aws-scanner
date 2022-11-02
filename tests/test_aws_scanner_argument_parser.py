@@ -358,6 +358,13 @@ def test_default_log_level_is_warning() -> None:
         assert args.log_level == "WARNING"
 
 
+def test_default_region() -> None:
+    with patch("sys.argv", ". audit_vpc_flow_logs --token 223344".split()):
+        args = AwsScannerArgumentParser().parse_cli_args()
+
+        assert args.region == "eu-west-2"
+
+
 def test_invalid_log_level_logs_and_exits(capsys: Any) -> None:
     with patch("sys.argv", ". audit_vpc_flow_logs --token 223344 -v banana".split()):
         with pytest.raises(SystemExit):

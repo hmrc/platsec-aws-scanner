@@ -135,6 +135,7 @@ def test_init_config_from_file() -> None:
         "AWS_SCANNER_TASKS_EXECUTORS": "5",
         "AWS_SCANNER_USER_ACCOUNT": "444333222111",
         "AWS_SCANNER_USER_NAME": "john.doo",
+        "AWS_SCANNER_COMMON_DEFAULT_REGION": "a-test-region",
     },
     clear=True,
 )
@@ -183,6 +184,7 @@ def test_init_config_from_env_vars() -> None:
     assert 5 == config.tasks_executors()
     assert Account("444333222111", "user") == config.user_account()
     assert "john.doo" == config.user_name()
+    assert "a-test-region" == config.default_region()
 
 
 def test_config_not_found() -> None:
