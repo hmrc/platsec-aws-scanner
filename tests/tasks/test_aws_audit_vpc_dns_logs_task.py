@@ -36,7 +36,7 @@ def enforcement_actions(v: Sequence[Vpc], with_sub_filter: bool) -> Sequence[Com
     return [
         delete_flow_log_action(flow_log_id="fl-4"),
         create_flow_log_action(vpc_id="vpc-7"),
-        PutLogGroupSubscriptionFilterAction(logs_mock, AwsScannerConfig().logs_vpc_dns_log_group_config()),
+        PutLogGroupSubscriptionFilterAction(logs_mock, AwsScannerConfig().vpc_dns_log_config()),
     ]
 
 

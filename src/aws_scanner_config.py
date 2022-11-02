@@ -152,56 +152,43 @@ class AwsScannerConfig:
     def route53_resolver_role(self) -> str:
         return self._get_config("route53resolver", "role")
 
-    def logs_vpc_flow_log_group_config(self) -> LogGroupConfig:
+    def log_group_config(self, section: str) -> LogGroupConfig:
         return LogGroupConfig(
-            logs_group_name=self._get_config("logs", "vpc_log_group_name"),
-            logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'vpc_log_group_name')}_sub_filter",
-            logs_log_group_pattern=self._get_config("logs", "vpc_log_group_pattern"),
-            logs_group_retention_policy_days=int(self._get_config("logs", "vpc_log_group_retention_policy_days")),
-            logs_log_group_destination_name=self._get_config("logs", "vpc_log_group_destination_name"),
-            logs_log_group_target_account=self._get_config("logs", "vpc_log_group_target_account"),
+            logs_group_name=self._get_config(section, "name"),
+            logs_log_group_subscription_filter_name=f"{self._get_config('vpc_flow_log', 'name')}_sub_filter",
+            logs_log_group_pattern=self._get_config(section, "pattern"),
+            logs_group_retention_policy_days=int(self._get_config(section, "retention_policy_days")),
+            logs_log_group_destination_name=self._get_config(section, "destination_name"),
+            logs_log_group_target_account=self._get_config(section, "target_account"),
             log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
         )
 
-    def logs_vpc_dns_log_group_config(self) -> LogGroupConfig:
-        return LogGroupConfig(
-            logs_group_name=self._get_config("logs", "vpc_dns_log_group_name"),
-            logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'vpc_dns_log_group_name')}_sub_filter",
-            logs_log_group_pattern=self._get_config("logs", "vpc_dns_log_group_pattern"),
-            logs_group_retention_policy_days=int(self._get_config("logs", "vpc_dns_log_group_retention_policy_days")),
-            logs_log_group_destination_name=self._get_config("logs", "vpc_dns_log_group_destination_name"),
-            logs_log_group_target_account=self._get_config("logs", "vpc_dns_log_group_target_account"),
-            log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
-        )
+    def vpc_flow_log_config(self) -> LogGroupConfig:
+        return self.log_group_config("vpc_flow_log")
 
-    def logs_route53_query_log_group_config(self) -> LogGroupConfig:
-        return LogGroupConfig(
-            logs_group_name=self._get_config("logs", "route53_log_group_name"),
-            logs_log_group_subscription_filter_name=f"{self._get_config('logs', 'route53_log_group_name')}_sub_filter",
-            logs_log_group_pattern=self._get_config("logs", "route53_log_group_pattern"),
-            logs_group_retention_policy_days=int(self._get_config("logs", "route53_log_group_retention_policy_days")),
-            logs_log_group_destination_name=self._get_config("logs", "route53_log_group_destination_name"),
-            logs_log_group_target_account=self._get_config("logs", "route53_log_group_target_account"),
-            log_group_resource_policy_name=self.logs_log_group_resource_policy_name(),
-        )
+    def vpc_dns_log_config(self) -> LogGroupConfig:
+        return self.log_group_config("vpc_dns_log")
 
-    def logs_vpc_log_group_delivery_role(self) -> str:
-        return self._get_config("logs", "vpc_log_group_delivery_role")
+    def route53_query_log_config(self) -> LogGroupConfig:
+        return self.log_group_config("route53_query_log")
 
-    def logs_route53_log_group_delivery_role(self) -> str:
-        return self._get_config("logs", "route53_log_group_delivery_role")
+    def vpc_flow_log_delivery_role(self) -> str:
+        return self._get_config("vpc_flow_log", "delivery_role")
 
-    def logs_vpc_log_group_delivery_role_policy(self) -> str:
-        return self._get_config("logs", "vpc_log_group_delivery_role_policy")
+    def vpc_flow_log_delivery_role_policy(self) -> str:
+        return self._get_config("vpc_flow_log", "delivery_role_policy")
 
-    def logs_vpc_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
-        return self._get_json_config("logs", "vpc_log_group_delivery_role_assume_policy")
+    def vpc_flow_log_delivery_role_assume_policy(self) -> Dict[str, Any]:
+        return self._get_json_config("vpc_flow_log", "delivery_role_assume_policy")
 
-    def logs_route53_log_group_delivery_role_assume_policy(self) -> Dict[str, Any]:
-        return self._get_json_config("logs", "route53_log_group_delivery_role_assume_policy")
+    def vpc_flow_log_delivery_role_policy_document(self) -> Dict[str, Any]:
+        return self._get_json_config("vpc_flow_log", "delivery_role_policy_document")
 
-    def logs_vpc_log_group_delivery_role_policy_document(self) -> Dict[str, Any]:
-        return self._get_json_config("logs", "vpc_log_group_delivery_role_policy_document")
+    def route53_query_log_delivery_role_assume_policy(self) -> Dict[str, Any]:
+        return self._get_json_config("route53_query_log", "delivery_role_assume_policy")
+
+    def route53_query_log_delivery_role(self) -> str:
+        return self._get_config("route53_query_log", "delivery_role")
 
     def logs_role(self) -> str:
         return self._get_config("logs", "role")
@@ -287,7 +274,7 @@ class AwsScannerConfig:
         try:
             return dict(loads(json_str))
         except JSONDecodeError as err:
-            sys.exit(f"invalid config: section '{section}', key '{key}', error: {err}")
+            sys.exit(f"Failed to parse json value of section '{section}', key '{key}', error: {err}")
 
     def _get_json_config(self, section: str, key: str) -> Dict[str, Any]:
         return self._to_json(self._get_config(section, key), section, key)

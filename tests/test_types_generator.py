@@ -476,7 +476,7 @@ def create_flow_log_action(
     ec2_client: AwsEC2Client = Mock(spec=AwsEC2Client),
     iam: AwsIamClient = Mock(spec=AwsIamClient),
     vpc_id: str = vpc().id,
-    log_group_config: LogGroupConfig = AwsScannerConfig().logs_vpc_flow_log_group_config(),
+    log_group_config: LogGroupConfig = AwsScannerConfig().vpc_flow_log_config(),
 ) -> CreateFlowLogAction:
     return CreateFlowLogAction(
         ec2_client=ec2_client,
