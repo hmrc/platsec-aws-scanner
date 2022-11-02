@@ -17,6 +17,7 @@ class AwsScannerArguments:
     year: int
     month: int
     day: Optional[int]
+    athena_partition_region: str
     region: str
     accounts: Optional[List[str]]
     services: List[str]
@@ -31,7 +32,9 @@ class AwsScannerArguments:
 
     @property
     def partition(self) -> AwsAthenaDataPartition:
-        return AwsAthenaDataPartition(region=self.region, year=self.year, month=self.month, day=self.day)
+        return AwsAthenaDataPartition(
+            region=self.athena_partition_region, year=self.year, month=self.month, day=self.day
+        )
 
 
 class AwsScannerCommands:
@@ -60,9 +63,17 @@ class AwsScannerCommands:
 
 class AwsScannerArgumentParser:
     @staticmethod
-    def _add_auth_args(parser: ArgumentParser) -> None:
+    def _add_common_args(parser: ArgumentParser) -> None:
         parser.add_argument("-u", "--username", type=str, help="username that assumes AWS roles")
         parser.add_argument("-t", "--token", type=str, required=True, help="AWS mfa token")
+        parser.add_argument("-re", "--region", type=str, help="AWS region to run in")
+        parser.add_argument(
+            "-v",
+            "--verbosity",
+            choices=["error", "warning", "info", "debug"],
+            default="warning",
+            help="log level configuration",
+        )
 
     @staticmethod
     def _add_accounts_args(parser: ArgumentParser) -> None:
@@ -98,7 +109,7 @@ class AwsScannerArgumentParser:
 
     @staticmethod
     def _add_athena_cloudtrail_task_args(parser: ArgumentParser) -> None:
-        parser.add_argument("-re", "--region", type=str, help="region for AWS Athena data partition")
+        parser.add_argument("-apr", "--athena_partition_region", type=str, help="region for AWS Athena data partition")
         AwsScannerArgumentParser._add_year_arg(parser, "year for AWS Athena data partition")
         AwsScannerArgumentParser._add_month_arg(parser, "month for AWS Athena data partition")
         AwsScannerArgumentParser._add_accounts_args(parser)
@@ -114,16 +125,6 @@ class AwsScannerArgumentParser:
     @staticmethod
     def _add_day_arg(parser: ArgumentParser, cmd_help: str) -> None:
         parser.add_argument("-d", "--day", type=int, help=cmd_help)
-
-    @staticmethod
-    def _add_verbosity_arg(parser: ArgumentParser) -> None:
-        parser.add_argument(
-            "-v",
-            "--verbosity",
-            choices=["error", "warning", "info", "debug"],
-            default="warning",
-            help="log level configuration",
-        )
 
     @staticmethod
     def _add_services_arg(parser: ArgumentParser, help_msg: str) -> None:
@@ -157,135 +158,117 @@ class AwsScannerArgumentParser:
     def _add_drop_command(self, subparsers: Any) -> None:
         desc = "drop databases and tables created by tasks"
         drop_parser = subparsers.add_parser(AwsScannerCommands.drop, help=desc, description=desc)
-        self._add_auth_args(drop_parser)
-        self._add_verbosity_arg(drop_parser)
+        self._add_common_args(drop_parser)
 
     def _add_audit_s3_command(self, subparsers: Any) -> None:
         desc = "audit S3 bucket compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_s3, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_cloudtrail_command(self, subparsers: Any) -> None:
         desc = "audit CloudTrail compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_cloudtrail, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_iam_command(self, subparsers: Any) -> None:
         desc = "audit iam compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_iam, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_cost_explorer_command(self, subparsers: Any) -> None:
         desc = "audit cost usage data acrosss serivces and regions for last 12 months"
         audit_parser = subparsers.add_parser(AwsScannerCommands.cost_explorer, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_vpc_flow_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC flow logs compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_flow_logs, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised flow logs to VPCs that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
         self._add_skip_tags_arg(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_vpc_dns_logs_command(self, subparsers: Any) -> None:
         desc = "audit VPC dns logs compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_dns_logs, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised dns logs to VPCs that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
         self._add_skip_tags_arg(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_password_policy_command(self, subparsers: Any) -> None:
         desc = "audit account password policy compliance"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_password_policy, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
         self._add_enforce_arg(audit_parser, "update account password policy")
-        self._add_verbosity_arg(audit_parser)
 
     def _add_create_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table"
         table_parser = subparsers.add_parser(AwsScannerCommands.create_table, help=desc, description=desc)
-        self._add_auth_args(table_parser)
+        self._add_common_args(table_parser)
         self._add_athena_cloudtrail_task_args(table_parser)
-        self._add_verbosity_arg(table_parser)
 
     def _add_list_accounts_command(self, subparsers: Any) -> None:
         desc = "list organization accounts"
         list_accounts_parser = subparsers.add_parser(AwsScannerCommands.list_accounts, help=desc, description=desc)
-        self._add_auth_args(list_accounts_parser)
-        self._add_verbosity_arg(list_accounts_parser)
+        self._add_common_args(list_accounts_parser)
 
     def _add_list_ssm_parameters_command(self, subparsers: Any) -> None:
         desc = "list SSM parameters"
         list_params_parser = subparsers.add_parser(AwsScannerCommands.list_ssm_parameters, help=desc, description=desc)
-        self._add_auth_args(list_params_parser)
+        self._add_common_args(list_params_parser)
         self._add_accounts_args(list_params_parser)
-        self._add_verbosity_arg(list_params_parser)
 
     def _add_find_principal_command(self, subparsers: Any) -> None:
         desc = "find principal by source IP"
         principal_parser = subparsers.add_parser(AwsScannerCommands.find_principal, help=desc, description=desc)
-        self._add_auth_args(principal_parser)
+        self._add_common_args(principal_parser)
         self._add_athena_cloudtrail_task_args(principal_parser)
         principal_parser.add_argument("-i", "--ip", type=str, required=True, help="source IP of principal to find")
-        self._add_verbosity_arg(principal_parser)
 
     def _add_role_usage_command(self, subparsers: Any) -> None:
         desc = "scan AWS role usage"
         role_parser = subparsers.add_parser(AwsScannerCommands.role_usage, help=desc, description=desc)
-        self._add_auth_args(role_parser)
+        self._add_common_args(role_parser)
         self._add_athena_cloudtrail_task_args(role_parser)
         role_parser.add_argument("-r", "--role", type=str, required=True, help="which role to scan usage for")
-        self._add_verbosity_arg(role_parser)
 
     def _add_service_usage_command(self, subparsers: Any) -> None:
         desc = "scan AWS service usage"
         service_parser = subparsers.add_parser(AwsScannerCommands.service_usage, help=desc, description=desc)
-        self._add_auth_args(service_parser)
+        self._add_common_args(service_parser)
         self._add_athena_cloudtrail_task_args(service_parser)
         self._add_services_arg(service_parser, "comma-separated list of service(s) to scan usage for")
-        self._add_verbosity_arg(service_parser)
 
     def _add_audit_central_logging_command(self, subparsers: Any) -> None:
         desc = "audit central AWS logging account"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_central_logging, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
+        self._add_common_args(audit_parser)
 
     def _add_audit_ec2_instances_command(self, subparsers: Any) -> None:
         desc = "audit EC2 instances"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_ec2_instances, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_route53_command(self, subparsers: Any) -> None:
         desc = "list public zones"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
 
     def _add_audit_route53_query_logs(self, subparsers: Any) -> None:
         desc = "audit route53 logging"
         audit_parser = subparsers.add_parser(AwsScannerCommands.audit_route53_query_logs, help=desc, description=desc)
-        self._add_auth_args(audit_parser)
+        self._add_common_args(audit_parser)
         self._add_accounts_args(audit_parser)
-        self._add_verbosity_arg(audit_parser)
         self._add_enforce_arg(audit_parser, "add centralised query logs to Route53 Zones that don't already have one")
         self._add_with_subscription_filter_arg(audit_parser)
         self._add_skip_tags_arg(audit_parser)
@@ -293,8 +276,7 @@ class AwsScannerArgumentParser:
     def _add_create_flow_logs_table_command(self, subparsers: Any) -> None:
         desc = "create Athena table for flow logs querying"
         create_parser = subparsers.add_parser(AwsScannerCommands.create_flow_logs_table, help=desc, description=desc)
-        self._add_auth_args(create_parser)
-        self._add_verbosity_arg(create_parser)
+        self._add_common_args(create_parser)
         self._add_year_arg(create_parser, "year for AWS Athena data partition")
         self._add_month_arg(create_parser, "month for AWS Athena data partition")
         self._add_day_arg(create_parser, "day for AWS Athena data partition")
@@ -302,9 +284,8 @@ class AwsScannerArgumentParser:
     def _add_audit_vpc_peering_command(self, subparsers: Any) -> None:
         desc = "audit VPC peering connections"
         audit_peering_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_peering, help=desc, description=desc)
-        self._add_auth_args(audit_peering_parser)
+        self._add_common_args(audit_peering_parser)
         self._add_accounts_args(audit_peering_parser)
-        self._add_verbosity_arg(audit_peering_parser)
 
     def parse_cli_args(self) -> AwsScannerArguments:
         return self._parse_args()
@@ -325,7 +306,8 @@ class AwsScannerArgumentParser:
             task=str(args.get("task")),
             year=args.get("year") or date.today().year,
             month=args.get("month") or date.today().month,
-            region=args.get("region") or Config().cloudtrail_region(),
+            athena_partition_region=args.get("athena_partition_region") or Config().cloudtrail_region(),
+            region=args.get("region") or Config().default_region(),
             accounts=args.get("accounts", "").split(",") if args.get("accounts") else None,
             services=args.get("services", "").split(",") if args.get("services") else [],
             role=str(args.get("role")),

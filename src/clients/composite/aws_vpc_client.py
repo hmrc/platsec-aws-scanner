@@ -56,18 +56,18 @@ class AwsVpcClient:
         return fl
 
     def _find_flow_log_delivery_role(self) -> Optional[Role]:
-        return self.iam.find_role(self.config.logs_vpc_log_group_delivery_role())
+        return self.iam.find_role(self.config.vpc_flow_log_delivery_role())
 
     def _is_flow_log_role_compliant(self, role: Optional[Role]) -> bool:
         return bool(
             role
-            and role.assume_policy == self.config.logs_vpc_log_group_delivery_role_assume_policy()
+            and role.assume_policy == self.config.vpc_flow_log_delivery_role_assume_policy()
             and role.policies
-            and all(p.doc_equals(self.config.logs_vpc_log_group_delivery_role_policy_document()) for p in role.policies)
+            and all(p.doc_equals(self.config.vpc_flow_log_delivery_role_policy_document()) for p in role.policies)
         )
 
     def _is_flow_log_centralised(self, flow_log: FlowLog) -> bool:
-        return flow_log.log_group_name == self.config.logs_vpc_flow_log_group_config().logs_group_name
+        return flow_log.log_group_name == self.config.vpc_flow_log_config().logs_group_name
 
     def _is_flow_log_misconfigured(self, flow_log: FlowLog) -> bool:
         return self._is_flow_log_centralised(flow_log) and (
@@ -75,7 +75,7 @@ class AwsVpcClient:
             or flow_log.traffic_type != self.config.ec2_flow_log_traffic_type()
             or flow_log.log_format != self.config.ec2_flow_log_format()
             or flow_log.deliver_log_role_arn is None
-            or not flow_log.deliver_log_role_arn.endswith(f":role/{self.config.logs_vpc_log_group_delivery_role()}")
+            or not flow_log.deliver_log_role_arn.endswith(f":role/{self.config.vpc_flow_log_delivery_role()}")
         )
 
     def enforcement_flow_log_actions(
@@ -83,7 +83,7 @@ class AwsVpcClient:
     ) -> Sequence[ComplianceAction]:
         if not vpcs:
             return list()
-        log_group_config = self.config.logs_vpc_flow_log_group_config()
+        log_group_config = self.config.vpc_flow_log_config()
         log_group_actions = self.log_group.log_group_enforcement_actions(
             log_group_config=log_group_config, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
         )
@@ -97,7 +97,7 @@ class AwsVpcClient:
         if not vpcs:
             return []
 
-        log_group_config = self.config.logs_vpc_dns_log_group_config()
+        log_group_config = self.config.vpc_dns_log_config()
         log_group_actions = self.log_group.log_group_enforcement_actions(
             log_group_config=log_group_config, with_subscription_filter=with_subscription_filter, skip_tags=skip_tags
         )
@@ -196,7 +196,7 @@ class AwsVpcClient:
         ]
 
     def _create_flow_log_actions(self, vpc: Vpc) -> Sequence[ComplianceAction]:
-        log_group_config = self.config.logs_vpc_flow_log_group_config()
+        log_group_config = self.config.vpc_flow_log_config()
         return (
             [
                 CreateFlowLogAction(
@@ -240,7 +240,7 @@ class AwsVpcClient:
         return []
 
     def _delivery_role_policy_exists(self) -> bool:
-        return bool(self.iam.find_policy_arn(self.config.logs_vpc_log_group_delivery_role_policy()))
+        return bool(self.iam.find_policy_arn(self.config.vpc_flow_log_delivery_role_policy()))
 
     def _centralised(self, fls: Sequence[FlowLog]) -> Sequence[FlowLog]:
         return list(

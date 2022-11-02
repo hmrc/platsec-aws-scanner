@@ -9,8 +9,8 @@ from src.tasks.aws_ssm_task import AwsSSMTask
 
 @dataclass
 class AwsListSSMParametersTask(AwsSSMTask):
-    def __init__(self, account: Account) -> None:
-        super().__init__("list SSM parameters", account)
+    def __init__(self, account: Account, region: str) -> None:
+        super().__init__(description="list SSM parameters", account=account, region=region)
 
     def _run_task(self, client: AwsSSMClient) -> Dict[Any, Any]:
         parameters = client.list_parameters()

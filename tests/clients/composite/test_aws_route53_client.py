@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 from unittest import TestCase
 from typing import List
+from src.clients.aws_logs_client import AwsLogsClient
 from src.clients.aws_log_group_client import AwsLogGroupClient
 from src.clients.composite.aws_route53_client import AwsRoute53Client
 from src.data.aws_logs_types import LogGroup
@@ -44,7 +45,7 @@ class TestAwsRoute53Client(TestCase):
         assert expectedQueryLogActionList == client.enforcement_actions(account, hostedZones, False, False)
 
     def test_route_53_does_nothing_when_all_correct(self) -> None:
-        log_group_config = Config().logs_route53_query_log_group_config()
+        log_group_config = Config().route53_query_log_config()
 
         account = Account(identifier="AAAAAAAAAA", name="AAAAAAAA")
         hostedZones: Dict[Any, Any] = {
@@ -103,7 +104,7 @@ class TestAwsRoute53Client(TestCase):
         logs.get_resource_policy = Mock(return_value=None)
         log_group = AwsLogGroupClient(logs=logs)
 
-        log_group_config = Config().logs_route53_query_log_group_config()
+        log_group_config = Config().route53_query_log_config()
 
         expectedLogGroup = LogGroup(
             name="logs_route53_log_group_name", kms_key_id="kms_key_id", retention_days=0, arn=""
@@ -155,7 +156,7 @@ class TestAwsRoute53Client(TestCase):
         assert expectedQueryLogActionList == actual
 
     def test_enforcement_actions_with_new_subscription_filter(self) -> None:
-        log_group_config = Config().logs_route53_query_log_group_config()
+        log_group_config = Config().route53_query_log_config()
         account = Account(identifier="AAAAAAAAAA", name="AAAAAAAA")
         hostedZones: Dict[Any, Any] = {
             "/hostedzone/AAAABBBBCCCCDD": route53Type.Route53Zone(
@@ -218,7 +219,7 @@ class TestAwsRoute53Client(TestCase):
         iam = Mock()
         logs = Mock()
         log_group = AwsLogGroupClient(logs=logs)
-        log_group_config = Config().logs_route53_query_log_group_config()
+        log_group_config = Config().route53_query_log_config()
 
         expectedLogGroups: List[Any] = []
 
@@ -285,11 +286,14 @@ class TestAwsRoute53Client(TestCase):
         boto_route53 = Mock()
         boto_route53.list_query_logging_configs = Mock(return_value={"QueryLoggingConfigs": []})
         iam = Mock()
-        logs = Mock()
+        logs = Mock(
+            spec=AwsLogsClient,
+            destination_arn=Mock(return_value="arn:aws:logs:some-test-aws-region:555666777888:destination:central"),
+        )
         logs.is_central_log_group = Mock(return_value=True)
         log_group = AwsLogGroupClient(logs=logs)
 
-        log_group_config = Config().logs_route53_query_log_group_config()
+        log_group_config = Config().route53_query_log_config()
 
         expectedLogGroups: List[Any] = []
 
@@ -317,7 +321,7 @@ class TestAwsRoute53Client(TestCase):
                 account=account,
                 route53_client=boto_route53,
                 iam=iam,
-                log_group_config=self.config.logs_route53_query_log_group_config(),
+                log_group_config=self.config.route53_query_log_config(),
                 zone_id="/hostedzone/AAAABBBBCCCCDD",
             )
         )
@@ -329,7 +333,7 @@ class TestAwsRoute53Client(TestCase):
                 account=account,
                 route53_client=boto_route53,
                 iam=iam,
-                log_group_config=self.config.logs_route53_query_log_group_config(),
+                log_group_config=self.config.route53_query_log_config(),
                 zone_id="/hostedzone/IIIIIIILLLLLLL",
             )
         )

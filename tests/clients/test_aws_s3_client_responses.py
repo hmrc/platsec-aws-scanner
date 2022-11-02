@@ -8,9 +8,18 @@ LIST_BUCKETS: Dict[str, Any] = {
     "Buckets": [
         {"Name": "a-bucket", "CreationDate": "2015, 1, 1"},
         {"Name": "another-bucket", "CreationDate": "2015, 1, 1"},
+        {"Name": "other-region-bucket", "CreationDate": "2010, 1, 1"},
     ],
     "Owner": {"DisplayName": "string", "ID": "string"},
 }
+
+# Buckets in Region us-east-1 have a LocationConstraint of null
+# https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.get_bucket_location
+GET_BUCKET_LOCATION_US_EAST_1 = {"LocationConstraint": None}
+
+GET_BUCKET_LOCATION_CURRENT = {"LocationConstraint": "our-current-region"}
+
+GET_BUCKET_LOCATION_OTHER = {"LocationConstraint": "other-region"}
 
 GET_BUCKET_ENCRYPTION_CMK: Dict[str, Any] = {
     "ServerSideEncryptionConfiguration": {

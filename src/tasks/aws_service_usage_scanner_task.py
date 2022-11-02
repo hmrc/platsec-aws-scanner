@@ -10,15 +10,28 @@ from src.data.aws_organizations_types import Account
 
 
 class AwsServiceUsageScannerTask(AwsCloudTrailTask):
-    def __init__(self, account: Account, partition: AwsAthenaDataPartition, service: str):
-        super().__init__(f"AWS {service} service usage scan", account, partition)
+    def __init__(
+        self,
+        account: Account,
+        partition: AwsAthenaDataPartition,
+        service: str,
+        region: str,
+    ):
+        super().__init__(
+            description=f"AWS {service} service usage scan",
+            account=account,
+            partition=partition,
+            region=region,
+        )
         self._service = service
 
     def _run_task(self, client: AwsAthenaClient) -> Dict[Any, Any]:
         results = self._run_query(
             client,
             Template(queries.SCAN_SERVICE_USAGE).substitute(
-                database=self._database, account=self._account.identifier, service=self._service
+                database=self._database,
+                account=self._account.identifier,
+                service=self._service,
             ),
         )
         return {

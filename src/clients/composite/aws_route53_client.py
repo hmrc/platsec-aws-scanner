@@ -23,7 +23,7 @@ class AwsRoute53Client:
         self._route53 = boto_route53
         self._iam = iam
         self.log_group = log_group
-        self.log_group_config = Config().logs_route53_query_log_group_config()
+        self.log_group_config = Config().route53_query_log_config()
 
     def enforcement_actions(
         self, account: Account, hostedZones: Dict[Any, Any], with_subscription_filter: bool, skip_tags: bool

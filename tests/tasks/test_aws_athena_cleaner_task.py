@@ -3,7 +3,7 @@ from unittest.mock import Mock, call
 
 from src.tasks.aws_athena_cleaner_task import AwsAthenaCleanerTask
 
-from tests.test_types_generator import account, task_report
+from tests.test_types_generator import account, task_report, TEST_REGION
 
 
 class TestAwsAthenaCleanerTask(TestCase):
@@ -26,7 +26,11 @@ class TestAwsAthenaCleanerTask(TestCase):
                 "some_prefix_db_4.table_2",
                 "some_prefix_db_4.table_3",
             ],
-            "dropped_databases": ["some_prefix_db_2", "some_prefix_db_4", "some_prefix_db_5"],
+            "dropped_databases": [
+                "some_prefix_db_2",
+                "some_prefix_db_4",
+                "some_prefix_db_5",
+            ],
         },
     )
 
@@ -35,7 +39,11 @@ class TestAwsAthenaCleanerTask(TestCase):
             list_databases=Mock(return_value=list(self.database_mappings.keys())),
             list_tables=Mock(side_effect=lambda db: self.database_mappings.get(db)),
         )
-        self.assertEqual(self.expected_report, AwsAthenaCleanerTask().run(mock_athena))
+        self.assertEqual(
+            self.expected_report,
+            AwsAthenaCleanerTask(region=TEST_REGION).run(mock_athena),
+        )
+
         mock_athena.assert_has_calls(
             [
                 call.list_databases(),

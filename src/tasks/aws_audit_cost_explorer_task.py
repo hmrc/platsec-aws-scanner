@@ -8,8 +8,12 @@ from src.tasks.aws_task import AwsTask
 
 @dataclass
 class AwsAuditCostExplorerTask(AwsTask):
-    def __init__(self, account: Account, today: date) -> None:
-        super().__init__(f"cost & usage in acount {account}", account)
+    def __init__(self, account: Account, today: date, region: str) -> None:
+        super().__init__(
+            description=f"cost & usage in acount {account}",
+            account=account,
+            region=region,
+        )
         self.today = today
 
     def _run_task(self, client: AwsCostExplorerClient) -> Dict[Any, Any]:

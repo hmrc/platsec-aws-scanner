@@ -8,8 +8,19 @@ from src.tasks.aws_task import AwsTask
 
 @dataclass
 class AwsAuditRoute53QueryLogsTask(AwsTask):
-    def __init__(self, account: Account, enforce: bool, with_subscription_filter: bool, skip_tags: bool) -> None:
-        super().__init__("audit Route53 query logs compliance", account)
+    def __init__(
+        self,
+        account: Account,
+        enforce: bool,
+        with_subscription_filter: bool,
+        skip_tags: bool,
+        region: str,
+    ) -> None:
+        super().__init__(
+            description="audit Route53 query logs compliance",
+            account=account,
+            region=region,
+        )
         self.with_subscription_filter = with_subscription_filter
         self.enforce = enforce
         self.target_account = account
@@ -18,7 +29,10 @@ class AwsAuditRoute53QueryLogsTask(AwsTask):
     def _run_task(self, client: AwsRoute53Client) -> Dict[Any, Any]:
         hostedZones = client._route53.list_hosted_zones()
         actions = client.enforcement_actions(
-            self.target_account, hostedZones, self.with_subscription_filter, self.skip_tags
+            self.target_account,
+            hostedZones,
+            self.with_subscription_filter,
+            self.skip_tags,
         )
 
         if self.enforce:

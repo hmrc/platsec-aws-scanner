@@ -6,15 +6,20 @@ from src.data.aws_organizations_types import Account
 
 
 class AwsTask:
-    def __init__(self, description: str, account: Account):
+    def __init__(self, description: str, account: Account, region: str):
         self._logger = getLogger(self.__class__.__name__)
         self._description = description
         self._account = account
+        self._region = region
 
     def run(self, client: Any) -> AwsTaskReport:
         self._logger.info(f"running {self}")
         return AwsTaskReport(
-            account=self._account, description=self._description, partition=None, results=self._run_task(client)
+            account=self._account,
+            region=self._region,
+            description=self._description,
+            partition=None,
+            results=self._run_task(client),
         )
 
     @property

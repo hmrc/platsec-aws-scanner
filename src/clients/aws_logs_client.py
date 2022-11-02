@@ -115,7 +115,13 @@ class AwsLogsClient:
 
     def is_central_destination_filter(self, sub_filter: SubscriptionFilter, log_group_config: LogGroupConfig) -> bool:
         return (sub_filter.filter_pattern == log_group_config.logs_log_group_pattern) and (
-            sub_filter.destination_arn == log_group_config.logs_log_group_destination
+            sub_filter.destination_arn == self.destination_arn(config=log_group_config)
+        )
+
+    def destination_arn(self, config: LogGroupConfig) -> str:
+        return (
+            f"arn:aws:logs:{self.region()}:{config.logs_log_group_target_account}"
+            f":destination:{config.logs_log_group_destination_name}"
         )
 
     def find_log_group(self, name: str) -> Optional[LogGroup]:
@@ -153,3 +159,6 @@ class AwsLogsClient:
             if policy["policyName"] == policy_name:
                 return json.loads(policy["policyDocument"])
         return None
+
+    def region(self) -> str:
+        return str(self._logs.meta.region_name)

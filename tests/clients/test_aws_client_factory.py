@@ -12,9 +12,11 @@ from src.data.aws_scanner_exceptions import ClientFactoryException
 
 from tests.test_types_generator import account
 
+TEST_REGION = "eu-west-2"
+
 
 class TestGetBotoClients(TestCase):
-    mfa, username = "123456", "joe.bloggs"
+    mfa, username, region = "123456", "joe.bloggs", "eu-west-2"
 
     def assert_get_client(
         self,
@@ -29,7 +31,7 @@ class TestGetBotoClients(TestCase):
 
         with patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token"):
             with patch("src.clients.aws_client_factory.AwsClientFactory._get_client", mock_get_client):
-                factory = AwsClientFactory(self.mfa, self.username)
+                factory = AwsClientFactory(self.mfa, self.username, self.region)
                 client = (
                     getattr(factory, method_under_test)(**method_args)
                     if method_args
@@ -40,7 +42,6 @@ class TestGetBotoClients(TestCase):
 
             if method_under_test == "get_logs_boto_client":
                 mock_get_client.assert_called_once_with(service, target_account, role, "us-east-1")
-
             else:
                 mock_get_client.assert_called_once_with(service, target_account, role)
 
@@ -164,11 +165,11 @@ class TestGetBotoClients(TestCase):
 @patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token")
 class TestGetClients(TestCase):
     factory_path = "src.clients.aws_client_factory.AwsClientFactory"
-    mfa, username = "123456", "joe.bloggs"
+    mfa, username, region = "123456", "joe.bloggs", "eu-west-2"
 
     def test_get_athena_client(self, _: Mock) -> None:
         with patch(f"{self.factory_path}.get_athena_boto_client") as boto_client:
-            athena_client = AwsClientFactory(self.mfa, self.username).get_athena_client()
+            athena_client = AwsClientFactory(self.mfa, self.username, self.region).get_athena_client()
             self.assertEqual(athena_client._athena_async._boto_athena, boto_client.return_value)
 
     def test_get_cost_explorer_client(self, _: Mock) -> None:
@@ -177,7 +178,9 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_cost_explorer_boto_client",
             side_effect=lambda acc: cost_explorer_boto_client if acc == account() else None,
         ):
-            cost_explorer_client = AwsClientFactory(self.mfa, self.username).get_cost_explorer_client(account())
+            cost_explorer_client = AwsClientFactory(self.mfa, self.username, self.region).get_cost_explorer_client(
+                account()
+            )
             self.assertEqual(cost_explorer_client._cost_explorer, cost_explorer_boto_client)
 
     def test_get_ec2_client(self, _: Mock) -> None:
@@ -186,7 +189,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_ec2_boto_client",
             side_effect=lambda acc, role: ec2_boto_client if acc == account() and role == "ec2_role" else None,
         ):
-            ec2_client = AwsClientFactory(self.mfa, self.username).get_ec2_client(account())
+            ec2_client = AwsClientFactory(self.mfa, self.username, self.region).get_ec2_client(account())
             self.assertEqual(ec2_client._ec2, ec2_boto_client)
 
     def test_get_hostedZones_client(self, _: Mock) -> None:
@@ -195,14 +198,14 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_route53_boto_client",
             side_effect=lambda acc, role: route53_boto_client if acc == account() and role == "route53_role" else None,
         ):
-            hosted_zones_client = AwsClientFactory(self.mfa, self.username).get_hosted_zones_client(
+            hosted_zones_client = AwsClientFactory(self.mfa, self.username, self.region).get_hosted_zones_client(
                 account(), "route53_role"
             )
             self.assertEqual(hosted_zones_client._route53, route53_boto_client)
 
     def test_get_organizations_client(self, _: Mock) -> None:
         with patch(f"{self.factory_path}.get_organizations_boto_client") as boto_client:
-            orgs_client = AwsClientFactory(self.mfa, self.username).get_organizations_client()
+            orgs_client = AwsClientFactory(self.mfa, self.username, self.region).get_organizations_client()
             self.assertEqual(orgs_client._orgs, boto_client.return_value)
 
     def test_get_ssm_client(self, _: Mock) -> None:
@@ -211,7 +214,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_ssm_boto_client",
             side_effect=lambda acc: ssm_boto_client if acc == account() else None,
         ):
-            ssm_client = AwsClientFactory(self.mfa, self.username).get_ssm_client(account())
+            ssm_client = AwsClientFactory(self.mfa, self.username, self.region).get_ssm_client(account())
             self.assertEqual(ssm_client._ssm, ssm_boto_client)
 
     def test_get_s3_client(self, _: Mock) -> None:
@@ -220,7 +223,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_s3_boto_client",
             side_effect=lambda acc, role: s3_boto_client if acc == account() and role == "s3_role" else None,
         ):
-            s3_client = AwsClientFactory(self.mfa, self.username).get_s3_client(account())
+            s3_client = AwsClientFactory(self.mfa, self.username, self.region).get_s3_client(account())
             self.assertEqual(s3_client._s3, s3_boto_client)
 
     def test_get_custom_s3_client(self, _: Mock) -> None:
@@ -229,7 +232,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_s3_boto_client",
             side_effect=lambda acc, role: s3_boto_client if acc == account("id") and role == "role" else None,
         ):
-            s3_client = AwsClientFactory(self.mfa, self.username).get_s3_client(account("id"), "role")
+            s3_client = AwsClientFactory(self.mfa, self.username, self.region).get_s3_client(account("id"), "role")
             self.assertEqual(s3_client._s3, s3_boto_client)
 
     def test_get_logs_client(self, _: Mock) -> None:
@@ -243,7 +246,7 @@ class TestGetClients(TestCase):
                 f"{self.factory_path}.get_kms_boto_client",
                 side_effect=lambda acc: kms_boto_client if acc == account() else None,
             ):
-                logs_client = AwsClientFactory(self.mfa, self.username).get_logs_client(account(), None)
+                logs_client = AwsClientFactory(self.mfa, self.username, self.region).get_logs_client(account(), None)
                 self.assertEqual(logs_client._logs, logs_boto_client)
                 self.assertEqual(logs_client.kms, kms_boto_client)
 
@@ -253,7 +256,9 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_logs_client",
             side_effect=lambda acc, region: logs_boto_client if acc == account() else None,
         ):
-            log_group_client = AwsClientFactory(self.mfa, self.username).get_log_group_client(account(), None)
+            log_group_client = AwsClientFactory(self.mfa, self.username, self.region).get_log_group_client(
+                account(), None
+            )
             self.assertEqual(log_group_client.logs, logs_boto_client)
 
     def test_get_iam_client(self, _: Mock) -> None:
@@ -262,7 +267,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_iam_boto_client",
             side_effect=lambda acc, role: iam_boto_client if acc == account() and role == "iam_role" else None,
         ):
-            iam_client = AwsClientFactory(self.mfa, self.username).get_iam_client(account())
+            iam_client = AwsClientFactory(self.mfa, self.username, self.region).get_iam_client(account())
             self.assertEqual(iam_client._iam, iam_boto_client)
 
     def test_get_iam_client_for_audit(self, _: Mock) -> None:
@@ -271,7 +276,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_iam_boto_client",
             side_effect=lambda acc, role: iam_boto_client if acc == account() and role == "iam_audit_role" else None,
         ):
-            iam_client = AwsClientFactory(self.mfa, self.username).get_iam_client_for_audit(account())
+            iam_client = AwsClientFactory(self.mfa, self.username, self.region).get_iam_client_for_audit(account())
             self.assertEqual(iam_client._iam, iam_boto_client)
             self.assertEqual(type(iam_client), AwsIamAuditClient)
 
@@ -281,7 +286,7 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_kms_boto_client",
             side_effect=lambda acc: kms_boto_client if acc == account() else None,
         ):
-            kms_client = AwsClientFactory(self.mfa, self.username).get_kms_client(account())
+            kms_client = AwsClientFactory(self.mfa, self.username, self.region).get_kms_client(account())
             self.assertEqual(kms_client._kms, kms_boto_client)
 
     def test_getroute53_resolver_client(self, _: Mock) -> None:
@@ -290,7 +295,9 @@ class TestGetClients(TestCase):
             f"{self.factory_path}.get_route53_resolver_boto_client",
             side_effect=lambda acc: route53_resolver__boto_client if acc == account() else None,
         ):
-            route53_resolver_client = AwsClientFactory(self.mfa, self.username).get_route53resolver_client(account())
+            route53_resolver_client = AwsClientFactory(self.mfa, self.username, self.region).get_route53resolver_client(
+                account()
+            )
             self.assertEqual(route53_resolver_client.resolver, route53_resolver__boto_client)
 
     def test_get_cloudtrail_client(self, _: Mock) -> None:
@@ -304,7 +311,9 @@ class TestGetClients(TestCase):
                 f"{self.factory_path}.get_logs_client",
                 side_effect=lambda acc: logs_client if acc == account() else None,
             ):
-                cloudtrail_client = AwsClientFactory(self.mfa, self.username).get_cloudtrail_client(account())
+                cloudtrail_client = AwsClientFactory(self.mfa, self.username, self.region).get_cloudtrail_client(
+                    account()
+                )
 
                 self.assertEqual(cloudtrail_client._cloudtrail, cloudtrail_boto_client)
                 self.assertEqual(cloudtrail_client._logs, logs_client)
@@ -323,7 +332,9 @@ class TestGetClients(TestCase):
                 side_effect=lambda acc: kms_client if acc == cloudtrail_acc else None,
             ):
                 with patch(f"{self.factory_path}.get_organizations_client", return_value=org_client):
-                    central_logging_client = AwsClientFactory(self.mfa, self.username).get_central_logging_client()
+                    central_logging_client = AwsClientFactory(
+                        self.mfa, self.username, self.region
+                    ).get_central_logging_client()
                     self.assertEqual(central_logging_client._s3, s3_client)
                     self.assertEqual(central_logging_client._kms, kms_client)
                     self.assertEqual(central_logging_client._org, org_client)
@@ -339,7 +350,7 @@ class TestGetClients(TestCase):
                 f"{self.factory_path}.get_kms_client",
                 side_effect=lambda acc: kms_client if acc == account() else None,
             ):
-                s3_kms_client = AwsClientFactory(self.mfa, self.username).get_s3_kms_client(account())
+                s3_kms_client = AwsClientFactory(self.mfa, self.username, self.region).get_s3_kms_client(account())
                 self.assertEqual(s3_kms_client._s3, s3_client)
                 self.assertEqual(s3_kms_client._kms, kms_client)
 
@@ -380,7 +391,7 @@ class TestGetCompositeClients(TestCase):
                         with patch.object(
                             AwsClientFactory, "get_route53resolver_client", side_effect=self.mock_client(resolver, acc)
                         ):
-                            vpc_client = AwsClientFactory("123456", "joe.bloggs").get_vpc_client(acc)
+                            vpc_client = AwsClientFactory("123456", "joe.bloggs", "eu-west-2").get_vpc_client(acc)
         self.assertEqual(
             [ec2, iam, logs, log_group], [vpc_client.ec2, vpc_client.iam, vpc_client.logs, vpc_client.log_group]
         )
@@ -401,7 +412,7 @@ class TestGetCompositeClients(TestCase):
                 ),
             ):
                 with patch.object(AwsClientFactory, "get_iam_client", side_effect=self.mock_client(iam, acc)):
-                    route53_client = AwsClientFactory("123456", "joe.bloggs").get_route53_client(acc)
+                    route53_client = AwsClientFactory("123456", "joe.bloggs", "eu-west-2").get_route53_client(acc)
         self.assertEqual(
             [boto_route53, iam, log_group],
             [route53_client._route53, route53_client._iam, route53_client.log_group],
@@ -412,12 +423,12 @@ class TestGetCompositeClients(TestCase):
         ec2, org = Mock(name="ec2"), Mock(name="org")
         with patch.object(AwsClientFactory, "get_ec2_client", side_effect=self.mock_client_role(ec2, acc, "pcx_role")):
             with patch.object(AwsClientFactory, "get_organizations_client", return_value=org):
-                client = AwsClientFactory("123456", "joe.bloggs").get_vpc_peering_client(acc)
+                client = AwsClientFactory("123456", "joe.bloggs", "eu-west-2").get_vpc_peering_client(acc)
         self.assertEqual([ec2, org], [client.ec2, client.org])
 
 
 class TestAwsClientFactory(TestCase):
-    mfa, username = "123456", "joe.bloggs"
+    mfa, username, region = "123456", "joe.bloggs", "eu-west-2"
     service_name, role = "some_service", "some_role"
 
     def test_get_session_token_user_account(self) -> None:
@@ -432,7 +443,7 @@ class TestAwsClientFactory(TestCase):
         mock_boto3 = Mock(client=Mock(return_value=mock_sts_client))
 
         with patch("src.clients.aws_client_factory.boto3", mock_boto3):
-            client_factory = AwsClientFactory(self.mfa, self.username)
+            client_factory = AwsClientFactory(self.mfa, self.username, self.region)
         self.assertEqual(
             client_factory._session_token,
             AwsCredentials("some_access_key", "some_secret_access_key", "some_session_token"),
@@ -444,7 +455,7 @@ class TestAwsClientFactory(TestCase):
 
     def test_get_session_token_service_account(self) -> None:
         with patch("src.clients.aws_client_factory.boto3") as mock_boto3:
-            self.assertIsNone(AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER)._session_token)
+            self.assertIsNone(AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, TEST_REGION)._session_token)
         mock_boto3.client.assert_not_called()
 
     def test_get_client(self) -> None:
@@ -455,7 +466,7 @@ class TestAwsClientFactory(TestCase):
         with patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token"):
             with patch("src.clients.aws_client_factory.AwsClientFactory._assume_role", mock_assume_role):
                 with patch("src.clients.aws_client_factory.boto3", mock_boto):
-                    client = AwsClientFactory(self.mfa, self.username)._get_client(
+                    client = AwsClientFactory(self.mfa, self.username, self.region)._get_client(
                         self.service_name, account(), self.role
                     )
         self.assertEqual(mock_client, client)
@@ -465,6 +476,7 @@ class TestAwsClientFactory(TestCase):
             aws_access_key_id="access",
             aws_secret_access_key="secret",
             aws_session_token="session",
+            region_name="eu-west-2",
         )
 
     def test_get_client_with_region(self) -> None:
@@ -475,7 +487,7 @@ class TestAwsClientFactory(TestCase):
         with patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token"):
             with patch("src.clients.aws_client_factory.AwsClientFactory._assume_role", mock_assume_role):
                 with patch("src.clients.aws_client_factory.boto3", mock_boto):
-                    client = AwsClientFactory(self.mfa, self.username)._get_client(
+                    client = AwsClientFactory(self.mfa, self.username, self.region)._get_client(
                         self.service_name, account(), self.role, "us-east-1"
                     )
         self.assertEqual(mock_client, client)
@@ -502,7 +514,7 @@ class TestAwsClientFactory(TestCase):
 
         with patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token", return_value=session_token):
             with patch("src.clients.aws_client_factory.boto3", mock_boto):
-                creds = AwsClientFactory(self.mfa, self.username)._assume_role(account(), self.role)
+                creds = AwsClientFactory(self.mfa, self.username, self.region)._assume_role(account(), self.role)
         self.assertEqual(creds, AwsCredentials("some_access_key", "some_secret_access_key", "some_session_token"))
         mock_boto.client.assert_called_once_with(
             service_name="sts",
@@ -528,7 +540,9 @@ class TestAwsClientFactory(TestCase):
         mock_boto = Mock(client=Mock(return_value=mock_sts_client))
 
         with patch("src.clients.aws_client_factory.boto3", mock_boto):
-            creds = AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER)._assume_role(account(), self.role)
+            creds = AwsClientFactory(SERVICE_ACCOUNT_TOKEN, SERVICE_ACCOUNT_USER, TEST_REGION)._assume_role(
+                account(), self.role
+            )
         self.assertEqual(creds, AwsCredentials("some_access_key", "some_secret_access_key", "some_session_token"))
         mock_boto.client.assert_called_once_with(service_name="sts")
         mock_sts_client.assume_role.assert_called_once_with(
@@ -543,4 +557,4 @@ class TestAwsClientFactory(TestCase):
 
         with patch("src.clients.aws_client_factory.AwsClientFactory._get_session_token"):
             with self.assertRaisesRegex(ClientFactoryException, NoCredentialsError.fmt):
-                AwsClientFactory("123456", "bob")._to_credentials(trigger_error)
+                AwsClientFactory("123456", "bob", "eu-west-2")._to_credentials(trigger_error)

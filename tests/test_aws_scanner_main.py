@@ -21,9 +21,9 @@ class TestMain(TestCase):
     @patch("src.aws_scanner_main.AwsParallelTaskRunner", return_value=mock_task_runner)
     @patch("src.aws_scanner_main.AwsScannerOutput", return_value=mock_output)
     def test_main(self, output: Mock, task_runner: Mock, task_builder: Mock, factory: Mock) -> None:
-        args = aws_scanner_arguments(task="service_usage", services=["ssm"], year=2020, month=10, region="us")
+        args = aws_scanner_arguments(task="service_usage", services=["ssm"], year=2020, month=10, region="eu-west-2")
         AwsScannerMain(args)
-        factory.assert_called_once_with(mfa="123456", username="bob")
+        factory.assert_called_once_with(mfa="123456", username="bob", region="eu-west-2")
         task_builder.assert_called_once_with(mock_factory, args)
         mock_task_builder.build_tasks.assert_called_once()
         task_runner.assert_called_once_with(mock_factory)

@@ -21,13 +21,17 @@ from tests.test_types_generator import (
     ssm_task,
     task_report,
     vpc_flow_logs_task,
+    TEST_REGION,
 )
 
 
 class TestAwsTaskRunner(TestCase):
     def test_run(self) -> None:
         tasks = [athena_task(description="task_34"), athena_task(description="task_23")]
-        report = [task_report(description="task_34"), task_report(description="task_23")]
+        report = [
+            task_report(description="task_34"),
+            task_report(description="task_23"),
+        ]
 
         task_runner = AwsTaskRunner(Mock())
         mock_run_tasks = Mock(return_value=report)
@@ -118,7 +122,7 @@ class TestAwsTaskRunner(TestCase):
         _get_client.return_value = boto_client
         task = audit_iam_task()
 
-        AwsTaskRunner(AwsClientFactory("1234456", "username"))._run_task(task)
+        AwsTaskRunner(AwsClientFactory("1234456", "username", "eu-west-2"))._run_task(task)
 
         _get_client.assert_called_once_with("iam", task.account, "iam_audit_role")
         task_run.assert_called_once()
@@ -130,7 +134,7 @@ class TestAwsTaskRunner(TestCase):
                 return dict()
 
         with self.assertRaisesRegex(UnsupportedClientException, "Any"):
-            AwsTaskRunner(Mock())._run_task(UnsupportedClientTask("unsupported", account()))
+            AwsTaskRunner(Mock())._run_task(UnsupportedClientTask("unsupported", account(), region=TEST_REGION))
 
     def test_run_unspecified_client(self) -> None:
         class UnspecifiedClientTask(AwsTask):
@@ -138,7 +142,7 @@ class TestAwsTaskRunner(TestCase):
                 return dict()
 
         with self.assertRaisesRegex(UnsupportedClientException, "empty"):
-            AwsTaskRunner(Mock())._run_task(UnspecifiedClientTask("unspecified", account()))
+            AwsTaskRunner(Mock())._run_task(UnspecifiedClientTask("unspecified", account(), region=TEST_REGION))
 
     def test_run_task_with_no_client(self) -> None:
         class ClientlessTask(AwsTask):
@@ -146,4 +150,4 @@ class TestAwsTaskRunner(TestCase):
                 return dict()
 
         with self.assertRaisesRegex(UnsupportedClientException, "requires a client argument"):
-            AwsTaskRunner(Mock())._run_task(ClientlessTask("clientless", account()))
+            AwsTaskRunner(Mock())._run_task(ClientlessTask("clientless", account(), region=TEST_REGION))

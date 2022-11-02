@@ -15,16 +15,22 @@ from src.clients.aws_athena_flow_logs_queries import (
 
 
 class AwsCreateFlowLogsTableTask(AwsAthenaTask):
-    def __init__(self, partition: AwsAthenaDataPartition):
+    def __init__(self, partition: AwsAthenaDataPartition, region: str):
         self._config = Config()
         super().__init__(
-            "create Athena table for flow logs and load data partition", self._config.athena_account(), partition
+            description="create Athena table for flow logs and load data partition",
+            account=self._config.athena_account(),
+            partition=partition,
+            region=region,
         )
         self._table_name = self._generate_table_name()
 
     def _create_table(self, client: AwsAthenaClient) -> None:
         query_template = CREATE_FL_TABLE_YEAR_MONTH_DAY if self._partition.day else CREATE_FL_TABLE_YEAR_MONTH
-        query_attributes = {"table_name": self._table_name, "flow_logs_bucket": self._config.athena_flow_logs_bucket()}
+        query_attributes = {
+            "table_name": self._table_name,
+            "flow_logs_bucket": self._config.athena_flow_logs_bucket(),
+        }
 
         client.run_query(
             database=self._database,

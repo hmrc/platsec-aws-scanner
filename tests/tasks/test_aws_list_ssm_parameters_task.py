@@ -3,7 +3,13 @@ from unittest.mock import Mock
 
 from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 
-from tests.test_types_generator import account, secure_string_parameter, string_list_parameter, string_parameter
+from tests.test_types_generator import (
+    account,
+    secure_string_parameter,
+    string_list_parameter,
+    string_parameter,
+)
+from tests.test_types_generator import TEST_REGION
 
 
 class TestAwsListSSMParametersTask(TestCase):
@@ -17,7 +23,7 @@ class TestAwsListSSMParametersTask(TestCase):
             string_parameter("string_3"),
         ]
         ssm_client = Mock(list_parameters=Mock(return_value=parameters))
-        task_report = AwsListSSMParametersTask(account())._run_task(ssm_client)
+        task_report = AwsListSSMParametersTask(account=account(), region=TEST_REGION)._run_task(ssm_client)
         self.assertEqual(
             {
                 "ssm_parameters": parameters,

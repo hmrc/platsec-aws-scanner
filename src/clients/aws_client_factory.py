@@ -40,10 +40,11 @@ class AwsCredentials:
 
 
 class AwsClientFactory:
-    def __init__(self, mfa: str, username: str):
+    def __init__(self, mfa: str, username: str, region: str):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._session_token = self._get_session_token(mfa, username)
+        self._region = region
 
     def get_athena_boto_client(self) -> BaseClient:
         return self._get_client("athena", self._config.athena_account(), self._config.athena_role())
@@ -74,7 +75,11 @@ class AwsClientFactory:
         return AwsCostExplorerClient(self.get_cost_explorer_boto_client(account))
 
     def get_organizations_boto_client(self) -> BaseClient:
-        return self._get_client("organizations", self._config.organization_account(), self._config.organization_role())
+        return self._get_client(
+            "organizations",
+            self._config.organization_account(),
+            self._config.organization_role(),
+        )
 
     def get_ssm_boto_client(self, account: Account) -> BaseClient:
         return self._get_client("ssm", account, self._config.ssm_role())
@@ -124,7 +129,9 @@ class AwsClientFactory:
 
     def get_logs_client(self, account: Account, region: Optional[str] = None) -> AwsLogsClient:
         return AwsLogsClient(
-            boto_logs=self.get_logs_boto_client(account, region), kms=self.get_kms_boto_client(account), account=account
+            boto_logs=self.get_logs_boto_client(account, region),
+            kms=self.get_kms_boto_client(account),
+            account=account,
         )
 
     def get_iam_client(self, account: Account) -> AwsIamClient:
@@ -157,7 +164,8 @@ class AwsClientFactory:
 
     def get_vpc_peering_client(self, account: Account) -> AwsVpcPeeringClient:
         return AwsVpcPeeringClient(
-            ec2=self.get_ec2_client(account, self._config.vpc_peering_role()), org=self.get_organizations_client()
+            ec2=self.get_ec2_client(account, self._config.vpc_peering_role()),
+            org=self.get_organizations_client(),
         )
 
     def _get_session_token(self, mfa: str, username: str) -> Optional[AwsCredentials]:
@@ -187,10 +195,20 @@ class AwsClientFactory:
             sessionToken=credentials_dict["Credentials"]["SessionToken"],
         )
 
-    def _get_client(self, service_name: str, account: Account, role: str, region: Optional[str] = None) -> BaseClient:
+    def _get_client(
+        self,
+        service_name: str,
+        account: Account,
+        role: str,
+        region: Optional[str] = None,
+    ) -> BaseClient:
         assumed_role = self._assume_role(account, role)
         self._logger.info(f"creating {service_name} client for {role} in {account}")
         if region is not None:
+            if region != self._region:
+                self._logger.warning(
+                    f"{service_name} client region: {region} does not match region parameter: {self._region} "
+                )
             return boto3.client(
                 service_name=service_name,
                 aws_access_key_id=assumed_role.accessKeyId,
@@ -203,6 +221,7 @@ class AwsClientFactory:
             aws_access_key_id=assumed_role.accessKeyId,
             aws_secret_access_key=assumed_role.secretAccessKey,
             aws_session_token=assumed_role.sessionToken,
+            region_name=self._region,
         )
 
     def _assume_role(self, account: Account, role: str) -> AwsCredentials:

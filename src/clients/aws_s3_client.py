@@ -42,7 +42,18 @@ class AwsS3Client:
         self._s3 = boto_s3
 
     def list_buckets(self) -> List[Bucket]:
-        return [to_bucket(bucket) for bucket in self._s3.list_buckets()["Buckets"]]
+        all_buckets = [to_bucket(bucket) for bucket in self._s3.list_buckets()["Buckets"]]
+        return list(filter(self.is_current_region, all_buckets))
+
+    def is_current_region(self, bucket: Bucket) -> bool:
+        return self.__get_bucket_location(bucket) == self._s3.meta.region_name  # type: ignore
+
+    def __get_bucket_location(self, bucket: Bucket) -> str:
+        region_name = self._s3.get_bucket_location(Bucket=bucket.name)["LocationConstraint"]
+        if region_name is None:
+            return "us-east-1"
+        else:
+            return region_name  # type: ignore
 
     def get_bucket_acl(self, bucket: str) -> BucketACL:
         self._logger.debug(f"fetching access control list for bucket '{bucket}'")

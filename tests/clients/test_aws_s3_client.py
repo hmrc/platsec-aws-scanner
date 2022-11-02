@@ -8,6 +8,11 @@ from src.clients.aws_s3_client import AwsS3Client
 
 from tests import _raise
 from tests.clients import test_aws_s3_client_responses as responses
+from tests.clients.test_aws_s3_client_responses import (
+    GET_BUCKET_LOCATION_CURRENT,
+    GET_BUCKET_LOCATION_OTHER,
+    GET_BUCKET_LOCATION_US_EAST_1,
+)
 from tests.test_types_generator import (
     bucket,
     bucket_acl,
@@ -26,10 +31,42 @@ from tests.test_types_generator import (
 )
 
 
-def test_list_buckets() -> None:
-    client = AwsS3Client(Mock(list_buckets=Mock(return_value=responses.LIST_BUCKETS)))
+def test_list_buckets_returns_only_current_region() -> None:
+    def get_bucket_location(Bucket: str) -> Dict[str, Any]:
+        if Bucket == "other-region-bucket":
+            return GET_BUCKET_LOCATION_OTHER
+        else:
+            return GET_BUCKET_LOCATION_CURRENT
+
+    client = AwsS3Client(
+        Mock(
+            list_buckets=Mock(return_value=responses.LIST_BUCKETS),
+            get_bucket_location=Mock(side_effect=get_bucket_location),
+            meta=Mock(region_name="our-current-region"),
+        )
+    )
+
     expected_buckets = [bucket("a-bucket"), bucket("another-bucket")]
     assert expected_buckets == client.list_buckets()
+
+
+def test_list_buckets_handles_us_east_1_region() -> None:
+    def get_bucket_location(Bucket: str) -> Dict[str, Any]:
+        if Bucket == "other-region-bucket":
+            return GET_BUCKET_LOCATION_US_EAST_1
+        else:
+            return GET_BUCKET_LOCATION_CURRENT
+
+    client = AwsS3Client(
+        Mock(
+            list_buckets=Mock(return_value=responses.LIST_BUCKETS),
+            get_bucket_location=Mock(side_effect=get_bucket_location),
+            meta=Mock(region_name="us-east-1"),
+        )
+    )
+
+    expected_buckets = [bucket("other-region-bucket")]
+    assert client.list_buckets() == expected_buckets
 
 
 def get_bucket_acl(**kwargs: Dict[str, Any]) -> Any:
