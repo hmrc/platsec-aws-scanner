@@ -76,10 +76,13 @@ def test_get_bucket_location_handles_failure(caplog: Any) -> None:
             get_bucket_location=Mock(side_effect=client_error("GetBucketLocation", "AccessDenied", "Access Denied")),
         )
     )
+    bucket_name = "some-error-bucket"
 
     with caplog.at_level(logging.WARNING):
-        client.get_bucket_location(bucket())
+        client.get_bucket_location(bucket(name=bucket_name))
+
     assert "AccessDenied" in caplog.text
+    assert bucket_name in caplog.text
 
 
 def get_bucket_acl(**kwargs: Dict[str, Any]) -> Any:
