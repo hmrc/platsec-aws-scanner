@@ -50,23 +50,36 @@ def test_list_buckets_returns_only_current_region() -> None:
     assert expected_buckets == client.list_buckets()
 
 
-def test_list_buckets_handles_us_east_1_region() -> None:
-    def get_bucket_location(Bucket: str) -> Dict[str, Any]:
-        if Bucket == "other-region-bucket":
-            return GET_BUCKET_LOCATION_US_EAST_1
-        else:
-            return GET_BUCKET_LOCATION_CURRENT
-
+def test_get_bucket_location() -> None:
     client = AwsS3Client(
         Mock(
-            list_buckets=Mock(return_value=responses.LIST_BUCKETS),
-            get_bucket_location=Mock(side_effect=get_bucket_location),
-            meta=Mock(region_name="us-east-1"),
+            get_bucket_location=Mock(return_value=GET_BUCKET_LOCATION_CURRENT),
         )
     )
 
-    expected_buckets = [bucket("other-region-bucket")]
-    assert client.list_buckets() == expected_buckets
+    assert client.get_bucket_location(bucket()) == "our-current-region"
+
+
+def test_get_bucket_location_handles_us_east_1_region() -> None:
+    client = AwsS3Client(
+        Mock(
+            get_bucket_location=Mock(return_value=GET_BUCKET_LOCATION_US_EAST_1),
+        )
+    )
+
+    assert client.get_bucket_location(bucket()) == "us-east-1"
+
+
+def test_get_bucket_location_handles_failure(caplog: Any) -> None:
+    client = AwsS3Client(
+        Mock(
+            get_bucket_location=Mock(side_effect=client_error("GetBucketLocation", "AccessDenied", "Access Denied")),
+        )
+    )
+
+    with caplog.at_level(logging.WARNING):
+        client.get_bucket_location(bucket())
+    assert "AccessDenied" in caplog.text
 
 
 def get_bucket_acl(**kwargs: Dict[str, Any]) -> Any:
