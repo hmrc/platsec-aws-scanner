@@ -55,10 +55,10 @@ Scanner.
 
 ### Where can I find a CI/CD pipeline for this code base?
 
-* [PR build job](https://build.tax.service.gov.uk/job/platform-security/job/platsec-aws-scanner-pr-builder)
-* [Deployment pipeline](https://eu-west-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/aws-scanner/view?region=eu-west-2)
+- [PR build job](https://build.tax.service.gov.uk/job/platform-security/job/platsec-aws-scanner-pr-builder)
+- [Deployment pipeline](https://eu-west-2.console.aws.amazon.com/codesuite/codepipeline/pipelines/aws-scanner/view?region=eu-west-2)
 
 ### How is the CI/CD pipeline configured?
 
-* PR build job is configured on [Jenkins](https://build.tax.service.gov.uk/job/platform-security/job/platsec-aws-scanner-pr-builder)
-* Codepipeline pipeline config for deployment can be found in [platsec-ci-terraform repo](https://github.com/hmrc/platsec-ci-terraform/blob/main/pipelines.tf#L1)
+- PR build job is configured on [Jenkins](https://build.tax.service.gov.uk/job/platform-security/job/platsec-aws-scanner-pr-builder)
+- Codepipeline pipeline config for deployment can be found in [platsec-ci-terraform repo](https://github.com/hmrc/platsec-ci-terraform/blob/main/pipelines.tf#L1)
