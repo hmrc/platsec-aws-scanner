@@ -238,6 +238,7 @@ def get_bucket_expiry_tagging(**kwargs: Dict[str, str]) -> Any:
         raise client_error("GetBucketTagging", "NoSuchTagSet", "The TagSet does not exist")
 
     expiry: Dict[Any, Any] = {
+        "expiry-1-day": responses.GET_BUCKET_TAGGING_EXPIRY_1_DAY,
         "expiry-1-week": responses.GET_BUCKET_TAGGING_EXPIRY_1_WEEK,
         "expiry-1-month": responses.GET_BUCKET_TAGGING_EXPIRY_1_MONTH,
         "expiry-90-days": responses.GET_BUCKET_TAGGING_EXPIRY_90_DAYS,
@@ -255,6 +256,11 @@ def get_bucket_expiry_tagging(**kwargs: Dict[str, str]) -> Any:
 
 def s3_client_expiry_tagging() -> AwsS3Client:
     return AwsS3Client(Mock(get_bucket_tagging=Mock(side_effect=get_bucket_expiry_tagging)))
+
+
+def test_get_bucket_data_tagging_expiry_1_day() -> None:
+    tagging = bucket_data_tagging(expiry="1-day", sensitivity="low")
+    assert tagging == s3_client_expiry_tagging().get_bucket_data_tagging("expiry-1-day")
 
 
 def test_get_bucket_data_tagging_expiry_1_week() -> None:
