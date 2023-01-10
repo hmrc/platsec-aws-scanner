@@ -117,6 +117,7 @@ def to_bucket_data_tagging(tag_response: Dict[str, List[Dict[str, str]]]) -> Buc
         expiry_tag
         if expiry_tag
         in [
+            "1-day",
             "1-week",
             "1-month",
             "90-days",

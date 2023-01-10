@@ -143,6 +143,9 @@ GET_BUCKET_TAGGING_LOW_SENSITIVITY = {
 GET_BUCKET_TAGGING_UNKNOWN_SENSITIVITY = {"TagSet": [{"Key": "data_sensitivity", "Value": "unexpected"}]}
 GET_BUCKET_TAGGING_NO_SENSITIVITY = {"TagSet": [{"Key": "some_tag", "Value": "some_value"}]}
 
+GET_BUCKET_TAGGING_EXPIRY_1_DAY = {
+    "TagSet": [{"Key": "data_expiry", "Value": "1-day"}, {"Key": "data_sensitivity", "Value": "low"}]
+}
 GET_BUCKET_TAGGING_EXPIRY_1_WEEK = {
     "TagSet": [{"Key": "data_expiry", "Value": "1-week"}, {"Key": "data_sensitivity", "Value": "low"}]
 }
