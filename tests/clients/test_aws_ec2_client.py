@@ -22,7 +22,7 @@ def test_list_vpcs() -> None:
             assert [vpc(flow_logs=[flow_log()])] == ec2.list_vpcs()
 
 
-def test_list_pcs_filters_by_current_account_id() -> None:
+def test_describe_vpcs_filters_by_current_account_id() -> None:
     test_account_id = "test_id_123"
     ec2 = AwsEC2Client(Mock(), account=account(test_account_id))
     with patch.object(ec2, "_describe_flow_logs", side_effect=lambda v: [flow_log()] if v.id == vpc().id else None):
