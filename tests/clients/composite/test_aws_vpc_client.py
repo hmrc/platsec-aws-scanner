@@ -874,7 +874,7 @@ class TestLogGroupCompliance(TestCase):
 class AwsVpcClientBuilder(TestCase):
     def __init__(self) -> None:
         super().__init__()
-        self.ec2 = Mock(spec=AwsEC2Client, wraps=AwsEC2Client(Mock()))
+        self.ec2 = Mock(spec=AwsEC2Client, wraps=AwsEC2Client(Mock(), account=account()))
         self.iam = Mock(spec=AwsIamClient, wraps=AwsIamClient(Mock()))
         self.logs = Mock(
             spec=AwsLogsClient,
