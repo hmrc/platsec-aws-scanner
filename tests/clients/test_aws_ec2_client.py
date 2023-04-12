@@ -12,32 +12,46 @@ from src.data.aws_scanner_exceptions import EC2Exception
 
 from tests import _raise
 from tests.clients import test_aws_ec2_client_responses as responses
-from tests.test_types_generator import client_error, flow_log, vpc
+from tests.test_types_generator import client_error, flow_log, vpc, account
 
 
 def test_list_vpcs() -> None:
-    ec2 = AwsEC2Client(Mock())
+    ec2 = AwsEC2Client(Mock(), account=account())
     with patch.object(ec2, "_describe_flow_logs", side_effect=lambda v: [flow_log()] if v.id == vpc().id else None):
         with patch.object(ec2, "_describe_vpcs", return_value=[vpc()]):
             assert [vpc(flow_logs=[flow_log()])] == ec2.list_vpcs()
 
 
+def test_list_vpcs_filters_by_curernt_account_id() -> None:
+    test_account_id = "test_id_123"
+    ec2 = AwsEC2Client(Mock(), account=account(test_account_id))
+    with patch.object(ec2, "_describe_flow_logs", side_effect=lambda v: [flow_log()] if v.id == vpc().id else None):
+        with patch.object(ec2, "_describe_vpcs", return_value=[vpc()]) as mock_vpc:
+            assert [vpc(flow_logs=[flow_log()])] == ec2.list_vpcs()
+            mock_vpc.assert_called_once_with(account_id=test_account_id)
+
+
 def test_describe_vpcs_empty() -> None:
-    ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(return_value={"Vpcs": []})))
-    assert [] == ec2_client._describe_vpcs()
+    ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(return_value={"Vpcs": []})), account=account())
+    assert [] == ec2_client._describe_vpcs(account_id="foo")
 
 
-def test_describe_vpcs() -> None:
+def test_describe_vpcs_filters_by_current_account() -> None:
+    # we filter by account id as vpcs can be "shared" across accounts
     vpcs = [{"VpcId": "vpc-12312e654bf654d12"}, {"VpcId": "vpc-984a4654b65465e12"}]
-    ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(return_value={"Vpcs": vpcs})))
-    assert [Vpc("vpc-12312e654bf654d12"), Vpc("vpc-984a4654b65465e12")] == ec2_client._describe_vpcs()
+    mock_describe_vpcs = Mock(return_value={"Vpcs": vpcs})
+    ec2_client = AwsEC2Client(Mock(describe_vpcs=mock_describe_vpcs), account=account())
+    assert [Vpc("vpc-12312e654bf654d12"), Vpc("vpc-984a4654b65465e12")] == ec2_client._describe_vpcs(
+        account_id=account().identifier
+    )
+    mock_describe_vpcs.assert_called_once_with(filters=[{"Name": "owner-id", "Values": ["account_id"]}])
 
 
 def test_describe_vpcs_failure(caplog: Any) -> None:
     error = client_error("DescribeVpcs", "AccessDenied", "Access Denied")
-    ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(side_effect=error)))
+    ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(side_effect=error)), account=account())
     with caplog.at_level(logging.INFO):
-        assert [] == ec2_client._describe_vpcs()
+        assert [] == ec2_client._describe_vpcs(account_id=account().identifier)
     assert "AccessDenied" in caplog.text
 
 
@@ -55,9 +69,10 @@ def describe_flow_logs(**kwargs: Any) -> Dict[Any, Any]:
 
 def ec2_client() -> AwsEC2Client:
     return AwsEC2Client(
-        Mock(
+        boto_ec2=Mock(
             describe_flow_logs=Mock(side_effect=describe_flow_logs), delete_flow_logs=Mock(side_effect=delete_flow_logs)
-        )
+        ),
+        account=account(),
     )
 
 
@@ -104,7 +119,7 @@ class TestAwsEC2ClientCreateFlowLogs(TestCase):
         return resp_mapping[(kwargs["ResourceIds"][0], kwargs["LogGroupName"], kwargs["DeliverLogsPermissionArn"])]()
 
     def ec2_client(self) -> AwsEC2Client:
-        return AwsEC2Client(Mock(create_flow_logs=Mock(side_effect=self.create_flow_logs)))
+        return AwsEC2Client(Mock(create_flow_logs=Mock(side_effect=self.create_flow_logs)), account=account())
 
     def test_create_flow_logs(self) -> None:
         self.ec2_client().create_flow_logs("good-vpc", "lg-1", "perm-1")
@@ -144,14 +159,17 @@ def test_delete_flow_logs_failure() -> None:
 def test_describe_vpc_peering_connections() -> None:
     paginator_mock = Mock(paginate=Mock(side_effect=lambda **k: iter(responses.DESCRIBE_VPC_PEERING_CONNECTIONS_PAGES)))
     boto_mock = Mock(get_paginator=Mock(return_value=paginator_mock))
-    assert responses.EXPECTED_VPC_PEERING_CONNECTIONS == AwsEC2Client(boto_mock).describe_vpc_peering_connections()
+    assert (
+        responses.EXPECTED_VPC_PEERING_CONNECTIONS
+        == AwsEC2Client(boto_mock, account()).describe_vpc_peering_connections()
+    )
     boto_mock.get_paginator.assert_called_once_with("describe_vpc_peering_connections")
 
 
 def test_describe_vpc_peering_connections_failure() -> None:
     boto_mock = Mock(get_paginator=Mock(side_effect=client_error("GetPaginator", "AccessDenied", "boom!")))
     with pytest.raises(EC2Exception, match="boom"):
-        AwsEC2Client(boto_mock).describe_vpc_peering_connections()
+        AwsEC2Client(boto_mock, account()).describe_vpc_peering_connections()
 
 
 def test_list_instances() -> None:
@@ -165,7 +183,7 @@ def test_list_instances() -> None:
             }[kwargs["ImageIds"][0]]
         ),
     )
-    assert AwsEC2Client(boto_mock).list_instances() == responses.EXPECTED_INSTANCES
+    assert AwsEC2Client(boto_mock, account()).list_instances() == responses.EXPECTED_INSTANCES
 
 
 def test_list_instances_missing_ami_data() -> None:
@@ -179,4 +197,4 @@ def test_list_instances_missing_ami_data() -> None:
             }[kwargs["ImageIds"][0]]
         ),
     )
-    assert AwsEC2Client(boto_mock).list_instances() == responses.EXPECTED_INSTANCES_MISSING_CREATED_DATE
+    assert AwsEC2Client(boto_mock, account()).list_instances() == responses.EXPECTED_INSTANCES_MISSING_CREATED_DATE

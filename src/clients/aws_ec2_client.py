@@ -17,17 +17,19 @@ from src.data.aws_ec2_types import (
     to_vpc,
     to_vpc_peering_connection,
 )
+from src.data.aws_organizations_types import Account
 from src.data.aws_scanner_exceptions import EC2Exception
 
 
 class AwsEC2Client:
-    def __init__(self, boto_ec2: BaseClient):
+    def __init__(self, boto_ec2: BaseClient, account: Account):
         self._logger = getLogger(self.__class__.__name__)
         self._config = Config()
         self._ec2 = boto_ec2
+        self.account = account
 
     def list_vpcs(self) -> List[Vpc]:
-        return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs()]
+        return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs(account_id=self.account.identifier)]
 
     def create_flow_logs(self, vpc_id: str, log_group_name: str, permission: str) -> None:
         self._logger.debug(f"creating flow logs for VPC {vpc_id}")
@@ -61,10 +63,12 @@ class AwsEC2Client:
         vpc.flow_logs = self._describe_flow_logs(vpc)
         return vpc
 
-    def _describe_vpcs(self) -> List[Vpc]:
-        return boto_try(
-            lambda: [to_vpc(vpc) for vpc in self._ec2.describe_vpcs()["Vpcs"]], list, "unable to describe VPCs"
-        )
+    def _describe_vpcs(self, account_id: str) -> List[Vpc]:
+        def __describe_vpcs() -> List[Vpc]:
+            filters = [{"Name": "owner-id", "Values": [account_id]}]
+            return list(map(to_vpc, self._ec2.describe_vpcs(filters=filters)["Vpcs"]))
+
+        return boto_try(__describe_vpcs, list, "unable to describe VPCs")
 
     def _describe_flow_logs(self, vpc: Vpc) -> List[FlowLog]:
         filters = [{"Name": "resource-id", "Values": [vpc.id]}]
