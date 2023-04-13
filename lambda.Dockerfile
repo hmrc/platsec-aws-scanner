@@ -2,15 +2,19 @@ ARG PYTHON_VERSION
 ARG FUNCTION_DIR="/platsec-aws-scanner"
 
 FROM python:${PYTHON_VERSION}-slim as build-image
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
-    && apt-get install -y \
+
+RUN sed -i 's/http:/https:/g' /etc/apt/sources.list
+
+RUN apt-get update && apt-get upgrade -y
+
+RUN apt-get install -y \
     g++ \
     make \
     cmake \
     unzip \
     libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
+
 ARG FUNCTION_DIR
 WORKDIR ${FUNCTION_DIR}
 ARG PIP_PIPENV_VERSION
