@@ -1,5 +1,6 @@
 ARG PYTHON_VERSION
 FROM python:${PYTHON_VERSION}-slim-buster
+RUN sed -i 's/http:/https:/g' /etc/apt/sources.list
 RUN useradd --create-home scanner
 USER scanner
 WORKDIR /home/scanner
