@@ -2,7 +2,7 @@ PYTHON_VERSION = $(shell head -1 .python-version)
 PIP_PIPENV_VERSION = $(shell head -1 .pipenv-version)
 
 ifdef CI_MODE
-	DOCKER = $(info buiding dockerfile 'lambda.Dockerfile') \
+	DOCKER = $(info building dockerfile 'lambda.Dockerfile') \
 		docker build \
 		--target dev \
 		--file lambda.Dockerfile \
@@ -11,7 +11,7 @@ ifdef CI_MODE
 		--build-arg PIP_PIPENV_VERSION=$(PIP_PIPENV_VERSION) \
 		&& docker run test-run:ci
 else
-	DOCKER = $(info buiding dockerfile 'Dockerfile') \
+	DOCKER = $(info building dockerfile 'Dockerfile') \
 		docker build \
 		--file Dockerfile \
                 --build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
