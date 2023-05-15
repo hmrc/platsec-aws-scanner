@@ -31,6 +31,12 @@ def test_describe_vpcs_filters_by_current_account_id() -> None:
             mock_vpc.assert_called_once_with(account_id=test_account_id)
 
 
+def test_list_default_vpcs() -> None:
+    vpcs = [{"VpcId": "vpc-12312e654bf654d12"}, {"VpcId": "vpc-984a4654b65465e12"}]
+    ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(return_value={"Vpcs": vpcs})), account=account())
+    assert [Vpc("vpc-12312e654bf654d12"), Vpc("vpc-984a4654b65465e12")] == ec2_client.list_default_vpcs()
+
+
 def test_describe_vpcs_empty() -> None:
     ec2_client = AwsEC2Client(Mock(describe_vpcs=Mock(return_value={"Vpcs": []})), account=account())
     assert [] == ec2_client._describe_vpcs(account_id="foo")

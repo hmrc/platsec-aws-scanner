@@ -31,6 +31,9 @@ class AwsEC2Client:
     def list_vpcs(self) -> List[Vpc]:
         return [self._enrich_vpc(vpc) for vpc in self._describe_vpcs(account_id=self.account.identifier)]
 
+    def list_default_vpcs(self) -> List[Vpc]:
+        return self._describe_default_vpcs()
+
     def create_flow_logs(self, vpc_id: str, log_group_name: str, permission: str) -> None:
         self._logger.debug(f"creating flow logs for VPC {vpc_id}")
         try:
@@ -69,6 +72,16 @@ class AwsEC2Client:
             return list(map(to_vpc, self._ec2.describe_vpcs(filters=filters)["Vpcs"]))
 
         return boto_try(__describe_vpcs, list, "unable to describe VPCs")
+
+    def _describe_default_vpcs(self) -> List[Vpc]:
+        return boto_try(
+            lambda: [
+                to_vpc(vpc)
+                for vpc in self._ec2.describe_vpcs(Filters=[{"Name": "is-default", "Values": ["true"]}])["Vpcs"]
+            ],
+            list,
+            "unable to describe VPCs",
+        )
 
     def _describe_flow_logs(self, vpc: Vpc) -> List[FlowLog]:
         filters = [{"Name": "resource-id", "Values": [vpc.id]}]

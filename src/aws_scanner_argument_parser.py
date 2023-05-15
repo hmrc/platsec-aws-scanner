@@ -43,6 +43,7 @@ class AwsScannerCommands:
     find_principal = "find_principal"
     create_table = "create_table"
     list_accounts = "list_accounts"
+    list_default_vpcs = "list_default_vpcs"
     list_ssm_parameters = "list_ssm_parameters"
     drop = "drop"
     audit_s3 = "audit_s3"
@@ -137,6 +138,7 @@ class AwsScannerArgumentParser:
         self._add_role_usage_command(subparsers)
         self._add_find_principal_command(subparsers)
         self._add_list_accounts_command(subparsers)
+        self._add_list_default_vpcs_command(subparsers)
         self._add_list_ssm_parameters_command(subparsers)
         self._add_create_table_command(subparsers)
         self._add_drop_command(subparsers)
@@ -219,6 +221,13 @@ class AwsScannerArgumentParser:
         desc = "list organization accounts"
         list_accounts_parser = subparsers.add_parser(AwsScannerCommands.list_accounts, help=desc, description=desc)
         self._add_common_args(list_accounts_parser)
+
+    def _add_list_default_vpcs_command(self, subparsers: Any) -> None:
+        desc = "list default VPCs"
+        list_default_vpcs_parser = subparsers.add_parser(
+            AwsScannerCommands.list_default_vpcs, help=desc, description=desc
+        )
+        self._add_common_args(list_default_vpcs_parser)
 
     def _add_list_ssm_parameters_command(self, subparsers: Any) -> None:
         desc = "list SSM parameters"

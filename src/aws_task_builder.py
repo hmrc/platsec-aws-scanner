@@ -22,6 +22,7 @@ from src.tasks.aws_audit_vpc_peering_task import AwsAuditVpcPeeringTask
 from src.tasks.aws_create_athena_table_task import AwsCreateAthenaTableTask
 from src.tasks.aws_create_flow_logs_table_task import AwsCreateFlowLogsTableTask
 from src.tasks.aws_list_accounts_task import AwsListAccountsTask
+from src.tasks.aws_list_default_vpcs_task import AwsListDefaultVpcsTask
 from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
 from src.tasks.aws_principal_by_ip_finder_task import AwsPrincipalByIPFinderTask
 from src.tasks.aws_role_usage_scanner_task import AwsRoleUsageScannerTask
@@ -65,6 +66,7 @@ class AwsTaskBuilder:
                 region=self._args.region,
             ),
             Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask, region=self._args.region),
+            Cmd.list_default_vpcs: lambda: self._tasks(AwsListDefaultVpcsTask, region=self._args.region),
             Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, region=self._args.region),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask, region=self._args.region),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, region=self._args.region),
