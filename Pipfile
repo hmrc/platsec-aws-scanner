@@ -19,4 +19,4 @@ requests = "==2.27.1"
 tenacity = "==8.1.0"
 
 [requires]
-python_version = "3.9.10"
+python_version = "3.9.16"
