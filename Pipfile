@@ -1,6 +1,6 @@
 [[source]]
-name = "pypi"
-url = "https://pypi.org/simple"
+name = "artifactory"
+url = "https://artefacts.tax.service.gov.uk/artifactory/api/pypi/pips/simple/"
 verify_ssl = true
 
 [dev-packages]
