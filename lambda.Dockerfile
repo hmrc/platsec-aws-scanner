@@ -18,17 +18,17 @@ RUN apt-get install -y \
 ARG FUNCTION_DIR
 WORKDIR ${FUNCTION_DIR}
 ARG PIP_PIPENV_VERSION
-RUN pip install --no-cache-dir pipenv==${PIP_PIPENV_VERSION}
-RUN pip install --no-cache-dir --target ${FUNCTION_DIR} awslambdaric==1.2.0
+RUN pip install --index-url https://artefacts.tax.service.gov.uk/artifactory/api/pypi/pips/simple --no-cache-dir pipenv==${PIP_PIPENV_VERSION}
+RUN pip install --index-url https://artefacts.tax.service.gov.uk/artifactory/api/pypi/pips/simple --no-cache-dir --target ${FUNCTION_DIR} awslambdaric==1.2.0
 COPY Pipfile.lock ${FUNCTION_DIR}
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync --pypi-mirror https://artefacts.tax.service.gov.uk/artifactory/api/pypi/pips/simple
 
 FROM python:${PYTHON_VERSION}-slim as dev
 COPY --from=build-image . .
 ARG FUNCTION_DIR
 WORKDIR ${FUNCTION_DIR}
 COPY . .
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync --dev
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv sync --dev --pypi-mirror https://artefacts.tax.service.gov.uk/artifactory/api/pypi/pips/simple
 
 FROM python:${PYTHON_VERSION}-slim as production
 ARG FUNCTION_DIR
