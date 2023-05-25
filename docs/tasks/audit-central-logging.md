@@ -6,7 +6,7 @@ The `audit_central_logging` task produces an audit report logging into the accou
 ## Usage
 
 ```sh
-./platsec_aws_scanner.sh audit_centrail_logging -t 123456
+./platsec_aws_scanner.sh audit_central_logging -t 123456
 ```
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
