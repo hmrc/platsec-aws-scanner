@@ -44,7 +44,7 @@ def test_describe_vpcs_filters_by_current_account() -> None:
     assert [Vpc("vpc-12312e654bf654d12"), Vpc("vpc-984a4654b65465e12")] == ec2_client._describe_vpcs(
         account_id=account().identifier
     )
-    mock_describe_vpcs.assert_called_once_with(filters=[{"Name": "owner-id", "Values": ["account_id"]}])
+    mock_describe_vpcs.assert_called_once_with(Filters=[{"Name": "owner-id", "Values": ["account_id"]}])
 
 
 def test_describe_vpcs_failure(caplog: Any) -> None:

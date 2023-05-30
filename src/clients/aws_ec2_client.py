@@ -66,7 +66,7 @@ class AwsEC2Client:
     def _describe_vpcs(self, account_id: str) -> List[Vpc]:
         def __describe_vpcs() -> List[Vpc]:
             filters = [{"Name": "owner-id", "Values": [account_id]}]
-            return list(map(to_vpc, self._ec2.describe_vpcs(filters=filters)["Vpcs"]))
+            return list(map(to_vpc, self._ec2.describe_vpcs(Filters=filters)["Vpcs"]))
 
         return boto_try(__describe_vpcs, list, "unable to describe VPCs")
 
