@@ -80,6 +80,10 @@ class ListSSMParametersException(AwsScannerException):
     pass
 
 
+class GetSSMDocumentException(AwsScannerException):
+    pass
+
+
 class LogsException(AwsScannerException):
     pass
 

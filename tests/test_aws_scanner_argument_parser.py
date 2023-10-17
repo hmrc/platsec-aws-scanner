@@ -408,3 +408,16 @@ def test_parse_lambda_args_for_service_usage_task() -> None:
     assert lambda_args.accounts is None
     assert lambda_args.services == ["ssm"]
     assert lambda_args.disable_account_lookup is True
+
+def test_parse_cli_args_for_audit_ssm_document() -> None:
+    with patch("sys.argv", ". audit_ssm_document -a 15,43 -t 465132".split()):
+        short_args = AwsScannerArgumentParser().parse_cli_args()
+
+    with patch("sys.argv", ". audit_ssm_document --accounts 15,43 --token 465132".split()):
+        long_args = AwsScannerArgumentParser().parse_cli_args()
+
+    for args in [short_args, long_args]:
+        assert args.task == "audit_ssm_document"
+        assert args.accounts == ["15", "43"]
+        assert args.username == "joe.bloggs"
+        assert args.mfa_token == "465132"
