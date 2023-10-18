@@ -8,7 +8,7 @@ from src.data.aws_ssm_types import SSMDocument
 from src.tasks.aws_ssm_task import AwsSSMTask
 
 SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME = "SSM-SessionManagerRunShell"
-SESSION_MANAGER_RUN_SHELL_JSON_FILE = "../resources/SessionManagerRunShell.json"
+SESSION_MANAGER_RUN_SHELL_JSON_FILE = "src/resources/SessionManagerRunShell.json"
 
 @dataclass
 class AwsAuditSSMDocumentTask(AwsSSMTask):
