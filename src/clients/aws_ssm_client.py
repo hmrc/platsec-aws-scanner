@@ -1,3 +1,4 @@
+import json
 from logging import getLogger
 from typing import List
 
@@ -5,8 +6,8 @@ from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
 from src.clients.aws_boto_paginator import AwsBotoPaginator
-from src.data.aws_scanner_exceptions import ListSSMParametersException
-from src.data.aws_ssm_types import Parameter, to_parameter
+from src.data.aws_scanner_exceptions import GetSSMDocumentException, ListSSMParametersException
+from src.data.aws_ssm_types import Parameter, SSMDocument, to_parameter
 
 
 class AwsSSMClient:
@@ -23,3 +24,16 @@ class AwsSSMClient:
             ).paginate(response_key="Parameters", response_mapper=to_parameter)
         except (BotoCoreError, ClientError) as error:
             raise ListSSMParametersException(error) from None
+
+    def get_document(self, name: str) -> SSMDocument:
+        try:
+            response = self._ssm.get_document(Name=name, DocumentFormat="JSON")
+            content = json.loads(response["Content"])
+            return SSMDocument(
+                schema_version=content["schemaVersion"],
+                description=content["description"],
+                session_type=content["sessionType"],
+                inputs=content["inputs"],
+            )
+        except (BotoCoreError, ClientError) as error:
+            raise GetSSMDocumentException(error) from None

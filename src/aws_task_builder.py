@@ -15,6 +15,7 @@ from src.tasks.aws_audit_cost_explorer_task import AwsAuditCostExplorerTask
 from src.tasks.aws_audit_iam_task import AwsAuditIamTask
 from src.tasks.aws_audit_password_policy_task import AwsAuditPasswordPolicyTask
 from src.tasks.aws_audit_s3_task import AwsAuditS3Task
+from src.tasks.aws_audit_ssm_document_task import AwsAuditSSMDocumentTask
 from src.tasks.aws_audit_vpc_flow_logs_task import AwsAuditVPCFlowLogsTask
 from src.tasks.aws_audit_vpc_dns_logs_task import AwsAuditVPCDnsLogsTask
 from src.tasks.aws_audit_route53_query_logs_task import AwsAuditRoute53QueryLogsTask
@@ -66,6 +67,7 @@ class AwsTaskBuilder:
             ),
             Cmd.list_accounts: lambda: self._standalone_task(AwsListAccountsTask, region=self._args.region),
             Cmd.list_ssm_parameters: lambda: self._tasks(AwsListSSMParametersTask, region=self._args.region),
+            Cmd.audit_ssm_document: lambda: self._tasks(AwsAuditSSMDocumentTask, region=self._args.region),
             Cmd.drop: lambda: self._standalone_task(AwsAthenaCleanerTask, region=self._args.region),
             Cmd.audit_s3: lambda: self._tasks(AwsAuditS3Task, region=self._args.region),
             Cmd.audit_iam: lambda: self._tasks(AwsAuditIamTask, region=self._args.region),

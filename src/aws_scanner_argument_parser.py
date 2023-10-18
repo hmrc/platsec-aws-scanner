@@ -59,6 +59,7 @@ class AwsScannerCommands:
     audit_route53 = "list_public_zones"
     enable_route53_logging = "enable_route53_logging"
     audit_route53_query_logs = "audit_route53_query_logs"
+    audit_ssm_document = "audit_ssm_document"
 
 
 class AwsScannerArgumentParser:
@@ -153,6 +154,7 @@ class AwsScannerArgumentParser:
         self._add_audit_ec2_instances_command(subparsers)
         self._add_audit_route53_command(subparsers)
         self._add_audit_route53_query_logs(subparsers)
+        self._add_audit_ssm_document_command(subparsers)
         return parser
 
     def _add_drop_command(self, subparsers: Any) -> None:
@@ -286,6 +288,14 @@ class AwsScannerArgumentParser:
         audit_peering_parser = subparsers.add_parser(AwsScannerCommands.audit_vpc_peering, help=desc, description=desc)
         self._add_common_args(audit_peering_parser)
         self._add_accounts_args(audit_peering_parser)
+
+    def _add_audit_ssm_document_command(self, subparsers: Any) -> None:
+        desc = "audit SSM Run Shell document "
+        audit_ssm_document_parser = subparsers.add_parser(
+            AwsScannerCommands.audit_ssm_document, help=desc, description=desc
+        )
+        self._add_common_args(audit_ssm_document_parser)
+        self._add_accounts_args(audit_ssm_document_parser)
 
     def parse_cli_args(self) -> AwsScannerArguments:
         return self._parse_args()
