@@ -30,11 +30,8 @@ def test_ssm_document_equals_true():
             "runAsDefaultUser": "",
             "idleSessionTimeout": "",
             "maxSessionDuration": "",
-            "shellProfile": {
-                "windows": "date",
-                "linux": "pwd;ls;pwd"
-            }
-        }
+            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+        },
     )
     document02 = SSMDocument(
         schema_version="1.0",
@@ -52,11 +49,8 @@ def test_ssm_document_equals_true():
             "runAsDefaultUser": "",
             "idleSessionTimeout": "",
             "maxSessionDuration": "",
-            "shellProfile": {
-                "windows": "date",
-                "linux": "pwd;ls;pwd"
-            }
-        }
+            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+        },
     )
     assert document01 == document02
 
@@ -78,11 +72,8 @@ def test_ssm_document_equals_false():
             "runAsDefaultUser": "",
             "idleSessionTimeout": "",
             "maxSessionDuration": "",
-            "shellProfile": {
-                "windows": "date",
-                "linux": "pwd;ls;pwd"
-            }
-        }
+            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+        },
     )
     document02 = SSMDocument(
         schema_version="1.0",
@@ -100,11 +91,8 @@ def test_ssm_document_equals_false():
             "runAsDefaultUser": "",
             "idleSessionTimeout": "",
             "maxSessionDuration": "",
-            "shellProfile": {
-                "windows": "date",
-                "linux": "pwd;ls;pwd"
-            }
-        }
+            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+        },
     )
     assert document01 != document02
     assert document01 != "someStr"

@@ -10,6 +10,7 @@ from src.tasks.aws_ssm_task import AwsSSMTask
 SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME = "SSM-SessionManagerRunShell"
 SESSION_MANAGER_RUN_SHELL_JSON_FILE = "src/resources/SessionManagerRunShell.json"
 
+
 @dataclass
 class AwsAuditSSMDocumentTask(AwsSSMTask):
     def __init__(self, account: Account, region: str) -> None:
@@ -23,6 +24,6 @@ class AwsAuditSSMDocumentTask(AwsSSMTask):
                 schema_version=data["schemaVersion"],
                 description=data["description"],
                 session_type=data["sessionType"],
-                inputs=data["inputs"]
+                inputs=data["inputs"],
             )
         return {"ssm_document_audit_compliant": expected == observed}

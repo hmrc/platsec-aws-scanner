@@ -33,7 +33,7 @@ class AwsSSMClient:
                 schema_version=content["schemaVersion"],
                 description=content["description"],
                 session_type=content["sessionType"],
-                inputs=content["inputs"]
+                inputs=content["inputs"],
             )
         except (BotoCoreError, ClientError) as error:
             raise GetSSMDocumentException(error) from None

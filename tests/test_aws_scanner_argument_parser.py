@@ -409,6 +409,7 @@ def test_parse_lambda_args_for_service_usage_task() -> None:
     assert lambda_args.services == ["ssm"]
     assert lambda_args.disable_account_lookup is True
 
+
 def test_parse_cli_args_for_audit_ssm_document() -> None:
     with patch("sys.argv", ". audit_ssm_document -a 15,43 -t 465132".split()):
         short_args = AwsScannerArgumentParser().parse_cli_args()

@@ -291,7 +291,9 @@ class AwsScannerArgumentParser:
 
     def _add_audit_ssm_document_command(self, subparsers: Any) -> None:
         desc = "audit SSM Run Shell document "
-        audit_ssm_document_parser = subparsers.add_parser(AwsScannerCommands.audit_ssm_document, help=desc, description=desc)
+        audit_ssm_document_parser = subparsers.add_parser(
+            AwsScannerCommands.audit_ssm_document, help=desc, description=desc
+        )
         self._add_common_args(audit_ssm_document_parser)
         self._add_accounts_args(audit_ssm_document_parser)
 

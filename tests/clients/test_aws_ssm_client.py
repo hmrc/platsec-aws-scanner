@@ -17,13 +17,18 @@ class TestAwsSSMClient(TestCase):
         self.assertEqual(responses.EXPECTED_LIST_PARAMETERS, self.get_ssm_client().list_parameters())
 
     def test_get_document(self) -> None:
-        self.assertEqual(responses.EXPECTED_SSM_DOCUMENT, self.get_ssm_client().get_document(name=SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME))
+        self.assertEqual(
+            responses.EXPECTED_SSM_DOCUMENT,
+            self.get_ssm_client().get_document(name=SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME),
+        )
 
     def get_ssm_client(self) -> AwsSSMClient:
-        return AwsSSMClient(Mock(
-            describe_parameters=Mock(side_effect=self.describe_parameters),
-            get_document=Mock(return_value=responses.RESPONSE_GET_DOCUMENT),
-        ))
+        return AwsSSMClient(
+            Mock(
+                describe_parameters=Mock(side_effect=self.describe_parameters),
+                get_document=Mock(return_value=responses.RESPONSE_GET_DOCUMENT),
+            )
+        )
 
     def describe_parameters(self, **kwargs: Dict[str, Any]) -> Dict[Any, Any]:
         self.assertEqual(50, kwargs["MaxResults"], f"expected MaxResults=50, got {kwargs['MaxResults']}")
@@ -42,13 +47,15 @@ class TestAwsSSMClientFailure(TestCase):
 
     def test_get_document_failure(self) -> None:
         with self.assertRaisesRegex(GetSSMDocumentException, "SomeErrorCode"):
-            self.get_ssm_client().get_document(name='someDoc')
+            self.get_ssm_client().get_document(name="someDoc")
 
     def get_ssm_client(self) -> AwsSSMClient:
-        return AwsSSMClient(Mock(
-            describe_parameters=Mock(side_effect=self.describe_parameters),
-            get_document=Mock(side_effect=self.get_document),
-        ))
+        return AwsSSMClient(
+            Mock(
+                describe_parameters=Mock(side_effect=self.describe_parameters),
+                get_document=Mock(side_effect=self.get_document),
+            )
+        )
 
     @staticmethod
     def describe_parameters(**kwargs: Dict[str, Any]) -> Dict[Any, Any]:

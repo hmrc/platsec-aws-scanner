@@ -31,11 +31,8 @@ def test_aws_audit_ssm_document_compliance_true():
             "runAsDefaultUser": "",
             "idleSessionTimeout": "",
             "maxSessionDuration": "",
-            "shellProfile": {
-                "windows": "date",
-                "linux": "pwd;ls;pwd"
-            }
-        }
+            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+        },
     )
 
     ssm_client = Mock(get_document=Mock(return_value=document))
@@ -43,6 +40,7 @@ def test_aws_audit_ssm_document_compliance_true():
     expected = {"ssm_document_audit_compliant": True}
 
     assert expected == task_report
+
 
 def test_aws_audit_ssm_document_compliance_false():
     document = SSMDocument(
@@ -61,11 +59,8 @@ def test_aws_audit_ssm_document_compliance_false():
             "runAsDefaultUser": "",
             "idleSessionTimeout": "",
             "maxSessionDuration": "",
-            "shellProfile": {
-                "windows": "date",
-                "linux": "pwd;ls;pwd"
-            }
-        }
+            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+        },
     )
 
     ssm_client = Mock(get_document=Mock(return_value=document))
