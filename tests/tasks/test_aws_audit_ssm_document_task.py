@@ -1,20 +1,12 @@
-from unittest import TestCase
 from unittest.mock import Mock
 from src.data.aws_ssm_types import SSMDocument
 from src.tasks.aws_audit_ssm_document_task import AwsAuditSSMDocumentTask
 
-from src.tasks.aws_list_ssm_parameters_task import AwsListSSMParametersTask
-
-from tests.test_types_generator import (
-    account,
-    secure_string_parameter,
-    string_list_parameter,
-    string_parameter,
-)
+from tests.test_types_generator import account
 from tests.test_types_generator import TEST_REGION
 
 
-def test_aws_audit_ssm_document_compliance_true():
+def test_aws_audit_ssm_document_compliance_true() -> None:
     document = SSMDocument(
         schema_version="1.0",
         description="ssm document",
@@ -42,7 +34,7 @@ def test_aws_audit_ssm_document_compliance_true():
     assert expected == task_report
 
 
-def test_aws_audit_ssm_document_compliance_false():
+def test_aws_audit_ssm_document_compliance_false() -> None:
     document = SSMDocument(
         schema_version="1.0",
         description="ssm document",

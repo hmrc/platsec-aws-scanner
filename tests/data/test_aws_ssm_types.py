@@ -13,7 +13,7 @@ class TestAwsSSMTypes(TestCase):
         self.assertEqual(Parameter(name="a_secure_string_param", type="SecureString"), to_parameter(parameter))
 
 
-def test_ssm_document_equals_true():
+def test_ssm_document_equals_true() -> None:
     document01 = SSMDocument(
         schema_version="1.0",
         description="ssm document 01",
@@ -55,7 +55,7 @@ def test_ssm_document_equals_true():
     assert document01 == document02
 
 
-def test_ssm_document_equals_false():
+def test_ssm_document_equals_false() -> None:
     document01 = SSMDocument(
         schema_version="1.0",
         description="ssm document",

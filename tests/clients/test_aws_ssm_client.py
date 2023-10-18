@@ -5,7 +5,6 @@ from typing import Any, Dict
 
 from src.data.aws_scanner_exceptions import GetSSMDocumentException, ListSSMParametersException
 from src.clients.aws_ssm_client import AwsSSMClient
-from src.data.aws_ssm_types import SSMDocument
 from src.tasks.aws_audit_ssm_document_task import SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME
 
 from tests.clients import test_aws_ssm_client_responses as responses

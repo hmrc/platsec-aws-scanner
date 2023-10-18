@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.data.aws_organizations_types import Account
@@ -17,7 +17,7 @@ class AwsAuditSSMDocumentTask(AwsSSMTask):
         super().__init__(description="Audit SSM RunShell Document", account=account, region=region)
 
     def _run_task(self, client: AwsSSMClient) -> Dict[str, Any]:
-        observed = client.get_document()
+        observed = client.get_document(name=SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME)
         with open(SESSION_MANAGER_RUN_SHELL_JSON_FILE) as f:
             data = json.load(f)
             expected = SSMDocument(

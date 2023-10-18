@@ -24,7 +24,26 @@ RESPONSE_GET_DOCUMENT = {
     "CreatedDate": "2023-10-16T16:56:28.598000+01:00",
     "DocumentVersion": "1",
     "Status": "Active",
-    "Content": '{\n  "schemaVersion": "1.0",\n  "description": "Document to hold regional settings for Session Manager",\n  "sessionType": "Standard_Stream",\n  "inputs": {\n    "s3BucketName": "",\n    "s3KeyPrefix": "",\n    "s3EncryptionEnabled": true,\n    "cloudWatchLogGroupName": "",\n    "cloudWatchEncryptionEnabled": true,\n    "cloudWatchStreamingEnabled": false,\n    "kmsKeyId": "",\n    "runAsEnabled": false,\n    "runAsDefaultUser": "",\n    "idleSessionTimeout": "",\n    "maxSessionDuration": "",\n    "shellProfile": {\n      "windows": "date",\n      "linux": "pwd;ls;pwd"\n    }\n  }\n}\n',
+    "Content": (
+        '{\n  "schemaVersion": "1.0",'
+        '\n  "description": "Document to hold regional settings for Session Manager",'
+        '\n  "sessionType": "Standard_Stream",'
+        '\n  "inputs": {'
+        '\n    "s3BucketName": "",'
+        '\n    "s3KeyPrefix": "",'
+        '\n    "s3EncryptionEnabled": true,'
+        '\n    "cloudWatchLogGroupName": "",'
+        '\n    "cloudWatchEncryptionEnabled": true,'
+        '\n    "cloudWatchStreamingEnabled": false,'
+        '\n    "kmsKeyId": "",'
+        '\n    "runAsEnabled": false,'
+        '\n    "runAsDefaultUser": "",'
+        '\n    "idleSessionTimeout": "",'
+        '\n    "maxSessionDuration": "",'
+        '\n    "shellProfile": {\n      "windows": "date",\n      "linux": "pwd;ls;pwd"\n    }'
+        "\n  }"
+        "\n}"
+    ),
     "DocumentType": "Session",
     "DocumentFormat": "JSON",
 }
