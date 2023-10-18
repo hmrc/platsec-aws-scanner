@@ -4,22 +4,11 @@ from typing import Any, Dict, List
 
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.data.aws_organizations_types import Account
+from src.data.aws_ssm_types import SSMDocument
 from src.tasks.aws_ssm_task import AwsSSMTask
 
 SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME = "SSM-SessionManagerRunShell"
 SESSION_MANAGER_RUN_SHELL_JSON_FILE = "../resources/SessionManagerRunShell.json"
-
-@dataclass
-class SSMDocument:
-    schema_version: str
-    description: str
-    session_type: str
-    inputs: Dict[str, Any]
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, SSMDocument):
-            return False
-        return self.inputs == other.inputs
 
 @dataclass
 class AwsAuditSSMDocumentTask(AwsSSMTask):

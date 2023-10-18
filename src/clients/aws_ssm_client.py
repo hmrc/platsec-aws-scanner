@@ -7,8 +7,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from src.clients.aws_boto_paginator import AwsBotoPaginator
 from src.data.aws_scanner_exceptions import GetSSMDocumentException, ListSSMParametersException
-from src.data.aws_ssm_types import Parameter, to_parameter
-from src.tasks.aws_audit_ssm_document_task import SSMDocument
+from src.data.aws_ssm_types import Parameter, SSMDocument, to_parameter
 
 
 class AwsSSMClient:
