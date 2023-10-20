@@ -24,4 +24,9 @@ class SSMDocument:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SSMDocument):
             return False
-        return self.inputs == other.inputs
+        return (
+            self.inputs.get("s3BucketName") == other.inputs.get("s3BucketName")
+            and self.inputs.get("s3EncryptionEnabled") == other.inputs.get("s3EncryptionEnabled")
+            and self.inputs.get("maxSessionDuration") == other.inputs.get("maxSessionDuration")
+            and self.inputs.get("shellProfile") == other.inputs.get("shellProfile")
+        )

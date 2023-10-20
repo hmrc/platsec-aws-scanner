@@ -3,20 +3,12 @@
     "description": "Document to hold regional settings for Session Manager",
     "sessionType": "Standard_Stream",
     "inputs": {
-      "s3BucketName": "",
-      "s3KeyPrefix": "",
+      "s3BucketName": "mdtp-ssm-session-manager-audit-logs",
+      "s3KeyPrefix": "123456789012",
       "s3EncryptionEnabled": true,
-      "cloudWatchLogGroupName": "",
-      "cloudWatchEncryptionEnabled": true,
-      "cloudWatchStreamingEnabled": false,
-      "kmsKeyId": "",
-      "runAsEnabled": false,
-      "runAsDefaultUser": "",
-      "idleSessionTimeout": "",
-      "maxSessionDuration": "",
+      "maxSessionDuration": "120",
       "shellProfile": {
-        "windows": "date",
-        "linux": "pwd;ls;pwd"
+        "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
       }
     }
   }
