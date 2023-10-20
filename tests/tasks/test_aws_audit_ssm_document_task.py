@@ -17,8 +17,8 @@ def test_aws_audit_ssm_document_compliance_true() -> None:
             "s3EncryptionEnabled": True,
             "maxSessionDuration": "120",
             "shellProfile": {
-              "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
-            }
+                "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
+            },
         },
     )
 
@@ -41,8 +41,8 @@ def test_aws_audit_ssm_document_compliance_false() -> None:
             "s3EncryptionEnabled": True,
             "maxSessionDuration": "1440",
             "shellProfile": {
-              "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
-            }
+                "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
+            },
         },
     )
 
