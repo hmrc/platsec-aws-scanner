@@ -12,24 +12,20 @@ def test_aws_audit_ssm_document_compliance_true() -> None:
         description="ssm document",
         session_type="Standard_Stream",
         inputs={
-            "s3BucketName": "",
-            "s3KeyPrefix": "",
+            "s3BucketName": "mdtp-ssm-session-manager-audit-logs",
+            "s3KeyPrefix": "123456789012",
             "s3EncryptionEnabled": True,
-            "cloudWatchLogGroupName": "",
-            "cloudWatchEncryptionEnabled": True,
-            "cloudWatchStreamingEnabled": False,
-            "kmsKeyId": "",
-            "runAsEnabled": False,
-            "runAsDefaultUser": "",
-            "idleSessionTimeout": "",
-            "maxSessionDuration": "",
-            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+            "maxSessionDuration": "120",
+            "shellProfile": {
+                "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
+            },
         },
     )
 
     ssm_client = Mock(get_document=Mock(return_value=document))
     task_report = AwsAuditSSMDocumentTask(account=account(), region=TEST_REGION)._run_task(ssm_client)
-    expected = {"ssm_document_audit_compliant": True}
+    print(task_report)
+    expected = {"documents": [{"name": "SSM-SessionManagerRunShell", "compliant": True}]}
 
     assert expected == task_report
 
@@ -40,23 +36,18 @@ def test_aws_audit_ssm_document_compliance_false() -> None:
         description="ssm document",
         session_type="Standard_Stream",
         inputs={
-            "s3BucketName": "my-bucket",
-            "s3KeyPrefix": "my-key-prefix",
+            "s3BucketName": "mdtp-ssm-session-manager-audit-logs",
+            "s3KeyPrefix": "123456789012",
             "s3EncryptionEnabled": True,
-            "cloudWatchLogGroupName": "",
-            "cloudWatchEncryptionEnabled": True,
-            "cloudWatchStreamingEnabled": False,
-            "kmsKeyId": "",
-            "runAsEnabled": False,
-            "runAsDefaultUser": "",
-            "idleSessionTimeout": "",
-            "maxSessionDuration": "",
-            "shellProfile": {"windows": "date", "linux": "pwd;ls;pwd"},
+            "maxSessionDuration": "1440",
+            "shellProfile": {
+                "linux": "cd ~ && /bin/bash && echo 'This session will be automatically terminated after 2 hours'"
+            },
         },
     )
 
     ssm_client = Mock(get_document=Mock(return_value=document))
     task_report = AwsAuditSSMDocumentTask(account=account(), region=TEST_REGION)._run_task(ssm_client)
-    expected = {"ssm_document_audit_compliant": True}
+    expected = {"documents": [{"name": "SSM-SessionManagerRunShell", "compliant": True}]}
 
     assert expected != task_report
