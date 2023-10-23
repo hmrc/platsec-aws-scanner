@@ -19,6 +19,15 @@ class AwsAuditSSMDocumentTask(AwsSSMTask):
         observed = client.get_document(name=SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME)
         with open(SESSION_MANAGER_RUN_SHELL_JSON_FILE) as f:
             expected = json.load(f)
+
+        try:
+            observed_max_session_duration = int(observed.inputs["maxSessionDuration"])
+            max_session_duration_is_compliant = observed_max_session_duration <= int(
+                expected["inputs"]["maxSessionDuration"]
+            )
+        except ValueError:
+            max_session_duration_is_compliant = False
+
         return {
             "documents": [
                 {
@@ -34,8 +43,7 @@ class AwsAuditSSMDocumentTask(AwsSSMTask):
                             "message": "S3 encryption should be enabled",
                         },
                         "maxSessionDuration": {
-                            "compliant": int(observed.inputs["maxSessionDuration"])
-                            <= int(expected["inputs"]["maxSessionDuration"]),
+                            "compliant": max_session_duration_is_compliant,
                             "message": "maxSessionDuration should be less than or equal to 120 mins",
                         },
                         "shellProfile": {
