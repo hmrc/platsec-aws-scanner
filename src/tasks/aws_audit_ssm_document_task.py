@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 from src.clients.aws_ssm_client import AwsSSMClient
 from src.data.aws_organizations_types import Account
-from src.data.aws_ssm_types import SSMDocument
 from src.tasks.aws_ssm_task import AwsSSMTask
 
 SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME = "SSM-SessionManagerRunShell"
@@ -19,11 +18,31 @@ class AwsAuditSSMDocumentTask(AwsSSMTask):
     def _run_task(self, client: AwsSSMClient) -> Dict[str, Any]:
         observed = client.get_document(name=SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME)
         with open(SESSION_MANAGER_RUN_SHELL_JSON_FILE) as f:
-            data = json.load(f)
-            expected = SSMDocument(
-                schema_version=data["schemaVersion"],
-                description=data["description"],
-                session_type=data["sessionType"],
-                inputs=data["inputs"],
-            )
-        return {"documents": [{"name": SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME, "compliant": expected == observed}]}
+            expected = json.load(f)
+        return {
+            "documents": [
+                {
+                    "name": SESSION_MANAGER_RUN_SHELL_DOCUMENT_NAME,
+                    "compliancy": {
+                        "s3BucketName": {
+                            "compliant": observed.inputs["s3BucketName"] == expected["inputs"]["s3BucketName"],
+                            "message": "S3 bucket name should be mdtp-ssm-session-manager-audit-logs",
+                        },
+                        "s3EncryptionEnabled": {
+                            "compliant": observed.inputs["s3EncryptionEnabled"]
+                            == expected["inputs"]["s3EncryptionEnabled"],
+                            "message": "S3 encryption should be enabled",
+                        },
+                        "maxSessionDuration": {
+                            "compliant": int(observed.inputs["maxSessionDuration"])
+                            <= int(expected["inputs"]["maxSessionDuration"]),
+                            "message": "maxSessionDuration should be less than or equal to 120 mins",
+                        },
+                        "shellProfile": {
+                            "compliant": observed.inputs["shellProfile"] == expected["inputs"]["shellProfile"],
+                            "message": "shellProfile should match expected config",
+                        },
+                    },
+                }
+            ]
+        }
