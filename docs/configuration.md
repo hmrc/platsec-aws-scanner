@@ -55,7 +55,7 @@ region = us-east-1
 
 ```ini
 [cost_explorer]
-role = RoleSecurityReadOnly
+role = RolePlatformReadOnly
 ```
 
 `role`: name of the role that is assumed to perform costExplorer-related operations on accounts
