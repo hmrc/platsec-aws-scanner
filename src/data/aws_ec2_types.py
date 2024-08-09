@@ -86,7 +86,7 @@ class Instance:
     def with_image_creation_date(self, creation_date: str) -> Instance:
         self.image_creation_date = datetime.strptime(creation_date, "%Y-%m-%dT%H:%M:%S.%f%z")
         return self
-    
+
     def with_image_name(self, image_name: str) -> Instance:
         self.image_name = image_name
         return self
