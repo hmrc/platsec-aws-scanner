@@ -78,6 +78,7 @@ class Instance:
     id: str
     component: str
     image_id: str
+    image_name: Optional[str]
     image_creation_date: Optional[datetime]
     launch_time: datetime
     metadata_options_http_tokens: str
@@ -86,12 +87,17 @@ class Instance:
         self.image_creation_date = datetime.strptime(creation_date, "%Y-%m-%dT%H:%M:%S.%f%z")
         return self
 
+    def with_image_name(self, image_name: str) -> Instance:
+        self.image_name = image_name
+        return self
+
 
 def to_instance(instance: Dict[Any, Any]) -> Instance:
     return Instance(
         id=instance["InstanceId"],
         component=_find_tag("Name", instance.get("Tags", {})),
         image_id=instance["ImageId"],
+        image_name=None,
         image_creation_date=None,
         launch_time=instance["LaunchTime"],
         metadata_options_http_tokens=instance["MetadataOptions"]["HttpTokens"],
