@@ -197,4 +197,4 @@ def test_list_instances_missing_ami_data() -> None:
             }[kwargs["ImageIds"][0]]
         ),
     )
-    assert AwsEC2Client(boto_mock, account()).list_instances() == responses.EXPECTED_INSTANCES_MISSING_CREATED_DATE
+    assert AwsEC2Client(boto_mock, account()).list_instances() == responses.EXPECTED_INSTANCES_MISSING_IMAGE_DATA
