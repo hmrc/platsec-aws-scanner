@@ -135,8 +135,16 @@ EXPECTED_VPC_PEERING_CONNECTIONS = [
     ),
 ]
 
-DESCRIBE_IMAGE_1234 = {"Images": [{"CreationDate": "2022-02-21T14:05:14.000Z", "ImageId": "ami-1234", "Name": "ubuntu-1604", "Public": False}]}
-DESCRIBE_IMAGE_5678 = {"Images": [{"CreationDate": "2022-02-21T14:05:14.000Z", "ImageId": "ami-5678", "Name": "ubuntu-2404", "Public": True}]}
+DESCRIBE_IMAGE_1234 = {
+    "Images": [
+        {"CreationDate": "2022-02-21T14:05:14.000Z", "ImageId": "ami-1234", "Name": "ubuntu-1604", "Public": False}
+    ]
+}
+DESCRIBE_IMAGE_5678 = {
+    "Images": [
+        {"CreationDate": "2022-02-21T14:05:14.000Z", "ImageId": "ami-5678", "Name": "ubuntu-2404", "Public": True}
+    ]
+}
 DESCRIBE_IMAGE_NOT_FOUND: Dict[str, Any] = {"Images": []}
 
 DESCRIBE_INSTANCES = [

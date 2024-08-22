@@ -95,11 +95,11 @@ class AwsEC2Client:
         creation_date = self._get_image_metadata(self._describe_images(instance.image_id), "CreationDate")
         if creation_date:
             instance.with_image_creation_date(creation_date=creation_date)
-        
+
         image_name = self._get_image_metadata(self._describe_images(instance.image_id), "Name")
         if image_name:
             instance.with_image_name(image_name=image_name)
-        
+
         return instance
 
     def list_instances(self) -> List[Instance]:
