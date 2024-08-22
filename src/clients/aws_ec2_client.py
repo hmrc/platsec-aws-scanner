@@ -91,14 +91,19 @@ class AwsEC2Client:
         except (BotoCoreError, ClientError) as err:
             raise EC2Exception(f"unable to describe VPC peering connections: {err}")
 
-    def __fetch_creation_date(self, instance: Instance) -> Instance:
+    def __fetch_image_data(self, instance: Instance) -> Instance:
         creation_date = self._get_image_metadata(self._describe_images(instance.image_id), "CreationDate")
         if creation_date:
             instance.with_image_creation_date(creation_date=creation_date)
+
+        image_name = self._get_image_metadata(self._describe_images(instance.image_id), "Name")
+        if image_name:
+            instance.with_image_name(image_name=image_name)
+
         return instance
 
     def list_instances(self) -> List[Instance]:
-        return list(map(self.__fetch_creation_date, self._describe_instances()))
+        return list(map(self.__fetch_image_data, self._describe_instances()))
 
     def _describe_instances(self) -> List[Instance]:
         return boto_try(
