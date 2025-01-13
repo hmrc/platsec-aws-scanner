@@ -61,8 +61,7 @@ python-test:
 		tests
 
 md-check:
-	@docker pull ghcr.io/zemanlx/remark-lint:0.3.5
-	@docker run --rm -i -v $(PWD):/lint/input:ro ghcr.io/zemanlx/remark-lint:0.3.5 --frail .
+	@docker run --pull missing --rm -i -v $(PWD):/lint/input:ro ghcr.io/zemanlx/remark-lint:0.3.5 --frail .
 
 container-release:
 	docker build \
