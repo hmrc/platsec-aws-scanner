@@ -4,12 +4,12 @@ The `list_accounts` task lists all the AWS accounts of the organization.
 
 **Notes**:
 
--   every account in the root organizational unit, along with every account in the leaves organizational units for the
-    entire organization tree will be listed
+- every account in the root organizational unit, along with every account in the leaves organizational units for the
+  entire organization tree will be listed
 
--   the organization tree that is walked by this task is expected to exist in the
-    [AWS Organizations service][aws-organizations] for the `organization` account as configured in
-    [the configuration file](../configuration.md#organization)
+- the organization tree that is walked by this task is expected to exist in the
+  [AWS Organizations service][aws-organizations] for the `organization` account as configured in
+  [the configuration file](../configuration.md#organization)
 
 ## Usage
 

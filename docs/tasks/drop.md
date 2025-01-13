@@ -4,11 +4,11 @@ The `drop` task drops Athena databases and tables that were created by previousl
 
 **Notes**:
 
--   the `drop` task only drops Athena databases whose names start with the `database_prefix` as configured in
-    [the configuration file](../configuration.md#athena)
+- the `drop` task only drops Athena databases whose names start with the `database_prefix` as configured in
+  [the configuration file](../configuration.md#athena)
 
--   the targeted Athena databases and tables are expected to be in the `athena` account as configured in
-    [the configuration file](../configuration.md#athena)
+- the targeted Athena databases and tables are expected to be in the `athena` account as configured in
+  [the configuration file](../configuration.md#athena)
 
 ## Usage
 

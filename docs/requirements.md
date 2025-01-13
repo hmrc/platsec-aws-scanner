@@ -4,12 +4,12 @@
 
 The scanning tasks will work out of the box for any AWS infrastructure where the following conditions are met:
 
--   an AWS account exists and consolidates the other AWS accounts through the
-    [AWS Organizations service][aws-organizations]
+- an AWS account exists and consolidates the other AWS accounts through the
+  [AWS Organizations service][aws-organizations]
 
--   an AWS account exists and collects [CloudTrail logs][aws-cloudtrail] from some/all the other AWS accounts
+- an AWS account exists and collects [CloudTrail logs][aws-cloudtrail] from some/all the other AWS accounts
 
--   an AWS account exists with IAM users that have delegate access on the roles that are assumed by the scanning tasks
+- an AWS account exists with IAM users that have delegate access on the roles that are assumed by the scanning tasks
 
 **Notes**
 
@@ -47,6 +47,9 @@ Then within the activated virtual environment, the scanner can be invoked as suc
 ```
 
 [aws-cloudtrail]: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html
+
 [aws-organizations]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html
+
 [python-venv]: https://docs.python.org/3/library/venv.html
+
 [python-pipenv]: https://pipenv.pypa.io/en/latest/
