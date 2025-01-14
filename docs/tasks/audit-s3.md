@@ -111,8 +111,8 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 
 See the [task report section](../usage.md#task-report) for details on the common task report fields.
 
-- `results`:
+* `results`:
 
-  - `buckets`: audit report of AWS S3 buckets for given account
+  * `buckets`: audit report of AWS S3 buckets for given account
 
 [aws-s3-bucket]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#BasicsBucket

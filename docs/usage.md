@@ -37,30 +37,30 @@ Arguments also have abbreviations:
 ./platsec_aws_scanner.sh create_table -u john.doo -t 123456 -y 2021 -m 3 -a 888777666555
 ```
 
-- `-u / --username` (optional): actions performed by the tool will be under this username's identity (the related AWS
-    IAM user is required to exist in the [user account](configuration.md#user)); supersedes `name` in [the
-    configuration file](configuration.md#user) when present
+* `-u / --username` (optional): actions performed by the tool will be under this username's identity (the related AWS
+  IAM user is required to exist in the [user account](configuration.md#user)); supersedes `name` in [the
+  configuration file](configuration.md#user) when present
 
-- `-t / --token` (required): MFA token for the above user
+* `-t / --token` (required): MFA token for the above user
 
-- `-y / --year` (optional): year for partitioning data in Athena (current year if unspecified)
+* `-y / --year` (optional): year for partitioning data in Athena (current year if unspecified)
 
-- `-m / --month` (optional): month for partitioning data in Athena (current month if unspecified)
+* `-m / --month` (optional): month for partitioning data in Athena (current month if unspecified)
 
-- `-d / --day` (optional): day for partitioning data in Athena
+* `-d / --day` (optional): day for partitioning data in Athena
 
-- `-re / --region` (optional): AWS region for partitioning the CloudTrail data in Athena; supersedes `region` in [the
-    configuration file](configuration.md#cloudtrail) when present
+* `-re / --region` (optional): AWS region for partitioning the CloudTrail data in Athena; supersedes `region` in [the
+  configuration file](configuration.md#cloudtrail) when present
 
-- `-a / --accounts` (optional): comma-separated list of accounts to be targeted by the task being run (when omitted,
-    the task will be run against all accounts that live in and under the [parent organizational unit specified in the
-    configuration file](configuration.md#organization))
+* `-a / --accounts` (optional): comma-separated list of accounts to be targeted by the task being run (when omitted,
+  the task will be run against all accounts that live in and under the [parent organizational unit specified in the
+  configuration file](configuration.md#organization))
 
-- `-p / --parent` (optional): organization unit parent to be targeted by the task being run (when omitted, the task
-    will be run against all accounts that live in and under the [parent organizational unit specified in the
-    configuration file](configuration.md#organization))
+* `-p / --parent` (optional): organization unit parent to be targeted by the task being run (when omitted, the task
+  will be run against all accounts that live in and under the [parent organizational unit specified in the
+  configuration file](configuration.md#organization))
 
-- `-v / --verbosity` (optional): log level configuration; one of \["error" (default), "warning", "info", "debug"\]
+* `-v / --verbosity` (optional): log level configuration; one of \["error" (default), "warning", "info", "debug"]
 
 ### Task report
 
@@ -89,19 +89,19 @@ another program like `jq` for pretty printing/filtering, or redirect the report 
 ]
 ```
 
-- `account`: the AWS account that the task was run against
-- `description`: reminds which task type was run
-- `partition`: the CloudTrail logs data partition that was loaded for this account in Athena
-- `results`: the task outcome
+* `account`: the AWS account that the task was run against
+* `description`: reminds which task type was run
+* `partition`: the CloudTrail logs data partition that was loaded for this account in Athena
+* `results`: the task outcome
 
 ### Task setup and tear down
 
 Tasks that run Athena queries against CloudTrail logs data have:
 
-- an automatic setup process to create the required databases and tables; this setup triggers before queries are run
+* an automatic setup process to create the required databases and tables; this setup triggers before queries are run
 
-- an automatic tear down process to drop databases and tables that were created as part of the setup; this tear down
-    triggers once the queries have completed
+* an automatic tear down process to drop databases and tables that were created as part of the setup; this tear down
+  triggers once the queries have completed
 
 > Tear down is run on a best effort basis and may fail for tasks that hit AWS Athena query rate limits when
 > running; this is because dropping databases and tables also are queries behind the scenes. Tasks leftovers that

@@ -19,20 +19,20 @@ query_timeout_seconds = 600
 query_throttling_seconds = 2
 ```
 
-- `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
-  
-- `role`: name of the role that is assumed to perform Athena-related operations on Cloudtrail logs
-  
-- `database_prefix`: when this tool runs [Athena][aws-athena] related tasks, the databases that are created will have
+* `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
+
+* `role`: name of the role that is assumed to perform Athena-related operations on Cloudtrail logs
+
+* `database_prefix`: when this tool runs [Athena][aws-athena] related tasks, the databases that are created will have
   their names prefixed with this value, to avoid confusion with other databases that might already exist
 
-- `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
+* `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
 
-- `query_results_polling_delay_seconds`: interval between two query results polls
+* `query_results_polling_delay_seconds`: interval between two query results polls
 
-- `query_timeout_seconds`: maximum duration a query can run for
+* `query_timeout_seconds`: maximum duration a query can run for
 
-- `query_throttling_seconds`: delay before starting a new query execution
+* `query_throttling_seconds`: delay before starting a new query execution
 
 ## CloudTrail
 
@@ -43,12 +43,12 @@ logs_retention_days = 90
 region = us-east-1
 ```
 
-- `logs_bucket`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
-  
-- `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this
+* `logs_bucket`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
+
+* `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this
   is used to validate the data partition configuration in [AwsAthenaDataPartition][src-partition])
-  
-- `region`: AWS region for partitioning the CloudTrail data in Athena; can be superseded with `-re | --region`
+
+* `region`: AWS region for partitioning the CloudTrail data in Athena; can be superseded with `-re | --region`
   argument
 
 ## CostExplorer
@@ -70,16 +70,16 @@ include_root_accounts = true
 parent = Parent OU
 ```
 
-- `account`: an account that consolidates the other AWS accounts through the
+* `account`: an account that consolidates the other AWS accounts through the
   [AWS Organizations service][aws-organizations]
 
-- `role`: name of the role that is assumed to perform organizations-related operations
-  
-- `include_root_accounts`: \[true|false\] indicate whether accounts in the
+* `role`: name of the role that is assumed to perform organizations-related operations
+
+* `include_root_accounts`: \[true|false] indicate whether accounts in the
   [root organizational unit][aws-organizations-root] should be included in the accounts list that tasks will be run
   against
 
-- `parent`: name of the parent [organizational unit][aws-organizational-ou] that will be targeted by the tasks (i.e.
+* `parent`: name of the parent [organizational unit][aws-organizational-ou] that will be targeted by the tasks (i.e.
   all accounts, whether they are part of this parent OU or OUs owned by this OU, will be targeted by the scanning
   tasks)
 
@@ -93,10 +93,10 @@ output = s3
 role = s3_reports_role
 ```
 
-- `account`: an account with a bucket where scanner reports will be written into
-- `bucket`: name of the bucket were scanner reports will be written into
-- `output`: \[stdout|s3\] whether scanner reports should be printed in standard output or written in an S3 bucket
-- `role`: name of the role that is assumed to write scanner reports in `reports.bucket`
+* `account`: an account with a bucket where scanner reports will be written into
+* `bucket`: name of the bucket were scanner reports will be written into
+* `output`: \[stdout|s3] whether scanner reports should be printed in standard output or written in an S3 bucket
+* `role`: name of the role that is assumed to write scanner reports in `reports.bucket`
 
 ## S3
 
@@ -105,7 +105,7 @@ role = s3_reports_role
 role = s3_role
 ```
 
-- `role`: name of the role that is assumed to perform s3-related operations
+* `role`: name of the role that is assumed to perform s3-related operations
 
 ## Session
 
@@ -114,7 +114,7 @@ role = s3_role
 duration_seconds = 3600
 ```
 
-- `duration_seconds`: number of seconds during which an assumed-role session is valid
+* `duration_seconds`: number of seconds during which an assumed-role session is valid
 
 ## SSM
 
@@ -123,7 +123,7 @@ duration_seconds = 3600
 role = ssm_role
 ```
 
-- `role`: name of the role that is assumed to perform ssm-related operations
+* `role`: name of the role that is assumed to perform ssm-related operations
 
 ## Tasks
 
@@ -132,7 +132,7 @@ role = ssm_role
 executors = 10
 ```
 
-- `executors`: number of executors that run tasks in parallel
+* `executors`: number of executors that run tasks in parallel
 
 ## User
 
@@ -142,8 +142,8 @@ account = 111222333444
 name = joe.bloggs
 ```
 
-- `account`: an account with an IAM user that have delegate access on the roles that are assumed
-- `name`: IAM user that is used to assume roles; can be superseded with `-u | --username` argument
+* `account`: an account with an IAM user that have delegate access on the roles that are assumed
+* `name`: IAM user that is used to assume roles; can be superseded with `-u | --username` argument
 
 [aws-athena]: https://docs.aws.amazon.com/athena/latest/ug/what-is.html
 

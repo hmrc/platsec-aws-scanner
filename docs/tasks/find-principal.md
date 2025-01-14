@@ -11,7 +11,7 @@ on which principal this IP address belongs to.
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
 
-- `-i / --ip`: IP address of the principal to be found
+* `-i / --ip`: IP address of the principal to be found
 
 ## Task report
 
@@ -54,6 +54,6 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 
 See the [task report section](../usage.md#task-report) for details on the common task report fields.
 
-- `results`:
+* `results`:
 
-  - `principals`: list of principals whose IP address matches the specified source IP
+  * `principals`: list of principals whose IP address matches the specified source IP

@@ -52,10 +52,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 
 See the [task report section](../usage.md#task-report) for details on the common task report fields.
 
-- `results`:
+* `results`:
 
-  - `ssm_parameters`: names and types of SSM parameters for given account
-  - `type_count`: count of SSM parameters grouped by types for given account
-  - `total_count`: total count of SSM parameters for given account
+  * `ssm_parameters`: names and types of SSM parameters for given account
+  * `type_count`: count of SSM parameters grouped by types for given account
+  * `total_count`: total count of SSM parameters for given account
 
 [aws-param-store]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html
