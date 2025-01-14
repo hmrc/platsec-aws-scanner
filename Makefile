@@ -60,8 +60,14 @@ python-test:
 		-vvv \
 		tests
 
+REMARK_LINT_VERSION = 0.3.5
 md-check:
-	@docker run --pull missing --rm -i -v $(PWD):/lint/input:ro ghcr.io/zemanlx/remark-lint:0.3.5 --frail .
+	@docker run --pull missing --rm -i -v $(PWD):/lint/input:ro ghcr.io/zemanlx/remark-lint:${REMARK_LINT_VERSION} --frail .
+
+# Update (to best of tools ability) md linter findings
+.PHONY: md-fix
+md-fix:
+	@docker run --pull missing --rm -i -v $(PWD):/lint/input:rw ghcr.io/zemanlx/remark-lint:${REMARK_LINT_VERSION} . -o
 
 container-release:
 	docker build \

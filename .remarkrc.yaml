@@ -8,3 +8,6 @@ plugins:
   lint-list-item-indent: one
   lint-maximum-line-length: 120
   lint-no-missing-blank-lines:
+  lint-maximum-heading-length: 80
+  lint-ordered-list-marker-value: ordered
+  lint-unordered-list-marker-style: consistent

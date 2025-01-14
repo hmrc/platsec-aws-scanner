@@ -11,7 +11,7 @@ event name that occurred for this particular role and how many times each event 
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
 
-- `-r / --role`: name of the AWS IAM role that the task will scan usage for
+* `-r / --role`: name of the AWS IAM role that the task will scan usage for
 
 ## Task report
 
@@ -68,10 +68,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 
 See the [task report section](../usage.md#task-report) for details on the common task report fields.
 
-- `results`:
+* `results`:
 
-  - `role_usage`: events list for this particular IAM role in the requested account for the specified data partition
+  * `role_usage`: events list for this particular IAM role in the requested account for the specified data partition
 
-    - `event_source`: name of an AWS service for which an event occurred using this IAM role
-    - `event_name`: name of an event that occurred
-    - `count`: how many times said event fired
+    * `event_source`: name of an AWS service for which an event occurred using this IAM role
+    * `event_name`: name of an event that occurred
+    * `count`: how many times said event fired

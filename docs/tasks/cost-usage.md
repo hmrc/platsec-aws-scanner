@@ -1,7 +1,7 @@
 # Cost Usage
 
-The `cost_explorer` task outputs data showing the usage & cost 
-of services in a given region and account / list of accounts 
+The `cost_explorer` task outputs data showing the usage & cost
+of services in a given region and account / list of accounts
 for the last 12 months.
 
 ## Usage
@@ -12,7 +12,7 @@ for the last 12 months.
 
 ### Arguments
 
-- None
+* None
 
 The scanner will check for costs and usage from the 1st day of the month one year ago
 in the command, ending on the current date. However, [AWS Cost Explorer documentation][aws-cost-explorer] states that

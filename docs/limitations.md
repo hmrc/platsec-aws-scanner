@@ -9,5 +9,5 @@ recreated/partitioned because the data source of truth isn't affected as it live
 
 ## Missing pagination
 
-Pagination has not been implemented on all resources. 
+Pagination has not been implemented on all resources.
 This is wheen there is a very low likelihood of hitting these limits in our usecases.

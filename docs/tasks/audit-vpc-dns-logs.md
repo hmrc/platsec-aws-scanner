@@ -1,6 +1,6 @@
 # Audit/Enforce VPC DNS log collection
 
-The `audit_vpc_dns_logs` task audits (or optionally create/updates) 
+The `audit_vpc_dns_logs` task audits (or optionally create/updates)
 sending logs DNS query logs to a central destination.
 
 ## Usage

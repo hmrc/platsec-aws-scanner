@@ -11,7 +11,7 @@ event name that occurred for this particular service and how many times each eve
 
 See the [common arguments section](../usage.md#common-arguments) for details on the common arguments.
 
-- `-s / --services`: comma-separated list of service(s) to scan usage for
+* `-s / --services`: comma-separated list of service(s) to scan usage for
 
 ## Task report
 
@@ -89,10 +89,10 @@ See the [common arguments section](../usage.md#common-arguments) for details on 
 
 See the [task report section](../usage.md#task-report) for details on the common task report fields.
 
-- `results`:
+* `results`:
 
-  - `service_usage`: events list for this particular service in the requested account for the specified data partition
+  * `service_usage`: events list for this particular service in the requested account for the specified data partition
 
-    - `event_name`: name of an event that occurred
-    - `error_code`: if the event errors, an error code will populate otherwise the field will be empty
-    - `count`: how many times said event fired
+    * `event_name`: name of an event that occurred
+    * `error_code`: if the event errors, an error code will populate otherwise the field will be empty
+    * `count`: how many times said event fired
