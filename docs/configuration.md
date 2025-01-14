@@ -19,20 +19,20 @@ query_timeout_seconds = 600
 query_throttling_seconds = 2
 ```
 
--   `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
-    
--   `role`: name of the role that is assumed to perform Athena-related operations on Cloudtrail logs
-    
--   `database_prefix`: when this tool runs [Athena][aws-athena] related tasks, the databases that are created will have
-    their names prefixed with this value, to avoid confusion with other databases that might already exist
+- `account`: an account where [CloudTrail logs][aws-cloudtrail] of other AWS accounts are centrally collected
+  
+- `role`: name of the role that is assumed to perform Athena-related operations on Cloudtrail logs
+  
+- `database_prefix`: when this tool runs [Athena][aws-athena] related tasks, the databases that are created will have
+  their names prefixed with this value, to avoid confusion with other databases that might already exist
 
--   `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
+- `query_results_bucket`: name of the bucket were results of [Athena queries][aws-athena-querying] will be stored
 
--   `query_results_polling_delay_seconds`: interval between two query results polls
+- `query_results_polling_delay_seconds`: interval between two query results polls
 
--   `query_timeout_seconds`: maximum duration a query can run for
+- `query_timeout_seconds`: maximum duration a query can run for
 
--   `query_throttling_seconds`: delay before starting a new query execution
+- `query_throttling_seconds`: delay before starting a new query execution
 
 ## CloudTrail
 
@@ -43,13 +43,13 @@ logs_retention_days = 90
 region = us-east-1
 ```
 
--   `logs_bucket`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
-    
--   `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this
-    is used to validate the data partition configuration in [AwsAthenaDataPartition][src-partition])
-    
--   `region`: AWS region for partitioning the CloudTrail data in Athena; can be superseded with `-re | --region`
-    argument
+- `logs_bucket`: name of the bucket were [CloudTrail logs][aws-cloudtrail-bucket] are stored
+  
+- `log_retention_days`: number of days before CloudTrail logs are removed from the bucket where they are stored (this
+  is used to validate the data partition configuration in [AwsAthenaDataPartition][src-partition])
+  
+- `region`: AWS region for partitioning the CloudTrail data in Athena; can be superseded with `-re | --region`
+  argument
 
 ## CostExplorer
 
@@ -70,18 +70,18 @@ include_root_accounts = true
 parent = Parent OU
 ```
 
--   `account`: an account that consolidates the other AWS accounts through the
-    [AWS Organizations service][aws-organizations]
+- `account`: an account that consolidates the other AWS accounts through the
+  [AWS Organizations service][aws-organizations]
 
--   `role`: name of the role that is assumed to perform organizations-related operations
-    
--   `include_root_accounts`: \[true|false\] indicate whether accounts in the
-    [root organizational unit][aws-organizations-root] should be included in the accounts list that tasks will be run
-    against
+- `role`: name of the role that is assumed to perform organizations-related operations
+  
+- `include_root_accounts`: \[true|false\] indicate whether accounts in the
+  [root organizational unit][aws-organizations-root] should be included in the accounts list that tasks will be run
+  against
 
--   `parent`: name of the parent [organizational unit][aws-organizational-ou] that will be targeted by the tasks (i.e.
-    all accounts, whether they are part of this parent OU or OUs owned by this OU, will be targeted by the scanning
-    tasks)
+- `parent`: name of the parent [organizational unit][aws-organizational-ou] that will be targeted by the tasks (i.e.
+  all accounts, whether they are part of this parent OU or OUs owned by this OU, will be targeted by the scanning
+  tasks)
 
 ## Reports
 
@@ -146,11 +146,19 @@ name = joe.bloggs
 - `name`: IAM user that is used to assume roles; can be superseded with `-u | --username` argument
 
 [aws-athena]: https://docs.aws.amazon.com/athena/latest/ug/what-is.html
+
 [aws-athena-querying]: https://docs.aws.amazon.com/athena/latest/ug/querying.html
+
 [aws-cloudtrail]: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html
+
 [aws-cloudtrail-bucket]: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-and-update-a-trail.html
+
 [aws-organizational-ou]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html#organizationalunit
+
 [aws-organizations]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html
+
 [aws-organizations-root]: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html#root
+
 [doc-requirements]: ./requirements.md
+
 [src-partition]: ../src/data/aws_athena_data_partition.py

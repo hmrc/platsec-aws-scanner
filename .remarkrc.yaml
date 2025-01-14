@@ -5,6 +5,6 @@ plugins:
   validate-links:
     repository: false
   # Customized settings
-  lint-list-item-indent: mixed
+  lint-list-item-indent: one
   lint-maximum-line-length: 120
   lint-no-missing-blank-lines:
