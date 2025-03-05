@@ -35,9 +35,9 @@ def test_s3_output() -> None:
     mock_s3 = Mock()
     factory = Mock(
         get_s3_client=Mock(
-            side_effect=lambda acc, role: mock_s3
-            if acc == account("reports_account", "reports") and role == "reports_role"
-            else None
+            side_effect=lambda acc, role: (
+                mock_s3 if acc == account("reports_account", "reports") and role == "reports_role" else None
+            )
         )
     )
     AwsScannerOutput(factory).write("some_task", [task_report(partition=partition())])

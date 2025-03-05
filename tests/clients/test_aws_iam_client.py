@@ -43,9 +43,9 @@ def test_get_role() -> None:
         get_policy=Mock(side_effect=get_policy),
         get_policy_version=Mock(side_effect=get_policy_version),
         get_paginator=Mock(
-            side_effect=lambda op: list_attached_role_policies_paginator()
-            if op == "list_attached_role_policies"
-            else None
+            side_effect=lambda op: (
+                list_attached_role_policies_paginator() if op == "list_attached_role_policies" else None
+            )
         ),
     )
     assert resp.EXPECTED_ROLE == AwsIamClient(mock_boto_iam).get_role("a_role")

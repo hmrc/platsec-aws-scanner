@@ -24,9 +24,11 @@ class AwsAuditS3Task(AwsS3Task):
 
     def _is_acl_compliant(self, bucket: Bucket) -> ComplianceCheck:
         return ComplianceCheck(
-            compliant=(not bucket.acl.all_users_enabled and not bucket.acl.authenticated_users_enabled)
-            if bucket.acl
-            else False,
+            compliant=(
+                (not bucket.acl.all_users_enabled and not bucket.acl.authenticated_users_enabled)
+                if bucket.acl
+                else False
+            ),
             message="bucket should not have ACL set",
         )
 

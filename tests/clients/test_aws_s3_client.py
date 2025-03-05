@@ -590,9 +590,11 @@ def s3_client_pab(public_access_block_response: Dict[str, Any]) -> AwsS3Client:
     return AwsS3Client(
         Mock(
             get_public_access_block=Mock(
-                side_effect=lambda **kwargs: public_access_block_response
-                if kwargs.get("Bucket") == "bucket"
-                else _raise(client_error("GetPublicAccessBlock", "AccessDenied", "Access Denied")),
+                side_effect=lambda **kwargs: (
+                    public_access_block_response
+                    if kwargs.get("Bucket") == "bucket"
+                    else _raise(client_error("GetPublicAccessBlock", "AccessDenied", "Access Denied"))
+                ),
             )
         )
     )
@@ -762,9 +764,9 @@ def test_get_object() -> None:
     s3_client = AwsS3Client(
         Mock(
             get_object=Mock(
-                side_effect=lambda **kwargs: responses.GET_OBJECT
-                if kwargs["Bucket"] == "buck" and kwargs["Key"] == "fruit"
-                else None
+                side_effect=lambda **kwargs: (
+                    responses.GET_OBJECT if kwargs["Bucket"] == "buck" and kwargs["Key"] == "fruit" else None
+                )
             )
         )
     )
