@@ -34,6 +34,7 @@ RUN apk add --no-cache \
     gcc \
     libc-dev \
     make \
+    && pip install --upgrade pip \
     && pip install pipenv==${PIP_PIPENV_VERSION} --index-url "https://artefacts.tax.service.gov.uk/artifactory/api/pypi/pips/simple/"
 USER builder
 # Install Python dependencies so they are cached

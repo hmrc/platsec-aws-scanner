@@ -433,15 +433,17 @@ def role(
         name=name,
         arn=arn,
         assume_policy=assume_policy if assume_policy is not None else {"Statement": [{"Action": "sts:AssumeRole"}]},
-        policies=policies
-        if policies is not None
-        else [
-            policy(
-                name="vpc_flow_log_role_policy",
-                arn="arn:vpc_flow_log_role_policy",
-                document={"Statement": [{"Effect": "Allow", "Action": ["logs:*"], "Resource": "*"}]},
-            )
-        ],
+        policies=(
+            policies
+            if policies is not None
+            else [
+                policy(
+                    name="vpc_flow_log_role_policy",
+                    arn="arn:vpc_flow_log_role_policy",
+                    document={"Statement": [{"Effect": "Allow", "Action": ["logs:*"], "Resource": "*"}]},
+                )
+            ]
+        ),
         tags=tags,
     )
 
