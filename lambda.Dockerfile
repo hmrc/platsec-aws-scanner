@@ -3,7 +3,7 @@ ARG FUNCTION_DIR="/platsec-aws-scanner"
 
 FROM python:${PYTHON_VERSION}-slim as build-image
 
-RUN sed -i 's/http:/https:/g' /etc/apt/sources.list
+RUN sed -i 's/http:/https:/g' /etc/apt/sources.list.d/debian.sources
 
 RUN apt-get update && apt-get upgrade -y
 
