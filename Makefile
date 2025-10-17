@@ -46,7 +46,7 @@ static-check:
 	@$(DOCKER) pipenv run flake8 --max-line-length=120 --max-complexity=10 src tests
 	@$(DOCKER) pipenv run mypy --show-error-codes --namespace-packages --strict src tests
 
-all-checks: python-test fmt-check static-check md-check
+all-checks: md-check fmt-check python-test static-check
 
 test: all-checks
 
